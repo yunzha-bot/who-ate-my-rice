@@ -9,6 +9,16 @@ export const GAME_CONFIG = {
     speed: 230,
     color: 0x3197ff,
   },
+  rice: {
+    id: 'rice-1',
+    x: 450,
+    y: 420,
+    size: 30,
+    color: 0xf2e5bc,
+    interactionRange: 60,
+    prepareMs: 400,
+    maxProgressMs: 60_000,
+  },
   wallColor: 0x4e5359,
   walls: [
     { x: 300, y: 220, width: 320, height: 32 },

@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
 import { GAME_CONFIG } from '../config/gameConfig';
+import { RiceSystem } from '../systems/RiceSystem';
 
 export class GameScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
+  private interactKey!: Phaser.Input.Keyboard.Key;
+  private riceSystem!: RiceSystem;
+  private riceLabel!: Phaser.GameObjects.Text;
   private pauseLabel!: Phaser.GameObjects.Text;
   private paused = false;
 
@@ -13,7 +17,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { width, height, player: playerConfig, walls } = GAME_CONFIG;
+    const { width, height, player: playerConfig, rice: riceConfig, walls } = GAME_CONFIG;
 
     this.cameras.main.setBounds(0, 0, width, height);
     this.physics.world.setBounds(0, 0, width, height);
@@ -28,6 +32,20 @@ export class GameScene extends Phaser.Scene {
     );
     this.player.setCollideWorldBounds(true);
 
+    this.add
+      .rectangle(riceConfig.x, riceConfig.y, riceConfig.size, riceConfig.size, riceConfig.color)
+      .setStrokeStyle(2, 0x846d43);
+    this.add.text(riceConfig.x, riceConfig.y - 32, '大米', {
+      color: '#ffffff',
+      fontFamily: 'sans-serif',
+      fontSize: '18px',
+    }).setOrigin(0.5);
+    this.riceSystem = new RiceSystem(
+      riceConfig.id,
+      riceConfig.maxProgressMs,
+      riceConfig.prepareMs,
+    );
+
     for (const wallConfig of walls) {
       const wall = this.physics.add.staticImage(
         wallConfig.x,
@@ -41,6 +59,7 @@ export class GameScene extends Phaser.Scene {
 
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
+    this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     window.addEventListener('keydown', this.handleEscape);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('keydown', this.handleEscape);
@@ -57,9 +76,18 @@ export class GameScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setVisible(false)
       .setDepth(10);
+
+    this.riceLabel = this.add.text(width - 16, 16, '', {
+      color: '#ffffff',
+      fontFamily: 'sans-serif',
+      fontSize: '20px',
+      backgroundColor: '#30343a',
+      padding: { x: 10, y: 8 },
+    }).setOrigin(1, 0).setDepth(5);
+    this.updateRiceLabel(false);
   }
 
-  update(): void {
+  update(_time: number, deltaMs: number): void {
     if (this.paused) return;
 
     const horizontal = Number(this.cursors.right.isDown || this.wasd.D.isDown)
@@ -71,6 +99,32 @@ export class GameScene extends Phaser.Scene {
     this.player.setVelocity(
       direction.x * GAME_CONFIG.player.speed,
       direction.y * GAME_CONFIG.player.speed,
+    );
+
+    const riceConfig = GAME_CONFIG.rice;
+    const inRange = Phaser.Math.Distance.Between(
+      this.player.x,
+      this.player.y,
+      riceConfig.x,
+      riceConfig.y,
+    ) <= riceConfig.interactionRange;
+    this.riceSystem.update(deltaMs, this.interactKey.isDown && inRange && direction.lengthSq() === 0);
+    this.updateRiceLabel(inRange);
+  }
+
+  private updateRiceLabel(inRange: boolean): void {
+    const rice = this.riceSystem.rice;
+    const states = {
+      IDLE: '未交互',
+      PREPARING: '准备中',
+      EATING: '进食中',
+      INTERRUPTED: '已中断',
+      COMPLETED: '已完成',
+    };
+    const hint = rice.completed ? '已吃完' : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
+    this.riceLabel.setText(
+      `大米进度：${(rice.progressMs / 1000).toFixed(1)} / ${(rice.maxProgressMs / 1000).toFixed(1)} 秒\n` +
+      `状态：${states[rice.interactionState]}\n${hint}`,
     );
   }
 
@@ -87,6 +141,8 @@ export class GameScene extends Phaser.Scene {
     this.pauseLabel.setVisible(this.paused);
 
     if (this.paused) {
+      this.riceSystem.interrupt();
+      this.updateRiceLabel(false);
       this.player.setVelocity(0, 0);
       this.physics.world.pause();
     } else {
