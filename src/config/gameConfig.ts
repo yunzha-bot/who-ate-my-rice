@@ -30,6 +30,13 @@ export const GAME_CONFIG = {
     riskThreshold: 0.30,
     stunMs: 1_000,
   },
+  three: {
+    pixelsPerUnit: 60,
+    viewHeight: 14,
+    actorHeight: 0.7,
+    wallHeight: 1.1,
+    boundaryHeight: 0.5,
+  },
   match: {
     readyMs: 3_000,
     captureRange: 42,

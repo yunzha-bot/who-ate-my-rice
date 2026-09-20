@@ -65,4 +65,11 @@ export class RiceSystem {
     }
     this.preparationMs = 0;
   }
+
+  reset(): void {
+    this.preparationMs = 0;
+    this.rice.progressMs = 0;
+    this.rice.completed = false;
+    this.rice.interactionState = 'IDLE';
+  }
 }

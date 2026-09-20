@@ -148,3 +148,21 @@
 - 已知问题：无已证实的功能 BUG；Vite 对 Phaser 大包仍有非阻断警告；正式发布前须恢复 60 秒大米时间。
 - 下一步建议：完成本阶段 commit、push 与 `v0.0.4` Tag 后停止；是否进入 S5 完整灰盒地图由用户另行决定。
 - Git commit 信息：计划 `feat: add staged sprint chase prototype`；提交与推送结果以最终汇报为准。
+
+## 2026-09-20 20:49 +08:00｜S4.5 Three.js 技术迁移人工验收通过
+
+- 任务名称：S4.5 Phaser → Three.js 3D 技术迁移验证与阶段收尾。
+- 当前开发阶段：S4.5 Gate = PASS；不开始 S5。
+- 本次目标：在保留 S1–S4 玩法逻辑的前提下验证真实 3D 网页技术路线。插入 S4.5 的原因是先确认 3D 场景、等距相机、碰撞与既有追逃对局可以完整运行，再决定是否投入 S5 完整 3D 地图。
+- 实际完成内容：Three.js 0.186.0 成为主渲染层，接管 Scene、WebGLRenderer、OrthographicCamera、浏览器输入、requestAnimationFrame 循环和游戏运行。世界采用 Y 高度、XZ 地面坐标；建立一间灰盒 3D 房间、墙体、两名方块角色与一份大米，用 Box3 和边界约束实现 3D 碰撞。相机保持固定等距/斜俯视角并精确跟随当前玩家，使其基本位于屏幕中心；Camera-Relative Movement 将 WASD/方向键及 IJKL 调试方向转换到 XZ，支持对角归一化及冲刺方向延续。
+- 阵营与对局流程：新增 DeepSeek 娘/人类阵营选择和 FACTION_SELECT 状态；ControlledCharacter 与 CameraTarget 随阵营切换。R 在 FINISHED 后快速重开并保留阵营；M 或结算按钮返回阵营选择，清空上一局状态后无需刷新即可改选另一阵营。正常 PLAYING 时 M 不退出。
+- 保留的逻辑：GameState 的 READY/PLAYING/PAUSED/FINISHED、0.35 秒持续抓捕和胜负结算；RiceSystem 的 0.4 秒准备、持久进度和中断恢复；SprintSystem 的 2.5 秒阶段式冲刺、30% 风险阈值、强制持续奔跑、摔倒与 1 秒眩晕；暂停冻结与重开。当前开发测试单份大米为 5 秒，正式设计仍为 60 秒，发布前必须切回并复测。
+- Phaser 状态：旧 GameScene 不再被运行入口引用；人工 Gate 通过后删除该闲置场景并卸载 Phaser。现有运行源码和依赖树均无 Phaser 引用。
+- 新增文件：`src/style.css`、`src/three/ThreeGame.ts`、`src/three/InputManager.ts`、`src/three/CollisionWorld.ts`、`src/three/CameraRelativeMovement.ts`、`src/three/LocalControl.ts`、`tests/collision-world.test.mjs`、`tests/camera-controls.test.mjs`。
+- 修改文件：`index.html`、`package.json`、`package-lock.json`、`src/config/gameConfig.ts`、`src/main.ts`、`src/systems/GameStateSystem.ts`、`src/systems/RiceSystem.ts`、`docs/AGENT_LOG.md`（仅追加本条）。
+- 删除文件：`src/scenes/GameScene.ts`（已闲置的 Phaser 场景）。
+- 依赖变化：新增 `three@0.186.0` 与 `@types/three@0.186.0`；移除 `phaser`，未引入物理引擎。
+- 测试结果：`npm test` 30 项全部通过，含原有 Rice/GameState/Sprint 回归及 3D 碰撞、屏幕方向、阵营切换、相机目标、FACTION_SELECT、R/M 重开与状态清理测试。`npm run build` 通过，包含 TypeScript 检查；移除 Phaser 后重新运行两项检查仍通过。用户人工确认 3D 场景、相机与屏幕方向、双阵营控制、碰撞、进食、冲刺风险、抓捕、暂停、双向胜负、R/M 重开及连续第二局全部正常；S4.5 人工验收 PASS。
+- 已知问题：Vite 仍提示主构建产物约 535 kB，超过 500 kB 提示线；不阻断运行。正式发布前仍需恢复 60 秒大米设计时长并复测。
+- 下一步建议：完成本次 commit、push 和 `v0.0.5-tech3d` Tag 后，可由用户另行决定进入 S5 完整 3D 灰盒地图；`AGENTS.md` 留待用户单独任务更新。
+- Git commit 信息：本条追加时尚未提交；计划 `refactor: migrate gameplay prototype to threejs`，实际提交和推送结果以最终汇报为准。

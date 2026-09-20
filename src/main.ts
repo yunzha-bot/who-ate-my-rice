@@ -1,21 +1,6 @@
-import Phaser from 'phaser';
-import { GAME_CONFIG } from './config/gameConfig';
-import { GameScene } from './scenes/GameScene';
+import { ThreeGame } from './three/ThreeGame';
+import './style.css';
 
-new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'app',
-  width: GAME_CONFIG.width,
-  height: GAME_CONFIG.height,
-  backgroundColor: GAME_CONFIG.backgroundColor,
-  pixelArt: true,
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  physics: {
-    default: 'arcade',
-    arcade: { debug: false },
-  },
-  scene: [GameScene],
-});
+const container = document.querySelector<HTMLElement>('#app');
+if (!container) throw new Error('Game container #app was not found');
+new ThreeGame(container);

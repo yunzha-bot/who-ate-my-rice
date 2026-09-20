@@ -1,4 +1,4 @@
-export type GamePhase = 'READY' | 'PLAYING' | 'PAUSED' | 'FINISHED';
+export type GamePhase = 'FACTION_SELECT' | 'READY' | 'PLAYING' | 'PAUSED' | 'FINISHED';
 export type MatchWinner = 'DEEPSEEK' | 'HUMAN';
 export type MatchReason = 'RICE_COMPLETED' | 'CAPTURED';
 
@@ -17,10 +17,24 @@ export class GameStateSystem {
   result: GameResult | null = null;
   readyRemainingMs: number;
 
-  constructor(readyMs: number, captureMs: number) {
+  constructor(readyMs: number, captureMs: number, initialPhase: GamePhase = 'READY') {
     this.readyMs = readyMs;
     this.captureMs = captureMs;
     this.readyRemainingMs = readyMs;
+    this.phase = initialPhase;
+  }
+
+  beginFromFactionSelect(): boolean {
+    if (this.phase !== 'FACTION_SELECT') return false;
+    this.reset();
+    return true;
+  }
+
+  returnToFactionSelect(): boolean {
+    if (this.phase !== 'FINISHED') return false;
+    this.reset();
+    this.phase = 'FACTION_SELECT';
+    return true;
   }
 
   advanceReady(deltaMs: number): void {
