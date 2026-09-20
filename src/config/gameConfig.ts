@@ -21,8 +21,14 @@ export const GAME_CONFIG = {
     x: 760,
     y: 450,
     size: 32,
-    speed: 230,
+    speedMultiplier: 1.08,
     color: 0xf28b45,
+  },
+  sprint: {
+    speedMultiplier: 1.6,
+    durationMs: 2_500,
+    riskThreshold: 0.30,
+    stunMs: 1_000,
   },
   match: {
     readyMs: 3_000,

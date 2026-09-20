@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GAME_CONFIG } from '../config/gameConfig';
 import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceSystem } from '../systems/RiceSystem';
+import { SprintSystem } from '../systems/SprintSystem';
 
 export class GameScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -10,7 +11,9 @@ export class GameScene extends Phaser.Scene {
   private wasd!: Record<'W' | 'A' | 'S' | 'D', Phaser.Input.Keyboard.Key>;
   private ijkl!: Record<'I' | 'J' | 'K' | 'L', Phaser.Input.Keyboard.Key>;
   private interactKey!: Phaser.Input.Keyboard.Key;
+  private sprintKey!: Phaser.Input.Keyboard.Key;
   private riceSystem!: RiceSystem;
+  private sprint!: SprintSystem;
   private match!: GameStateSystem;
   private riceLabel!: Phaser.GameObjects.Text;
   private statusLabel!: Phaser.GameObjects.Text;
@@ -25,6 +28,11 @@ export class GameScene extends Phaser.Scene {
     const { width, height, player: playerConfig, human: humanConfig, rice: riceConfig, walls } = GAME_CONFIG;
 
     this.match = new GameStateSystem(GAME_CONFIG.match.readyMs, GAME_CONFIG.match.captureMs);
+    this.sprint = new SprintSystem(
+      GAME_CONFIG.sprint.durationMs,
+      GAME_CONFIG.sprint.riskThreshold,
+      GAME_CONFIG.sprint.stunMs,
+    );
 
     this.cameras.main.setBounds(0, 0, width, height);
     this.physics.world.setBounds(0, 0, width, height);
@@ -75,6 +83,7 @@ export class GameScene extends Phaser.Scene {
     this.wasd = this.input.keyboard!.addKeys('W,A,S,D') as typeof this.wasd;
     this.ijkl = this.input.keyboard!.addKeys('I,J,K,L') as typeof this.ijkl;
     this.interactKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.sprintKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     window.addEventListener('keydown', this.handleGlobalKeyDown);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('keydown', this.handleGlobalKeyDown);
@@ -99,10 +108,10 @@ export class GameScene extends Phaser.Scene {
       })
       .setOrigin(0.5).setVisible(false).setDepth(11);
 
-    this.statusLabel = this.add.text(16, 16, '', {
-      color: '#ffffff', fontFamily: 'sans-serif', fontSize: '18px',
+    this.statusLabel = this.add.text(16, height - 16, '', {
+      color: '#ffffff', fontFamily: 'sans-serif', fontSize: '16px',
       backgroundColor: '#30343a', padding: { x: 10, y: 8 },
-    }).setDepth(5);
+    }).setOrigin(0, 1).setDepth(5);
 
     this.riceLabel = this.add.text(width - 16, 16, '', {
       color: '#ffffff',
@@ -116,6 +125,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(_time: number, deltaMs: number): void {
+    const sprintPressed = Phaser.Input.Keyboard.JustDown(this.sprintKey);
     if (this.match.phase === 'READY') {
       this.match.advanceReady(deltaMs);
       this.updateStatusLabel();
@@ -129,17 +139,30 @@ export class GameScene extends Phaser.Scene {
       - Number(this.cursors.up.isDown || this.wasd.W.isDown);
     const direction = new Phaser.Math.Vector2(horizontal, vertical).normalize();
 
+    // S4 uses the one test rice as the temporary global progress ratio.
+    const riceProgressRatio = this.riceSystem.rice.progressMs / this.riceSystem.rice.maxProgressMs;
+    if (sprintPressed) {
+      this.sprint.tryStart(direction, riceProgressRatio);
+    }
+    this.sprint.advance(deltaMs, direction);
+    const playerDirection = this.sprint.movementDirection(direction);
+    const playerSpeed = GAME_CONFIG.player.speed *
+      (this.sprint.state === 'SPRINT_RUNNING' ? GAME_CONFIG.sprint.speedMultiplier : 1);
+
     this.player.setVelocity(
-      direction.x * GAME_CONFIG.player.speed,
-      direction.y * GAME_CONFIG.player.speed,
+      playerDirection.x * playerSpeed,
+      playerDirection.y * playerSpeed,
     );
+    this.player.setAngle(this.sprint.state === 'STUNNED' ? 90 : 0);
+    if (this.sprint.state === 'STUNNED') this.player.setTint(0xff7777);
+    else this.player.clearTint();
 
     const humanHorizontal = Number(this.ijkl.L.isDown) - Number(this.ijkl.J.isDown);
     const humanVertical = Number(this.ijkl.K.isDown) - Number(this.ijkl.I.isDown);
     const humanDirection = new Phaser.Math.Vector2(humanHorizontal, humanVertical).normalize();
     this.human.setVelocity(
-      humanDirection.x * GAME_CONFIG.human.speed,
-      humanDirection.y * GAME_CONFIG.human.speed,
+      humanDirection.x * GAME_CONFIG.player.speed * GAME_CONFIG.human.speedMultiplier,
+      humanDirection.y * GAME_CONFIG.player.speed * GAME_CONFIG.human.speedMultiplier,
     );
 
     const riceConfig = GAME_CONFIG.rice;
@@ -149,7 +172,10 @@ export class GameScene extends Phaser.Scene {
       riceConfig.x,
       riceConfig.y,
     ) <= riceConfig.interactionRange;
-    this.riceSystem.update(deltaMs, this.interactKey.isDown && inRange && direction.lengthSq() === 0);
+    this.riceSystem.update(
+      deltaMs,
+      this.sprint.state === 'NORMAL' && this.interactKey.isDown && inRange && direction.lengthSq() === 0,
+    );
     const inCaptureRange = Phaser.Math.Distance.Between(
       this.player.x, this.player.y, this.human.x, this.human.y,
     ) <= GAME_CONFIG.match.captureRange;
@@ -164,10 +190,17 @@ export class GameScene extends Phaser.Scene {
     const phaseText = phase === 'READY'
       ? `准备：${Math.ceil(this.match.readyRemainingMs / 1000)} 秒`
       : phase === 'PLAYING' ? '对局中' : phase === 'PAUSED' ? '已暂停' : '已结束';
+    const riceRatio = this.riceSystem.rice.progressMs / this.riceSystem.rice.maxProgressMs;
+    const currentRisk = this.sprint.state === 'NORMAL'
+      ? riceRatio >= GAME_CONFIG.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
+      : this.sprint.riskMode === 'FALL_ON_END' ? 'RISK SPRINT' : 'SAFE SPRINT';
     this.statusLabel.setText(
       `${phaseText}  时间：${this.formatTime(this.match.elapsedMs)}\n` +
-      `蓝色 WASD/方向键 + E｜橙色 IJKL\n` +
-      `抓捕：${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(GAME_CONFIG.match.captureMs / 1000).toFixed(2)} 秒`,
+      `蓝色 WASD/方向键 + E；移动时点 Space 冲刺｜橙色 IJKL\n` +
+      `抓捕：${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(GAME_CONFIG.match.captureMs / 1000).toFixed(2)} 秒\n` +
+      `状态：${this.sprint.state}  米总进度：${Math.round(riceRatio * 100)}%\n` +
+      `${currentRisk}  冲刺剩余：${(this.sprint.sprintRemainingMs / 1000).toFixed(1)} 秒\n` +
+      `结束摔倒：${this.sprint.riskMode === 'FALL_ON_END' ? 'YES' : 'NO'}  眩晕剩余：${(this.sprint.stunRemainingMs / 1000).toFixed(1)} 秒`,
     );
   }
 
@@ -200,7 +233,9 @@ export class GameScene extends Phaser.Scene {
       INTERRUPTED: '已中断',
       COMPLETED: '已完成',
     };
-    const hint = rice.completed ? '已吃完' : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
+    const hint = rice.completed ? '已吃完'
+      : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
+      : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
     this.riceLabel.setText(
       `大米进度：${(rice.progressMs / 1000).toFixed(1)} / ${(rice.maxProgressMs / 1000).toFixed(1)} 秒\n` +
       `状态：${states[rice.interactionState]}\n${hint}`,
