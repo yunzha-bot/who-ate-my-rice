@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "node --experimental-strip-types --test tests/rice.test.mjs",
+    "test": "node --experimental-strip-types --test tests/rice.test.mjs tests/game-state.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -81,3 +81,37 @@
 - 已知问题：无已证实的 S2 功能 BUG；构建仍有 Phaser 产物超过 Vite 500 kB 的非阻断警告。
 - 下一步建议：仅完成本阶段提交、推送与 `v0.0.2` 里程碑；S3 等待单独指令。
 - Git commit 信息：计划 `feat: add persistent rice progress`；提交与推送结果以本次最终汇报为准。
+
+## 2026-09-20 15:55 +08:00｜S3 最小完整对局待人工验收
+
+- 任务名称：S3 最小完整对局。
+- 当前开发阶段：S3 实现与自动化检查完成；Gate 尚未全部通过，不进入 S4。
+- 本次目标：在 S2 基础上完成双方可获胜、结算和重开的最小对局闭环。
+- 实际完成内容：增加橙色人类测试方块与 IJKL 控制；增加 READY / PLAYING / PAUSED / FINISHED 状态、3 秒准备、对局计时、0.35 秒持续接触抓捕、单份测试大米完成胜利、同帧固定大米优先、调试结算和 R 重开。FINISHED 后场景更新直接返回，双方速度归零；Esc 不能恢复 FINISHED。未加入 AI 或后续玩法。
+- 新增文件：`src/systems/GameStateSystem.ts`、`tests/game-state.test.mjs`。
+- 修改文件：`src/config/gameConfig.ts`、`src/scenes/GameScene.ts`、`package.json`、`docs/AGENT_LOG.md`（仅追加本条）。
+- 删除文件：无。
+- 依赖变化：无。
+- 测试结果：S2 基线 `npm test` 与 `npm run build` 均通过；S3 修改后 `npm test` 8 项通过、`npm run build` 通过（含 TypeScript 检查），`git diff --check` 通过。浏览器画面确认人类方块、READY→PLAYING、计时、Esc 暂停冻结和恢复；浏览器控制工具不能可靠持续按键，尚未完成双方各赢一局与 R 重开的实际操作验收。构建有既有的包体积非阻断警告。
+- S2 回归测试结果：原有 3 项 RiceSystem 测试全部通过；新增联动测试验证约 10 秒中断后续吃及 60 秒完成。真实浏览器中的 S2 持久进度本次尚未重新人工验证。
+- S3 Gate 验收结果：待人工验收，未判定 PASS；核心“双方各赢一局、结算后重开再打一局”尚待确认。因此未提交、未推送、未创建 `v0.0.3`。
+- 已知问题：无已证实的 S3 功能 BUG；人工 Gate 待确认。`AGENTS.md` 的“当前下一开发阶段”仍写 S2，属于历史状态描述，本次按要求不修改。
+- 下一步建议：人工完成短暂接触、持续抓捕、吃满 60 秒、结束后冻结、R 重开与连续两局；全部通过后再提交、推送并创建阶段 Tag。不要进入 S4。
+- Git commit 信息：本次未提交。
+
+## 2026-09-20 16:03 +08:00｜S3 人工验收通过与开发测试时长调整
+
+- 任务名称：S3 最小完整对局收尾；开发测试参数调整。
+- 当前开发阶段：S3 Gate 已由用户人工验收通过；不进入 S4。
+- 本次目标：保留正式单份大米 60 秒设计值，当前开发阶段改用可切换的 5 秒测试值，复验后完成 S3 收尾。
+- 实际完成内容：用户报告 S3 人工验收全部通过、无异常；在现有 `src/config/gameConfig.ts` 中明确保留 `production = 60_000 ms` 与 `development = 5_000 ms`，当前 `RICE_TIMING_MODE = 'development'`，RiceSystem 内未写死 5 秒。切换该模式为 `production` 即恢复正式 60 秒。浏览器调试画面已确认显示大米上限 `5.0` 秒。
+- 新增文件：无（S3 新增文件见上一条日志）。
+- 修改文件：`src/config/gameConfig.ts`、`tests/game-state.test.mjs`、`docs/AGENT_LOG.md`（仅末尾追加本条）。
+- 删除文件：无。
+- 依赖变化：无。
+- 测试结果：`npm test` 9 项通过；新增测试确认正式 60 秒值保留、开发 5 秒完成且中断进度保留并触发 DeepSeek 娘胜利；原有 RiceSystem 测试及 S3 抓捕、暂停、胜负、重置、两局测试均通过。`npm run build` 通过（含 TypeScript 检查）；浏览器已确认显示 `0.0 / 5.0 秒`。本次 5 秒调整后的浏览器持续按 E 实测未由代理完成，原因是浏览器工具不能可靠长按；5 秒完成由自动化逻辑测试确认。构建仍有既有的包体积非阻断警告。
+- S2 回归测试结果：3 项 RiceSystem 测试全部通过，0.4 秒准备、中断续吃及完成封顶逻辑未改。
+- S3 Gate 验收结果：PASS；用户已人工验收原 60 秒 S3 闭环全部通过，本次仅通过配置调整开发测试时长，自动化回归通过。
+- 已知问题：无已证实的功能 BUG。发布前必须将 `RICE_TIMING_MODE` 改为 `production`，恢复正式 60 秒，并重新测试。`AGENTS.md` 当前阶段描述仍停留在 S2，本次按要求不修改。
+- 下一步建议：完成 S3 commit、push 与 `v0.0.3` Tag 后停止；S4 等待单独指令。
+- Git commit 信息：计划 `feat: add minimal complete match flow`；提交与推送结果以最终汇报为准。
