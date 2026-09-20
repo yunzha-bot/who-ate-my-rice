@@ -4,10 +4,16 @@
 
 ## 项目与阶段
 
-- 中文名：《谁吃了我的米》；工程名：`who-ate-my-rice`。
-- 当前技术栈：TypeScript + Vite + Phaser；目标平台：Chrome / Edge 电脑浏览器。
+- 中文名：《谁吃了我的米》；工程名：`who-ate-my-rice`；目标平台：Chrome / Edge 电脑浏览器。
+- 当前主版本为 Web / Three.js 3D 版本。Phaser 已从当前主运行技术栈移除。
 - 先用灰盒验证核心玩法，再投入正式美术；核心玩法未验证前，不大规模扩展功能。
 - 采用阶段 Gate：实现 → 测试 → 验收 → 更新日志 → 提交 Git → 进入下一阶段。当前阶段未通过验收，不提前进入后续阶段。
+
+## 当前主技术栈
+
+- Web 主版本使用 Vite、TypeScript、Three.js、HTML、CSS；Phaser 已从依赖和运行源码中移除。
+- Three.js 负责 3D Scene、WebGLRenderer、OrthographicCamera、角色/房间/墙体/大米占位体、3D 世界坐标、XZ 地面移动、相机跟随、Camera-Relative Movement 和 3D 碰撞；后续如有明确任务，可加载 glTF 模型。
+- HTML / CSS 负责 HUD、菜单、阵营选择、结算和调试 UI。
 
 ## ChatGPT 与 Codex 的分工
 
@@ -33,19 +39,41 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 ## 当前项目状态
 
+项目：`who-ate-my-rice`；中文名：《谁吃了我的米》。
+
+当前主版本：Web / Three.js 3D 版本。
+
 已完成阶段：
 
 - S1 最小运行工程 —— `v0.0.1`。
 - S2 一房一米 —— `v0.0.2`。
 - S3 最小完整对局 —— `v0.0.3`，Gate = PASS。
+- S4 追逐原型 —— `v0.0.4`，Gate = PASS。
+- S4.5 Three.js 3D 技术迁移 —— `v0.0.5-tech3d`，Gate = PASS。
 
-当前下一阶段：S4 追逐原型；尚未开始，进入该阶段仍需用户明确任务。
+当前下一阶段：S5 完整 3D 灰盒地图；尚未开始，进入仍需用户明确任务。Web 主版本后续继续按 S5 → S6 → S7 → S8 → S9… → 发布的阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
+
+## 当前核心玩法规则摘要
+
+- 可选择 DeepSeek 娘或人类阵营。WASD / 方向键采用 Camera-Relative Movement，所控角色保持在屏幕中央附近；IJKL 暂作另一角色的开发调试控制。
+- DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。
+- 人类抓捕需要约 0.35 秒持续接触。R 在结算后快速重开当前阵营；M 或结算按钮返回阵营选择并清空上一局状态。
 
 ## 阶段状态维护规则
 
 只有正式开发阶段同时满足 Gate 通过、Git commit 完成、成功推送到 GitHub、对应阶段 Tag 创建并成功推送，才允许更新本文件中的项目进度。更新时只将刚完成的阶段加入“已完成”，并将下一阶段设为“当前下一阶段”；不得改写其他长期规则、删除历史阶段信息、跳过阶段或将未通过 Gate 的阶段提前写成已完成。普通小任务和 Bug 修复不触发本文件的阶段状态更新。
+
+## UE5.3 平行版本预留
+
+- 未来允许基于同一游戏设计开发独立的 Unreal Engine 5.3 版本。它与当前 Web / Three.js 主版本是平行实现，不直接替换 Web 版本；本节不是当前开发任务。
+- 两版可共享游戏核心设计、玩法与数值规则、角色设定、地图结构、UI 流程、美术与音频规范、测试用例及设计文档，但不直接共享运行时代码。不得将 Three.js Runtime Code 硬塞入 UE 工程，也不得使 Web Runtime 依赖 UE Blueprint / C++；共享设计层 ≠ 共享运行时代码。
+- 预留“跨版本玩法协议 / Cross-Version Gameplay Spec”概念，供未来两版对齐胜负、大米、冲刺、30% 风险阈值、抓捕、门、AI、数值参数含义与 GameState 定义。它不是网络接口、服务器 API 或联机接口；未来可另建 `docs/SHARED_GAMEPLAY_SPEC.md`，本次不创建。
+- 当前 `who-ate-my-rice` 仓库继续作为 Web 主工程。未来 UE5.3 工程推荐独立仓库（如 `who-ate-my-rice-web` 与 `who-ate-my-rice-ue5`）或同一父目录下的独立文件夹（`who-ate-my-rice/` 与 `who-ate-my-rice-ue5/`）；不要塞入当前 `src/`，也不要现在移动仓库。
+- 只有用户明确说“开始 UE5.3 版本开发”后，才可创建 UE 工程、Blueprint、Unreal C++、地图、导入资产或建立 UE Input、Character、GameMode / GameState。预留内容不授权自动创建 UE 文件或变更当前 Web 技术栈。
+- 概念映射：Three.js Scene → Unreal Level / World；OrthographicCamera / Camera → CameraActor / CameraComponent；Mesh → StaticMesh / SkeletalMesh；Game Loop → Tick / Actor Component / Subsystem；GameState → Unreal GameState / 自定义状态系统；Input Manager → Enhanced Input；Collision → Unreal Collision / Capsule / Box；HTML/CSS HUD → UMG；Three.js Character → Character / Pawn；glTF 模型 → UE Import Asset；Sprint / Rice / Capture 纯逻辑 → Blueprint / C++ Gameplay Logic。这仅供未来规划，不是立即迁移任务。
+- Web 与 UE 版本未来独立管理版本号。Web 可继续使用 `v0.x.x`、`v1.0.0`；UE 未来可用 `ue-v0.1.0` 等前缀或独立仓库版本。本次不创建 UE Tag。
 
 ## 每次任务的最终汇报
 
