@@ -5,7 +5,7 @@
 ## 项目与阶段
 
 - 中文名：《谁吃了我的米》；工程名：`who-ate-my-rice`；目标平台：Chrome / Edge 电脑浏览器。
-- 当前主版本为 Web / Three.js 3D 版本。Phaser 已从当前主运行技术栈移除。
+- 当前主版本为 Web / Three.js 3D Alpha。Phaser 已从当前主运行技术栈移除。
 - 先用灰盒验证核心玩法，再投入正式美术；核心玩法未验证前，不大规模扩展功能。
 - 采用阶段 Gate：实现 → 测试 → 验收 → 更新日志 → 提交 Git → 进入下一阶段。当前阶段未通过验收，不提前进入后续阶段。
 
@@ -41,7 +41,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 项目：`who-ate-my-rice`；中文名：《谁吃了我的米》。
 
-当前主版本：Web / Three.js 3D 版本。
+当前主版本：Web / Three.js 3D Alpha。
 
 已完成阶段：
 
@@ -50,16 +50,27 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S3 最小完整对局 —— `v0.0.3`，Gate = PASS。
 - S4 追逐原型 —— `v0.0.4`，Gate = PASS。
 - S4.5 Three.js 3D 技术迁移 —— `v0.0.5-tech3d`，Gate = PASS。
+- S5 完整 3D 灰盒地图 —— `v0.1.0-alpha`，Gate = PASS。
 
-当前下一阶段：S5 完整 3D 灰盒地图；尚未开始，进入仍需用户明确任务。Web 主版本后续继续按 S5 → S6 → S7 → S8 → S9… → 发布的阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前下一阶段：S6A —— 正式大米循环；进入仍需用户明确任务。Web 主版本后续继续按 S6A → S6 → S7 → S8 → S9… → 发布的阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
+
+当前 S5 地图状态：
+
+- 住宅 / 公寓式 3D 灰盒地图已完成；旧九宫格布局已废弃。
+- 地图包含 10 个主要空间与阳台、衣帽间两个附属空间，并保留三条追逐环路。
+- 14 个 RiceCandidate 每局无重复随机激活 5 个 Active Rice；18 个 DoorNode、双方 Spawn、5 个 HideSpot Placeholder 与家具碰撞已就位。
+- 保留 Camera-Relative Movement、玩家相机跟随，以及轻量分轴碰撞 / Wall Sliding；外凸墙角卡脚已修复。
+
+S6A 仅在后续单独授权后，将当前测试性质大米扩展为“14 候选点 → 每局 5 份 → 每份独立持久进度 → 5 份全完成获胜”的正式循环；本次不实现该阶段内容。
 
 ## 当前核心玩法规则摘要
 
 - 可选择 DeepSeek 娘或人类阵营。WASD / 方向键采用 Camera-Relative Movement，所控角色保持在屏幕中央附近；IJKL 暂作另一角色的开发调试控制。
 - DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。
 - 人类抓捕需要约 0.35 秒持续接触。R 在结算后快速重开当前阵营；M 或结算按钮返回阵营选择并清空上一局状态。
+- 角色碰撞使用轻量分轴碰撞（Axis-Separated Collision Resolution）：单轴受阻时保留另一轴位移；墙体和家具使用一致的 Wall Sliding，以减少外凸墙角卡脚。
 
 ## 阶段状态维护规则
 
@@ -67,6 +78,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 ## UE5.3 平行版本预留
 
+- `who-ate-my-rice-ue5` 是独立平行仓库，当前状态为 Reserved / Planning；Web / Three.js 仍是主线。
 - 未来允许基于同一游戏设计开发独立的 Unreal Engine 5.3 版本。它与当前 Web / Three.js 主版本是平行实现，不直接替换 Web 版本；本节不是当前开发任务。
 - 两版可共享游戏核心设计、玩法与数值规则、角色设定、地图结构、UI 流程、美术与音频规范、测试用例及设计文档，但不直接共享运行时代码。不得将 Three.js Runtime Code 硬塞入 UE 工程，也不得使 Web Runtime 依赖 UE Blueprint / C++；共享设计层 ≠ 共享运行时代码。
 - 预留“跨版本玩法协议 / Cross-Version Gameplay Spec”概念，供未来两版对齐胜负、大米、冲刺、30% 风险阈值、抓捕、门、AI、数值参数含义与 GameState 定义。它不是网络接口、服务器 API 或联机接口；未来可另建 `docs/SHARED_GAMEPLAY_SPEC.md`，本次不创建。

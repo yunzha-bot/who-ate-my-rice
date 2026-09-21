@@ -201,3 +201,19 @@
 - 已知问题：无已证实的功能、地图或碰撞阻断问题。Vite 仍提示主构建 bundle 约 556 kB，超过 500 kB 提示线，属于非阻断性能/构建提示；正式发布前仍需恢复 60 秒正式大米时长并重新测试。
 - 下一步建议：可在用户单独授权后进入 S6A —— 正式大米循环；本次不得自行开始。
 - Git commit 信息：计划 `feat: complete residential 3d greybox map`；提交、推送和 `v0.1.0-alpha` Tag 结果以本次最终汇报为准。
+
+## 2026-09-21 10:26 +08:00｜更新 S5 完成后的项目状态
+
+- 任务名称：更新 S5 完成后的 AGENTS.md 项目状态。
+- 当前开发阶段：S5 已完成；S6A —— 正式大米循环待开始。
+- 本次目标：在 S5 Gate、commit、push 和 Tag 完成后维护长期项目状态；不修改游戏功能代码，不开始 S6A。
+- 实际完成内容：核对本地与 `origin` 的 `v0.1.0-alpha` 均存在，且均指向 S5 完成提交 `c197ef43c6d4708a11867429f2246eef754c0bff`。将当前主版本更新为 Web / Three.js 3D Alpha；将 S5 写入已完成阶段并将 S6A 设为当前下一阶段。记录住宅式 S5 灰盒、旧九宫格废弃、14/5 大米节点、DoorNode、出生点、HideSpot Placeholder、家具碰撞和 Wall Sliding 状态；明确 S6A 只是待授权的后续阶段。保留 UE5.3 `who-ate-my-rice-ue5` 的 Reserved / Planning 说明。
+- 新增文件：无。
+- 修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`（仅在末尾追加本条）。
+- 删除文件：无。
+- 依赖变化：无。
+- 游戏功能代码修改：无；未开始 S6A，未修改 Web 运行代码或 UE5.3 平行仓库。
+- 测试结果：纯文档维护任务；已核对当前分支、工作区、S5 提交以及本地/远程 `v0.1.0-alpha` 指向。未运行 `npm test` 或 `npm run build`，原因是未修改游戏代码。
+- 已知问题：S5 已记录的 Vite 主构建 bundle 超过 500 kB 提示仍为非阻断问题。
+- 下一步建议：等待用户单独授权后进入 S6A —— 正式大米循环；正式发布前仍须切回 60 秒大米设计时长并重新测试。
+- Git commit 信息：本条追加时尚未提交；计划 `docs: update project status after s5`，实际提交和推送结果以最终汇报为准。
