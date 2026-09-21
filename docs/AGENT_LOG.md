@@ -181,3 +181,23 @@
 - 已知问题：本次无功能改动；Web 构建超过 500 kB 的既有提示仍由 S4.5 记录。UE5.3 仅为未来预留，尚无工程。
 - 下一步建议：等待用户明确下达 Web 版 S5 完整 3D 灰盒地图任务；不要因 UE5.3 预留跳过 Web 阶段。
 - Git commit 信息：本条追加时尚未提交；计划 `docs: update threejs stack and reserve ue5 version`，实际提交和推送结果以最终汇报为准。
+
+## 2026-09-21 10:19 +08:00｜S5 完整 3D 灰盒地图完成
+
+- 任务名称：S5 完整 3D 灰盒地图正式收尾。
+- 当前开发阶段：S5 Gate = PASS；本次不进入 S6A。
+- 本次目标：完成住宅式 3D 灰盒地图、碰撞手感的人工 Gate 收尾，并记录可复现的最终地图规范。
+- 实际完成内容：废弃旧等大房间九宫格布局，完成以住宅平面图为基准、游戏化放大的不规则公寓灰盒。地图包围盒约 `36 × 30` 世界单位，包含 10 个主要空间（客厅、厨房、储物间、餐厅、主卧、卫生间、主走廊、次卧、书房、玄关）及阳台、衣帽间两个附属空间。主走廊宽 5，典型门洞宽 2.0–2.6，最窄门洞宽 1.5，角色直径约 0.533；家具和门前后均按追逐通行尺度留出空间。
+- 追逐环路：公共区“客厅 → 餐厅 → 厨房 → 客厅”；主卧区“主走廊 → 主卧 → 衣帽间 → 主走廊”；卧室区“主走廊 → 卫生间 → 次卧 → 书房 → 主走廊”。全图可遍历，关键区域有备用路径。
+- 节点：14 个 RiceCandidate，每局无重复随机激活 5 个 Active Rice；18 个 DoorNode；DeepSeek 出生于玄关、Human 出生于厨房；5 个 HideSpot Placeholder（主卧衣柜、次卧床底、书房书柜、储物柜、衣帽间衣柜）。门与藏身的正式玩法仍未在 S5 实现。
+- 系统适配：多份米的 `globalRiceProgressRatio` 用于 30% Sprint 风险判断；保留持久进食、0.4 秒准备、0.35 秒 Capture、Faction Select、Camera-Relative Movement、OrthographicCamera 跟随、R 快速重开、M 返回阵营选择与 Esc 暂停。当前开发单份大米为 5 秒；正式设计值为 60 秒，Beta / Release Candidate 前必须切回并重新测试。
+- 碰撞：墙体、家具和门洞使用统一轻量碰撞；保留分轴碰撞，在外凸角接触时增加 Wall Sliding 切线响应，修复斜向持续输入在两段墙 L 型外凸角的卡脚。两轴均被真实阻挡时保持停止；移动分段防止 Sprint 高速穿透，Sprint 碰撞不提前结束持续时间或改变 30% 摔倒规则。
+- 新增文件：`docs/MAP_SPEC.md`、`src/systems/RiceField.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`tests/apartment-map.test.mjs`。
+- 修改文件：`package.json`、`tsconfig.json`、`src/config/gameConfig.ts`、`src/style.css`、`src/three/ThreeGame.ts`、`src/three/CollisionWorld.ts`、`tests/collision-world.test.mjs`、`docs/MAP_SPEC.md`、`docs/AGENT_LOG.md`。
+- 删除文件：无。
+- 依赖变化：无；未加入物理引擎或其他运行时依赖。
+- 测试结果：`npm test` 48 项全部通过，覆盖地图布局/连通、14/5 米点、DoorNode、出生点、HideSpot、全局 30% 进度、相机相对移动、碰撞分轴滑动、四组斜向角点、家具、门洞、Sprint 防穿透与既有玩法回归。`npm run build` 通过，包含 TypeScript 检查。
+- 人工验收结果：用户确认住宅布局、三条环路、节点、家具、全图可遍历、墙体与家具碰撞、外凸墙角滑动、门洞、Sprint、相机、Rice、30% 风险、Capture、Faction Select、R/M/Esc 与双方胜负均通过；S5 Gate = PASS。
+- 已知问题：无已证实的功能、地图或碰撞阻断问题。Vite 仍提示主构建 bundle 约 556 kB，超过 500 kB 提示线，属于非阻断性能/构建提示；正式发布前仍需恢复 60 秒正式大米时长并重新测试。
+- 下一步建议：可在用户单独授权后进入 S6A —— 正式大米循环；本次不得自行开始。
+- Git commit 信息：计划 `feat: complete residential 3d greybox map`；提交、推送和 `v0.1.0-alpha` Tag 结果以本次最终汇报为准。

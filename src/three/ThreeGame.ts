@@ -1,16 +1,17 @@
 import * as THREE from 'three';
 import { GAME_CONFIG as C } from '../config/gameConfig';
 import { GameStateSystem } from '../systems/GameStateSystem';
-import { RiceSystem } from '../systems/RiceSystem';
+import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
 import { CollisionWorld } from './CollisionWorld';
 import { InputManager } from './InputManager';
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
 import { LocalControl, type Faction } from './LocalControl';
+import { buildApartment } from './map/MapBuilder';
+import { ACTIVE_RICE_COUNT, MAP_WIDTH, MAP_DEPTH, SPAWNS,
+  selectRiceCandidates } from './map/apartmentMap';
 
 const U = C.three.pixelsPerUnit;
-const wx = (x: number) => (x - C.width / 2) / U;
-const wz = (y: number) => (y - C.height / 2) / U;
 const distance = (a: THREE.Vector3, b: THREE.Vector3) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export class ThreeGame {
@@ -22,11 +23,11 @@ export class ThreeGame {
   private control = new LocalControl();
   private readonly cameraOffset = new THREE.Vector3(12, 14, 12);
   private match = new GameStateSystem(C.match.readyMs, C.match.captureMs, 'FACTION_SELECT');
-  private rice = new RiceSystem(C.rice.id, C.rice.maxProgressMs, C.rice.prepareMs);
+  private rice = new RiceField([], C.rice.maxProgressMs, C.rice.prepareMs);
   private sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold, C.sprint.stunMs);
   private player: THREE.Mesh;
   private human: THREE.Mesh;
-  private riceMesh: THREE.Mesh;
+  private riceMeshes = new Map<string, THREE.Mesh>();
   private collision: CollisionWorld;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
@@ -46,31 +47,20 @@ export class ThreeGame {
     light.position.set(4, 9, 6);
     light.castShadow = true;
     light.shadow.mapSize.set(1024, 1024);
-    light.shadow.camera.left = light.shadow.camera.bottom = -12;
-    light.shadow.camera.right = light.shadow.camera.top = 12;
+    light.shadow.camera.left = -MAP_WIDTH / 2;
+    light.shadow.camera.right = MAP_WIDTH / 2;
+    light.shadow.camera.bottom = -MAP_DEPTH / 2;
+    light.shadow.camera.top = MAP_DEPTH / 2;
     this.scene.add(light);
 
-    const width = C.width / U, depth = C.height / U;
-    const floor = this.box(width, 0.15, depth, 0xa8afb5, 0, -0.075, 0);
-    floor.receiveShadow = true;
-    const edge = C.three.boundaryHeight;
-    this.box(width, edge, 0.15, 0x667078, 0, edge / 2, -depth / 2 - 0.08);
-    this.box(width, edge, 0.15, 0x667078, 0, edge / 2, depth / 2 + 0.08);
-    this.box(0.15, edge, depth, 0x667078, -width / 2 - 0.08, edge / 2, 0);
-    this.box(0.15, edge, depth, 0x667078, width / 2 + 0.08, edge / 2, 0);
-    const obstacles = C.walls.map(wall => {
-      const mesh = this.box(wall.width / U, C.three.wallHeight, wall.height / U,
-        C.wallColor, wx(wall.x), C.three.wallHeight / 2, wz(wall.y));
-      return new THREE.Box3().setFromObject(mesh);
-    });
-    this.collision = new CollisionWorld(width / 2, depth / 2, obstacles);
+    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
+      buildApartment(this.scene));
     const actorWidth = C.player.size / U, actorHeight = C.three.actorHeight;
     this.player = this.box(actorWidth, actorHeight, actorWidth, C.player.color,
-      wx(C.player.x), actorHeight / 2, wz(C.player.y));
+      SPAWNS.deepseek.x, actorHeight / 2, SPAWNS.deepseek.z);
     this.human = this.box(actorWidth, actorHeight, actorWidth, C.human.color,
-      wx(C.human.x), actorHeight / 2, wz(C.human.y));
-    this.riceMesh = this.box(C.rice.size / U, 0.25, C.rice.size / U, C.rice.color,
-      wx(C.rice.x), 0.125, wz(C.rice.y));
+      SPAWNS.human.x, actorHeight / 2, SPAWNS.human.z);
+    this.resetRice();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
     window.addEventListener('resize', this.resize);
@@ -100,7 +90,7 @@ export class ThreeGame {
       const selected = this.menu.querySelector<HTMLInputElement>('input[name="faction"]:checked');
       if (selected) this.chooseFaction(selected.value as Faction);
     });
-    this.updateHud(false);
+    this.updateHud(this.nearestRice());
     this.clock.start();
     this.frame = requestAnimationFrame(this.tick);
   }
@@ -117,8 +107,9 @@ export class ThreeGame {
     this.control.choose(faction);
     this.menu.hidden = true;
     this.input.clear();
+    this.resize();
     this.followCamera();
-    this.updateHud(false);
+    this.updateHud(this.nearestRice());
   }
 
   private followCamera(): void {
@@ -136,13 +127,44 @@ export class ThreeGame {
     return mesh;
   }
 
+  private resetRice(): void {
+    for (const mesh of this.riceMeshes.values()) {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+    this.riceMeshes.clear();
+    const selected = selectRiceCandidates();
+    this.rice = new RiceField(selected.map(point => point.id),
+      C.rice.maxProgressMs, C.rice.prepareMs);
+    for (const point of selected) {
+      const mesh = this.box(C.rice.size / U, 0.25, C.rice.size / U,
+        C.rice.color, point.x, 0.125, point.z);
+      this.riceMeshes.set(point.id, mesh);
+    }
+  }
+
+  private nearestRice(): { id: string; portion: RiceField['portions'][number]; range: number } | null {
+    let nearest: { id: string; portion: RiceField['portions'][number]; range: number } | null = null;
+    for (const portion of this.rice.portions) {
+      if (portion.rice.completed) continue;
+      const mesh = this.riceMeshes.get(portion.rice.id)!;
+      const range = distance(this.player.position, mesh.position);
+      if (!nearest || range < nearest.range) {
+        nearest = { id: portion.rice.id, portion, range };
+      }
+    }
+    return nearest;
+  }
+
   private resize = (): void => {
     const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
-    const viewWidth = C.three.viewHeight * width / height;
+    const viewHeight = this.match.phase === 'FACTION_SELECT' ? MAP_DEPTH + 5 : C.three.viewHeight;
+    const viewWidth = viewHeight * width / height;
     this.camera.left = -viewWidth / 2;
     this.camera.right = viewWidth / 2;
-    this.camera.top = C.three.viewHeight / 2;
-    this.camera.bottom = -C.three.viewHeight / 2;
+    this.camera.top = viewHeight / 2;
+    this.camera.bottom = -viewHeight / 2;
     this.camera.near = 0.1;
     this.camera.far = 100;
     this.camera.updateProjectionMatrix();
@@ -165,7 +187,7 @@ export class ThreeGame {
     if (this.control.faction !== null) {
       this.followCamera();
     }
-    this.updateHud(distance(this.player.position, this.riceMesh.position) <= C.rice.interactionRange / U);
+    this.updateHud(this.nearestRice());
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
   };
@@ -174,7 +196,7 @@ export class ThreeGame {
     const local = cameraRelativeDirection(this.camera, this.input.localDirection());
     const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
-    const ratio = this.rice.rice.progressMs / this.rice.rice.maxProgressMs;
+    const ratio = this.rice.progressRatio;
     if (this.input.consumePress('Space') && this.control.faction === 'DEEPSEEK') {
       this.sprint.tryStart(direction, ratio);
     }
@@ -190,13 +212,17 @@ export class ThreeGame {
     const humanSpeed = C.player.speed / U * C.human.speedMultiplier;
     this.move(this.human, humanDirection.x * humanSpeed * deltaMs / 1000,
       humanDirection.y * humanSpeed * deltaMs / 1000);
-    const inRange = distance(this.player.position, this.riceMesh.position) <= C.rice.interactionRange / U;
-    this.rice.update(deltaMs, this.control.faction === 'DEEPSEEK' &&
+    const nearest = this.nearestRice();
+    const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
+    this.rice.update(deltaMs, inRange ? nearest!.id : null,
+      this.control.faction === 'DEEPSEEK' &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
       inRange && direction.x === 0 && direction.y === 0);
-    this.riceMesh.visible = !this.rice.rice.completed;
+    for (const portion of this.rice.portions) {
+      this.riceMeshes.get(portion.rice.id)!.visible = !portion.rice.completed;
+    }
     const capture = distance(this.player.position, this.human.position) <= C.match.captureRange / U;
-    this.match.advancePlaying(deltaMs, capture, this.rice.rice.completed);
+    this.match.advancePlaying(deltaMs, capture, this.rice.completed);
     if (this.match.result) this.rice.interrupt();
   }
 
@@ -215,7 +241,7 @@ export class ThreeGame {
     this.match.reset();
     this.resetRound();
     this.followCamera();
-    this.updateHud(false);
+    this.updateHud(this.nearestRice());
   }
 
   private returnToFactionSelect(): void {
@@ -224,30 +250,30 @@ export class ThreeGame {
     this.control.clear();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
+    this.resize();
     this.menu.querySelector<HTMLInputElement>('input[value="DEEPSEEK"]')!.checked = true;
     this.menu.hidden = false;
-    this.updateHud(false);
+    this.updateHud(this.nearestRice());
   }
 
   private resetRound(): void {
     this.sprint.reset();
-    this.rice.reset();
-    this.player.position.set(wx(C.player.x), C.three.actorHeight / 2, wz(C.player.y));
-    this.human.position.set(wx(C.human.x), C.three.actorHeight / 2, wz(C.human.y));
+    this.resetRice();
+    this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
+    this.human.position.set(SPAWNS.human.x, C.three.actorHeight / 2, SPAWNS.human.z);
     this.player.rotation.z = 0;
     (this.player.material as THREE.MeshStandardMaterial).color.setHex(C.player.color);
-    this.riceMesh.visible = true;
     this.input.clear();
   }
 
-  private updateHud(inRange: boolean): void {
+  private updateHud(nearest: ReturnType<ThreeGame['nearestRice']>): void {
     const phase = this.match.phase;
     const phaseText = phase === 'FACTION_SELECT' ? '选择阵营'
       : phase === 'READY' ? `准备：${Math.ceil(this.match.readyRemainingMs / 1000)} 秒`
       : phase === 'PLAYING' ? '对局中' : phase === 'PAUSED' ? '已暂停' : '已结束';
     const seconds = Math.floor(this.match.elapsedMs / 1000);
     const time = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-    const ratio = this.rice.rice.progressMs / this.rice.rice.maxProgressMs;
+    const ratio = this.rice.progressRatio;
     const risk = this.sprint.state === 'NORMAL'
       ? ratio >= C.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
       : this.sprint.riskMode === 'FALL_ON_END' ? 'RISK SPRINT' : 'SAFE SPRINT';
@@ -262,20 +288,23 @@ export class ThreeGame {
       `结束摔倒：${this.sprint.riskMode === 'FALL_ON_END' ? 'YES' : 'NO'}  眩晕剩余：${(this.sprint.stunRemainingMs / 1000).toFixed(1)} 秒`;
     const riceStates = { IDLE: '未交互', PREPARING: '准备中', EATING: '进食中',
       INTERRUPTED: '已中断', COMPLETED: '已完成' };
-    const hint = this.rice.rice.completed ? '已吃完'
+    const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
+    const hint = this.rice.completed ? '5 份大米已吃完'
       : this.control.faction === 'HUMAN' ? 'DeepSeek 娘进食仅在其为玩家时可操作'
       : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
       : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
+    const current = nearest?.portion.rice;
     this.riceHud.textContent =
-      `大米进度：${(this.rice.rice.progressMs / 1000).toFixed(1)} / ${(this.rice.rice.maxProgressMs / 1000).toFixed(1)} 秒\n` +
-      `状态：${riceStates[this.rice.rice.interactionState]}\n${hint}`;
+      `大米：${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}  总进度：${Math.round(ratio * 100)}%\n` +
+      `当前：${current?.id ?? '无'}  ${((current?.progressMs ?? 0) / 1000).toFixed(1)} / ${(C.rice.maxProgressMs / 1000).toFixed(1)} 秒\n` +
+      `状态：${current ? riceStates[current.interactionState] : '全部完成'}\n${hint}`;
     if (phase === 'PAUSED') this.overlayText.textContent = '已暂停 · 按 Esc 继续';
     else if (phase === 'FINISHED') {
       const result = this.match.result!;
       this.overlayText.textContent =
         `${result.winner === 'DEEPSEEK' ? 'DeepSeek 娘' : '人类'}获胜\n` +
-        `原因：${result.reason === 'RICE_COMPLETED' ? '测试大米完成' : '抓捕完成'}\n` +
-        `对局时间：${time}\n大米：${this.rice.rice.completed ? '已完成' : '未完成'}\n` +
+        `原因：${result.reason === 'RICE_COMPLETED' ? '5 份大米完成' : '抓捕完成'}\n` +
+        `对局时间：${time}\n大米：${this.rice.completedCount}/${ACTIVE_RICE_COUNT}\n` +
         '[R] 再来一局\n[M] 返回阵营选择';
     } else this.overlayText.textContent = '';
     this.resultActions.hidden = phase !== 'FINISHED';
