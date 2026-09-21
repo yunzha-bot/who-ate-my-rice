@@ -1,0 +1,115 @@
+import type { DoorNode } from '../three/map/apartmentMap.ts';
+
+export type DoorStateName = 'OPEN' | 'CLOSED' | 'LOCKED';
+export type DoorActor = 'DEEPSEEK' | 'HUMAN';
+export type DoorActionResult =
+  | 'OPENED' | 'CLOSED' | 'LOCKED'
+  | 'BLOCKED_BY_ACTOR' | 'LOCK_LIMIT_REACHED'
+  | 'INVALID_STATE' | 'NOT_ALLOWED' | 'NOT_FOUND';
+
+export interface DoorState {
+  id: string;
+  nodeId: string;
+  state: DoorStateName;
+  locked: boolean;
+  lockDisabled: boolean;
+}
+
+export interface NearbyDoor {
+  door: DoorState;
+  definition: DoorNode;
+  distance: number;
+}
+
+export class DoorSystem {
+  readonly doors: DoorState[];
+  readonly maxActiveLocks: number;
+  private readonly definitions = new Map<string, DoorNode>();
+
+  constructor(nodes: readonly DoorNode[], maxActiveLocks: number) {
+    this.maxActiveLocks = maxActiveLocks;
+    for (const node of nodes) this.definitions.set(node.id, node);
+    this.doors = nodes.map(node => ({
+      id: node.id,
+      nodeId: node.id,
+      state: node.initialState,
+      locked: false,
+      lockDisabled: false,
+    }));
+  }
+
+  get activeLockedDoorCount(): number {
+    return this.doors.filter(door => door.state === 'LOCKED' && door.locked).length;
+  }
+
+  get(id: string): DoorState | undefined {
+    return this.doors.find(door => door.id === id);
+  }
+
+  definition(id: string): DoorNode | undefined {
+    return this.definitions.get(id);
+  }
+
+  nearest(x: number, z: number, maxDistance: number): NearbyDoor | null {
+    let nearest: NearbyDoor | null = null;
+    for (const door of this.doors) {
+      const definition = this.definitions.get(door.id)!;
+      const distance = distanceToDoorSegment(x, z, definition);
+      if (distance <= maxDistance && (!nearest || distance < nearest.distance)) {
+        nearest = { door, definition, distance };
+      }
+    }
+    return nearest;
+  }
+
+  toggle(id: string, _actor: DoorActor, canClose = true): DoorActionResult {
+    const door = this.get(id);
+    if (!door) return 'NOT_FOUND';
+    if (door.state === 'LOCKED') return 'INVALID_STATE';
+    if (door.state === 'CLOSED') {
+      door.state = 'OPEN';
+      return 'OPENED';
+    }
+    if (!canClose) return 'BLOCKED_BY_ACTOR';
+    door.state = 'CLOSED';
+    return 'CLOSED';
+  }
+
+  lock(id: string, actor: DoorActor): DoorActionResult {
+    const door = this.get(id);
+    if (!door) return 'NOT_FOUND';
+    if (actor !== 'DEEPSEEK') return 'NOT_ALLOWED';
+    if (door.state !== 'CLOSED' || door.locked || door.lockDisabled) return 'INVALID_STATE';
+    if (this.activeLockedDoorCount >= this.maxActiveLocks) return 'LOCK_LIMIT_REACHED';
+    door.state = 'LOCKED';
+    door.locked = true;
+    return 'LOCKED';
+  }
+
+  reset(): void {
+    for (const door of this.doors) {
+      const definition = this.definitions.get(door.id)!;
+      door.state = definition.initialState;
+      door.locked = false;
+      door.lockDisabled = false;
+    }
+  }
+}
+
+export function distanceToDoorSegment(x: number, z: number, door: DoorNode): number {
+  const half = door.width / 2;
+  const nearestX = door.rotation === 0
+    ? Math.max(door.x - half, Math.min(x, door.x + half)) : door.x;
+  const nearestZ = door.rotation === 0
+    ? door.z : Math.max(door.z - half, Math.min(z, door.z + half));
+  return Math.hypot(x - nearestX, z - nearestZ);
+}
+
+export function doorIntersectsActor(door: DoorNode, actorX: number, actorZ: number,
+  actorRadius: number, thickness: number): boolean {
+  const halfWidth = door.rotation === 0 ? door.width / 2 : thickness / 2;
+  const halfDepth = door.rotation === 0 ? thickness / 2 : door.width / 2;
+  const nearestX = Math.max(door.x - halfWidth, Math.min(actorX, door.x + halfWidth));
+  const nearestZ = Math.max(door.z - halfDepth, Math.min(actorZ, door.z + halfDepth));
+  return Math.hypot(actorX - nearestX, actorZ - nearestZ) < actorRadius;
+}

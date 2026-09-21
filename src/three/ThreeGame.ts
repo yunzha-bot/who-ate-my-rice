@@ -3,14 +3,17 @@ import { GAME_CONFIG as C } from '../config/gameConfig';
 import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
+import { DoorSystem, doorIntersectsActor, type DoorActionResult } from '../systems/DoorSystem';
 import { CollisionWorld } from './CollisionWorld';
+import { DoorView } from './DoorView';
 import { InputManager } from './InputManager';
 import { RiceView } from './RiceView';
+import { resolveDirectControlSwitch, resolveRoundShortcut } from './RoundShortcuts';
 import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './CaptureZone';
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
 import { LocalControl, type Faction } from './LocalControl';
 import { buildApartment } from './map/MapBuilder';
-import { ACTIVE_RICE_COUNT, MAP_WIDTH, MAP_DEPTH, SPAWNS,
+import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, SPAWNS,
   selectRiceCandidates } from './map/apartmentMap';
 
 const U = C.three.pixelsPerUnit;
@@ -33,11 +36,15 @@ export class ThreeGame {
   private captureZoneActive = false;
   private captureZoneBlocked = false;
   private riceViews = new Map<string, RiceView>();
+  private doorSystem = new DoorSystem(DOOR_NODES, C.door.maxActiveLocks);
+  private doorViews = new Map<string, DoorView>();
+  private doorStatusMessage = '';
   private collision: CollisionWorld;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
+  private pauseActions: HTMLElement;
   private resultActions: HTMLElement;
   private menu: HTMLElement;
   private frame = 0;
@@ -60,6 +67,12 @@ export class ThreeGame {
 
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
       buildApartment(this.scene));
+    DOOR_NODES.forEach((door, index) => {
+      const view = new DoorView(door, index, DEBUG_MAP);
+      this.scene.add(view.object);
+      this.doorViews.set(door.id, view);
+    });
+    this.syncAllDoors();
     const actorWidth = C.player.size / U, actorHeight = C.three.actorHeight;
     this.player = this.box(actorWidth, actorHeight, actorWidth, C.player.color,
       SPAWNS.deepseek.x, actorHeight / 2, SPAWNS.deepseek.z);
@@ -76,14 +89,34 @@ export class ThreeGame {
     this.riceHud = this.label(container, 'rice-hud');
     this.overlay = this.label(container, 'game-overlay');
     this.overlayText = this.label(this.overlay, 'overlay-text');
+    this.pauseActions = this.label(this.overlay, 'pause-actions');
+    const continueButton = document.createElement('button');
+    continueButton.type = 'button';
+    continueButton.textContent = '继续游戏';
+    continueButton.addEventListener('click', () => this.resumeFromPause());
+    const pauseRestartButton = document.createElement('button');
+    pauseRestartButton.type = 'button';
+    pauseRestartButton.textContent = '重新开始';
+    pauseRestartButton.addEventListener('click', () => this.restart());
+    const pauseMenuButton = document.createElement('button');
+    pauseMenuButton.type = 'button';
+    pauseMenuButton.textContent = '返回阵营选择';
+    pauseMenuButton.addEventListener('click', () => this.returnToFactionSelect());
+    const debugSwitchButton = document.createElement('button');
+    debugSwitchButton.type = 'button';
+    debugSwitchButton.textContent = '开发调试：切换控制角色';
+    debugSwitchButton.hidden = !C.development.factionSwitchEnabled;
+    debugSwitchButton.addEventListener('click', () => this.switchControlledFactionFromPause());
+    this.pauseActions.append(
+      continueButton, pauseRestartButton, pauseMenuButton, debugSwitchButton);
     this.resultActions = this.label(this.overlay, 'result-actions');
     const restartButton = document.createElement('button');
     restartButton.type = 'button';
-    restartButton.textContent = '再来一局 [R]';
+    restartButton.textContent = '再来一局';
     restartButton.addEventListener('click', () => this.restart());
     const menuButton = document.createElement('button');
     menuButton.type = 'button';
-    menuButton.textContent = '返回阵营选择 [M]';
+    menuButton.textContent = '返回阵营选择';
     menuButton.addEventListener('click', () => this.returnToFactionSelect());
     this.resultActions.append(restartButton, menuButton);
     this.menu = this.label(container, 'faction-menu');
@@ -181,19 +214,27 @@ export class ThreeGame {
   private tick = (): void => {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
     this.input.setTabCaptureEnabled(
-      C.development.factionSwitchEnabled && this.match.phase === 'PLAYING');
+      C.development.factionSwitchEnabled && C.development.directHotkeysEnabled &&
+      this.match.phase === 'PLAYING');
     const pausePressed = this.input.consumePress('Escape');
     const restartPressed = this.input.consumePress('KeyR');
     const menuPressed = this.input.consumePress('KeyM');
     const controlSwitchPressed = this.input.consumePress('Tab');
-    if (this.match.phase === 'FINISHED') {
-      if (restartPressed) this.restart();
-      else if (menuPressed) this.returnToFactionSelect();
+    const shortcut = resolveRoundShortcut(this.match.phase,
+      C.development.directHotkeysEnabled, restartPressed, menuPressed);
+    if (shortcut === 'RESTART') {
+      this.restart();
+    } else if (shortcut === 'FACTION_SELECT') {
+      this.returnToFactionSelect();
+    } else if (this.match.phase === 'FINISHED') {
+      // The finished scene remains frozen until a global shortcut or button is used.
     } else if (this.match.phase !== 'FACTION_SELECT') {
       if (pausePressed) this.togglePause();
       if (this.match.phase === 'READY') this.match.advanceReady(deltaMs);
       else if (this.match.phase === 'PLAYING') {
-        if (C.development.factionSwitchEnabled && controlSwitchPressed) {
+        if (C.development.factionSwitchEnabled &&
+            resolveDirectControlSwitch(this.match.phase,
+              C.development.directHotkeysEnabled, controlSwitchPressed)) {
           this.control.toggleControlled();
         }
         this.updatePlaying(deltaMs);
@@ -211,6 +252,7 @@ export class ThreeGame {
     const local = cameraRelativeDirection(this.camera, this.input.localDirection());
     const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
+    const doorOwnsInteraction = this.handleDoorInteractions();
     const ratio = this.rice.progressRatio;
     if (this.input.consumePress('Space') && this.control.isControlling('DEEPSEEK')) {
       this.sprint.tryStart(direction, ratio);
@@ -232,7 +274,7 @@ export class ThreeGame {
     this.rice.update(deltaMs, inRange ? nearest!.id : null,
       this.control.isControlling('DEEPSEEK') &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
-      inRange && direction.x === 0 && direction.y === 0);
+      !doorOwnsInteraction && inRange && direction.x === 0 && direction.y === 0);
     for (const portion of this.rice.portions) {
       this.riceViews.get(portion.rice.id)!.sync(portion.rice);
     }
@@ -248,17 +290,98 @@ export class ThreeGame {
     if (this.match.result) this.rice.interrupt();
   }
 
+  private handleDoorInteractions(): boolean {
+    const faction = this.control.controlledFaction;
+    const actor = this.control.controlled(this.player, this.human);
+    if (!faction || !actor) {
+      this.input.consumePress('KeyE');
+      this.input.consumePress('KeyQ');
+      return false;
+    }
+    const nearby = this.doorSystem.nearest(
+      actor.position.x, actor.position.z, C.door.interactionRange);
+    const rice = faction === 'DEEPSEEK' ? this.nearestRice() : null;
+    const doorOwnsInteraction = !!nearby && (!rice || nearby.distance <= rice.range);
+    if (this.input.consumePress('KeyE') && nearby && doorOwnsInteraction) {
+      const canClose = nearby.door.state !== 'OPEN' || this.canCloseDoor(nearby.definition.id);
+      const result = this.doorSystem.toggle(nearby.door.id, faction, canClose);
+      this.applyDoorResult(nearby.door.id, result);
+    }
+    if (this.input.consumePress('KeyQ')) {
+      const result = nearby
+        ? this.doorSystem.lock(nearby.door.id, faction)
+        : 'NOT_FOUND';
+      this.applyDoorResult(nearby?.door.id ?? null, result);
+    }
+    return doorOwnsInteraction;
+  }
+
+  private canCloseDoor(id: string): boolean {
+    const definition = this.doorSystem.definition(id);
+    if (!definition) return false;
+    const radius = C.collision.playerRadius;
+    return !doorIntersectsActor(definition, this.player.position.x, this.player.position.z,
+      radius, C.door.leafThickness) &&
+      !doorIntersectsActor(definition, this.human.position.x, this.human.position.z,
+        radius, C.door.leafThickness);
+  }
+
+  private applyDoorResult(id: string | null, result: DoorActionResult): void {
+    if (id && (result === 'OPENED' || result === 'CLOSED' || result === 'LOCKED')) {
+      this.syncDoor(id);
+    }
+    this.doorStatusMessage = result === 'OPENED' ? '门已打开'
+      : result === 'CLOSED' ? '门已关闭'
+      : result === 'LOCKED' ? '门已上锁'
+      : result === 'BLOCKED_BY_ACTOR' ? '门口有人，无法关门'
+      : result === 'LOCK_LIMIT_REACHED' ? '锁门资源已满'
+      : result === 'NOT_ALLOWED' ? '只有 DeepSeek 娘可以锁门'
+      : result === 'INVALID_STATE' ? '当前门状态不允许该操作'
+      : '附近没有可操作的门';
+  }
+
+  private syncDoor(id: string): void {
+    const state = this.doorSystem.get(id)!;
+    const view = this.doorViews.get(id)!;
+    view.sync(state);
+    this.collision.setDynamicObstacle(id,
+      state.state === 'OPEN' ? null : view.closedCollisionBox());
+  }
+
+  private syncAllDoors(): void {
+    for (const door of this.doorSystem.doors) this.syncDoor(door.id);
+  }
+
   private move(mesh: THREE.Mesh, dx: number, dz: number): void {
     mesh.position.copy(this.collision.move(mesh.position, dx, dz,
-      C.player.size / U, C.three.actorHeight));
+      C.collision.playerRadius, C.three.actorHeight));
   }
 
   private togglePause(): void {
-    if (!this.match.pause()) this.match.resume();
+    if (this.match.pause()) {
+      this.rice.interrupt();
+      this.input.clear();
+      return;
+    }
+    this.resumeFromPause();
+  }
+
+  private resumeFromPause(): void {
+    if (!this.match.resume()) return;
+    this.input.clear();
+    this.updateHud(this.nearestRice());
+  }
+
+  private switchControlledFactionFromPause(): void {
+    if (this.match.phase !== 'PAUSED' || !C.development.factionSwitchEnabled) return;
+    this.control.toggleControlled();
+    this.input.clear();
+    this.followCamera();
+    this.updateHud(this.nearestRice());
   }
 
   private restart(): void {
-    if (this.match.phase !== 'FINISHED') return;
+    if (this.match.phase === 'FACTION_SELECT' || this.control.selectedFaction === null) return;
     this.match.reset();
     this.resetRound();
     this.followCamera();
@@ -281,6 +404,9 @@ export class ThreeGame {
     this.sprint.reset();
     this.control.resetControlled();
     this.resetRice();
+    this.doorSystem.reset();
+    this.syncAllDoors();
+    this.doorStatusMessage = '';
     this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
     this.human.position.set(SPAWNS.human.x, C.three.actorHeight / 2, SPAWNS.human.z);
     this.player.rotation.z = 0;
@@ -306,12 +432,17 @@ export class ThreeGame {
       : this.control.selectedFaction === 'HUMAN' ? '人类' : '未选择';
     const controlledName = this.control.controlledFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
       : this.control.controlledFaction === 'HUMAN' ? 'Human' : '未选择';
+    const directHotkeyHint = C.development.directHotkeysEnabled ? '｜直达 R / M / Tab 已开启' : '';
     const developmentControl = C.development.factionSwitchEnabled
-      ? `当前控制：${controlledName}｜Tab：切换控制\n` : '';
+      ? `当前控制：${controlledName}｜Esc 菜单可切换控制${directHotkeyHint}\n` : '';
+    const doorHint = this.control.isControlling('DEEPSEEK')
+      ? `门：E 开/关｜Q 锁门  锁：${this.doorSystem.activeLockedDoorCount} / ${C.door.maxActiveLocks}`
+      : '门：E 开/关｜Human 当前不能打开 LOCKED 门';
     this.hud.textContent = `${phaseText}  时间：${time}\n玩家阵营：${factionName}\n` +
       developmentControl +
       'WASD/方向键：当前控制角色｜IJKL：另一角色（调试）\n' +
       'DeepSeek 娘：E 进食、移动时点 Space 冲刺\n' +
+      `${doorHint}${this.doorStatusMessage ? `｜${this.doorStatusMessage}` : ''}\n` +
       `抓捕：${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(C.match.captureMs / 1000).toFixed(2)} 秒\n` +
       `抓捕区：${this.captureZoneBlocked ? '有阻挡' : this.captureZoneActive ? '圈内' : '圈外'}\n` +
       `DeepSeek 状态：${this.sprint.state}  米总进度：${Math.round(ratio * 100)}%\n` +
@@ -333,15 +464,15 @@ export class ThreeGame {
       `当前目标：${current?.id ?? '无'}\n` +
       `当前 Rice：${((current?.progressMs ?? 0) / 1000).toFixed(1)} / ${((current?.maxProgressMs ?? C.rice.maxProgressMs) / 1000).toFixed(1)} 秒\n` +
       `剩余：${(remainingMs / 1000).toFixed(1)} 秒  状态：${current ? riceStates[current.interactionState] : '全部完成'}\n${hint}`;
-    if (phase === 'PAUSED') this.overlayText.textContent = '已暂停 · 按 Esc 继续';
+    if (phase === 'PAUSED') this.overlayText.textContent = '游戏已暂停\n按 Esc 或点击按钮继续';
     else if (phase === 'FINISHED') {
       const result = this.match.result!;
       this.overlayText.textContent =
         `${result.winner === 'DEEPSEEK' ? 'DeepSeek 娘' : '人类'}获胜\n` +
         `原因：${result.reason === 'RICE_COMPLETED' ? '5 份大米完成' : '抓捕完成'}\n` +
-        `对局时间：${time}\n大米：${this.rice.completedCount}/${ACTIVE_RICE_COUNT}\n` +
-        '[R] 再来一局\n[M] 返回阵营选择';
+        `对局时间：${time}\n大米：${this.rice.completedCount}/${ACTIVE_RICE_COUNT}`;
     } else this.overlayText.textContent = '';
+    this.pauseActions.hidden = phase !== 'PAUSED';
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
   }
@@ -351,6 +482,7 @@ export class ThreeGame {
     window.removeEventListener('resize', this.resize);
     this.input.dispose();
     this.captureZone.dispose();
+    for (const view of this.doorViews.values()) view.dispose();
     this.renderer.dispose();
   }
 }

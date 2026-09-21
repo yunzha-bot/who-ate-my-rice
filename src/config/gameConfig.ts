@@ -11,6 +11,8 @@ export const GAME_CONFIG = {
   development: {
     // Development-only control handoff. Disable for production builds.
     factionSwitchEnabled: true,
+    // Dangerous direct R/M/Tab shortcuts stay off by default. Use the pause menu instead.
+    directHotkeysEnabled: false,
   },
   player: {
     size: 32,
@@ -32,12 +34,13 @@ export const GAME_CONFIG = {
     pixelsPerUnit: 60,
     viewHeight: 14,
     actorHeight: 0.7,
-    wallHeight: 1.1,
+    wallHeight: 1.5,
     boundaryHeight: 0.5,
   },
   collision: {
-    // Keep the actor's full visual half-width as a circular XZ footprint.
-    radiusScale: 1,
+    // Gameplay footprint is independent from the square placeholder mesh.
+    // 0.23 is about 86% of the current visual half-width (0.267 world units).
+    playerRadius: 0.23,
     contactEpsilon: 0.0001,
     maxMovementSubstep: 0.12,
   },
@@ -46,6 +49,19 @@ export const GAME_CONFIG = {
     // XZ world-space radius around Human; deliberately independent of actor mesh size.
     captureRadius: 0.70,
     captureMs: 350,
+  },
+  door: {
+    interactionRange: 0.85,
+    maxActiveLocks: 3,
+    leafHeight: 1.2,
+    leafThickness: 0.16,
+    openAngle: Math.PI / 2,
+    colors: {
+      open: 0x6d8f73,
+      closed: 0x8a644b,
+      locked: 0xa0443f,
+      lockCore: 0xffc247,
+    },
   },
   rice: {
     size: 30,

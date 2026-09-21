@@ -51,30 +51,44 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S4 追逐原型 —— `v0.0.4`，Gate = PASS。
 - S4.5 Three.js 3D 技术迁移 —— `v0.0.5-tech3d`，Gate = PASS。
 - S5 完整 3D 灰盒地图 —— `v0.1.0-alpha`，Gate = PASS。
+- S6A 正式大米循环 —— Gate = PASS。
+- S6B 门系统 —— Gate = PASS。
 
-当前下一阶段：S6A —— 正式大米循环；进入仍需用户明确任务。Web 主版本后续继续按 S6A → S6 → S7 → S8 → S9… → 发布的阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前下一阶段：S6C —— Human 反制 / PulseLock；进入仍需用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
 
-当前 S5 地图状态：
+当前灰盒与玩法状态：
 
 - 住宅 / 公寓式 3D 灰盒地图已完成；旧九宫格布局已废弃。
 - 地图包含 10 个主要空间与阳台、衣帽间两个附属空间，并保留三条追逐环路。
-- 14 个 RiceCandidate 每局无重复随机激活 5 个 Active Rice；18 个 DoorNode、双方 Spawn、5 个 HideSpot Placeholder 与家具碰撞已就位。
-- 保留 Camera-Relative Movement、玩家相机跟随，以及轻量分轴碰撞 / Wall Sliding；外凸墙角卡脚已修复。
-
-S6A 仅在后续单独授权后，将当前测试性质大米扩展为“14 候选点 → 每局 5 份 → 每份独立持久进度 → 5 份全完成获胜”的正式循环；本次不实现该阶段内容。
+- 14 个 RiceCandidate 每局无重复随机激活 5 个 Active Rice；每份大米拥有独立持久进度，完成 5 / 5 后 DeepSeek 娘获胜。
+- 18 个 DoorNode 已升级为正式 Door System；5 个 HideSpot 仍为占位，尚未实现正式藏身玩法。
+- 保留 Camera-Relative Movement、玩家相机跟随、Circle Footprint、分轴碰撞与 Wall Sliding。
 
 ## 当前核心玩法规则摘要
 
 - 可选择 DeepSeek 娘或人类阵营。WASD / 方向键采用 Camera-Relative Movement，所控角色保持在屏幕中央附近；IJKL 暂作另一角色的开发调试控制。
 - DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。
-- 人类抓捕需要约 0.35 秒持续接触。R 在结算后快速重开当前阵营；M 或结算按钮返回阵营选择并清空上一局状态。
-- 角色碰撞使用轻量分轴碰撞（Axis-Separated Collision Resolution）：单轴受阻时保留另一轴位移；墙体和家具使用一致的 Wall Sliding，以减少外凸墙角卡脚。
+- 人类抓捕需要 DeepSeek 娘在 Capture Zone 内连续约 0.35 秒，墙体、家具以及 CLOSED / LOCKED Door 会阻断有效抓捕。
+- Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door；Human 当前不能用普通 Door Interaction 打开 LOCKED Door，反制属于 S6C。最多同时存在 3 个 Active Lock；Lock Core 在逻辑和表现上独立于 Door Leaf。
+- 角色视觉 Mesh 与 Gameplay Collider 必须解耦。当前角色使用 XZ Circle Footprint，环境使用 AABB，并以 Circle-vs-AABB、Axis-Separated Movement 和 Wall Sliding 解析碰撞；Sprint 使用同一规则。不要轻易恢复 Player Box / AABB Footprint，因为方形碰撞体在门框和墙角斜向移动时容易卡脚。
+
+## 输入与暂停长期规则
+
+- Esc 是统一 Pause Menu 入口；菜单提供 Continue、Restart、Return to Faction Select，开发模式可提供 Switch Controlled Faction。
+- `selectedFaction` 表示正式本局阵营，`controlledFaction` 表示开发调试控制角色，两者语义必须保持分离。
+- `development.directHotkeysEnabled` 默认保持 `false`；正常正式对局中不启用裸 R / M / Tab，避免误触。需要调试切换时从暂停菜单进入。
+
+## Build Environment
+
+- 执行正式 `npm run build`，尤其是阶段收尾前，先检查并正常停止由当前 Codex / 开发环境启动、且能明确确认属于本项目的 Vite dev / preview server。
+- 若构建出现 `EPERM` 或 `dist` 写入、创建、清理错误，优先排查当前项目的 Vite、`npm run dev`、`npm run preview` 和相关 Node 子进程；不要先修改游戏代码、Vite `outDir`、Windows ACL，也不要使用管理员提权、`takeown`、`icacls` 或强杀不明进程。
+- 只允许安全停止能明确确认属于当前项目的开发 / 预览进程；若停止后项目根目录仍不可写，再报告环境权限问题。
 
 ## 阶段状态维护规则
 
-只有正式开发阶段同时满足 Gate 通过、Git commit 完成、成功推送到 GitHub、对应阶段 Tag 创建并成功推送，才允许更新本文件中的项目进度。更新时只将刚完成的阶段加入“已完成”，并将下一阶段设为“当前下一阶段”；不得改写其他长期规则、删除历史阶段信息、跳过阶段或将未通过 Gate 的阶段提前写成已完成。普通小任务和 Bug 修复不触发本文件的阶段状态更新。
+只有正式开发阶段满足 Gate 通过、Git commit 完成并成功推送到 GitHub，才允许更新本文件中的项目进度；若该阶段明确要求创建 Tag，还必须完成 Tag 创建和推送。明确规定“不创建 Tag”的阶段不以 Tag 作为完成条件。更新时只将刚完成的阶段加入“已完成”，并将下一阶段设为“当前下一阶段”；不得改写其他长期规则、删除历史阶段信息、跳过阶段或将未通过 Gate 的阶段提前写成已完成。普通小任务和 Bug 修复不触发本文件的阶段状态更新。
 
 ## UE5.3 平行版本预留
 

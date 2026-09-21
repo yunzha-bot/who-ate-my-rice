@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DEBUG_MAP, DOOR_NODES, FURNITURE, HIDE_SPOTS,
+import { DEBUG_MAP, FURNITURE, HIDE_SPOTS,
   RICE_CANDIDATES, ROOMS, SPAWNS, WALLS, type Rect } from './apartmentMap';
 
 const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 1 });
@@ -54,15 +54,6 @@ export function buildApartment(scene: THREE.Scene): THREE.Box3[] {
     }
   };
   [...WALLS, ...FURNITURE].forEach(addObstacle);
-
-  DOOR_NODES.forEach((door, index) => {
-    // The lintel is intentionally non-colliding; doors stay open throughout S5.
-    const horizontal = door.rotation === 0;
-    box(scene, horizontal ? door.width : 0.12, 0.12,
-      horizontal ? 0.12 : door.width, 0xe9b15d, door.x, 1.45, door.z);
-    if (DEBUG_MAP) marker(scene, `D${String(index + 1).padStart(2, '0')}`, '#f4ca7b',
-      door.x, door.z, 1.95);
-  });
 
   if (DEBUG_MAP) {
     for (const candidate of RICE_CANDIDATES) {

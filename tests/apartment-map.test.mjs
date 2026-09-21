@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ACTIVE_RICE_COUNT, DOOR_NODES, FURNITURE, HIDE_SPOTS,
   MAP_WIDTH, MAP_DEPTH, MIN_DOOR_WIDTH, PLAYER_DIAMETER, RICE_CANDIDATES,
-  ROOMS, ROUTE_LOOPS, SPAWNS, WALLS, selectRiceCandidates
+  ROOMS, ROUTE_LOOPS, SINGLE_DOOR_WIDTH, SPAWNS, WALL_HEIGHT, WALLS, selectRiceCandidates
 } from '../src/three/map/apartmentMap.ts';
+import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { RiceField } from '../src/systems/RiceField.ts';
 
 const roomIds = new Set(ROOMS.map(room => room.id));
@@ -93,6 +94,41 @@ test('natural openings form three declared loops; no single doorway cuts the apa
       assert.ok(edges.has(edgeId(loop[i], loop[i + 1])), `${loop[i]} → ${loop[i + 1]}`);
     }
   }
+});
+
+test('all openings use the shorter residential single-door width and walls close around them', () => {
+  assert.ok(SINGLE_DOOR_WIDTH < 1.4);
+  assert.ok(SINGLE_DOOR_WIDTH >= MIN_DOOR_WIDTH);
+  assert.ok(SINGLE_DOOR_WIDTH - PLAYER_DIAMETER > PLAYER_DIAMETER,
+    'single door retains more than one actor width of free alignment margin');
+  for (const door of DOOR_NODES) {
+    assert.equal(door.width, SINGLE_DOOR_WIDTH, door.id);
+    const coordinate = door.rotation === 0 ? door.x : door.z;
+    const parallelWalls = WALLS.filter(wall => door.rotation === 0
+      ? Math.abs(wall.z - door.z) < 0.001
+      : Math.abs(wall.x - door.x) < 0.001);
+    const beforeEdges = parallelWalls.map(wall => door.rotation === 0
+      ? wall.x + wall.width / 2 : wall.z + wall.depth / 2)
+      .filter(edge => edge <= coordinate + 0.001);
+    const afterEdges = parallelWalls.map(wall => door.rotation === 0
+      ? wall.x - wall.width / 2 : wall.z - wall.depth / 2)
+      .filter(edge => edge >= coordinate - 0.001);
+    const openingStart = Math.max(...beforeEdges);
+    const openingEnd = Math.min(...afterEdges);
+    assert.ok(Number.isFinite(openingStart) && Number.isFinite(openingEnd), door.id);
+    assert.ok(Math.abs((openingEnd - openingStart) - SINGLE_DOOR_WIDTH) < 0.001,
+      `${door.id} wall opening must match its leaf width`);
+  }
+});
+
+test('walls and doors use the taller narrow residential proportions', () => {
+  assert.ok(WALL_HEIGHT > 1.1);
+  assert.equal(GAME_CONFIG.three.wallHeight, WALL_HEIGHT);
+  assert.ok(GAME_CONFIG.door.leafHeight > 0.9);
+  assert.ok(GAME_CONFIG.door.leafHeight < WALL_HEIGHT);
+  assert.ok(GAME_CONFIG.door.leafHeight / SINGLE_DOOR_WIDTH >= 1);
+  assert.ok(GAME_CONFIG.door.leafHeight / WALL_HEIGHT >= 0.7);
+  assert.ok(GAME_CONFIG.door.leafHeight / WALL_HEIGHT <= 0.85);
 });
 
 test('actor-sized space reaches every room, rice point and spawn through open doors', () => {

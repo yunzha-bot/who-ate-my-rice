@@ -31,7 +31,7 @@ export class GameStateSystem {
   }
 
   returnToFactionSelect(): boolean {
-    if (this.phase !== 'FINISHED') return false;
+    if (this.phase === 'FACTION_SELECT') return false;
     this.reset();
     this.phase = 'FACTION_SELECT';
     return true;

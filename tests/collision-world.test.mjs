@@ -4,7 +4,7 @@ import { Box3, OrthographicCamera, Vector3 } from 'three';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { SprintSystem } from '../src/systems/SprintSystem.ts';
 import { cameraRelativeDirection } from '../src/three/CameraRelativeMovement.ts';
-import { CollisionWorld } from '../src/three/CollisionWorld.ts';
+import { CollisionWorld, circleIntersectsAabbXZ } from '../src/three/CollisionWorld.ts';
 
 const box = (minX, maxX, minZ, maxZ) =>
   new Box3(new Vector3(minX, 0, minZ), new Vector3(maxX, 1, maxZ));
@@ -12,30 +12,51 @@ const point = (x, z) => new Vector3(x, 0.35, z);
 const world = (...obstacles) => new CollisionWorld(5, 5, obstacles);
 const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-9,
   `expected ${actual} to equal ${expected}`);
+const radius = 0.3;
+
+test('configured player circle is independent from visual width and capture radius', () => {
+  const visualHalfWidth =
+    GAME_CONFIG.player.size / GAME_CONFIG.three.pixelsPerUnit / 2;
+  assert.ok(GAME_CONFIG.collision.playerRadius < visualHalfWidth);
+  assert.notEqual(GAME_CONFIG.collision.playerRadius, GAME_CONFIG.match.captureRadius);
+});
+
+test('circle outside, touching and overlapping a wall AABB are distinguished', () => {
+  const wall = box(0, 1, -1, 1);
+  assert.equal(circleIntersectsAabbXZ(-0.31, 0, radius, wall), false);
+  assert.equal(circleIntersectsAabbXZ(-0.3, 0, radius, wall), false);
+  assert.equal(circleIntersectsAabbXZ(-0.29, 0, radius, wall), true);
+});
+
+test('circle detects an AABB corner by closest-point distance', () => {
+  const obstacle = box(0, 1, 0, 1);
+  assert.equal(circleIntersectsAabbXZ(-0.22, -0.22, radius, obstacle), false);
+  assert.equal(circleIntersectsAabbXZ(-0.2, -0.2, radius, obstacle), true);
+});
 
 test('3D actor remains inside the room bounds', () => {
   const collision = new CollisionWorld(5, 4, []);
   const start = point(4.5, 0);
-  close(collision.move(start, 1, 0, 1, 0.7).x, 4.5);
-  close(collision.move(start, 0, 1, 1, 0.7).z, 1);
+  close(collision.move(start, 1, 0, 0.5, 0.7).x, 4.5);
+  close(collision.move(start, 0, 1, 0.5, 0.7).z, 1);
 });
 
 test('X blocked by a wall still preserves Z sliding', () => {
   const collision = world(box(0, 0.2, -2, 2));
-  const next = collision.move(point(-0.3, 0), 0.4, 0.4, 0.6, 0.7);
+  const next = collision.move(point(-0.3, 0), 0.4, 0.4, radius, 0.7);
   close(next.x, -0.3);
   close(next.z, 0.4);
 });
 
 test('Z blocked by a wall still preserves X sliding', () => {
   const collision = world(box(-2, 2, 0, 0.2));
-  const next = collision.move(point(0, -0.3), 0.4, 0.4, 0.6, 0.7);
+  const next = collision.move(point(0, -0.3), 0.4, 0.4, radius, 0.7);
   close(next.x, 0.4);
   close(next.z, -0.3);
 });
 
 test('unobstructed diagonal move preserves both components', () => {
-  const next = world().move(point(-1, -1), 0.4, 0.4, 0.6, 0.7);
+  const next = world().move(point(-1, -1), 0.4, 0.4, radius, 0.7);
   close(next.x, -0.6);
   close(next.z, -0.6);
 });
@@ -44,16 +65,31 @@ test('a genuine inner corner blocks both axes without jitter or penetration', ()
   const collision = world(box(0, 0.2, -2, 2), box(-2, 2, 0, 0.2));
   let position = point(-0.3, -0.3);
   for (let frame = 0; frame < 20; frame++) {
-    position = collision.move(position, 0.1, 0.1, 0.6, 0.7);
+    position = collision.move(position, 0.1, 0.1, radius, 0.7);
     close(position.x, -0.3);
     close(position.z, -0.3);
   }
 });
 
 test('rounded actor footprint passes an outer wall corner without a square-box snag', () => {
-  const next = world(box(0, 1, 0, 1)).move(point(-0.4, -0.4), 0.15, 0.15, 0.6, 0.7);
+  const next = world(box(0, 1, 0, 1)).move(
+    point(-0.4, -0.4), 0.15, 0.15, radius, 0.7);
   close(next.x, -0.25);
   close(next.z, -0.25);
+});
+
+test('a centered hit on one convex corner chooses a stable tangent instead of sticking', () => {
+  const collision = world(box(0, 1, 0, 1));
+  let position = point(-0.25, -0.25);
+  for (let frame = 0; frame < 20; frame++) {
+    position = collision.move(position, 0.05, 0.05,
+      GAME_CONFIG.collision.playerRadius, 0.7);
+  }
+  assert.ok(position.x > 0.5 || position.z > 0.5,
+    `centered convex-corner movement stuck at ${position.x}, ${position.z}`);
+  assert.ok(position.x < -GAME_CONFIG.collision.playerRadius ||
+    position.z < -GAME_CONFIG.collision.playerRadius,
+  'the chosen tangent must remain outside the obstacle');
 });
 
 test('all four held screen diagonals slide around a convex corner without penetration', () => {
@@ -74,7 +110,8 @@ test('all four held screen diagonals slide around a convex corner without penetr
     const collision = world(obstacle);
     let position = start;
     for (let frame = 0; frame < 20; frame++) {
-      position = collision.move(position, direction.x * 0.05, direction.y * 0.05, 0.6, 0.7);
+      position = collision.move(
+        position, direction.x * 0.05, direction.y * 0.05, radius, 0.7);
       const nearestX = Math.max(obstacle.min.x, Math.min(position.x, obstacle.max.x));
       const nearestZ = Math.max(obstacle.min.z, Math.min(position.z, obstacle.max.z));
       assert.ok(Math.hypot(position.x - nearestX, position.z - nearestZ) >=
@@ -95,7 +132,7 @@ test('two connected wall segments form an L-shaped outer corner that can be skir
   const collision = world(upright, crossbar);
   let position = point(-0.5, -0.2);
   for (let frame = 0; frame < 20; frame++) {
-    position = collision.move(position, 0.05, 0, 0.6, 0.7);
+    position = collision.move(position, 0.05, 0, radius, 0.7);
   }
   assert.ok(position.x > 0.2, `held movement stopped at L junction: ${position.x}`);
   assert.ok(position.z < -0.25, `did not slide beneath the L junction: ${position.z}`);
@@ -103,21 +140,21 @@ test('two connected wall segments form an L-shaped outer corner that can be skir
 
 test('furniture uses the same rounded contact and axis-separated sliding as walls', () => {
   const sofa = box(0, 1, -1, 1);
-  const next = world(sofa).move(point(-0.3, 0), 0.4, 0.4, 0.6, 0.7);
+  const next = world(sofa).move(point(-0.3, 0), 0.4, 0.4, radius, 0.7);
   close(next.x, -0.3);
   close(next.z, 0.4);
 });
 
 test('diagonal entry through a door gap remains passable without crossing its jambs', () => {
   const collision = world(box(-2, -0.7, -0.1, 0.1), box(0.7, 2, -0.1, 0.1));
-  const next = collision.move(point(0.3, -0.8), 0.1, 1.6, 0.6, 0.7);
+  const next = collision.move(point(0.3, -0.8), 0.1, 1.6, radius, 0.7);
   assert.ok(next.z > 0.5);
   assert.ok(next.x < 0.7);
 });
 
 test('substeps prevent a large frame or sprint from tunneling through a thin wall', () => {
   const collision = world(box(0, 0.05, -2, 2));
-  const next = collision.move(point(-1, 0), 2, 0.4, 0.6, 0.7);
+  const next = collision.move(point(-1, 0), 2, 0.4, radius, 0.7);
   assert.ok(next.x < 0);
   assert.ok(next.z > 0);
 });
@@ -133,7 +170,7 @@ test('sprint preserves free-axis motion and its normal timer when one axis hits 
   const speed = GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit *
     GAME_CONFIG.sprint.speedMultiplier;
   const next = collision.move(point(-0.3, 0), movement.x * speed * 0.05,
-    movement.y * speed * 0.05, 0.6, 0.7);
+    movement.y * speed * 0.05, radius, 0.7);
   close(next.x, -0.3);
   assert.ok(next.z > 0);
   assert.equal(sprint.state, 'SPRINT_RUNNING');
@@ -150,7 +187,7 @@ test('sprint into two real blockers stops position but not timer or 30% fall rul
   for (let frame = 0; frame < 50; frame++) {
     sprint.advance(50, direction);
     const movement = sprint.movementDirection(direction);
-    position = collision.move(position, movement.x * 0.3, movement.y * 0.3, 0.6, 0.7);
+    position = collision.move(position, movement.x * 0.3, movement.y * 0.3, radius, 0.7);
   }
   close(position.x, -0.3);
   close(position.z, -0.3);
@@ -171,7 +208,7 @@ test('sprint on a screen diagonal uses the same convex-corner slide without endi
     sprint.advance(50, direction);
     const movement = sprint.movementDirection(direction);
     position = collision.move(position, movement.x * speed * 0.05,
-      movement.y * speed * 0.05, 0.6, 0.7);
+      movement.y * speed * 0.05, radius, 0.7);
   }
   assert.ok(position.z < 0.1, `sprint stalled at the corner: ${position.z}`);
   assert.ok(position.x < -0.25, `sprint did not slide sideways: ${position.x}`);
@@ -181,7 +218,7 @@ test('sprint on a screen diagonal uses the same convex-corner slide without endi
 
 test('restart has no collision state to carry into a new round', () => {
   const collision = world(box(0, 0.2, -2, 2));
-  collision.move(point(-0.3, 0), 0.4, 0, 0.6, 0.7);
-  const next = collision.move(point(-1, 2.5), 0.4, 0, 0.6, 0.7);
+  collision.move(point(-0.3, 0), 0.4, 0, radius, 0.7);
+  const next = collision.move(point(-1, 2.5), 0.4, 0, radius, 0.7);
   close(next.x, -0.6);
 });

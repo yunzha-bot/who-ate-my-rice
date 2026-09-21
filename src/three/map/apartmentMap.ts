@@ -10,6 +10,7 @@ export interface Rect extends Point {
 }
 export interface DoorNode extends Point {
   id: string; rotation: number; width: number;
+  initialState: 'OPEN' | 'CLOSED';
   connectedRoomA: string; connectedRoomB: string;
 }
 export interface MapPoint extends Point { id: string; roomId: string }
@@ -20,6 +21,9 @@ export const DEBUG_MAP = true;
 export const ACTIVE_RICE_COUNT = 5;
 export const PLAYER_DIAMETER = 32 / 60;
 export const MIN_DOOR_WIDTH = PLAYER_DIAMETER * 2;
+// S6B residential single-leaf opening. It remains over two actor widths while
+// presenting a distinctly narrow, domestic door silhouette.
+export const SINGLE_DOOR_WIDTH = 1.2;
 
 const room = (id: string, name: string, minX: number, maxX: number,
   minZ: number, maxZ: number, color: number, major = true): Room => ({
@@ -50,7 +54,8 @@ const byId = new Map(ROOMS.map(value => [value.id, value]));
 const overlap = (a0: number, a1: number, b0: number, b1: number) =>
   [Math.max(a0, b0), Math.min(a1, b1)] as const;
 
-function makeDoor(id: string, aId: string, bId: string, width: number): DoorNode {
+function makeDoor(id: string, aId: string, bId: string): DoorNode {
+  const width = SINGLE_DOOR_WIDTH;
   const a = byId.get(aId)!;
   const b = byId.get(bId)!;
   if (a.maxX === b.minX || b.maxX === a.minX) {
@@ -58,6 +63,7 @@ function makeDoor(id: string, aId: string, bId: string, width: number): DoorNode
     if (end - start <= width) throw new Error(`Door ${id} has insufficient width`);
     return { id, x: a.maxX === b.minX ? a.maxX : b.maxX,
       z: (start + end) / 2, rotation: Math.PI / 2, width,
+      initialState: 'CLOSED',
       connectedRoomA: aId, connectedRoomB: bId };
   }
   if (a.maxZ === b.minZ || b.maxZ === a.minZ) {
@@ -65,34 +71,35 @@ function makeDoor(id: string, aId: string, bId: string, width: number): DoorNode
     if (end - start <= width) throw new Error(`Door ${id} has insufficient width`);
     return { id, x: (start + end) / 2,
       z: a.maxZ === b.minZ ? a.maxZ : b.maxZ,
+      initialState: 'CLOSED',
       rotation: 0, width, connectedRoomA: aId, connectedRoomB: bId };
   }
   throw new Error(`Door ${id} does not join adjacent rooms`);
 }
 
 export const DOOR_NODES: readonly DoorNode[] = [
-  makeDoor('door_balcony_living', 'balcony', 'living', 3),
-  makeDoor('door_balcony_kitchen', 'balcony', 'kitchen', 1.5),
-  makeDoor('door_living_kitchen', 'living', 'kitchen', 2.5),
-  makeDoor('door_kitchen_storage', 'kitchen', 'storage', 1.8),
-  makeDoor('door_storage_dining', 'storage', 'dining', 1.5),
-  makeDoor('door_kitchen_dining', 'kitchen', 'dining', 2.4),
-  makeDoor('door_living_dining', 'living', 'dining', 3.1),
-  makeDoor('door_hall_living', 'hall', 'living', 2.5),
-  makeDoor('door_hall_master', 'hall', 'main_bedroom', 2),
-  makeDoor('door_master_closet', 'main_bedroom', 'closet', 2),
-  makeDoor('door_closet_hall', 'closet', 'hall', 2),
-  makeDoor('door_hall_bathroom', 'hall', 'bathroom', 2),
-  makeDoor('door_bathroom_bedroom2', 'bathroom', 'second_bedroom', 2),
-  makeDoor('door_bedroom2_study', 'second_bedroom', 'study', 2.4),
-  makeDoor('door_hall_study', 'hall', 'study', 2.4),
-  makeDoor('door_study_entry', 'study', 'entry', 2.3),
-  makeDoor('door_living_entry', 'living', 'entry', 2.6),
-  makeDoor('door_dining_entry', 'dining', 'entry', 2.4),
+  makeDoor('door_balcony_living', 'balcony', 'living'),
+  makeDoor('door_balcony_kitchen', 'balcony', 'kitchen'),
+  makeDoor('door_living_kitchen', 'living', 'kitchen'),
+  makeDoor('door_kitchen_storage', 'kitchen', 'storage'),
+  makeDoor('door_storage_dining', 'storage', 'dining'),
+  makeDoor('door_kitchen_dining', 'kitchen', 'dining'),
+  makeDoor('door_living_dining', 'living', 'dining'),
+  makeDoor('door_hall_living', 'hall', 'living'),
+  makeDoor('door_hall_master', 'hall', 'main_bedroom'),
+  makeDoor('door_master_closet', 'main_bedroom', 'closet'),
+  makeDoor('door_closet_hall', 'closet', 'hall'),
+  makeDoor('door_hall_bathroom', 'hall', 'bathroom'),
+  makeDoor('door_bathroom_bedroom2', 'bathroom', 'second_bedroom'),
+  makeDoor('door_bedroom2_study', 'second_bedroom', 'study'),
+  makeDoor('door_hall_study', 'hall', 'study'),
+  makeDoor('door_study_entry', 'study', 'entry'),
+  makeDoor('door_living_entry', 'living', 'entry'),
+  makeDoor('door_dining_entry', 'dining', 'entry'),
 ];
 
 const WALL_THICKNESS = 0.18;
-const WALL_HEIGHT = 1.1;
+export const WALL_HEIGHT = 1.5;
 const xs = [...new Set(ROOMS.flatMap(value => [value.minX, value.maxX]))].sort((a, b) => a - b);
 const zs = [...new Set(ROOMS.flatMap(value => [value.minZ, value.maxZ]))].sort((a, b) => a - b);
 const roomAt = (x: number, z: number) => ROOMS.find(value =>

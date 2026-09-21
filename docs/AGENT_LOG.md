@@ -238,3 +238,26 @@
 - 已知问题：未发现已证实的 S6A 功能、视觉或体验阻断问题。Vite 仍提示主构建产物约 562.81 kB，超过 500 kB 提示线，属于非阻断构建提示；正式发布前仍须恢复每份米 60 秒并重新测试。
 - 下一步建议：S6A 收尾完成后，可等待用户单独授权进入 S6B —— 门系统；本次不得自行开始。
 - Git commit 信息：计划 `feat: add full rice gameplay loop`；实际提交和推送结果以本次最终汇报为准。本阶段按要求不创建新 Tag，当前正式 Tag 仍为 `v0.1.0-alpha`。
+
+## 2026-09-22 00:38 +08:00｜S6B 门系统正式完成
+
+- 任务名称：S6B —— 门系统正式收尾。
+- 当前开发阶段：S6B Gate = PASS，人工验收 = PASS；本次不进入 S6C。
+- 本次目标：完成 Door System、锁门玩法、门碰撞与抓捕阻挡、暂停输入安全和角色圆形碰撞的阶段收尾，并记录构建环境事件。
+- Door System：将 18 个 `DoorNode` 正式升级为 Door System，支持 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能正常开关未锁门；Door Leaf 围绕 Door Hinge 转动；OPEN Door 可通行，CLOSED / LOCKED Door 产生动态碰撞并阻断 Capture 判定。
+- 门比例调整：门改为更短的住宅单扇门，门洞同步收窄，左右墙体同步收口；门与墙体高度均增加，门墙比例调整为更接近住宅灰盒尺度。
+- Lock：DeepSeek 可锁住 CLOSED Door，OPEN Door 不可直接 Lock；Human 当前不能通过普通 Door Interaction 打开 LOCKED Door，反制留到 S6C。Lock Core 与 Door Leaf 分离。`MAX_ACTIVE_LOCKS = 3`，第 4 个 Active Lock 会被拒绝，不替换已有锁。
+- Pause / Input：Esc 统一进入 Pause Menu，提供 Continue、Restart、Return to Faction Select 和开发调试用 Switch Controlled Faction。`selectedFaction` 与 `controlledFaction` 保持分离；裸 R / M / Tab 由 `development.directHotkeysEnabled = false` 默认关闭，避免正常对局误触。
+- Player Collision：原角色逻辑碰撞为 Box / AABB footprint，在 W+A、W+D、A+S、S+D 斜向移动经过墙角、门框和家具边角时，会因轻微角点接触出现卡脚或粘住。最终改为角色 XZ Circle Footprint，环境 Wall / Furniture / Door 保持 AABB，组合使用 Circle-vs-AABB、Axis-Separated Collision Resolution 与 Wall Sliding；Sprint 同样使用 Circle Collider。用户人工确认卡脚问题明显改善并通过验收。
+- 回归结果：Door 开关与锁定、门碰撞、门阻断抓捕、锁数量限制、门口角色防夹、Sprint 防穿门、暂停菜单、阵营切换、Rice、Capture、Sprint、重开与地图连通均通过自动测试和人工验收。
+- Build Environment Incident：S6B 正式收尾时，`npm test` 93 / 93 PASS，`git diff --check` PASS；第一次 `npm run build` 因 `EPERM: operation not permitted` 失败，涉及路径 `D:\桌面\dev\who-ate-my-rice\dist`。确认 `dist/` 是 Vite 纯构建产物、未被 Git 跟踪且已由 `.gitignore` 忽略；删除后仍曾无法重新创建。排查期间未修改游戏源码或 Windows ACL，未使用管理员提权、`takeown`、`icacls` 或 `taskkill /F`。
+- 构建环境处理：发现明确指向本项目的 Vite dev server：`node.exe`，PID 24900，端口 5173；以非强制方式正常停止。随后项目根目录临时目录创建 PASS、删除 PASS，确认当前执行环境具备项目根目录写入权限；再次执行 `npm run build` PASS。
+- 构建事件结论：无法 100% 证明本次 EPERM 一定由 Vite dev server 文件占用直接导致，但停止当前项目 Vite 开发服务器后，项目根目录写入测试与 Vite production build 均恢复正常。后续正式 build / 阶段收尾前，应优先确认当前项目 dev / preview server 已正常停止。
+- 新增文件：`src/systems/DoorSystem.ts`、`src/three/DoorView.ts`、`src/three/RoundShortcuts.ts`、`tests/door-system.test.mjs`。
+- 修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`package.json`、`src/config/gameConfig.ts`、`src/style.css`、`src/systems/GameStateSystem.ts`、`src/three/CollisionWorld.ts`、`src/three/ThreeGame.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`tests/apartment-map.test.mjs`、`tests/camera-controls.test.mjs`、`tests/collision-world.test.mjs`。
+- 删除文件：无。
+- 依赖变化：无新增或删除依赖；仅扩展现有测试脚本。
+- 测试结果：最终 `npm test` 93 项全部通过；`npm run build` 通过并包含 TypeScript 检查；`git diff --check` 通过。用户人工确认 S6B Gate 与体验 Gate 均为 PASS。
+- 已知问题 / Build Notes：Vite production build 的主 JS chunk 约 570.87 kB，仍高于 500 kB 提示线；这是已知非阻断构建提示，本阶段不调整 `chunkSizeWarningLimit`，留待后续浏览器兼容 / 性能优化阶段处理。当前开发大米仍为 5 秒，正式设计值为 60 秒，发布前必须恢复并复测。
+- 下一步建议：完成本次 commit 和 push 后，可以等待用户单独授权进入 S6C —— Human 反制 / PulseLock；本次不开始 S6C，也不创建新 Tag，当前 milestone 仍为 `v0.1.0-alpha`。
+- Git commit 信息：计划 `feat: add door locking gameplay`；实际提交与推送结果以最终汇报为准。
