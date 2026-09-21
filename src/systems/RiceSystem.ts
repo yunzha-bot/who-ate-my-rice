@@ -7,6 +7,7 @@ export type RiceInteractionState =
 
 export interface RiceState {
   id: string;
+  candidateId: string;
   progressMs: number;
   maxProgressMs: number;
   completed: boolean;
@@ -22,11 +23,17 @@ export class RiceSystem {
     this.prepareMs = prepareMs;
     this.rice = {
       id,
+      candidateId: id,
       progressMs: 0,
       maxProgressMs,
       completed: false,
       interactionState: 'IDLE',
     };
+  }
+
+  get progressRatio(): number {
+    if (this.rice.maxProgressMs <= 0) return 0;
+    return Math.min(1, Math.max(0, this.rice.progressMs / this.rice.maxProgressMs));
   }
 
   update(deltaMs: number, canEat: boolean): void {

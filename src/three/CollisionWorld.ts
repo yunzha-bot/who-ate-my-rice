@@ -36,6 +36,31 @@ export class CollisionWorld {
     return next;
   }
 
+  isLineBlockedXZ(start: Vector3, end: Vector3): boolean {
+    return this.obstacles.some(obstacle => this.segmentIntersectsRectXZ(
+      start.x, start.z, end.x, end.z,
+      obstacle.min.x, obstacle.max.x, obstacle.min.z, obstacle.max.z,
+    ));
+  }
+
+  private segmentIntersectsRectXZ(startX: number, startZ: number, endX: number, endZ: number,
+    minX: number, maxX: number, minZ: number, maxZ: number): boolean {
+    let enter = 0;
+    let exit = 1;
+    const clipAxis = (start: number, delta: number, min: number, max: number): boolean => {
+      if (Math.abs(delta) <= GAME_CONFIG.collision.contactEpsilon) {
+        return start >= min && start <= max;
+      }
+      const first = (min - start) / delta;
+      const second = (max - start) / delta;
+      enter = Math.max(enter, Math.min(first, second));
+      exit = Math.min(exit, Math.max(first, second));
+      return enter <= exit;
+    };
+    return clipAxis(startX, endX - startX, minX, maxX) &&
+      clipAxis(startZ, endZ - startZ, minZ, maxZ) && enter <= 1 && exit >= 0;
+  }
+
   private tryCornerSlide(position: Vector3, stepX: number, stepZ: number,
     width: number, height: number): void {
     const targetX = position.x + stepX;

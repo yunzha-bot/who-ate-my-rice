@@ -8,6 +8,10 @@ export const RICE_TIMING_MODE: keyof typeof RICE_MAX_PROGRESS_MS = 'development'
 
 export const GAME_CONFIG = {
   backgroundColor: '#858b91',
+  development: {
+    // Development-only control handoff. Disable for production builds.
+    factionSwitchEnabled: true,
+  },
   player: {
     size: 32,
     speed: 230,
@@ -39,7 +43,8 @@ export const GAME_CONFIG = {
   },
   match: {
     readyMs: 3_000,
-    captureRange: 42,
+    // XZ world-space radius around Human; deliberately independent of actor mesh size.
+    captureRadius: 0.70,
     captureMs: 350,
   },
   rice: {
@@ -48,5 +53,11 @@ export const GAME_CONFIG = {
     interactionRange: 60,
     prepareMs: 400,
     maxProgressMs: RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE],
+    visual: {
+      fullHeight: 0.62,
+      emptyHeight: 0.08,
+      fullBulgeHeight: 0.22,
+      emptyWidthScale: 0.92,
+    },
   },
 } as const;

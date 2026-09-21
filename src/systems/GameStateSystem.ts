@@ -43,17 +43,18 @@ export class GameStateSystem {
     if (this.readyRemainingMs === 0) this.phase = 'PLAYING';
   }
 
-  advancePlaying(deltaMs: number, inCaptureRange: boolean, riceCompleted: boolean): void {
+  advancePlaying(deltaMs: number, captureEligible: boolean, riceCompleted: boolean): void {
     if (this.phase !== 'PLAYING') return;
     this.elapsedMs += Math.max(0, deltaMs);
 
-    // S3 temporary rule: completing this one test rice wins. A same-frame tie favors rice.
+    // The caller supplies true only when all active rice portions are complete.
+    // A same-frame tie still favors the rice objective.
     if (riceCompleted) {
       this.finish('DEEPSEEK', 'RICE_COMPLETED');
       return;
     }
 
-    this.captureProgressMs = inCaptureRange
+    this.captureProgressMs = captureEligible
       ? Math.min(this.captureMs, this.captureProgressMs + Math.max(0, deltaMs))
       : 0;
     if (this.captureProgressMs >= this.captureMs) {

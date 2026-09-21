@@ -217,3 +217,24 @@
 - 已知问题：S5 已记录的 Vite 主构建 bundle 超过 500 kB 提示仍为非阻断问题。
 - 下一步建议：等待用户单独授权后进入 S6A —— 正式大米循环；正式发布前仍须切回 60 秒大米设计时长并重新测试。
 - Git commit 信息：本条追加时尚未提交；计划 `docs: update project status after s5`，实际提交和推送结果以最终汇报为准。
+
+## 2026-09-21 15:51 +08:00｜S6A 正式大米循环人工验收通过
+
+- 任务名称：S6A —— 正式大米循环正式收尾。
+- 当前开发阶段：S6A Gate = PASS；本次不进入 S6B。
+- 本次目标：记录正式大米循环、大米视觉、人类抓捕区域与开发调试控制的实现及人工验收结果，完成测试、提交和推送收尾。
+- Gate：PASS；用户已完成浏览器人工验收并确认通过。
+- Rice：保留 14 个稳定 `RiceCandidate`，每局无重复随机激活 5 个 `Active Rice`；每份米拥有独立 `RiceState` 与持久进度；0.4 秒准备阶段不计入正式进度；中断后保留进度；完成值封顶；前 4 份不会提前胜利，完成 5 / 5 后触发 DeepSeek 娘胜利。当前开发测试时长为每份 5 秒，正式设计时长仍为每份 60 秒，发布前必须切回正式值并复测。
+- Visual：每袋米只读取自身 `RiceState`，随进度连续降低高度与顶部鼓起程度；底部固定贴地，交互锚点不随形变漂移；完成后保留可见的扁平空袋；Restart 后全部恢复饱满状态。
+- Global Progress：`globalRiceProgressRatio` 基于 5 份米总进度计算；既有 30% Sprint 风险阈值保持不变。
+- Human Capture：Human 脚下使用基于 XZ 距离、半径 0.70 世界单位的 Capture Zone；DeepSeek 娘需连续约 0.35 秒处于有效范围内才完成抓捕；离开范围立即清零；墙体或有效家具阻挡时不累计；表现颜色根据实际进度连续由蓝到黄再到红；达到阈值触发 Human Win。
+- 开发调试：开发模式可用 Tab 即时切换 `controlledFaction`；正式 `selectedFaction` 与调试控制目标分离；Camera 跟随当前 `controlledFaction`；切换不会重置比赛计时、Rice、Sprint、STUNNED 或 Capture 状态；Restart 后 `controlledFaction` 恢复为 `selectedFaction`。
+- 回归：Sprint、STUNNED、Capture、Wall Sliding、Camera-Relative Movement、Faction Select、R 快速重开、M 返回阵营选择与 Esc Pause 均经自动测试及用户人工验收确认无明显回归。
+- 新增文件：`src/three/CaptureZone.ts`、`src/three/RiceView.ts`、`tests/capture-zone.test.mjs`、`tests/rice-field.test.mjs`、`tests/rice-view.test.mjs`。
+- 修改文件：`package.json`、`src/config/gameConfig.ts`、`src/systems/GameStateSystem.ts`、`src/systems/RiceField.ts`、`src/systems/RiceSystem.ts`、`src/three/CollisionWorld.ts`、`src/three/InputManager.ts`、`src/three/LocalControl.ts`、`src/three/ThreeGame.ts`、`tests/camera-controls.test.mjs`、`tests/game-state.test.mjs`、`docs/AGENT_LOG.md`（仅在末尾追加本条）。
+- 删除文件：无。
+- 依赖变化：无新增运行时或开发依赖；仅扩展现有测试脚本覆盖范围。
+- 测试结果：`npm test` 72 项全部通过；`npm run build` 通过并包含 `tsc --noEmit`；`git diff --check` 通过，无空白错误。用户人工确认随机 5 份米、独立持久进度、视觉形变、5 / 5 胜利、全局进度、抓捕区域及渐变、阻挡、Tab 调试控制、相机、重开和 S5 回归均正常。
+- 已知问题：未发现已证实的 S6A 功能、视觉或体验阻断问题。Vite 仍提示主构建产物约 562.81 kB，超过 500 kB 提示线，属于非阻断构建提示；正式发布前仍须恢复每份米 60 秒并重新测试。
+- 下一步建议：S6A 收尾完成后，可等待用户单独授权进入 S6B —— 门系统；本次不得自行开始。
+- Git commit 信息：计划 `feat: add full rice gameplay loop`；实际提交和推送结果以本次最终汇报为准。本阶段按要求不创建新 Tag，当前正式 Tag 仍为 `v0.1.0-alpha`。

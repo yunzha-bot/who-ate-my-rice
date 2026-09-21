@@ -3,23 +3,44 @@ import type { Direction } from '../systems/SprintSystem';
 export type Faction = 'DEEPSEEK' | 'HUMAN';
 
 export class LocalControl {
-  faction: Faction | null = null;
+  selectedFaction: Faction | null = null;
+  controlledFaction: Faction | null = null;
+
+  get faction(): Faction | null {
+    return this.selectedFaction;
+  }
 
   choose(faction: Faction): void {
-    this.faction = faction;
+    this.selectedFaction = faction;
+    this.controlledFaction = faction;
+  }
+
+  toggleControlled(): boolean {
+    if (this.controlledFaction === null) return false;
+    this.controlledFaction = this.controlledFaction === 'DEEPSEEK' ? 'HUMAN' : 'DEEPSEEK';
+    return true;
+  }
+
+  resetControlled(): void {
+    this.controlledFaction = this.selectedFaction;
+  }
+
+  isControlling(faction: Faction): boolean {
+    return this.controlledFaction === faction;
   }
 
   clear(): void {
-    this.faction = null;
+    this.selectedFaction = null;
+    this.controlledFaction = null;
   }
 
   controlled<T>(deepseek: T, human: T): T | null {
-    return this.faction === 'DEEPSEEK' ? deepseek
-      : this.faction === 'HUMAN' ? human : null;
+    return this.controlledFaction === 'DEEPSEEK' ? deepseek
+      : this.controlledFaction === 'HUMAN' ? human : null;
   }
 
   directions(local: Direction, debug: Direction): { deepseek: Direction; human: Direction } {
-    return this.faction === 'HUMAN'
+    return this.controlledFaction === 'HUMAN'
       ? { deepseek: debug, human: local }
       : { deepseek: local, human: debug };
   }

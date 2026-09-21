@@ -3,6 +3,7 @@ import type { Direction } from '../systems/SprintSystem';
 export class InputManager {
   private readonly held = new Set<string>();
   private readonly pressed = new Set<string>();
+  private tabCaptureEnabled = false;
 
   constructor() {
     window.addEventListener('keydown', this.onKeyDown);
@@ -27,6 +28,10 @@ export class InputManager {
   }
 
   isHeld(code: string): boolean { return this.held.has(code); }
+
+  setTabCaptureEnabled(enabled: boolean): void {
+    this.tabCaptureEnabled = enabled;
+  }
 
   consumePress(code: string): boolean {
     const wasPressed = this.pressed.has(code);
@@ -54,7 +59,8 @@ export class InputManager {
   }
 
   private onKeyDown = (event: KeyboardEvent): void => {
-    if (event.code.startsWith('Arrow') || event.code === 'Space') event.preventDefault();
+    if (event.code.startsWith('Arrow') || event.code === 'Space' ||
+        (event.code === 'Tab' && this.tabCaptureEnabled)) event.preventDefault();
     if (!this.held.has(event.code) && !event.repeat) this.pressed.add(event.code);
     this.held.add(event.code);
   };

@@ -5,6 +5,8 @@ import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
 import { CollisionWorld } from './CollisionWorld';
 import { InputManager } from './InputManager';
+import { RiceView } from './RiceView';
+import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './CaptureZone';
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
 import { LocalControl, type Faction } from './LocalControl';
 import { buildApartment } from './map/MapBuilder';
@@ -27,7 +29,10 @@ export class ThreeGame {
   private sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold, C.sprint.stunMs);
   private player: THREE.Mesh;
   private human: THREE.Mesh;
-  private riceMeshes = new Map<string, THREE.Mesh>();
+  private captureZone: CaptureZoneView;
+  private captureZoneActive = false;
+  private captureZoneBlocked = false;
+  private riceViews = new Map<string, RiceView>();
   private collision: CollisionWorld;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
@@ -60,6 +65,7 @@ export class ThreeGame {
       SPAWNS.deepseek.x, actorHeight / 2, SPAWNS.deepseek.z);
     this.human = this.box(actorWidth, actorHeight, actorWidth, C.human.color,
       SPAWNS.human.x, actorHeight / 2, SPAWNS.human.z);
+    this.captureZone = new CaptureZoneView(this.human, C.match.captureRadius, actorHeight);
     this.resetRice();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
@@ -128,19 +134,20 @@ export class ThreeGame {
   }
 
   private resetRice(): void {
-    for (const mesh of this.riceMeshes.values()) {
-      this.scene.remove(mesh);
-      mesh.geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
+    for (const view of this.riceViews.values()) {
+      this.scene.remove(view.object);
+      view.dispose();
     }
-    this.riceMeshes.clear();
+    this.riceViews.clear();
     const selected = selectRiceCandidates();
     this.rice = new RiceField(selected.map(point => point.id),
       C.rice.maxProgressMs, C.rice.prepareMs);
     for (const point of selected) {
-      const mesh = this.box(C.rice.size / U, 0.25, C.rice.size / U,
-        C.rice.color, point.x, 0.125, point.z);
-      this.riceMeshes.set(point.id, mesh);
+      const view = new RiceView(C.rice.size / U, C.rice.color, C.rice.visual);
+      view.position.set(point.x, 0, point.z);
+      view.sync(this.rice.get(point.id)!.rice);
+      this.scene.add(view.object);
+      this.riceViews.set(point.id, view);
     }
   }
 
@@ -148,8 +155,8 @@ export class ThreeGame {
     let nearest: { id: string; portion: RiceField['portions'][number]; range: number } | null = null;
     for (const portion of this.rice.portions) {
       if (portion.rice.completed) continue;
-      const mesh = this.riceMeshes.get(portion.rice.id)!;
-      const range = distance(this.player.position, mesh.position);
+      const view = this.riceViews.get(portion.rice.id)!;
+      const range = distance(this.player.position, view.position);
       if (!nearest || range < nearest.range) {
         nearest = { id: portion.rice.id, portion, range };
       }
@@ -173,18 +180,26 @@ export class ThreeGame {
 
   private tick = (): void => {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
+    this.input.setTabCaptureEnabled(
+      C.development.factionSwitchEnabled && this.match.phase === 'PLAYING');
     const pausePressed = this.input.consumePress('Escape');
     const restartPressed = this.input.consumePress('KeyR');
     const menuPressed = this.input.consumePress('KeyM');
+    const controlSwitchPressed = this.input.consumePress('Tab');
     if (this.match.phase === 'FINISHED') {
       if (restartPressed) this.restart();
       else if (menuPressed) this.returnToFactionSelect();
     } else if (this.match.phase !== 'FACTION_SELECT') {
       if (pausePressed) this.togglePause();
       if (this.match.phase === 'READY') this.match.advanceReady(deltaMs);
-      else if (this.match.phase === 'PLAYING') this.updatePlaying(deltaMs);
+      else if (this.match.phase === 'PLAYING') {
+        if (C.development.factionSwitchEnabled && controlSwitchPressed) {
+          this.control.toggleControlled();
+        }
+        this.updatePlaying(deltaMs);
+      }
     }
-    if (this.control.faction !== null) {
+    if (this.control.controlledFaction !== null) {
       this.followCamera();
     }
     this.updateHud(this.nearestRice());
@@ -197,7 +212,7 @@ export class ThreeGame {
     const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
     const ratio = this.rice.progressRatio;
-    if (this.input.consumePress('Space') && this.control.faction === 'DEEPSEEK') {
+    if (this.input.consumePress('Space') && this.control.isControlling('DEEPSEEK')) {
       this.sprint.tryStart(direction, ratio);
     }
     this.sprint.advance(deltaMs, direction);
@@ -215,14 +230,21 @@ export class ThreeGame {
     const nearest = this.nearestRice();
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
     this.rice.update(deltaMs, inRange ? nearest!.id : null,
-      this.control.faction === 'DEEPSEEK' &&
+      this.control.isControlling('DEEPSEEK') &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
       inRange && direction.x === 0 && direction.y === 0);
     for (const portion of this.rice.portions) {
-      this.riceMeshes.get(portion.rice.id)!.visible = !portion.rice.completed;
+      this.riceViews.get(portion.rice.id)!.sync(portion.rice);
     }
-    const capture = distance(this.player.position, this.human.position) <= C.match.captureRange / U;
-    this.match.advancePlaying(deltaMs, capture, this.rice.completed);
+    const insideCaptureRadius = isInsideCaptureZoneXZ(
+      this.human.position, this.player.position, C.match.captureRadius);
+    this.captureZoneBlocked = insideCaptureRadius &&
+      this.collision.isLineBlockedXZ(this.human.position, this.player.position);
+    this.captureZoneActive = isCaptureEligibleXZ(
+      this.human.position, this.player.position, C.match.captureRadius, this.captureZoneBlocked);
+    this.match.advancePlaying(deltaMs, this.captureZoneActive, this.rice.completed);
+    this.captureZone.setProgress(
+      this.match.captureProgressMs, C.match.captureMs, this.captureZoneActive);
     if (this.match.result) this.rice.interrupt();
   }
 
@@ -232,8 +254,7 @@ export class ThreeGame {
   }
 
   private togglePause(): void {
-    if (this.match.pause()) this.rice.interrupt();
-    else this.match.resume();
+    if (!this.match.pause()) this.match.resume();
   }
 
   private restart(): void {
@@ -258,11 +279,15 @@ export class ThreeGame {
 
   private resetRound(): void {
     this.sprint.reset();
+    this.control.resetControlled();
     this.resetRice();
     this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
     this.human.position.set(SPAWNS.human.x, C.three.actorHeight / 2, SPAWNS.human.z);
     this.player.rotation.z = 0;
     (this.player.material as THREE.MeshStandardMaterial).color.setHex(C.player.color);
+    this.captureZoneActive = false;
+    this.captureZoneBlocked = false;
+    this.captureZone.reset();
     this.input.clear();
   }
 
@@ -277,12 +302,18 @@ export class ThreeGame {
     const risk = this.sprint.state === 'NORMAL'
       ? ratio >= C.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
       : this.sprint.riskMode === 'FALL_ON_END' ? 'RISK SPRINT' : 'SAFE SPRINT';
-    const factionName = this.control.faction === 'DEEPSEEK' ? 'DeepSeek 娘'
-      : this.control.faction === 'HUMAN' ? '人类' : '未选择';
+    const factionName = this.control.selectedFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
+      : this.control.selectedFaction === 'HUMAN' ? '人类' : '未选择';
+    const controlledName = this.control.controlledFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
+      : this.control.controlledFaction === 'HUMAN' ? 'Human' : '未选择';
+    const developmentControl = C.development.factionSwitchEnabled
+      ? `当前控制：${controlledName}｜Tab：切换控制\n` : '';
     this.hud.textContent = `${phaseText}  时间：${time}\n玩家阵营：${factionName}\n` +
-      'WASD/方向键：当前玩家｜IJKL：另一角色（调试）\n' +
+      developmentControl +
+      'WASD/方向键：当前控制角色｜IJKL：另一角色（调试）\n' +
       'DeepSeek 娘：E 进食、移动时点 Space 冲刺\n' +
       `抓捕：${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(C.match.captureMs / 1000).toFixed(2)} 秒\n` +
+      `抓捕区：${this.captureZoneBlocked ? '有阻挡' : this.captureZoneActive ? '圈内' : '圈外'}\n` +
       `DeepSeek 状态：${this.sprint.state}  米总进度：${Math.round(ratio * 100)}%\n` +
       `${risk}  冲刺剩余：${(this.sprint.sprintRemainingMs / 1000).toFixed(1)} 秒\n` +
       `结束摔倒：${this.sprint.riskMode === 'FALL_ON_END' ? 'YES' : 'NO'}  眩晕剩余：${(this.sprint.stunRemainingMs / 1000).toFixed(1)} 秒`;
@@ -290,14 +321,18 @@ export class ThreeGame {
       INTERRUPTED: '已中断', COMPLETED: '已完成' };
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
     const hint = this.rice.completed ? '5 份大米已吃完'
-      : this.control.faction === 'HUMAN' ? 'DeepSeek 娘进食仅在其为玩家时可操作'
+      : this.control.isControlling('HUMAN') ? '当前控制 Human，不能进食'
       : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
       : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
     const current = nearest?.portion.rice;
+    const remainingMs = current ? Math.max(0, current.maxProgressMs - current.progressMs) : 0;
+    const activeIds = this.rice.states.map(state => state.id).join(', ');
     this.riceHud.textContent =
       `大米：${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}  总进度：${Math.round(ratio * 100)}%\n` +
-      `当前：${current?.id ?? '无'}  ${((current?.progressMs ?? 0) / 1000).toFixed(1)} / ${(C.rice.maxProgressMs / 1000).toFixed(1)} 秒\n` +
-      `状态：${current ? riceStates[current.interactionState] : '全部完成'}\n${hint}`;
+      `本局米点：${activeIds}\n` +
+      `当前目标：${current?.id ?? '无'}\n` +
+      `当前 Rice：${((current?.progressMs ?? 0) / 1000).toFixed(1)} / ${((current?.maxProgressMs ?? C.rice.maxProgressMs) / 1000).toFixed(1)} 秒\n` +
+      `剩余：${(remainingMs / 1000).toFixed(1)} 秒  状态：${current ? riceStates[current.interactionState] : '全部完成'}\n${hint}`;
     if (phase === 'PAUSED') this.overlayText.textContent = '已暂停 · 按 Esc 继续';
     else if (phase === 'FINISHED') {
       const result = this.match.result!;
@@ -315,6 +350,7 @@ export class ThreeGame {
     cancelAnimationFrame(this.frame);
     window.removeEventListener('resize', this.resize);
     this.input.dispose();
+    this.captureZone.dispose();
     this.renderer.dispose();
   }
 }

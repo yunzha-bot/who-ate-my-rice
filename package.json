@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "node --experimental-strip-types --test tests/rice.test.mjs tests/game-state.test.mjs tests/sprint.test.mjs tests/collision-world.test.mjs tests/camera-controls.test.mjs tests/apartment-map.test.mjs",
+    "test": "node --experimental-strip-types --test tests/rice.test.mjs tests/rice-field.test.mjs tests/rice-view.test.mjs tests/capture-zone.test.mjs tests/game-state.test.mjs tests/sprint.test.mjs tests/collision-world.test.mjs tests/camera-controls.test.mjs tests/apartment-map.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

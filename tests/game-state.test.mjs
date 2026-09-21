@@ -23,7 +23,7 @@ test('READY transitions to PLAYING and only PLAYING advances match time', () => 
   assert.equal(match.resume(), true);
 });
 
-test('contact shorter than 350 ms does not win and separation resets capture', () => {
+test('capture-zone stay shorter than 350 ms does not win and leaving resets capture', () => {
   const match = makeMatch();
   start(match);
   match.advancePlaying(300, true, false);

@@ -1,11 +1,14 @@
-import { RiceSystem } from './RiceSystem.ts';
+import { RiceSystem, type RiceState } from './RiceSystem.ts';
 
-// S5 spatial adapter: five independent, persistent S2 rice interactions.
+// One round owns one RiceField. Each candidate ID maps to one persistent RiceState.
 export class RiceField {
   readonly portions: RiceSystem[];
   private currentId: string | null = null;
 
   constructor(ids: readonly string[], maxProgressMs: number, prepareMs: number) {
+    if (new Set(ids).size !== ids.length) {
+      throw new Error('Active rice IDs must be unique');
+    }
     this.portions = ids.map(id => new RiceSystem(id, maxProgressMs, prepareMs));
   }
 
@@ -31,6 +34,10 @@ export class RiceField {
 
   get activeId(): string | null { return this.currentId; }
 
+  get states(): readonly RiceState[] {
+    return this.portions.map(portion => portion.rice);
+  }
+
   get(id: string): RiceSystem | undefined {
     return this.portions.find(portion => portion.rice.id === id);
   }
@@ -45,6 +52,11 @@ export class RiceField {
 
   interrupt(): void {
     for (const portion of this.portions) portion.interrupt();
+    this.currentId = null;
+  }
+
+  reset(): void {
+    for (const portion of this.portions) portion.reset();
     this.currentId = null;
   }
 }
