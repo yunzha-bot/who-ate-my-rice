@@ -61,7 +61,13 @@ export const GAME_CONFIG = {
       closed: 0x8a644b,
       locked: 0xa0443f,
       lockCore: 0xffc247,
+      lockCoreDisabled: 0x565d63,
     },
+  },
+  pulseLock: {
+    interactionRange: 0.85,
+    unlockDurationMs: 3_000,
+    retentionMs: 5_000,
   },
   rice: {
     size: 30,

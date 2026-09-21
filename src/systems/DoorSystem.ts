@@ -1,18 +1,19 @@
 import type { DoorNode } from '../three/map/apartmentMap.ts';
 
 export type DoorStateName = 'OPEN' | 'CLOSED' | 'LOCKED';
+export type LockCoreState = 'ACTIVE' | 'DISABLED';
 export type DoorActor = 'DEEPSEEK' | 'HUMAN';
 export type DoorActionResult =
-  | 'OPENED' | 'CLOSED' | 'LOCKED'
+  | 'OPENED' | 'CLOSED' | 'LOCKED' | 'UNLOCKED'
   | 'BLOCKED_BY_ACTOR' | 'LOCK_LIMIT_REACHED'
-  | 'INVALID_STATE' | 'NOT_ALLOWED' | 'NOT_FOUND';
+  | 'LOCK_CORE_DISABLED' | 'INVALID_STATE' | 'NOT_ALLOWED' | 'NOT_FOUND';
 
 export interface DoorState {
   id: string;
   nodeId: string;
   state: DoorStateName;
   locked: boolean;
-  lockDisabled: boolean;
+  lockCoreState: LockCoreState;
 }
 
 export interface NearbyDoor {
@@ -34,7 +35,7 @@ export class DoorSystem {
       nodeId: node.id,
       state: node.initialState,
       locked: false,
-      lockDisabled: false,
+      lockCoreState: 'ACTIVE',
     }));
   }
 
@@ -79,11 +80,24 @@ export class DoorSystem {
     const door = this.get(id);
     if (!door) return 'NOT_FOUND';
     if (actor !== 'DEEPSEEK') return 'NOT_ALLOWED';
-    if (door.state !== 'CLOSED' || door.locked || door.lockDisabled) return 'INVALID_STATE';
+    if (door.lockCoreState === 'DISABLED') return 'LOCK_CORE_DISABLED';
+    if (door.state !== 'CLOSED' || door.locked) return 'INVALID_STATE';
     if (this.activeLockedDoorCount >= this.maxActiveLocks) return 'LOCK_LIMIT_REACHED';
     door.state = 'LOCKED';
     door.locked = true;
     return 'LOCKED';
+  }
+
+  disableLock(id: string, actor: DoorActor): DoorActionResult {
+    const door = this.get(id);
+    if (!door) return 'NOT_FOUND';
+    if (actor !== 'HUMAN') return 'NOT_ALLOWED';
+    if (door.lockCoreState === 'DISABLED') return 'LOCK_CORE_DISABLED';
+    if (door.state !== 'LOCKED' || !door.locked) return 'INVALID_STATE';
+    door.lockCoreState = 'DISABLED';
+    door.state = 'CLOSED';
+    door.locked = false;
+    return 'UNLOCKED';
   }
 
   reset(): void {
@@ -91,7 +105,7 @@ export class DoorSystem {
       const definition = this.definitions.get(door.id)!;
       door.state = definition.initialState;
       door.locked = false;
-      door.lockDisabled = false;
+      door.lockCoreState = 'ACTIVE';
     }
   }
 }

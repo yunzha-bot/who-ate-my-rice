@@ -10,6 +10,7 @@ export class DoorView {
   readonly definition: DoorNode;
   private readonly label: THREE.Sprite | null;
   private readonly material: THREE.MeshStandardMaterial;
+  private readonly lockCoreMaterial: THREE.MeshStandardMaterial;
 
   constructor(definition: DoorNode, debugIndex: number, debug: boolean) {
     this.definition = definition;
@@ -30,11 +31,13 @@ export class DoorView {
     this.leaf.castShadow = this.leaf.receiveShadow = true;
     this.object.add(this.leaf);
 
+    this.lockCoreMaterial = new THREE.MeshStandardMaterial({
+      color: config.colors.lockCore,
+      emissive: config.colors.lockCore,
+      emissiveIntensity: 0.45,
+    });
     this.lockCore = new THREE.Mesh(
-      new THREE.BoxGeometry(0.16, 0.22, 0.12),
-      new THREE.MeshStandardMaterial({ color: config.colors.lockCore, emissive: config.colors.lockCore,
-        emissiveIntensity: 0.45 }),
-    );
+      new THREE.BoxGeometry(0.16, 0.22, 0.12), this.lockCoreMaterial);
     this.lockCore.position.set(definition.width - 0.18, config.leafHeight * 0.58, 0.12);
     this.object.add(this.lockCore);
     this.lockCore.visible = false;
@@ -51,9 +54,22 @@ export class DoorView {
       (state.state === 'OPEN' ? config.openAngle : 0);
     this.material.color.setHex(state.state === 'OPEN' ? config.colors.open
       : state.state === 'LOCKED' ? config.colors.locked : config.colors.closed);
-    this.lockCore.visible = state.state === 'LOCKED' && state.locked;
-    if (this.label) setLabel(this.label, `${shortId(this.label.name)} ${state.state}`,
-      state.state === 'LOCKED' ? '#ffb48d' : state.state === 'OPEN' ? '#a9edb3' : '#f4ca7b');
+    const disabled = state.lockCoreState === 'DISABLED';
+    this.lockCore.visible = disabled || (state.state === 'LOCKED' && state.locked);
+    this.lockCoreMaterial.color.setHex(disabled
+      ? config.colors.lockCoreDisabled : config.colors.lockCore);
+    this.lockCoreMaterial.emissive.setHex(disabled ? 0x000000 : config.colors.lockCore);
+    this.lockCoreMaterial.emissiveIntensity = disabled ? 0 : 0.45;
+    if (this.label) setLabel(this.label,
+      `${shortId(this.label.name)} ${disabled ? 'LOCK DISABLED' : state.state}`,
+      disabled ? '#aeb4b9'
+        : state.state === 'LOCKED' ? '#ffb48d'
+          : state.state === 'OPEN' ? '#a9edb3' : '#f4ca7b');
+  }
+
+  lockCoreWorldPosition(target = new THREE.Vector3()): THREE.Vector3 {
+    this.object.updateWorldMatrix(true, false);
+    return this.lockCore.getWorldPosition(target);
   }
 
   closedCollisionBox(): THREE.Box3 {
@@ -73,7 +89,7 @@ export class DoorView {
     this.leaf.geometry.dispose();
     this.material.dispose();
     this.lockCore.geometry.dispose();
-    (this.lockCore.material as THREE.Material).dispose();
+    this.lockCoreMaterial.dispose();
     if (this.label) {
       const material = this.label.material as THREE.SpriteMaterial;
       material.map?.dispose();

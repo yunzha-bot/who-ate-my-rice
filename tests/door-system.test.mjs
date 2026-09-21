@@ -55,7 +55,7 @@ test('reset restores every initial state and all lock resources', () => {
   doors.reset();
   assert.equal(doors.activeLockedDoorCount, 0);
   assert.deepEqual(doors.doors.map(door => door.state), nodes.map(door => door.initialState));
-  assert.ok(doors.doors.every(door => !door.locked && !door.lockDisabled));
+  assert.ok(doors.doors.every(door => !door.locked && door.lockCoreState === 'ACTIVE'));
 });
 
 test('nearest interaction uses the door segment rather than only its center', () => {
@@ -98,6 +98,21 @@ test('door view rotates around its hinge and keeps lock core separate from the l
   view.sync(doors.get(door.id));
   assert.equal(view.lockCore.visible, true);
   assert.notEqual(view.lockCore, view.leaf);
+  assert.ok(view.lockCoreWorldPosition().distanceTo(view.object.position) > 0);
+  view.dispose();
+});
+
+test('disabled lock core stays visible and dim while the door remains closed', () => {
+  const doors = system();
+  const door = nodes[0];
+  const view = new DoorView(door, 0, false);
+  doors.lock(door.id, 'DEEPSEEK');
+  assert.equal(doors.disableLock(door.id, 'HUMAN'), 'UNLOCKED');
+  view.sync(doors.get(door.id));
+  assert.equal(doors.get(door.id).state, 'CLOSED');
+  assert.equal(doors.get(door.id).lockCoreState, 'DISABLED');
+  assert.equal(view.lockCore.visible, true);
+  assert.equal(view.lockCore.material.emissiveIntensity, 0);
   view.dispose();
 });
 

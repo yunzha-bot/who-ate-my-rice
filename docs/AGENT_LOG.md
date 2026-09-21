@@ -261,3 +261,25 @@
 - 已知问题 / Build Notes：Vite production build 的主 JS chunk 约 570.87 kB，仍高于 500 kB 提示线；这是已知非阻断构建提示，本阶段不调整 `chunkSizeWarningLimit`，留待后续浏览器兼容 / 性能优化阶段处理。当前开发大米仍为 5 秒，正式设计值为 60 秒，发布前必须恢复并复测。
 - 下一步建议：完成本次 commit 和 push 后，可以等待用户单独授权进入 S6C —— Human 反制 / PulseLock；本次不开始 S6C，也不创建新 Tag，当前 milestone 仍为 `v0.1.0-alpha`。
 - Git commit 信息：计划 `feat: add door locking gameplay`；实际提交与推送结果以最终汇报为准。
+
+## 2026-09-22 01:28 +08:00｜S6C Human 反制 / PulseLock 正式完成
+
+- 任务名称：S6C —— Human 反制 / PulseLock 正式收尾。
+- 当前开发阶段：S6C Gate = PASS，人工验收 = PASS；本次不进入 S6D。
+- 本次目标：在 S6B Door System 上完成 Human 破解锁芯的最小闭环，并在自动测试与人工验收通过后完成阶段文档、提交和推送收尾。
+- PulseLock：Human 可在 ACTIVE Lock Core 的实际世界坐标交互范围内按住 E 破解 LOCKED Door，DeepSeek 不可破解。破解需连续累计 3 秒，期间 Human 移动被锁定，但 Camera、世界更新和 Capture Zone 继续正常工作。
+- Progress Retention：松开 E、离开范围或切走 Human 控制会立即中断破解；各门独立保存破解进度，并从中断时起保留 5 秒。保留期内重新按住 E 可从原进度继续，超时后仅对应门的进度归零。Pause、READY、FACTION_SELECT 与 FINISHED 不推进破解或保留倒计时。
+- Lock Core：状态统一为 `ACTIVE / DISABLED`，不再以重复布尔状态作为另一套真相。破解成功后 Core 在本局永久 DISABLED，DeepSeek 无法再次给该门上锁且不会消耗 Active Lock Slot；Restart 或开始新 Match 时全部 Core 恢复 ACTIVE，破解进度、保留时间、暴露状态与当前目标全部清空。
+- Door / Lock Resource：破解完成后原子执行 `LOCKED → CLOSED`，不会自动 OPEN；Human 必须松开并再次按 E 才能正常开门。成功破解会释放一个 Active Lock Slot，例如 3 / 3 降为 2 / 3，并允许 DeepSeek 锁另一扇仍有效的门。
+- Exposure：仅 Human 正在 UNLOCKING 时设置 `humanExposed = true`，中断、暂停、完成或控制切换后关闭。当前 Exposure 只作为玩法状态与开发 HUD 反馈，尚未接入 S6D 的声音、视野或双向信息系统。
+- HUD / Visual：开发 HUD 增加十格 PulseLock 进度、当前进度 / 3.0 秒、暴露状态、进度保留倒计时与锁芯失效提示；ACTIVE 且 LOCKED 的锁芯保持明亮发光，DISABLED 锁芯保留为灰暗无发光状态。当前为 Hold E 可玩原型，未来如需 Timing Window / Skill Check 将另行设计，不在 S6C 范围内。
+- 控制与回归：Human 正在破解时无法移动，DeepSeek、门碰撞和抓捕仍继续；暂停与开发控制切换不会产生后台破解。Rice、Sprint、Capture、Door Collision、Circle Collider、Esc Pause Menu、Camera、Restart 与 Faction Select 回归均未发现阻断问题。
+- 新增文件：`src/systems/PulseLockSystem.ts`、`tests/pulse-lock.test.mjs`。
+- 修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`package.json`、`src/config/gameConfig.ts`、`src/systems/DoorSystem.ts`、`src/three/DoorView.ts`、`src/three/ThreeGame.ts`、`tests/door-system.test.mjs`。
+- 删除文件：无。
+- 依赖变化：无新增或删除依赖；仅扩展现有测试脚本。
+- 测试结果：最终 `npm test` 101 项全部通过；停止本项目 Vite 开发服务器后，`npm run build` 通过并包含 `tsc --noEmit`；`git diff --check` 通过。用户已人工确认完整破解、移动锁定、Capture 继续、5 秒保留与超时、双门独立、锁芯失效、二次 E 开门、Slot 释放、Pause / Switch、Restart / 新 Match 恢复及既有玩法回归均正常。
+- 共享规范：仓库当前不存在 `docs/SHARED_GAMEPLAY_SPEC.md`，按本次要求未新建；S6C 长期规则已记录在 `AGENTS.md`。
+- 已知问题：未发现已证实的 S6C 功能或体验阻断问题。Vite production build 主 JS chunk 为 575.97 kB，仍高于 500 kB 提示线，属于非阻断性能 / 构建提示，本阶段不调整阈值。当前开发大米仍为 5 秒，正式设计值为 60 秒，发布前必须恢复并复测。
+- 下一步建议：完成本次 commit 和 push 后，可等待用户单独授权进入 S6D —— 双向信息系统；本次不开始 S6D，也不创建新 Tag，当前 milestone 仍为 `v0.1.0-alpha`。
+- Git commit 信息：计划 `feat: add human lock counterplay`；实际提交与推送结果以最终汇报为准。

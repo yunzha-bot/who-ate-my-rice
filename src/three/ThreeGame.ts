@@ -4,6 +4,7 @@ import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
 import { DoorSystem, doorIntersectsActor, type DoorActionResult } from '../systems/DoorSystem';
+import { PulseLockSystem, type PulseLockEntry } from '../systems/PulseLockSystem';
 import { CollisionWorld } from './CollisionWorld';
 import { DoorView } from './DoorView';
 import { InputManager } from './InputManager';
@@ -37,6 +38,8 @@ export class ThreeGame {
   private captureZoneBlocked = false;
   private riceViews = new Map<string, RiceView>();
   private doorSystem = new DoorSystem(DOOR_NODES, C.door.maxActiveLocks);
+  private pulseLock = new PulseLockSystem(
+    this.doorSystem, C.pulseLock.unlockDurationMs, C.pulseLock.retentionMs);
   private doorViews = new Map<string, DoorView>();
   private doorStatusMessage = '';
   private collision: CollisionWorld;
@@ -252,7 +255,7 @@ export class ThreeGame {
     const local = cameraRelativeDirection(this.camera, this.input.localDirection());
     const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
-    const doorOwnsInteraction = this.handleDoorInteractions();
+    const doorInteraction = this.handleDoorInteractions(deltaMs);
     const ratio = this.rice.progressRatio;
     if (this.input.consumePress('Space') && this.control.isControlling('DEEPSEEK')) {
       this.sprint.tryStart(direction, ratio);
@@ -267,14 +270,16 @@ export class ThreeGame {
       this.sprint.state === 'STUNNED' ? 0xff7777 : C.player.color);
 
     const humanSpeed = C.player.speed / U * C.human.speedMultiplier;
-    this.move(this.human, humanDirection.x * humanSpeed * deltaMs / 1000,
-      humanDirection.y * humanSpeed * deltaMs / 1000);
+    const activeHumanDirection = doorInteraction.humanMovementLocked
+      ? { x: 0, y: 0 } : humanDirection;
+    this.move(this.human, activeHumanDirection.x * humanSpeed * deltaMs / 1000,
+      activeHumanDirection.y * humanSpeed * deltaMs / 1000);
     const nearest = this.nearestRice();
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
     this.rice.update(deltaMs, inRange ? nearest!.id : null,
       this.control.isControlling('DEEPSEEK') &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
-      !doorOwnsInteraction && inRange && direction.x === 0 && direction.y === 0);
+      !doorInteraction.doorOwnsInteraction && inRange && direction.x === 0 && direction.y === 0);
     for (const portion of this.rice.portions) {
       this.riceViews.get(portion.rice.id)!.sync(portion.rice);
     }
@@ -287,22 +292,35 @@ export class ThreeGame {
     this.match.advancePlaying(deltaMs, this.captureZoneActive, this.rice.completed);
     this.captureZone.setProgress(
       this.match.captureProgressMs, C.match.captureMs, this.captureZoneActive);
-    if (this.match.result) this.rice.interrupt();
+    if (this.match.result) {
+      this.rice.interrupt();
+      this.pulseLock.interrupt();
+    }
   }
 
-  private handleDoorInteractions(): boolean {
+  private handleDoorInteractions(deltaMs: number): {
+    doorOwnsInteraction: boolean;
+    humanMovementLocked: boolean;
+  } {
     const faction = this.control.controlledFaction;
     const actor = this.control.controlled(this.player, this.human);
     if (!faction || !actor) {
       this.input.consumePress('KeyE');
       this.input.consumePress('KeyQ');
-      return false;
+      this.pulseLock.advance(deltaMs, this.match.phase, null, null, false);
+      return { doorOwnsInteraction: false, humanMovementLocked: false };
     }
     const nearby = this.doorSystem.nearest(
       actor.position.x, actor.position.z, C.door.interactionRange);
     const rice = faction === 'DEEPSEEK' ? this.nearestRice() : null;
     const doorOwnsInteraction = !!nearby && (!rice || nearby.distance <= rice.range);
-    if (this.input.consumePress('KeyE') && nearby && doorOwnsInteraction) {
+    const nearbyCore = faction === 'HUMAN'
+      ? this.nearestLockCore(actor.position, false) : null;
+    const coreOwnsInteraction = nearbyCore !== null;
+    const pulseResult = this.pulseLock.advance(
+      deltaMs, this.match.phase, faction, nearbyCore?.id ?? null, this.input.isHeld('KeyE'));
+    const interactPressed = this.input.consumePress('KeyE');
+    if (interactPressed && nearby && doorOwnsInteraction && !coreOwnsInteraction) {
       const canClose = nearby.door.state !== 'OPEN' || this.canCloseDoor(nearby.definition.id);
       const result = this.doorSystem.toggle(nearby.door.id, faction, canClose);
       this.applyDoorResult(nearby.door.id, result);
@@ -313,7 +331,37 @@ export class ThreeGame {
         : 'NOT_FOUND';
       this.applyDoorResult(nearby?.door.id ?? null, result);
     }
-    return doorOwnsInteraction;
+    if (pulseResult.completedDoorId) {
+      this.applyDoorResult(pulseResult.completedDoorId, 'UNLOCKED');
+    } else if (this.pulseLock.humanExposed) {
+      this.doorStatusMessage = 'PulseLock 破解中：Human 暴露';
+    } else if (this.doorStatusMessage === 'PulseLock 破解中：Human 暴露') {
+      this.doorStatusMessage = '';
+    }
+    return {
+      doorOwnsInteraction: doorOwnsInteraction || coreOwnsInteraction,
+      humanMovementLocked: pulseResult.movementLocked,
+    };
+  }
+
+  private nearestLockCore(position: THREE.Vector3, includeDisabled: boolean): {
+    id: string;
+    distance: number;
+  } | null {
+    let nearest: { id: string; distance: number } | null = null;
+    for (const door of this.doorSystem.doors) {
+      const eligible = door.lockCoreState === 'DISABLED'
+        ? includeDisabled : door.state === 'LOCKED' && door.locked;
+      if (!eligible) continue;
+      const corePosition = this.doorViews.get(door.id)!.lockCoreWorldPosition();
+      const coreDistance = Math.hypot(
+        position.x - corePosition.x, position.z - corePosition.z);
+      if (coreDistance <= C.pulseLock.interactionRange &&
+          (!nearest || coreDistance < nearest.distance)) {
+        nearest = { id: door.id, distance: coreDistance };
+      }
+    }
+    return nearest;
   }
 
   private canCloseDoor(id: string): boolean {
@@ -327,14 +375,17 @@ export class ThreeGame {
   }
 
   private applyDoorResult(id: string | null, result: DoorActionResult): void {
-    if (id && (result === 'OPENED' || result === 'CLOSED' || result === 'LOCKED')) {
+    if (id && (result === 'OPENED' || result === 'CLOSED' ||
+        result === 'LOCKED' || result === 'UNLOCKED')) {
       this.syncDoor(id);
     }
     this.doorStatusMessage = result === 'OPENED' ? '门已打开'
       : result === 'CLOSED' ? '门已关闭'
       : result === 'LOCKED' ? '门已上锁'
+      : result === 'UNLOCKED' ? '锁芯已失效，门仍为关闭状态'
       : result === 'BLOCKED_BY_ACTOR' ? '门口有人，无法关门'
       : result === 'LOCK_LIMIT_REACHED' ? '锁门资源已满'
+      : result === 'LOCK_CORE_DISABLED' ? '锁芯已失效，本局不能再次上锁'
       : result === 'NOT_ALLOWED' ? '只有 DeepSeek 娘可以锁门'
       : result === 'INVALID_STATE' ? '当前门状态不允许该操作'
       : '附近没有可操作的门';
@@ -360,6 +411,7 @@ export class ThreeGame {
   private togglePause(): void {
     if (this.match.pause()) {
       this.rice.interrupt();
+      this.pulseLock.interrupt();
       this.input.clear();
       return;
     }
@@ -405,6 +457,7 @@ export class ThreeGame {
     this.control.resetControlled();
     this.resetRice();
     this.doorSystem.reset();
+    this.pulseLock.reset();
     this.syncAllDoors();
     this.doorStatusMessage = '';
     this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
@@ -437,12 +490,28 @@ export class ThreeGame {
       ? `当前控制：${controlledName}｜Esc 菜单可切换控制${directHotkeyHint}\n` : '';
     const doorHint = this.control.isControlling('DEEPSEEK')
       ? `门：E 开/关｜Q 锁门  锁：${this.doorSystem.activeLockedDoorCount} / ${C.door.maxActiveLocks}`
-      : '门：E 开/关｜Human 当前不能打开 LOCKED 门';
+      : '门：E 开/关｜靠近 LOCKED 锁芯后按住 E 破解';
+    const pulseEntry = this.pulseHudEntry();
+    const pulseRatio = pulseEntry
+      ? pulseEntry.unlockProgressMs / C.pulseLock.unlockDurationMs : 0;
+    const filledSegments = Math.round(Math.max(0, Math.min(1, pulseRatio)) * 10);
+    const pulseBar = `${'█'.repeat(filledSegments)}${'░'.repeat(10 - filledSegments)}`;
+    const pulseDoor = pulseEntry ? this.doorSystem.get(pulseEntry.doorId) : null;
+    const pulseStatus = !pulseEntry ? '无目标'
+      : pulseDoor?.lockCoreState === 'DISABLED' ? '锁芯已失效'
+      : pulseEntry.interactionState === 'UNLOCKING' ? '解锁中：暴露'
+      : pulseEntry.interactionState === 'RETAINED'
+        ? `进度保留：${(pulseEntry.retentionRemainingMs / 1000).toFixed(1)} 秒`
+        : '等待破解';
+    const coreState = pulseDoor?.lockCoreState ?? 'ACTIVE';
+    const pulseText = `锁芯：${coreState}｜PulseLock：${pulseBar} ${((pulseEntry?.unlockProgressMs ?? 0) / 1000).toFixed(1)} / ` +
+      `${(C.pulseLock.unlockDurationMs / 1000).toFixed(1)} 秒｜${pulseStatus}`;
     this.hud.textContent = `${phaseText}  时间：${time}\n玩家阵营：${factionName}\n` +
       developmentControl +
       'WASD/方向键：当前控制角色｜IJKL：另一角色（调试）\n' +
       'DeepSeek 娘：E 进食、移动时点 Space 冲刺\n' +
       `${doorHint}${this.doorStatusMessage ? `｜${this.doorStatusMessage}` : ''}\n` +
+      `${pulseText}\n` +
       `抓捕：${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(C.match.captureMs / 1000).toFixed(2)} 秒\n` +
       `抓捕区：${this.captureZoneBlocked ? '有阻挡' : this.captureZoneActive ? '圈内' : '圈外'}\n` +
       `DeepSeek 状态：${this.sprint.state}  米总进度：${Math.round(ratio * 100)}%\n` +
@@ -475,6 +544,16 @@ export class ThreeGame {
     this.pauseActions.hidden = phase !== 'PAUSED';
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
+  }
+
+  private pulseHudEntry(): PulseLockEntry | null {
+    const actor = this.control.controlled(this.player, this.human);
+    if (actor && this.control.isControlling('HUMAN')) {
+      const nearby = this.nearestLockCore(actor.position, true);
+      if (nearby) return this.pulseLock.get(nearby.id) ?? null;
+    }
+    return this.pulseLock.entries.find(entry => entry.interactionState === 'UNLOCKING') ??
+      this.pulseLock.entries.find(entry => entry.interactionState === 'RETAINED') ?? null;
   }
 
   dispose(): void {

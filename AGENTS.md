@@ -53,8 +53,9 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S5 完整 3D 灰盒地图 —— `v0.1.0-alpha`，Gate = PASS。
 - S6A 正式大米循环 —— Gate = PASS。
 - S6B 门系统 —— Gate = PASS。
+- S6C Human 反制 / PulseLock —— Gate = PASS。
 
-当前下一阶段：S6C —— Human 反制 / PulseLock；进入仍需用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前下一阶段：S6D —— 双向信息系统；进入仍需用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
 
@@ -71,7 +72,9 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - 可选择 DeepSeek 娘或人类阵营。WASD / 方向键采用 Camera-Relative Movement，所控角色保持在屏幕中央附近；IJKL 暂作另一角色的开发调试控制。
 - DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。
 - 人类抓捕需要 DeepSeek 娘在 Capture Zone 内连续约 0.35 秒，墙体、家具以及 CLOSED / LOCKED Door 会阻断有效抓捕。
-- Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door；Human 当前不能用普通 Door Interaction 打开 LOCKED Door，反制属于 S6C。最多同时存在 3 个 Active Lock；Lock Core 在逻辑和表现上独立于 Door Leaf。
+- Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door。最多同时存在 3 个 Active Lock；Lock Core 在逻辑和表现上独立于 Door Leaf。
+- Human 可在 ACTIVE Lock Core 的实际交互范围内按住 E 破解 LOCKED Door，DeepSeek 不可破解。破解持续 3 秒，期间 Human 不能移动但 Capture Zone 继续工作；中断进度保留 5 秒，超时后该门的破解进度清零，各门进度与保留时间相互独立。
+- Lock Core 状态为 `ACTIVE / DISABLED`。破解成功后门从 `LOCKED` 变为 `CLOSED`，不会自动打开，Human 必须松开并再次按 E 才能开门；同时释放一个 Active Lock Slot。DISABLED Core 本局不能再次上锁，Restart 或开始新 Match 时恢复为 ACTIVE。
 - 角色视觉 Mesh 与 Gameplay Collider 必须解耦。当前角色使用 XZ Circle Footprint，环境使用 AABB，并以 Circle-vs-AABB、Axis-Separated Movement 和 Wall Sliding 解析碰撞；Sprint 使用同一规则。不要轻易恢复 Player Box / AABB Footprint，因为方形碰撞体在门框和墙角斜向移动时容易卡脚。
 
 ## 输入与暂停长期规则
