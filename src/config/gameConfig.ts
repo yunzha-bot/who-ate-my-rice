@@ -51,8 +51,9 @@ export const GAME_CONFIG = {
     captureMs: 350,
   },
   door: {
-    interactionRange: 0.85,
+    interactionRange: 1.3,
     maxActiveLocks: 3,
+    humanForceBreakCooldownMs: 30_000,
     leafHeight: 1.2,
     leafThickness: 0.16,
     openAngle: Math.PI / 2,
@@ -65,9 +66,10 @@ export const GAME_CONFIG = {
     },
   },
   pulseLock: {
-    interactionRange: 0.85,
-    unlockDurationMs: 3_000,
-    retentionMs: 5_000,
+    rows: 4,
+    cols: 4,
+    mines: 3,
+    failureFeedbackMs: 1_500,
   },
   rice: {
     size: 30,

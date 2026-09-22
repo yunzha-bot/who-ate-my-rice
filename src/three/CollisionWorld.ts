@@ -1,5 +1,7 @@
 import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../config/gameConfig.ts';
+import { nearestPointOnDoorSegment } from '../systems/DoorSystem.ts';
+import type { DoorNode } from './map/apartmentMap.ts';
 
 export function circleIntersectsAabbXZ(x: number, z: number, radius: number,
   obstacle: Box3, epsilon = 0): boolean {
@@ -9,6 +11,13 @@ export function circleIntersectsAabbXZ(x: number, z: number, radius: number,
   const deltaZ = z - closestZ;
   const contactRadius = Math.max(0, radius - epsilon);
   return deltaX * deltaX + deltaZ * deltaZ < contactRadius * contactRadius;
+}
+
+export function canInteractWithDoorXZ(world: CollisionWorld, actor: Vector3,
+  door: DoorNode): boolean {
+  const point = nearestPointOnDoorSegment(actor.x, actor.z, door);
+  const target = new Vector3(point.x, actor.y, point.z);
+  return !world.isLineBlockedXZ(actor, target, door.id);
 }
 
 export class CollisionWorld {
@@ -61,8 +70,12 @@ export class CollisionWorld {
     return next;
   }
 
-  isLineBlockedXZ(start: Vector3, end: Vector3): boolean {
-    return this.allObstacles().some(obstacle => this.segmentIntersectsRectXZ(
+  isLineBlockedXZ(start: Vector3, end: Vector3, ignoredDynamicId?: string): boolean {
+    const obstacles = ignoredDynamicId
+      ? [...this.obstacles, ...[...this.dynamicObstacles.entries()]
+        .filter(([id]) => id !== ignoredDynamicId).map(([, box]) => box)]
+      : this.allObstacles();
+    return obstacles.some(obstacle => this.segmentIntersectsRectXZ(
       start.x, start.z, end.x, end.z,
       obstacle.min.x, obstacle.max.x, obstacle.min.z, obstacle.max.z,
     ));

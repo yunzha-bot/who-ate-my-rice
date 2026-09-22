@@ -37,3 +37,18 @@ canvas { display: block; }
 .faction-menu h1 { margin: 0; font-size: 22px; }
 .faction-menu label { cursor: pointer; }
 .faction-menu button { padding: 8px 14px; cursor: pointer; }
+.mine-panel {
+  position: absolute; z-index: 5; left: 50%; top: 50%;
+  transform: translate(-50%, -50%); width: min(360px, 94vw);
+  padding: 18px; color: #fff; background: #1f2833;
+  border: 2px solid #e1b65c; box-shadow: 0 15px 40px #0009;
+}
+.mine-panel[hidden] { display: none; }
+.mine-title { padding-right: 30px; font-weight: 700; margin-bottom: 14px; }
+.mine-close { position: absolute; top: 6px; right: 7px; width: 30px; height: 30px;
+  font-size: 25px; line-height: 25px; cursor: pointer; }
+.mine-grid { display: grid; grid-template-columns: repeat(var(--mine-cols), 1fr); gap: 4px; }
+.mine-cell { aspect-ratio: 1; font-size: 20px; font-weight: 700; cursor: pointer;
+  color: #243040; background: #b6c3ce; border: 2px solid #e8eef2; }
+.mine-cell.revealed { background: #e8e4d9; border-color: #8e9da8; cursor: default; }
+.mine-help { margin-top: 12px; font-size: 13px; text-align: center; }

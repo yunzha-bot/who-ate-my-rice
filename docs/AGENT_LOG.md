@@ -283,3 +283,19 @@
 - 已知问题：未发现已证实的 S6C 功能或体验阻断问题。Vite production build 主 JS chunk 为 575.97 kB，仍高于 500 kB 提示线，属于非阻断性能 / 构建提示，本阶段不调整阈值。当前开发大米仍为 5 秒，正式设计值为 60 秒，发布前必须恢复并复测。
 - 下一步建议：完成本次 commit 和 push 后，可等待用户单独授权进入 S6D —— 双向信息系统；本次不开始 S6D，也不创建新 Tag，当前 milestone 仍为 `v0.1.0-alpha`。
 - Git commit 信息：计划 `feat: add human lock counterplay`；实际提交与推送结果以最终汇报为准。
+
+## 2026-09-22 12:20 +08:00｜S6C Minesweeper Lock Counterplay 正式收尾
+
+- 任务名称：S6C —— Human 反制 / Minesweeper Lock Counterplay。当前阶段 S6C Gate = PASS，用户人工验收 = PASS；下一阶段为 S6D —— 双向信息系统，尚未开始。
+- 本次目标：以最终扫雷反制规则取代前述 Hold E PulseLock 原型，完成验收后的文档、自动验证和 Git 收尾；历史日志保留，旧原型规则不再适用于当前版本。
+- 实际完成内容：Human 对 LOCKED Door 按 E 打开 4×4、3 雷扫雷；长按或连点 E 不再推进解锁。× / Esc 退出后，同一 Lock Core 的盘面本局保留；扫雷期间世界继续运行，Human 不能移动，Capture Zone 仍可工作。扫雷成功使 Core `ACTIVE → DISABLED`、Door `LOCKED → CLOSED` 并释放 Lock Slot；Human 需再次 E 开门。踩雷失败时门仍 LOCKED，对局不结束。
+- Human Space：普通 CLOSED Door 立即 OPEN，不触发或受强破 CD 限制；LOCKED Door 则立即强破 Core 并 OPEN，进入 30 秒 Force Break CD。CD 内锁门不能再强破，但仍可 E 扫雷，普通门仍可 Space 免费打开；扫雷成功不触发强破 CD。DISABLED Core 本局不能再次 Lock。门交互范围扩大至 1.3 世界单位，并选最近的可达门，不可隔墙操作。
+- 回归与验收：DeepSeek Space Sprint、Capture、Door Collision、Circle Collider、Esc Pause Menu 均无阻断回归；用户确认 S6C 人工 Gate PASS。正式大米仍设计为 60 秒，当前开发测试值仍为 5 秒，发布前需恢复并复测。
+- 新增文件：`src/systems/HumanDoorSkill.ts`、`src/systems/MinesweeperLockSystem.ts`、`tests/human-door-skill.test.mjs`、`tests/minesweeper-lock.test.mjs`。
+- 修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`package.json`、`src/config/gameConfig.ts`、`src/style.css`、`src/systems/DoorSystem.ts`、`src/three/CollisionWorld.ts`、`src/three/ThreeGame.ts`。
+- 删除文件：已由最终扫雷实现替代的 `src/systems/PulseLockSystem.ts`、`tests/pulse-lock.test.mjs`。
+- 依赖变化：无新增依赖；测试脚本改为运行扫雷和 Human 门技能测试。
+- 测试结果：`npm run build` PASS（含 TypeScript 检查）；`npm test` 115 / 115 PASS；`git diff --check` PASS。首次构建因清理 `dist/assets/.gitkeep` 遇到 EPERM；确认 `dist/` 是被 Git 忽略且未跟踪的纯构建产物，无明确属于本项目的 Vite/npm 进程，安全清理后让 Vite 重建，构建通过。未修改 ACL、源码或 Vite 配置来绕过该问题。
+- 已知问题：主 JS bundle 约 581.22 kB 的 Vite >500 kB 提示仍为非阻断警告；无法确定此前 EPERM 的唯一成因。仓库不存在 `docs/SHARED_GAMEPLAY_SPEC.md`，按要求未新建。
+- 下一步建议：完成本次 commit / push 后等待用户另行授权 S6D，不创建 Tag、不提前开始下一阶段。
+- Git commit 信息：计划 `feat: complete human lock counterplay`；实际提交及推送结果以最终汇报为准。

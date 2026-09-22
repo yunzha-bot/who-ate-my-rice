@@ -19,13 +19,17 @@
 
 ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任务范围与验收标准、辅助判断是否进入下一阶段，并防止过度设计。用户粘贴来自 ChatGPT 的任务指令时，优先按该任务范围执行；不擅自扩大范围，也不提前实现“未来可能需要”的功能。若任务目标与当前代码状态冲突，先报告冲突，不自行改变玩法或设计。
 
-## 每次任务的执行顺序
+## 每次任务的执行顺序与精简执行模式
 
-1. 开始前：阅读本文件；阅读 `docs/AGENT_LOG.md` 最近几条记录；检查 `git status` 和当前分支；明确本次目标与验收标准。
+1. 开始前：阅读本文件、`docs/AGENT_LOG.md` 最近相关记录及与任务直接相关的规范文档；检查 `git status` 和当前分支；明确本次目标与验收标准。复用仓库已有的规则、状态和历史，不要求用户重复提供完整背景。
 2. 开发中：只完成明确要求；不擅加玩法、依赖、框架、重构或阶段外优化；不为未来扩展过度抽象；保持实现简单、可运行、可验证。发现现有实现与任务目标冲突，先说明原因。
-3. 验证：按任务适用性尽可能运行 `npm run build`、TypeScript 编译检查、相关功能测试，必要时启动开发服务器进行浏览器验证。`npm run build` 已包含 `tsc --noEmit` 时，可在报告中明确说明，不必重复执行同一检查。未测试的内容不得报告为“已完成验证”。纯文档或纯 Git 任务按适用性验证，并说明未运行游戏测试的原因。
-4. 日志：任务完成后，只在 `docs/AGENT_LOG.md` 文件末尾追加记录，不覆盖或改写历史；只写实际完成的工作，不把计划或失败事项写成完成。
-5. Git：除非用户明确要求不提交，任务完成且适用测试通过后，检查 `git status`，用 `git add .` 暂存本次应提交文件，创建说明清晰的 commit，并执行 `git push`。暂存前检查是否混入与本次任务无关的变更；如有，先报告并避免误提交。
+3. 验证：游戏代码任务默认运行 `npm test`、`npm run build`、`git diff --check`；回归重点覆盖受影响系统及直接依赖，而非每次完整人工重测。Door 修改查 Door + Capture + Collision；Rice 修改查 Rice + Sprint 30%；Input 修改查 Input + Pause + Faction。`npm run build` 已包含 `tsc --noEmit` 时不必重复运行。纯文档或纯 Git 任务按适用性检查并说明未运行游戏测试的原因；未测试内容不得称为已验证。
+4. 日志：`docs/AGENT_LOG.md` 主要用于正式阶段收尾和重要事件；普通小型临时修复无需每次追加，除非用户明确要求。需要记录时只在文件末尾追加，不覆盖历史，只写实际完成内容。
+5. Git：普通任务默认停在“代码完成 + 自动测试通过 + 等待人工验收”；未经人工确认，不自动 commit、push、tag 或进入下一阶段。用户明确允许且验收通过后，先检查 `git status`，仅暂存本次应提交文件，创建清晰 commit 并按授权 push；如有无关变更，先报告并避免误提交。用户明确要求不提交时不得提交。
+
+后续普通 Bug 修复、小功能、参数、UI 和体验调整默认使用精简执行模式。任务提示只需写当前目标、允许/禁止修改范围、必须执行的测试、人工验收点，以及是否允许 commit / push / tag；能用约 20～40 行说清的任务，不生成数百行重复约束。已写入本文件的长期规则只引用，不在提示词里重复全文；已记入日志的历史实现仅在本次要修改该系统时回看，不重复总结。只列当前相关系统，不每次展开全部 Rice、Sprint、Capture、Door、Camera、Faction、Git、UE5 规则。
+
+新大阶段、核心玩法架构或状态机重构、输入/地图结构重构、跨系统高耦合修改、高风险 Git/发布操作，或连续多次实现错误的功能，才使用详细执行模式。`AGENTS.md` 只在长期规则或正式阶段状态变化时更新。已知 Vite bundle 超过 500 kB 是非阻断提示；除非体积异常增长或出现实际性能问题，不反复长篇说明，也不因此阻断普通任务。
 
 ## 日志字段
 
@@ -53,7 +57,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S5 完整 3D 灰盒地图 —— `v0.1.0-alpha`，Gate = PASS。
 - S6A 正式大米循环 —— Gate = PASS。
 - S6B 门系统 —— Gate = PASS。
-- S6C Human 反制 / PulseLock —— Gate = PASS。
+- S6C Human 反制 / Minesweeper Lock Counterplay —— Gate = PASS。
 
 当前下一阶段：S6D —— 双向信息系统；进入仍需用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
@@ -73,8 +77,8 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。
 - 人类抓捕需要 DeepSeek 娘在 Capture Zone 内连续约 0.35 秒，墙体、家具以及 CLOSED / LOCKED Door 会阻断有效抓捕。
 - Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door。最多同时存在 3 个 Active Lock；Lock Core 在逻辑和表现上独立于 Door Leaf。
-- Human 可在 ACTIVE Lock Core 的实际交互范围内按住 E 破解 LOCKED Door，DeepSeek 不可破解。破解持续 3 秒，期间 Human 不能移动但 Capture Zone 继续工作；中断进度保留 5 秒，超时后该门的破解进度清零，各门进度与保留时间相互独立。
-- Lock Core 状态为 `ACTIVE / DISABLED`。破解成功后门从 `LOCKED` 变为 `CLOSED`，不会自动打开，Human 必须松开并再次按 E 才能开门；同时释放一个 Active Lock Slot。DISABLED Core 本局不能再次上锁，Restart 或开始新 Match 时恢复为 ACTIVE。
+- Human 在可达的 LOCKED Door 旁按 E 打开 4×4 / 3 雷扫雷盘；长按或连点 E 不推进解锁。× / Esc 可退出，同一 Lock Core 的盘面在本局保留；面板开启时世界继续运行，Human 不能移动，Capture Zone 仍有效。扫雷成功使 Core `ACTIVE → DISABLED`、Door `LOCKED → CLOSED` 并释放 Active Lock Slot；Human 需再次 E 开门。失败时门保持 LOCKED、对局继续；扫雷不消耗强破冷却。
+- Human 按 Space 可免费快速打开普通 CLOSED Door，即使强破正在冷却也有效；对 LOCKED Door 则立即强破 Core 并 OPEN，触发 30 秒冷却。冷却中不能再强破锁门，但仍可 E 扫雷。DISABLED Core 本局不可重新上锁；Restart 或新 Match 恢复 Core、扫雷盘与技能。门交互采用较宽容的最近有效门判定，不可隔墙操作。
 - 角色视觉 Mesh 与 Gameplay Collider 必须解耦。当前角色使用 XZ Circle Footprint，环境使用 AABB，并以 Circle-vs-AABB、Axis-Separated Movement 和 Wall Sliding 解析碰撞；Sprint 使用同一规则。不要轻易恢复 Player Box / AABB Footprint，因为方形碰撞体在门框和墙角斜向移动时容易卡脚。
 
 ## 输入与暂停长期规则

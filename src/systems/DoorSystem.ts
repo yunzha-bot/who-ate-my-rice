@@ -4,7 +4,7 @@ export type DoorStateName = 'OPEN' | 'CLOSED' | 'LOCKED';
 export type LockCoreState = 'ACTIVE' | 'DISABLED';
 export type DoorActor = 'DEEPSEEK' | 'HUMAN';
 export type DoorActionResult =
-  | 'OPENED' | 'CLOSED' | 'LOCKED' | 'UNLOCKED'
+  | 'OPENED' | 'CLOSED' | 'LOCKED' | 'UNLOCKED' | 'FORCE_OPENED'
   | 'BLOCKED_BY_ACTOR' | 'LOCK_LIMIT_REACHED'
   | 'LOCK_CORE_DISABLED' | 'INVALID_STATE' | 'NOT_ALLOWED' | 'NOT_FOUND';
 
@@ -51,12 +51,14 @@ export class DoorSystem {
     return this.definitions.get(id);
   }
 
-  nearest(x: number, z: number, maxDistance: number): NearbyDoor | null {
+  nearest(x: number, z: number, maxDistance: number,
+    accessible: (door: DoorState, definition: DoorNode) => boolean = () => true): NearbyDoor | null {
     let nearest: NearbyDoor | null = null;
     for (const door of this.doors) {
       const definition = this.definitions.get(door.id)!;
       const distance = distanceToDoorSegment(x, z, definition);
-      if (distance <= maxDistance && (!nearest || distance < nearest.distance)) {
+      if (distance <= maxDistance && accessible(door, definition) &&
+          (!nearest || distance < nearest.distance)) {
         nearest = { door, definition, distance };
       }
     }
@@ -100,6 +102,18 @@ export class DoorSystem {
     return 'UNLOCKED';
   }
 
+  forceOpen(id: string, actor: DoorActor): DoorActionResult {
+    const door = this.get(id);
+    if (!door) return 'NOT_FOUND';
+    if (actor !== 'HUMAN') return 'NOT_ALLOWED';
+    if (door.lockCoreState === 'DISABLED') return 'LOCK_CORE_DISABLED';
+    if (door.state !== 'LOCKED' || !door.locked) return 'INVALID_STATE';
+    door.lockCoreState = 'DISABLED';
+    door.locked = false;
+    door.state = 'OPEN';
+    return 'FORCE_OPENED';
+  }
+
   reset(): void {
     for (const door of this.doors) {
       const definition = this.definitions.get(door.id)!;
@@ -111,12 +125,19 @@ export class DoorSystem {
 }
 
 export function distanceToDoorSegment(x: number, z: number, door: DoorNode): number {
+  const point = nearestPointOnDoorSegment(x, z, door);
+  return Math.hypot(x - point.x, z - point.z);
+}
+
+export function nearestPointOnDoorSegment(x: number, z: number, door: DoorNode): {
+  x: number; z: number;
+} {
   const half = door.width / 2;
   const nearestX = door.rotation === 0
-    ? Math.max(door.x - half, Math.min(x, door.x + half)) : door.x;
+    ? Math.max(door.x - half + 0.08, Math.min(x, door.x + half - 0.08)) : door.x;
   const nearestZ = door.rotation === 0
-    ? door.z : Math.max(door.z - half, Math.min(z, door.z + half));
-  return Math.hypot(x - nearestX, z - nearestZ);
+    ? door.z : Math.max(door.z - half + 0.08, Math.min(z, door.z + half - 0.08));
+  return { x: nearestX, z: nearestZ };
 }
 
 export function doorIntersectsActor(door: DoorNode, actorX: number, actorZ: number,
