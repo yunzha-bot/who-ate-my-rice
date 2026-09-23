@@ -25,6 +25,7 @@ export const GAME_CONFIG = {
     color: 0xf28b45,
   },
   humanAI: {
+    movementSpeedMultiplier: 0.92, // AI 移速倍率：在 Human 基础速度上降低约 8%，不影响玩家手动控制。
     navCellSize: 0.4, // 寻路网格边长：XZ 世界单位。
     repathIntervalMs: 500, // 目标移动后的最长重新寻路间隔：毫秒。
     waypointTolerance: 0.25, // 通过路径点的距离：世界单位。
@@ -32,6 +33,17 @@ export const GAME_CONFIG = {
     stuckRepathMs: 800, // 移动受阻后的重新寻路时间：毫秒。
     stuckProgressEpsilon: 0.05, // 卡路检测窗口内靠近路径节点的最小距离：世界单位。
     closedDoorPathCost: 3, // 普通关门格的额外无量纲寻路代价。
+    lockedDoorPathCost: 12, // 规划可破解锁门路线时，每个锁门格的额外网格代价。
+    aiUnlockDurationMs: 8_750, // AI 模拟破解锁芯的一次尝试时长：毫秒（原 5 秒的 1.75 倍）。
+    aiUnlockSuccessChance: 0.7, // AI 单次破解成功概率：0～1。
+    aiUnlockMaxAttempts: 2, // 同一锁芯本局最多尝试次数。
+    aiUnlockFailureAvoidMs: 6_000, // 失败后暂避该锁门的时间：毫秒。
+    forceBreakReserveMs: 1_800, // 路线比较时为长冷却技能保留的等效时间：毫秒。
+    detourSlackMs: 600, // 绕行路线可比锁门方案多耗费的容差：毫秒。
+    searchRadius: 12, // Last Seen 周边有限搜索半径：世界单位。
+    searchRoomCount: 3, // 一次追丢最多搜索的相邻房间数。
+    searchDwellMs: 900, // 每个搜索点的观察停留：毫秒。
+    searchMaxMs: 15_000, // 一次追丢搜索总时限：毫秒。
   },
   characterAnimation: {
     fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。

@@ -354,3 +354,28 @@
 - 新增文件：无。修改文件：Human AI、寻路、ThreeGame DEV HUD、Human AI / Navigation 测试、`src/config/gameConfig.ts`、`docs/GAME_BALANCE_CONFIG.md`、`AGENTS.md` 与本日志。删除文件：无。依赖变化：无。
 - 已有检查点：本工作基于 `2205b32`（`wip: preserve s7a human ai and action interface`）；本次阶段提交 hash 与 push 结果以 Git 实际执行为准。
 - 下一步：进入 S7A-2 Human AI 高级决策的计划与开发；本次不开始 S7A-2。
+
+## 2026-09-23 17:40 +08:00｜S7A-2 开发调试面板专项验收
+
+- 任务名称：记录可收纳调试面板专项人工验收。
+- 当前阶段：S7A Human AI 进行中；本次仅调试面板专项 PASS，整个 S7A 尚未完成。
+- 本次目标：记录用户确认的调试面板验收，并核对 Human AI 平衡参数的复验状态。
+- 实际完成内容：用户确认原左上、左下、右上调试窗口已整合为默认收起、可展开/收纳的统一面板；原有实时调试信息与游戏操作均保留。验收状态同步记录于 `AGENTS.md`，此处保留本次专项的具体结果。
+- 平衡参数核对：`GAME_CONFIG.humanAI.movementSpeedMultiplier = 0.92`（AI 专用倍率，约比 Human 基础速度低 8%）；`aiUnlockDurationMs = 8,750 ms`（原 5,000 ms 的 1.75 倍）。用户尚未确认这两项调整的最终手感复验，故仍为待验收，未将整个 S7A 标记完成。
+- 游戏功能代码及数值：本次未修改。新增文件：无；修改文件：`AGENTS.md`、本日志。删除文件：无。依赖变化：无。
+- 测试结果：本次为文档维护，未运行游戏测试；`git diff --check` 待本次收尾检查。
+- 已知问题：Human AI 移速与自动解锁耗时需等待最终手感复验。
+- 下一步建议：等待用户复验上述两项平衡调整；在整个 S7A Gate 通过前不进入 S7B。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-23 18:00 +08:00｜S7A Human AI 正式封版
+
+- 任务名称：修复构建环境阻断并完成 S7A 阶段收尾。当前开发阶段：S7A Gate = PASS；下一阶段 S7B DeepSeek AI，本次不开始。
+- 本次目标：确认 S7A 人工验收、构建与数值文档一致性，再提交现有 S7A 工作。
+- 人工验收：用户最终确认 S7A-0 角色动作接口、S7A-1 基础 Human AI、S7A-2 高级决策及可收纳调试面板均 PASS。先前“平衡待最终手感复验”记录保留为当时状态；现接受 AI 移动倍率 0.92 与单次自动解锁 8,750 毫秒。解锁速度留到 S16 平衡阶段继续调整，不阻断本次 Gate。
+- 实际完成内容：保留已有 Human AI 巡逻、循声调查、视觉追逐、有限搜索、锁门绕行/模拟破解/强破、暂停及开发控制接管、调试 HUD 与动作接口；本次未修改玩法或平衡值。`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 的 AI 参数已核对一致。
+- 构建问题：`public/assets/.gitkeep` 是被 Git 跟踪的零字节占位文件，Vite 会把它复制到 `dist/assets/.gitkeep`；没有源码或运行依赖，现已移除。先前该路径 EPERM 的已验证原因是当前 Codex 受限执行对仓库路径没有写入权限：原始 `npm run build` 在具备该目录写入权限的执行环境下成功。未发现只读属性，也未确认有项目进程占用；不据此认定一般 Windows 文件锁已被完全排除。保留原始 TypeScript + Vite 构建命令，未改 Vite 输出目录、npm 脚本或系统 ACL。
+- 验证：移除占位文件后连续 3 次 `npm run build` PASS（均执行 TypeScript 检查与生产构建）；`npm test` 165/165 PASS；开发服务 `127.0.0.1:5174` 在构建后仍返回 HTTP 200；`dist/assets/.gitkeep` 未再生成。故意设置不存在的 Node 预加载模块时，`npm run build` 返回退出码 1，确认失败不会被伪报成功。`git diff --check` 以本次最终检查结果为准。
+- 新增文件：无。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`，并纳入此前未提交的 S7A 配置文档、Human AI、寻路、调试面板及测试修改。删除文件：无用途的 `public/assets/.gitkeep`。依赖变化：无。
+- 已知非阻断问题：Vite 主 JS chunk 约 624.28 kB，高于 500 kB 提示线；当前 Codex 若再次以无仓库写入权限的受限执行构建，仍可能在其他 `dist` 文件遇到 EPERM，需按项目写入边界处理；一般 Windows 文件占用风险未被证明为零。S16 待办：复评 Human AI 自动解锁速度。
+- Git commit 信息：计划 `feat: complete s7a human ai`，实际 hash 与推送结果以本次 Git 执行和最终汇报为准；本阶段不创建 Tag。

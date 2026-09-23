@@ -9,7 +9,8 @@ import { HumanDoorSkill } from '../systems/HumanDoorSkill';
 import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
-import { HumanAIController, shouldRunHumanAI } from '../systems/HumanAIController';
+import { HumanAIController, humanAiMovementSpeed, shouldRunHumanAI }
+  from '../systems/HumanAIController';
 import { resolveCharacterAction } from '../systems/CharacterAction';
 import { NavigationSystem } from '../systems/NavigationSystem';
 import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
@@ -69,6 +70,9 @@ export class ThreeGame {
   private collision: CollisionWorld;
   private humanAI: HumanAIController;
   private humanAiWasActive = false;
+  private debugPanel: HTMLElement;
+  private debugContent: HTMLElement;
+  private debugToggle: HTMLButtonElement;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
   private perceptionHud: HTMLElement;
@@ -132,9 +136,26 @@ export class ThreeGame {
     window.addEventListener('resize', this.resize);
     this.resize();
 
-    this.hud = this.label(container, 'game-hud');
-    this.riceHud = this.label(container, 'rice-hud');
-    this.perceptionHud = this.label(container, 'perception-hud');
+    this.debugPanel = this.label(container, 'debug-panel');
+    this.debugToggle = document.createElement('button');
+    this.debugToggle.type = 'button';
+    this.debugToggle.className = 'debug-toggle';
+    this.debugToggle.textContent = 'DEV ▾';
+    this.debugToggle.setAttribute('aria-expanded', 'false');
+    this.debugToggle.addEventListener('click', () => this.toggleDebugPanel());
+    this.debugPanel.append(this.debugToggle);
+    this.debugContent = this.label(this.debugPanel, 'debug-content');
+    this.debugContent.hidden = true;
+
+    const matchSection = this.label(this.debugContent, 'debug-section');
+    const matchTitle = this.label(matchSection, 'debug-section-title');
+    matchTitle.textContent = '对局状态';
+    this.hud = this.label(matchSection, 'game-hud');
+    this.riceHud = this.label(matchSection, 'rice-hud');
+
+    this.perceptionHud = this.label(this.debugContent, 'debug-section perception-hud');
+    const perceptionTitle = this.label(this.perceptionHud, 'debug-section-title');
+    perceptionTitle.textContent = '感知 / 信息';
     this.soundArrow = this.label(this.perceptionHud, 'sound-arrow');
     this.soundDetails = this.label(this.perceptionHud, 'sound-details');
     this.visionDetails = this.label(this.perceptionHud, 'vision-details');
@@ -142,6 +163,10 @@ export class ThreeGame {
     this.debugPossession = this.label(this.perceptionHud, 'debug-possession');
     this.humanAiDetails = this.label(this.perceptionHud, 'human-ai-details');
     this.actionDetails = this.label(this.perceptionHud, 'action-details');
+    const controlsSection = this.label(this.debugContent, 'debug-section');
+    const controlsTitle = this.label(controlsSection, 'debug-section-title');
+    controlsTitle.textContent = '控制 / 玩法调试';
+    controlsSection.append(this.debugPossession, this.humanAiDetails, this.actionDetails);
     this.actionDetails.hidden = !import.meta.env.DEV;
     if (this.debugPossessionEnabled) {
       for (const faction of ['HUMAN', 'DEEPSEEK'] as const) {
@@ -227,6 +252,12 @@ export class ThreeGame {
     element.className = className;
     parent.append(element);
     return element;
+  }
+
+  private toggleDebugPanel(): void {
+    this.debugContent.hidden = !this.debugContent.hidden;
+    this.debugToggle.textContent = this.debugContent.hidden ? 'DEV ▾' : '收起 DEV ▴';
+    this.debugToggle.setAttribute('aria-expanded', String(!this.debugContent.hidden));
   }
 
   private chooseFaction(faction: Faction): void {
@@ -430,6 +461,7 @@ export class ThreeGame {
         heard: this.sound.heardBy(this.human.position, 'HUMAN', this.camera,
           this.perceptionGeometry),
         captureEligible, doors: this.doorSystem.doors,
+        forceBreakCooldownMs: this.humanDoorSkill.cooldownRemainingMs,
         canOpenDoor: id => {
           const node = this.doorSystem.definition(id);
           return !!node && canInteractWithDoorXZ(this.collision, this.human.position, node);
@@ -439,10 +471,22 @@ export class ThreeGame {
         const result = this.doorSystem.toggle(command.openDoorId, 'HUMAN');
         this.applyDoorResult(command.openDoorId, result, 'HUMAN');
       }
+      if (command.unlockDoorId) {
+        const result = this.doorSystem.disableLock(command.unlockDoorId, 'HUMAN');
+        this.applyDoorResult(command.unlockDoorId, result, 'HUMAN');
+      }
+      if (command.forceBreakDoorId) {
+        const result = this.humanDoorSkill.use(command.forceBreakDoorId,
+          'HUMAN', this.match.phase);
+        if (result !== 'COOLDOWN')
+          this.applyDoorResult(command.forceBreakDoorId, result, 'HUMAN');
+      }
       aiHumanDirection = { x: command.direction.x, y: command.direction.z };
     }
     this.humanAiWasActive = aiCanAct;
-    const humanSpeed = C.player.speed / U * C.human.speedMultiplier;
+    const baseHumanSpeed = C.player.speed / U * C.human.speedMultiplier;
+    const humanSpeed = aiHumanDirection
+      ? humanAiMovementSpeed(baseHumanSpeed) : baseHumanSpeed;
     const activeHumanDirection = doorInteraction.humanMovementLocked
       ? { x: 0, y: 0 } : aiHumanDirection ?? humanDirection;
     const oldHuman = this.human.position.clone();
@@ -502,7 +546,8 @@ export class ThreeGame {
       moving: humanMoved,
       running: humanMoved && aiEnabled && this.humanAI.state === 'CHASE',
       capturing: this.captureZoneActive,
-      interacting: this.minesweeper.isOpen || (this.control.isControlling('HUMAN') &&
+      interacting: (aiEnabled && this.humanAI.unlockProgressMs > 0) ||
+        this.minesweeper.isOpen || (this.control.isControlling('HUMAN') &&
         this.input.isHeld('KeyE') && !!this.nearestInteractableDoor(this.human.position)),
     }), deltaMs);
   }
@@ -803,6 +848,7 @@ export class ThreeGame {
     this.pauseActions.hidden = phase !== 'PAUSED';
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
+    this.debugPanel.hidden = phase === 'FACTION_SELECT';
   }
 
   private mineHudEntry(): MineEntry | null {
@@ -916,6 +962,12 @@ export class ThreeGame {
           `(${goal.x.toFixed(1)}, ${goal.z.toFixed(1)})` : '无'}\n` +
         `路径节点：${path ? `${path.index}/${path.total} ` +
           `(${path.waypoint.x.toFixed(1)}, ${path.waypoint.z.toFixed(1)})` : '无'}\n` +
+        `锁门决策：${this.humanAI.lockDecision} / ${this.humanAI.targetDoorId ?? '无'}\n` +
+        `选择原因：${this.humanAI.decisionReason}\n` +
+        `解锁：${(this.humanAI.unlockProgressMs / 1000).toFixed(1)}s / ` +
+          `${(C.humanAI.aiUnlockDurationMs / 1000).toFixed(1)}s\n` +
+        `强破 CD：${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)}s\n` +
+        `搜索房间：${this.humanAI.searchTargetRoomId ?? '无'}\n` +
         `切换原因：${this.humanAI.lastTransitionReason}\n` +
         `路径事件：${this.humanAI.lastNavigationReason}`;
     }

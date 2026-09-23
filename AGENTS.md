@@ -76,8 +76,9 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S6C Human 反制 / Minesweeper Lock Counterplay —— Gate = PASS。
 - S6D 双向信息系统 —— Gate = PASS；声音、米痕、视野及调试主控切换已通过人工验收。
 - S6 游戏玩法 Alpha —— Gate = PASS；里程碑 `v0.2.0-alpha` 以实际推送结果为准。
+- S7A Human AI —— S7A-0 动作接口、S7A-1 基础行为、S7A-2 高级决策及可收纳调试面板人工验收 PASS；Gate = PASS。
 
-当前阶段：S7A —— Human AI，进行中。S7A-0 角色动作接口专项 = PASS；S7A-1 Human AI 基础行为 = PASS。CURRENT = S7A-2 Human AI 高级决策；整个 S7A 尚未完成，不得据前两项通过将整个 S7A 标记完成。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前下一阶段：S7B —— DeepSeek AI。Human AI 移动倍率 0.92 与自动解锁耗时 8,750 毫秒暂按用户决定接受；自动解锁速度留到 S16 平衡阶段继续调整。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
 
@@ -108,9 +109,9 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 ## Build Environment
 
-- 执行正式 `npm run build`，尤其是阶段收尾前，先检查并正常停止由当前 Codex / 开发环境启动、且能明确确认属于本项目的 Vite dev / preview server。
-- 若构建出现 `EPERM` 或 `dist` 写入、创建、清理错误，优先排查当前项目的 Vite、`npm run dev`、`npm run preview` 和相关 Node 子进程；不要先修改游戏代码、Vite `outDir`、Windows ACL，也不要使用管理员提权、`takeown`、`icacls` 或强杀不明进程。
-- 只允许安全停止能明确确认属于当前项目的开发 / 预览进程；若停止后项目根目录仍不可写，再报告环境权限问题。
+- `npm run build` 保持 `tsc --noEmit && vite build`，构建失败必须返回非零。`dist/` 是被 Git 忽略的可重建产物；不要在 `public/assets/` 放置仅用于保留空目录的 `.gitkeep`，Vite 会将其复制到 `dist/assets/`。
+- 遇到 `dist` 的 `EPERM` 时，先核对仓库是否处于当前 Codex 可写工作区。已验证：本仓库位于可写根目录外时，受限执行会在 `dist/assets/.gitkeep` 报 EPERM；同一原始构建命令获得项目目录写入权限后连续三次成功。这是执行环境的写入边界，不能据该报错直接认定 Windows 文件占用；文件系统授权不等于 Windows 管理员提权。
+- 再检查是否有能明确归属本项目的 Vite dev / preview 进程；需要停止时优先正常中断，不结束身份不明的进程。开发服务器与生产输出已验证可同时运行，无需仅因浏览器预览打开就停止服务。若获得项目写入权限后仍报 EPERM，再检查文件属性、具体路径和进程占用，并报告；不修改 Windows ACL、不使用 `takeown`、`icacls`、管理员提权或强杀不明进程。
 
 ## 阶段状态维护规则
 

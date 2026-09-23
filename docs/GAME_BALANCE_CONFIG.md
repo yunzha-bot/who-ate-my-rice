@@ -20,7 +20,7 @@
 | `C.player.size` / `C.human.size` | 32 / 32 | 像素；占位体尺寸 | 改动视觉体型时检查逻辑碰撞圆，不要假设两者自动相等。 |
 | `C.player.speed` | 230 | 像素/秒；DeepSeek 基础移动速度 | 运行时除以 `C.three.pixelsPerUnit`。 |
 | `C.three.pixelsPerUnit` | 60 | 像素/世界单位；角色速度、米袋尺寸与进食距离的换算基准 | 地图坐标仍按世界单位绘制，修改会同时改变多套尺寸关系，需全面验收。 |
-| `C.human.speedMultiplier` | 1.08 | 倍率；Human 相对基础速度 | 改动后重新测试追逐与抓捕胜率。 |
+| `C.human.speedMultiplier` | 1.08 | 倍率；Human（包括玩家手动控制）的基础速度 | 改动后重新测试追逐与抓捕胜率。 |
 | `C.collision.playerRadius` | 0.23 | 世界单位；两个角色的逻辑碰撞圆半径 | 会影响墙角、门框通行；不能直接当作抓捕圈半径。 |
 | `C.collision.contactEpsilon` / `maxMovementSubstep` | 0.0001 / 0.12 | 世界单位；接触容差与单次移动分步上限 | 属碰撞稳定性参数，修改需回归 Wall Sliding 和防穿墙。 |
 | `C.sprint.speedMultiplier` | 1.6 | 倍率；冲刺相对基础速度 | 追逐与墙角碰撞均受影响。 |
@@ -32,19 +32,27 @@
 | `C.match.readyMs` | 3,000 | 毫秒；开局准备时间 | 与正式对局已进行时间分开。 |
 | `C.match.maxFrameDeltaMs` | 50 | 毫秒；单帧规则推进上限 | 为浏览器切换/卡帧稳定性服务，修改会影响所有逐帧计时。 |
 
-## Human AI（S7A 第一轮开发参数）
+## Human AI（S7A 开发参数）
 
 AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声源所在区域，目视追逐才使用目标实时位置；抓捕仍由原有 `C.match` 规则裁决。
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
+| `C.humanAI.movementSpeedMultiplier` | 0.92 | 倍率；AI Human 在 Human 基础速度上的独立倍率，约降低 8% | 不影响玩家手动控制；巡逻、调查、追逐共用。 |
+| `C.humanAI.aiUnlockDurationMs` | 8,750 | 毫秒；AI 单次模拟破解锁芯的耗时（原 5,000 毫秒的 1.75 倍） | 只影响 AI，不影响玩家扫雷或强破冷却。 |
 | `C.humanAI.navCellSize` | 0.4 | 世界单位；XZ 寻路网格边长 | 改大可能漏掉门洞；改小会增加 A* 开销，须复测全图可达。 |
 | `C.humanAI.repathIntervalMs` | 500 | 毫秒；追逐时最长路径刷新间隔 | 太大可能跟丢移动目标。 |
 | `C.humanAI.waypointTolerance` | 0.25 | 世界单位；路径点到达容差 | 应与网格间距和角色步长一起调整，避免原地抖动。 |
 | `C.humanAI.investigationDwellMs` | 3,000 | 毫秒；到达声音/最后目击区域后等待时间 | 调整搜索节奏，不改变感知范围。 |
 | `C.humanAI.stuckRepathMs` | 800 | 毫秒；受阻后强制重新寻路阈值 | 太短可能频繁重算。 |
 | `C.humanAI.stuckProgressEpsilon` | 0.05 | 世界单位；受阻检测窗口内至少应缩短的路径节点距离 | 太大可能将正常绕行误判为卡路；太小可能漏掉原地抖动。 |
-| `C.humanAI.closedDoorPathCost` | 3 | 无量纲；路径经过普通关门格的额外成本 | 锁门始终不可走；普通关门由 AI 通过现有 DoorSystem 打开。 |
+| `C.humanAI.closedDoorPathCost` | 3 | 无量纲；路径经过普通关门格的额外成本 | 普通关门由 AI 通过现有 DoorSystem 打开。 |
+| `C.humanAI.lockedDoorPathCost` | 12 | 网格代价；仅在比较可破解锁门路线与绕行路线时使用 | 仅允许规划经过锁门；实体锁门始终阻挡，AI 须先解锁或强破。 |
+| `C.humanAI.aiUnlockSuccessChance` | 0.7 | 概率；AI 单次模拟解锁成功率 | 失败后的尝试上限与暂避机制保持原值。 |
+| `C.humanAI.aiUnlockMaxAttempts` / `aiUnlockFailureAvoidMs` | 2 / 6,000 | 次 / 毫秒；同锁芯尝试上限及失败后暂避时间 | 两次失败后只能绕行或等待强破冷却。 |
+| `C.humanAI.forceBreakReserveMs` / `detourSlackMs` | 1,800 / 600 | 毫秒；路线比较时的技能机会成本与绕行容差 | 仅影响 AI 决策；实际强破冷却仍取 `C.door.humanForceBreakCooldownMs`。 |
+| `C.humanAI.searchRadius` / `searchRoomCount` | 12 / 3 | 世界单位 / 间；追丢后的邻近搜索范围和上限 | 不提供目标实时位置，目标来自 Last Seen。 |
+| `C.humanAI.searchDwellMs` / `searchMaxMs` | 900 / 15,000 | 毫秒；搜索点停留和一次搜索时限 | 超时恢复巡逻，避免反复搜索同处。 |
 
 ## 角色动作表现（S7A 占位接口）
 

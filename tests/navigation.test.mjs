@@ -39,6 +39,10 @@ test('closed doors remain routeable, while locked doors force an alternate loop'
   const alternate = nav.findPath(SPAWNS.human, living, doors.doors);
   assert.ok(alternate?.length);
   assert.ok(!alternate.some(step => step.doorId === 'door_living_kitchen'));
+  const plannedUnlock = nav.findPath(SPAWNS.human, living, doors.doors,
+    undefined, 0);
+  assert.ok(plannedUnlock?.some(step => step.doorId === 'door_living_kitchen'));
+  assert.equal(doors.get('door_living_kitchen').state, 'LOCKED');
 });
 
 test('navigation never cuts a blocked diagonal corner', () => {
@@ -126,7 +130,7 @@ test('patrol physically enters all ten major apartment rooms', () => {
       world.setDynamicObstacle(command.openDoorId, null);
     }
     const speed = GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit *
-      GAME_CONFIG.human.speedMultiplier;
+      GAME_CONFIG.human.speedMultiplier * GAME_CONFIG.humanAI.movementSpeedMultiplier;
     human.copy(world.move(human, command.direction.x * speed * 0.05,
       command.direction.z * speed * 0.05, GAME_CONFIG.collision.playerRadius,
       GAME_CONFIG.three.actorHeight));
@@ -165,7 +169,7 @@ test('Human AI investigates through an alternate route instead of a locked door'
       world.setDynamicObstacle(command.openDoorId, null);
     }
     const speed = GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit *
-      GAME_CONFIG.human.speedMultiplier;
+      GAME_CONFIG.human.speedMultiplier * GAME_CONFIG.humanAI.movementSpeedMultiplier;
     human.copy(world.move(human, command.direction.x * speed * 0.05,
       command.direction.z * speed * 0.05, GAME_CONFIG.collision.playerRadius,
       GAME_CONFIG.three.actorHeight));

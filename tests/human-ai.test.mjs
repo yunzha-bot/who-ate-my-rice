@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HumanAIController, shouldRunHumanAI } from '../src/systems/HumanAIController.ts';
+import { HumanAIController, humanAiMovementSpeed, shouldRunHumanAI } from '../src/systems/HumanAIController.ts';
 import { GameStateSystem } from '../src/systems/GameStateSystem.ts';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { OrthographicCamera } from 'three';
 import { PerceptionGeometry, SoundEventSystem } from '../src/systems/PerceptionSystem.ts';
+import { DoorSystem } from '../src/systems/DoorSystem.ts';
+import { HumanDoorSkill } from '../src/systems/HumanDoorSkill.ts';
 
 const rooms = [
   { id: 'kitchen', x: 0, z: 0, minX: -2, maxX: 2, minZ: -2, maxZ: 2, major: true },
@@ -65,7 +67,7 @@ test('vision outranks sound; capture uses existing continuous match timer', () =
   assert.equal(match.result?.winner, 'HUMAN');
 });
 
-test('lost sight leads to last seen investigation, dwell, and patrol', () => {
+test('lost sight leads to last seen investigation, finite room search, and patrol', () => {
   const ai = new HumanAIController(fakeNavigation, rooms, []);
   const lastSeen = { position: { x: 8, z: 0 }, timeMs: 80 };
   ai.update(input({ visibleTarget: lastSeen.position, lastSeen }));
@@ -78,6 +80,10 @@ test('lost sight leads to last seen investigation, dwell, and patrol', () => {
   ai.update(input({ human: lastSeen.position, lastSeen, deltaMs: 1499 }));
   assert.equal(ai.state, 'INVESTIGATE');
   ai.update(input({ human: lastSeen.position, lastSeen, deltaMs: 1 }));
+  assert.equal(ai.state, 'SEARCH');
+  assert.equal(ai.searchTargetRoomId, 'kitchen');
+  ai.update(input({ human: { x: 0, z: 0 }, lastSeen,
+    deltaMs: GAME_CONFIG.humanAI.searchDwellMs }));
   assert.equal(ai.state, 'PATROL');
   ai.reset();
   assert.equal(ai.state, 'PATROL');
@@ -96,7 +102,137 @@ test('last seen search outranks sound and repeated footsteps cannot reset its dw
     heard: sound({ x: 0, z: 0 }, 200) }));
   assert.equal(ai.state, 'INVESTIGATE');
   ai.update(input({ human: lastSeen.position, lastSeen, deltaMs: 1000 }));
+  assert.equal(ai.state, 'SEARCH');
+  ai.update(input({ human: { x: 0, z: 0 }, lastSeen,
+    deltaMs: GAME_CONFIG.humanAI.searchDwellMs }));
   assert.equal(ai.state, 'PATROL');
+});
+
+test('AI compares a reachable detour with a locked route and avoids a similar-cost lock', () => {
+  const node = { id: 'd', x: 0.6, z: 0, width: 1.2, rotation: Math.PI / 2,
+    connectedRoomA: 'kitchen', connectedRoomB: 'living' };
+  const nav = { nearestFree: goal => goal,
+    findPath: (start, goal, doors, avoid, lockedCost = null) => lockedCost === null
+      ? [{ ...start, doorId: null }, { x: 4, z: 0, doorId: null },
+        { ...goal, doorId: null }]
+      : [{ ...start, doorId: null }, { x: 0.6, z: 0, doorId: 'd' },
+        { ...goal, doorId: null }] };
+  const ai = new HumanAIController(nav, rooms, [node]);
+  const door = { id: 'd', state: 'LOCKED', lockCoreState: 'ACTIVE' };
+  const command = ai.update(input({ doors: [door] }));
+  assert.equal(ai.lockDecision, 'DETOUR');
+  assert.equal(command.forceBreakDoorId, null);
+  assert.equal(command.unlockDoorId, null);
+});
+
+test('AI uses real force break when a lock is the only route, then respects cooldown', () => {
+  const node = { id: 'd', x: 0.6, z: 0, width: 1.2, rotation: Math.PI / 2,
+    initialState: 'CLOSED', connectedRoomA: 'kitchen', connectedRoomB: 'living' };
+  const nav = { nearestFree: goal => goal,
+    findPath: (start, goal, doors, avoid, lockedCost = null, blocked) =>
+      lockedCost === null || blocked?.has('d') ? null
+        : [{ ...start, doorId: null }, { x: 0.6, z: 0, doorId: 'd' },
+          { ...goal, doorId: null }] };
+  const ai = new HumanAIController(nav, rooms, [node]);
+  const door = { id: 'd', state: 'LOCKED', lockCoreState: 'ACTIVE' };
+  const force = ai.update(input({ doors: [door], forceBreakCooldownMs: 0 }));
+  assert.equal(ai.lockDecision, 'FORCE_BREAK');
+  assert.equal(force.forceBreakDoorId, 'd');
+  const blocked = ai.update(input({ doors: [door], forceBreakCooldownMs: 30000 }));
+  assert.equal(blocked.forceBreakDoorId, null);
+  assert.equal(ai.lockDecision, 'UNLOCK');
+});
+
+test('AI unlock takes time, fails into a finite avoidance, and succeeds on a fresh try', () => {
+  const node = { id: 'd', x: 0.6, z: 0, width: 1.2, rotation: Math.PI / 2,
+    connectedRoomA: 'kitchen', connectedRoomB: 'living' };
+  const nav = { nearestFree: goal => goal,
+    findPath: (start, goal, doors, avoid, lockedCost = null, blocked) =>
+      lockedCost === null || blocked?.has('d') ? null
+        : [{ ...start, doorId: null }, { x: 0.6, z: 0, doorId: 'd' },
+          { ...goal, doorId: null }] };
+  let roll = 1;
+  const ai = new HumanAIController(nav, rooms, [node], () => roll);
+  const door = { id: 'd', state: 'LOCKED', lockCoreState: 'ACTIVE' };
+  const attempt = ms => ai.update(input({ doors: [door],
+    forceBreakCooldownMs: 30000, deltaMs: ms }));
+  assert.equal(attempt(GAME_CONFIG.humanAI.aiUnlockDurationMs - 1).unlockDoorId, null);
+  assert.equal(ai.unlockProgressMs, GAME_CONFIG.humanAI.aiUnlockDurationMs - 1);
+  const failure = attempt(1);
+  assert.equal(failure.unlockDoorId, null);
+  assert.equal(ai.unlockProgressMs, 0);
+  assert.match(ai.lastNavigationReason, /AI_UNLOCK_FAILED/);
+  assert.equal(attempt(100).unlockDoorId, null);
+  roll = 0;
+  attempt(GAME_CONFIG.humanAI.aiUnlockFailureAvoidMs);
+  assert.equal(attempt(GAME_CONFIG.humanAI.aiUnlockDurationMs).unlockDoorId, 'd');
+  ai.reset();
+  assert.equal(ai.unlockProgressMs, 0);
+  assert.equal(ai.targetDoorId, null);
+});
+
+test('AI movement uses a separate 0.92 multiplier; manual Human keeps its original speed', () => {
+  const manualSpeed = GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit *
+    GAME_CONFIG.human.speedMultiplier;
+  assert.equal(GAME_CONFIG.humanAI.movementSpeedMultiplier, 0.92);
+  assert.equal(humanAiMovementSpeed(manualSpeed),
+    manualSpeed * GAME_CONFIG.humanAI.movementSpeedMultiplier);
+  assert.ok(Math.abs(manualSpeed - 4.14) < 1e-9);
+  assert.ok(Math.abs(humanAiMovementSpeed(manualSpeed) - 3.8088) < 1e-9);
+  assert.equal(GAME_CONFIG.human.speedMultiplier, 1.08);
+});
+
+test('AI unlock tuning does not change force-break cooldown and reset clears AI state', () => {
+  assert.equal(GAME_CONFIG.humanAI.aiUnlockDurationMs, 8_750);
+  assert.equal(GAME_CONFIG.door.humanForceBreakCooldownMs, 30_000);
+  const node = { id: 'd', x: 0.6, z: 0, width: 1.2, rotation: Math.PI / 2,
+    connectedRoomA: 'kitchen', connectedRoomB: 'living' };
+  const nav = { nearestFree: goal => goal,
+    findPath: (start, goal, doors, avoid, lockedCost = null) => lockedCost === null
+      ? null : [{ ...start, doorId: null }, { ...goal, doorId: 'd' }] };
+  const ai = new HumanAIController(nav, rooms, [node], () => 0);
+  ai.update(input({ doors: [{ id: 'd', state: 'LOCKED', lockCoreState: 'ACTIVE' }],
+    forceBreakCooldownMs: 30_000, deltaMs: 1_000 }));
+  assert.equal(ai.unlockProgressMs, 1_000);
+  assert.equal(shouldRunHumanAI('PAUSED', 'DEEPSEEK', 'DEEPSEEK',
+    { x: 0, y: 0 }, true), false);
+  // Paused frames do not call update(), so in-progress AI unlocking remains frozen.
+  assert.equal(ai.unlockProgressMs, 1_000);
+  ai.reset();
+  assert.equal(ai.state, 'PATROL');
+  assert.equal(ai.unlockProgressMs, 0);
+});
+
+test('AI force break uses Human skill cooldown and AI unlock leaves a closed door', () => {
+  const node = { id: 'd', x: 0.6, z: 0, width: 1.2, rotation: Math.PI / 2,
+    initialState: 'CLOSED', connectedRoomA: 'kitchen', connectedRoomB: 'living' };
+  const nav = { nearestFree: goal => goal,
+    findPath: (start, goal, doors, avoid, lockedCost = null) =>
+      doors[0]?.state === 'LOCKED' && lockedCost === null ? null
+        : [{ ...start, doorId: null }, { x: 0.6, z: 0, doorId: 'd' },
+          { ...goal, doorId: null }] };
+  const doors = new DoorSystem([node], 1);
+  const skill = new HumanDoorSkill(doors, GAME_CONFIG.door.humanForceBreakCooldownMs);
+  assert.equal(doors.lock('d', 'DEEPSEEK'), 'LOCKED');
+  const ai = new HumanAIController(nav, rooms, [node], () => 0);
+  const force = ai.update(input({ doors: doors.doors,
+    forceBreakCooldownMs: skill.cooldownRemainingMs }));
+  assert.equal(skill.use(force.forceBreakDoorId, 'HUMAN', 'PLAYING'), 'FORCE_OPENED');
+  assert.equal(doors.get('d').state, 'OPEN');
+  assert.equal(doors.get('d').lockCoreState, 'DISABLED');
+  assert.equal(doors.activeLockedDoorCount, 0);
+  assert.ok(skill.cooldownRemainingMs > 0);
+  doors.reset();
+  ai.reset();
+  assert.equal(doors.lock('d', 'DEEPSEEK'), 'LOCKED');
+  const unlock = ai.update(input({ doors: doors.doors,
+    forceBreakCooldownMs: skill.cooldownRemainingMs,
+    deltaMs: GAME_CONFIG.humanAI.aiUnlockDurationMs }));
+  assert.equal(doors.disableLock(unlock.unlockDoorId, 'HUMAN'), 'UNLOCKED');
+  assert.equal(doors.get('d').state, 'CLOSED');
+  assert.equal(doors.activeLockedDoorCount, 0);
+  assert.equal(skill.cooldownRemainingMs, GAME_CONFIG.door.humanForceBreakCooldownMs);
+  assert.equal(ai.update(input({ doors: doors.doors })).openDoorId, 'd');
 });
 
 test('patrol selects nearest unvisited reachable room and resumes after manual control', () => {

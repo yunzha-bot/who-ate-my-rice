@@ -36,11 +36,14 @@ export class NavigationSystem {
   }
 
   findPath(start: Point, goal: Point, doors: readonly DoorState[],
-    avoid?: Point): NavStep[] | null {
+    avoid?: Point, lockedDoorCost: number | null = null,
+    blockedDoors: ReadonlySet<string> = new Set()): NavStep[] | null {
     const states = new Map(doors.map(door => [door.id, door.state]));
-    const passable = (index: number): boolean =>
-      this.staticFree[index] &&
-      (!this.doorAt[index] || states.get(this.doorAt[index]!) !== 'LOCKED');
+    const passable = (index: number): boolean => {
+      const id = this.doorAt[index];
+      return this.staticFree[index] && (!id || (!blockedDoors.has(id) &&
+        (states.get(id) !== 'LOCKED' || lockedDoorCost !== null)));
+    };
     const first = this.nearestPassable(start, passable);
     const last = this.nearestPassable(goal, passable);
     if (first < 0 || last < 0) return null;
@@ -109,9 +112,12 @@ export class NavigationSystem {
         if (dx && dz && (!passable(cz * this.columns + x) ||
             !passable(z * this.columns + cx))) continue;
         const edge = this.edgeInfo(current, next);
-        if (!edge.free || (edge.doorId && states.get(edge.doorId) === 'LOCKED')) continue;
+        if (!edge.free || (edge.doorId && (blockedDoors.has(edge.doorId) ||
+            (states.get(edge.doorId) === 'LOCKED' && lockedDoorCost === null)))) continue;
         const doorCost = edge.doorId && states.get(edge.doorId) === 'CLOSED'
-          ? GAME_CONFIG.humanAI.closedDoorPathCost : 0;
+          ? GAME_CONFIG.humanAI.closedDoorPathCost
+          : edge.doorId && states.get(edge.doorId) === 'LOCKED'
+            ? lockedDoorCost ?? 0 : 0;
         const nextCost = cost[current] + (dx && dz ? Math.SQRT2 : 1) + doorCost;
         if (nextCost >= cost[next]) continue;
         cost[next] = nextCost;
