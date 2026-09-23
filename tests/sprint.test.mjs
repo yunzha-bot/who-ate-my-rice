@@ -116,12 +116,12 @@ test('reset clears sprint, risk, stun, and last direction for the next round', (
   assert.deepEqual(sprint.lastDirection, stopped);
 });
 
-test('one development rice reaches the temporary 30% threshold at 1.5 seconds', () => {
-  assert.equal(RICE_TIMING_MODE, 'development');
+test('one configured rice reaches the sprint risk threshold at the same progress ratio', () => {
   assert.equal(RICE_MAX_PROGRESS_MS.production, 60_000);
-  assert.equal(GAME_CONFIG.rice.maxProgressMs, 5_000);
+  assert.equal(GAME_CONFIG.rice.maxProgressMs, RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE]);
   const rice = new RiceSystem('rice-1', GAME_CONFIG.rice.maxProgressMs, GAME_CONFIG.rice.prepareMs);
-  rice.update(1_899, true);
+  const thresholdMs = GAME_CONFIG.rice.maxProgressMs * GAME_CONFIG.sprint.riskThreshold;
+  rice.update(GAME_CONFIG.rice.prepareMs + thresholdMs - 1, true);
   const safe = makeSprint();
   safe.tryStart(right, rice.rice.progressMs / rice.rice.maxProgressMs);
   assert.equal(safe.riskMode, 'SAFE');

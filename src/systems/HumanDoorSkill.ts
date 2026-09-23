@@ -1,3 +1,4 @@
+import { GAME_CONFIG } from '../config/gameConfig.ts';
 import { DoorSystem, type DoorActor, type DoorActionResult } from './DoorSystem.ts';
 import type { GamePhase } from './GameStateSystem.ts';
 
@@ -17,7 +18,10 @@ export class HumanDoorSkill {
     if (phase !== 'PLAYING' || actor !== 'HUMAN') return 'NOT_ALLOWED';
     const door = this.doors.get(doorId);
     if (!door) return 'NOT_FOUND';
-    if (door.state === 'CLOSED') return this.doors.toggle(doorId, actor);
+    if (door.state === 'CLOSED') {
+      return GAME_CONFIG.door.humanFreeOpenClosedDoor
+        ? this.doors.toggle(doorId, actor) : 'INVALID_STATE';
+    }
     if (door.state !== 'LOCKED') return 'INVALID_STATE';
     if (this.cooldownRemainingMs > 0) return 'COOLDOWN';
     const result = this.doors.forceOpen(doorId, actor);

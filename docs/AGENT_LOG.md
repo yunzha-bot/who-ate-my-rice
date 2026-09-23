@@ -299,3 +299,16 @@
 - 已知问题：主 JS bundle 约 581.22 kB 的 Vite >500 kB 提示仍为非阻断警告；无法确定此前 EPERM 的唯一成因。仓库不存在 `docs/SHARED_GAMEPLAY_SPEC.md`，按要求未新建。
 - 下一步建议：完成本次 commit / push 后等待用户另行授权 S6D，不创建 Tag、不提前开始下一阶段。
 - Git commit 信息：计划 `feat: complete human lock counterplay`；实际提交及推送结果以最终汇报为准。
+
+## 2026-09-23 11:26 +08:00｜S6D / S6 游戏玩法 Alpha 正式封版
+
+- 任务名称：S6D 双向信息系统及 S6 游戏玩法 Alpha 收尾；当前开发阶段：S6D Gate = PASS，S6A～S6D 人工 Gate 均已通过，下一阶段为 S7A Human AI（本次不开始）。
+- 本次目标：核对已实现规则、统一数值配置和六项浏览器人工验收结果，通过自动验证后完成文档与 Git 里程碑收尾。
+- 实际完成内容：S6D 已接入双向 SoundEvent、距离衰减与墙/门遮挡、相机相对声音方向和远蓝/中黄/近红场景声波；Vision 区分 VISIBLE、BLOCKED 与 OUT_OF_RANGE，Last Seen 与当前可见状态独立。鼠标点角色仅改变开发临时 WASD 输入目标；Esc 开发菜单切换正式主控，并同步镜头与信息观察者，不重开对局。
+- 米痕最终规则：DeepSeek 实际进食进度增长后开启或刷新 5 秒脚印生成窗口；窗口内移动按步距生成脚印，静止不生成。每个脚印从生成起独立保留 15 秒，末段平滑淡出；窗口结束不删除既有脚印。Human 正式观察者可见，暂停冻结计时，Restart / 新局清空。
+- 人工验收：用户于本次任务明确确认 S6D 六项浏览器人工验收全部 PASS：声音可视化、声音遮挡、鼠标临时控制、Esc 正式主控切换、米痕脚印、Vision / Last Seen。S6D Gate = PASS；S6A、S6B、S6C 的人工 PASS 已在前述日志记录。
+- 数值配置：现有可调玩法值集中在 `src/config/gameConfig.ts`，运行系统经 `GAME_CONFIG` 读取；`docs/GAME_BALANCE_CONFIG.md` 记录实际值、单位与影响。正式每份米 60 秒，开发测试仍为 5 秒，发布前须恢复并复测。目前未实现对局倒计时，不将其记作已完成。
+- 新增文件：`docs/GAME_BALANCE_CONFIG.md`、`tests/balance-config.test.mjs`（相对上次 WIP 检查点）。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md` 及当前 S6D／数值配置相关源码与测试；删除文件：无；依赖变化：无。
+- 测试结果：本次 `npm test` 141/141 PASS，`npm run build` PASS（含 TypeScript 检查），`git diff --check` PASS。构建前未发现明确属于本项目的 Vite/npm 进程；未修改 ACL、Vite 配置或游戏平衡。
+- 已知非阻断问题：Vite 主 JS chunk 约 599.97 kB，超过 500 kB 提示线；开发米仍为 5 秒，正式发布前需切回 60 秒。没有对局倒计时功能。未发现本次封版自动检查阻断问题。
+- Git：已有 S6D WIP 安全检查点 `3a29926`（`wip: preserve s6d information systems`）；本次正式封版 commit、main 推送及 `v0.2.0-alpha` Tag 结果以实际执行和最终汇报为准，不预填尚未产生的 hash。

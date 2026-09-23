@@ -15,20 +15,20 @@ export const GAME_CONFIG = {
     directHotkeysEnabled: false,
   },
   player: {
-    size: 32,
-    speed: 230,
+    size: 32, // 占位角色边长：像素，运行时按 pixelsPerUnit 换算。
+    speed: 230, // DeepSeek 基础速度：像素/秒。
     color: 0x3197ff,
   },
   human: {
     size: 32,
-    speedMultiplier: 1.08,
+    speedMultiplier: 1.08, // 相对 DeepSeek 基础速度的倍率。
     color: 0xf28b45,
   },
   sprint: {
-    speedMultiplier: 1.6,
-    durationMs: 2_500,
-    riskThreshold: 0.30,
-    stunMs: 1_000,
+    speedMultiplier: 1.6, // 相对 DeepSeek 基础速度的倍率。
+    durationMs: 2_500, // 冲刺持续时间：毫秒。
+    riskThreshold: 0.30, // 全局大米进度比例，达到后冲刺结束必摔。
+    stunMs: 1_000, // 摔倒后的眩晕时间：毫秒。
   },
   three: {
     pixelsPerUnit: 60,
@@ -40,19 +40,27 @@ export const GAME_CONFIG = {
   collision: {
     // Gameplay footprint is independent from the square placeholder mesh.
     // 0.23 is about 86% of the current visual half-width (0.267 world units).
-    playerRadius: 0.23,
+    playerRadius: 0.23, // 角色逻辑碰撞圆半径：世界单位。
     contactEpsilon: 0.0001,
     maxMovementSubstep: 0.12,
   },
   match: {
-    readyMs: 3_000,
-    // XZ world-space radius around Human; deliberately independent of actor mesh size.
+    // 单帧规则推进上限，毫秒；避免切回标签页时计时跳跃。
+    maxFrameDeltaMs: 50,
+    readyMs: 3_000, // 选阵营后的准备时间：毫秒。
+    // 抓捕圈半径：XZ 世界单位，独立于角色视觉方块。
     captureRadius: 0.70,
+    // 连续有效接触时间：毫秒。
     captureMs: 350,
   },
   door: {
+    // 门交互距离及门段端点内缩量：XZ 世界单位。
     interactionRange: 1.3,
+    interactionEndInset: 0.08,
     maxActiveLocks: 3,
+    // Human 对普通 CLOSED 门按 Space 免费快速打开。
+    humanFreeOpenClosedDoor: true,
+    // 仅强破 LOCKED 门触发的冷却：毫秒。
     humanForceBreakCooldownMs: 30_000,
     leafHeight: 1.2,
     leafThickness: 0.16,
@@ -66,22 +74,49 @@ export const GAME_CONFIG = {
     },
   },
   pulseLock: {
-    rows: 4,
-    cols: 4,
-    mines: 3,
+    rows: 4, // 扫雷行数。
+    cols: 4, // 扫雷列数。
+    mines: 3, // 地雷数量，必须小于总格数。
+    // 扫雷第一次揭格保证安全。
+    firstRevealSafe: true,
     failureFeedbackMs: 1_500,
   },
   perception: {
     // S6D debug hearing display: XZ world units, with stable near/mid/far bands.
-    soundVisual: { radius: 18, nearMax: 2.5, midMax: 6.5, bandHysteresis: 0.3 },
+    soundVisual: {
+      radius: 18, nearMax: 2.5, midMax: 6.5, bandHysteresis: 0.3,
+      colors: { far: 0x54aaff, mid: 0xffd45f, near: 0xff635b },
+      // 声波亮度归一化强度及结束淡出时间：无量纲、毫秒。
+      waveFullStrength: 0.45,
+      waveFadeMs: 420,
+      hudMidStrength: 0.25,
+      hudHighStrength: 0.55,
+    },
     visionRange: 11,
     lastSeenMs: 8_000,
-    traceLifetimeMs: 6_000,
-    traceRefreshMs: 1_000,
+    // 米痕：生成窗口与每个脚印寿命/淡出均为毫秒，步距为世界单位。
+    traceGenerationMs: 5_000,
+    traceLifetimeMs: 15_000,
+    traceFadeMs: 3_000,
+    traceStepDistance: 0.65,
+    traceVisual: {
+      color: 0x9aa4aa,
+      footprintRadius: 0.18,
+      widthScale: 0.7,
+      lengthScale: 1.45,
+      sideOffset: 0.14,
+      forwardOffset: 0.07,
+      groundOffset: 0.075,
+      opacity: 0.88,
+    },
     footstepIntervalMs: 650,
     sprintStepIntervalMs: 330,
     riceSoundIntervalMs: 1_200,
+    minimumMovementSoundDistance: 0.002,
+    // 距离衰减：(1 - 距离 / 事件范围) 的指数；1 保持当前线性手感。
+    distanceFalloffPower: 1,
     wallSoundFactor: 0.28,
+    openDoorSoundFactor: 1,
     closedDoorSoundFactor: 0.45,
     lockedDoorSoundFactor: 0.35,
     minimumAudibleStrength: 0.015,
@@ -98,10 +133,13 @@ export const GAME_CONFIG = {
     },
   },
   rice: {
+    // 地图中参与抽选的候选米点数和每局激活数量；坐标仍由地图文件定义。
+    candidateCount: 14,
+    activeCount: 5,
     size: 30,
     color: 0xf2e5bc,
-    interactionRange: 60,
-    prepareMs: 400,
+    interactionRange: 60, // 像素，运行时除以 pixelsPerUnit。
+    prepareMs: 400, // 每次开始或恢复进食的准备时间：毫秒。
     maxProgressMs: RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE],
     visual: {
       fullHeight: 0.62,

@@ -1,3 +1,4 @@
+import { GAME_CONFIG } from '../config/gameConfig.ts';
 import type { DoorNode } from '../three/map/apartmentMap.ts';
 
 export type DoorStateName = 'OPEN' | 'CLOSED' | 'LOCKED';
@@ -133,10 +134,11 @@ export function nearestPointOnDoorSegment(x: number, z: number, door: DoorNode):
   x: number; z: number;
 } {
   const half = door.width / 2;
+  const inset = GAME_CONFIG.door.interactionEndInset;
   const nearestX = door.rotation === 0
-    ? Math.max(door.x - half + 0.08, Math.min(x, door.x + half - 0.08)) : door.x;
+    ? Math.max(door.x - half + inset, Math.min(x, door.x + half - inset)) : door.x;
   const nearestZ = door.rotation === 0
-    ? door.z : Math.max(door.z - half + 0.08, Math.min(z, door.z + half - 0.08));
+    ? door.z : Math.max(door.z - half + inset, Math.min(z, door.z + half - inset));
   return { x: nearestX, z: nearestZ };
 }
 

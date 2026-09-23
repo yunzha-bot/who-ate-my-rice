@@ -1,3 +1,5 @@
+import { GAME_CONFIG } from '../../config/gameConfig.ts';
+
 export interface Point { x: number; z: number }
 export interface Room extends Point {
   id: string; name: string; color: number; major: boolean;
@@ -18,8 +20,8 @@ export interface MapPoint extends Point { id: string; roomId: string }
 export const MAP_WIDTH = 36;
 export const MAP_DEPTH = 30;
 export const DEBUG_MAP = true;
-export const ACTIVE_RICE_COUNT = 5;
-export const PLAYER_DIAMETER = 32 / 60;
+export const ACTIVE_RICE_COUNT = GAME_CONFIG.rice.activeCount;
+export const PLAYER_DIAMETER = GAME_CONFIG.player.size / GAME_CONFIG.three.pixelsPerUnit;
 export const MIN_DOOR_WIDTH = PLAYER_DIAMETER * 2;
 // S6B residential single-leaf opening. It remains over two actor widths while
 // presenting a distinctly narrow, domestic door silhouette.
@@ -210,7 +212,11 @@ export const ROUTE_LOOPS: readonly (readonly string[])[] = [
 ];
 
 export function selectRiceCandidates(random: () => number = Math.random): MapPoint[] {
-  const pool = [...RICE_CANDIDATES];
+  const pool = RICE_CANDIDATES.slice(0, GAME_CONFIG.rice.candidateCount);
+  if (pool.length !== GAME_CONFIG.rice.candidateCount ||
+      ACTIVE_RICE_COUNT < 1 || ACTIVE_RICE_COUNT > pool.length) {
+    throw new Error('Rice candidate/active counts exceed the authored map positions');
+  }
   for (let index = pool.length - 1; index > 0; index--) {
     const swap = Math.min(index, Math.max(0, Math.floor(random() * (index + 1))));
     [pool[index], pool[swap]] = [pool[swap], pool[index]];

@@ -5,7 +5,8 @@ import { GameStateSystem } from '../src/systems/GameStateSystem.ts';
 import { RiceField } from '../src/systems/RiceField.ts';
 import { ACTIVE_RICE_COUNT, RICE_CANDIDATES, selectRiceCandidates } from '../src/three/map/apartmentMap.ts';
 
-const ids = RICE_CANDIDATES.slice(0, ACTIVE_RICE_COUNT).map(point => point.id);
+// Fixed five-portion fixture is independent of the configured active count.
+const ids = RICE_CANDIDATES.slice(0, 5).map(point => point.id);
 const makeField = () => new RiceField(ids, 5_000, 400);
 
 test('fourteen stable candidates produce exactly five unique active IDs', () => {
@@ -13,8 +14,8 @@ test('fourteen stable candidates produce exactly five unique active IDs', () => 
   assert.equal(new Set(RICE_CANDIDATES.map(point => point.id)).size, 14);
   for (let run = 0; run < 50; run++) {
     const active = selectRiceCandidates();
-    assert.equal(active.length, 5);
-    assert.equal(new Set(active.map(point => point.id)).size, 5);
+    assert.equal(active.length, ACTIVE_RICE_COUNT);
+    assert.equal(new Set(active.map(point => point.id)).size, ACTIVE_RICE_COUNT);
     assert.ok(active.every(point => /^rice_\d{2}$/.test(point.id)));
   }
   assert.throws(() => new RiceField(['rice_01', 'rice_01'], 5_000, 400), /unique/);
@@ -97,9 +98,8 @@ test('a fresh round resets count, progress, completion and target state', () => 
   assert.ok(field.states.every(state => state.progressMs === 0 && !state.completed));
 });
 
-test('development remains five seconds while production remains sixty seconds', () => {
-  assert.equal(RICE_TIMING_MODE, 'development');
+test('development and production rice durations remain available through one mode switch', () => {
   assert.equal(RICE_MAX_PROGRESS_MS.development, 5_000);
   assert.equal(RICE_MAX_PROGRESS_MS.production, 60_000);
-  assert.equal(GAME_CONFIG.rice.maxProgressMs, 5_000);
+  assert.equal(GAME_CONFIG.rice.maxProgressMs, RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE]);
 });

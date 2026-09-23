@@ -94,11 +94,10 @@ test('rice progress survives interruption and two rounds can end with different 
   assert.equal(rice.rice.completed, false);
 });
 
-test('development rice finishes at 5 seconds while production remains 60 seconds', () => {
+test('configured rice duration retains progress and completes in either timing mode', () => {
   assert.equal(RICE_MAX_PROGRESS_MS.production, 60_000);
   assert.equal(RICE_MAX_PROGRESS_MS.development, 5_000);
-  assert.equal(RICE_TIMING_MODE, 'development');
-  assert.equal(GAME_CONFIG.rice.maxProgressMs, 5_000);
+  assert.equal(GAME_CONFIG.rice.maxProgressMs, RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE]);
 
   const rice = new RiceSystem('rice-1', GAME_CONFIG.rice.maxProgressMs, GAME_CONFIG.rice.prepareMs);
   const match = makeMatch();
@@ -106,8 +105,8 @@ test('development rice finishes at 5 seconds while production remains 60 seconds
   rice.update(2_400, true);
   assert.equal(rice.rice.progressMs, 2_000);
   rice.interrupt();
-  rice.update(3_400, true);
-  assert.equal(rice.rice.progressMs, 5_000);
+  rice.update(GAME_CONFIG.rice.maxProgressMs - 2_000 + GAME_CONFIG.rice.prepareMs, true);
+  assert.equal(rice.rice.progressMs, GAME_CONFIG.rice.maxProgressMs);
   assert.equal(rice.rice.completed, true);
   match.advancePlaying(5_800, false, rice.rice.completed);
   assert.equal(match.result?.winner, 'DEEPSEEK');

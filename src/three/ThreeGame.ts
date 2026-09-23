@@ -55,7 +55,7 @@ export class ThreeGame {
   private vision = new VisionSystem();
   private perceptionGeometry = new PerceptionGeometry(WALLS, DOOR_NODES,
     () => this.doorSystem.doors);
-  private traceViews = new Map<string, THREE.Mesh>();
+  private traceViews = new Map<string, THREE.Group>();
   private lastStepMs: Record<Faction, number> = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
   private lastRiceSoundMs = -Infinity;
   private doorStatusMessage = '';
@@ -302,7 +302,7 @@ export class ThreeGame {
   };
 
   private tick = (): void => {
-    const deltaMs = Math.min(this.clock.getDelta() * 1000, 50);
+    const deltaMs = Math.min(this.clock.getDelta() * 1000, C.match.maxFrameDeltaMs);
     this.input.setTabCaptureEnabled(
       C.development.factionSwitchEnabled && C.development.directHotkeysEnabled &&
       this.match.phase === 'PLAYING');
@@ -387,6 +387,7 @@ export class ThreeGame {
       (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
     const oldDeepseek = this.player.position.clone();
     this.move(this.player, movement.x * speed * deltaMs / 1000, movement.y * speed * deltaMs / 1000);
+    this.traces.recordMovement(this.player.position);
     this.emitMovementSound('DEEPSEEK', oldDeepseek, this.player.position,
       this.sprint.state === 'SPRINT_RUNNING');
     this.player.rotation.z = this.sprint.state === 'STUNNED' ? Math.PI / 2 : 0;
@@ -410,7 +411,7 @@ export class ThreeGame {
     for (const portion of this.rice.portions) {
       this.riceViews.get(portion.rice.id)!.sync(portion.rice);
       const position = this.riceViews.get(portion.rice.id)!.position;
-      this.traces.recordProgress(portion.rice.id, position,
+      this.traces.recordProgress(portion.rice.id, this.player.position,
         previousRice.get(portion.rice.id) ?? 0, portion.rice.progressMs);
       if (portion.rice.progressMs > (previousRice.get(portion.rice.id) ?? 0) &&
           this.sound.nowMs - this.lastRiceSoundMs >= C.perception.riceSoundIntervalMs) {
@@ -705,7 +706,7 @@ export class ThreeGame {
     const riceStates = { IDLE: '未交互', PREPARING: '准备中', EATING: '进食中',
       INTERRUPTED: '已中断', COMPLETED: '已完成' };
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
-    const hint = this.rice.completed ? '5 份大米已吃完'
+    const hint = this.rice.completed ? `${ACTIVE_RICE_COUNT} 份大米已吃完`
       : this.control.isControlling('HUMAN') ? '当前控制 Human，不能进食'
       : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
       : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
@@ -723,7 +724,7 @@ export class ThreeGame {
       const result = this.match.result!;
       this.overlayText.textContent =
         `${result.winner === 'DEEPSEEK' ? 'DeepSeek 娘' : '人类'}获胜\n` +
-        `原因：${result.reason === 'RICE_COMPLETED' ? '5 份大米完成' : '抓捕完成'}\n` +
+        `原因：${result.reason === 'RICE_COMPLETED' ? `${ACTIVE_RICE_COUNT} 份大米完成` : '抓捕完成'}\n` +
         `对局时间：${time}\n大米：${this.rice.completedCount}/${ACTIVE_RICE_COUNT}`;
     } else this.overlayText.textContent = '';
     this.pauseActions.hidden = phase !== 'PAUSED';
@@ -742,7 +743,7 @@ export class ThreeGame {
 
   private emitMovementSound(faction: Faction, before: THREE.Vector3,
     after: THREE.Vector3, sprinting: boolean): void {
-    if (distance(before, after) < 0.002) return;
+    if (distance(before, after) < C.perception.minimumMovementSoundDistance) return;
     const interval = sprinting ? C.perception.sprintStepIntervalMs : C.perception.footstepIntervalMs;
     if (this.sound.nowMs - this.lastStepMs[faction] < interval) return;
     this.sound.emit(sprinting ? 'SPRINT' : 'FOOTSTEP', after, faction);
@@ -752,27 +753,33 @@ export class ThreeGame {
   private clearTraceViews(): void {
     for (const view of this.traceViews.values()) {
       this.scene.remove(view);
-      view.geometry.dispose();
-      (view.material as THREE.Material).dispose();
+      this.disposeTraceView(view);
     }
     this.traceViews.clear();
   }
 
+  private disposeTraceView(view: THREE.Group): void {
+    view.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      object.geometry.dispose();
+      (object.material as THREE.Material).dispose();
+    });
+  }
+
   private syncTraceViews(): void {
-    const active = new Set(this.traces.traces.map(trace => trace.riceId));
+    const active = new Set(this.traces.traces.map(trace => trace.id));
     for (const [id, view] of this.traceViews) {
       if (active.has(id)) continue;
       this.scene.remove(view);
-      view.geometry.dispose();
-      (view.material as THREE.Material).dispose();
+      this.disposeTraceView(view);
       this.traceViews.delete(id);
     }
     for (const trace of this.traces.traces) {
-      let view = this.traceViews.get(trace.riceId);
+      let view = this.traceViews.get(trace.id);
       if (!view) {
         view = createRiceTraceView(trace, this.control.informationObserver === 'HUMAN');
         this.scene.add(view);
-        this.traceViews.set(trace.riceId, view);
+        this.traceViews.set(trace.id, view);
       }
       syncRiceTraceView(view, trace, this.control.informationObserver === 'HUMAN');
     }
@@ -793,11 +800,11 @@ export class ThreeGame {
       this.match.phase !== 'FINISHED', this.sound.nowMs);
     const sight = this.vision.get(faction);
     const seen = sight.lastSeen;
-    const newestTrace = this.traces.traces.at(-1);
     this.soundArrow.hidden = !heard;
     this.soundArrow.textContent = heard?.direction ?? '';
     this.perceptionHud.style.color = heard
-      ? heard.audibleStrength >= 0.55 ? '#ffad6d' : heard.audibleStrength >= 0.25 ? '#ffe18a' : '#b7d4e8'
+      ? heard.audibleStrength >= C.perception.soundVisual.hudHighStrength ? '#ffad6d'
+        : heard.audibleStrength >= C.perception.soundVisual.hudMidStrength ? '#ffe18a' : '#b7d4e8'
       : '#c9d6df';
     this.soundDetails.textContent = probe
       ? `${heard ? '最近声音' : '声音探针（不可听）'}：${probe.event.type}  剩余 ${(probe.remainingMs / 1000).toFixed(1)}s\n` +
@@ -812,8 +819,9 @@ export class ThreeGame {
       (blockerLabel ? `（${blockerLabel}）` : '') + '\n' +
       `Last Seen：${seen ? `(${seen.position.x.toFixed(1)}, ${seen.position.z.toFixed(1)}) ` +
         `${((this.vision.nowMs - seen.timeMs) / 1000).toFixed(1)} 秒前` : '无'}`;
-    this.traceDetails.textContent = `Rice Trace：${this.traces.traces.length}  最新：` +
-      (newestTrace ? `${((this.traces.nowMs - newestTrace.createdAt) / 1000).toFixed(1)}s` : '无');
+    this.traceDetails.textContent =
+      `脚印生成窗口：${(this.traces.generationRemainingMs / 1000).toFixed(1)}s\n` +
+      `当前有效脚印：${this.traces.traces.length}`;
     this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
   }
 

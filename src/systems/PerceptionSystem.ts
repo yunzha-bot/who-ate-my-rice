@@ -100,6 +100,7 @@ export class PerceptionGeometry {
     const hits = this.crossings(a, b);
     const cfg = GAME_CONFIG.perception;
     return cfg.wallSoundFactor ** hits.walls *
+      cfg.openDoorSoundFactor ** hits.open *
       cfg.closedDoorSoundFactor ** hits.closed *
       cfg.lockedDoorSoundFactor ** hits.locked;
   }
@@ -156,7 +157,8 @@ export class SoundEventSystem {
       const range = GAME_CONFIG.perception.sounds[event.type].range;
       const distance = Math.hypot(listener.x - event.position.x, listener.z - event.position.z);
       if (distance >= range) continue;
-      const distanceFactor = 1 - distance / range;
+      const distanceFactor = (1 - distance / range) **
+        GAME_CONFIG.perception.distanceFalloffPower;
       const hits = geometry.crossings(listener, event.position);
       const occlusionMultiplier = geometry.soundFactor(listener, event.position);
       const audibleStrength = event.strength * distanceFactor * occlusionMultiplier;
@@ -177,30 +179,80 @@ export class SoundEventSystem {
   reset(): void { this.events.length = 0; this.nowMs = 0; }
 }
 
-export interface RiceTrace { riceId: string; position: Point; createdAt: number; lifetimeMs: number; strength: number }
+export interface RiceTrace {
+  id: string;
+  position: Point;
+  heading: number;
+  createdAt: number;
+  lifetimeMs: number;
+  strength: number;
+}
 export class RiceTraceSystem {
   readonly traces: RiceTrace[] = [];
   nowMs = 0;
+  generationRemainingMs = 0;
+  private lastFootprintPosition: Point | null = null;
+  private nextId = 1;
 
   recordProgress(riceId: string, position: Point, previousMs: number, currentMs: number): void {
     if (currentMs <= previousMs) return;
-    const existing = this.traces.find(trace => trace.riceId === riceId);
-    if (existing && this.nowMs - existing.createdAt < GAME_CONFIG.perception.traceRefreshMs) return;
-    if (existing) this.traces.splice(this.traces.indexOf(existing), 1);
-    this.traces.push({ riceId, position: { x: position.x, z: position.z },
-      createdAt: this.nowMs, lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs, strength: 1 });
+    void riceId;
+    this.generationRemainingMs = GAME_CONFIG.perception.traceGenerationMs;
+    this.lastFootprintPosition = { x: position.x, z: position.z };
   }
 
-  advance(deltaMs: number): void {
-    this.nowMs += Math.max(0, deltaMs);
+  recordMovement(position: Point): RiceTrace | null {
+    if (this.generationRemainingMs <= 0) return null;
+    if (!this.lastFootprintPosition) {
+      this.lastFootprintPosition = { x: position.x, z: position.z };
+      return null;
+    }
+    const dx = position.x - this.lastFootprintPosition.x;
+    const dz = position.z - this.lastFootprintPosition.z;
+    if (Math.hypot(dx, dz) < GAME_CONFIG.perception.traceStepDistance) return null;
+    const trace: RiceTrace = {
+      id: `footprint-${this.nextId++}`,
+      position: { x: position.x, z: position.z },
+      heading: Math.atan2(dx, dz),
+      createdAt: this.nowMs,
+      lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs,
+      strength: 1,
+    };
+    this.traces.push(trace);
+    this.lastFootprintPosition = { x: position.x, z: position.z };
+    return trace;
+  }
+
+  advance(deltaMs: number, running = true): void {
+    if (!running) return;
+    const elapsed = Math.max(0, deltaMs);
+    this.nowMs += elapsed;
+    this.generationRemainingMs = Math.max(0, this.generationRemainingMs - elapsed);
     for (let index = this.traces.length - 1; index >= 0; index--) {
       const trace = this.traces[index];
-      trace.strength = Math.max(0, 1 - (this.nowMs - trace.createdAt) / trace.lifetimeMs);
-      if (trace.strength === 0) this.traces.splice(index, 1);
+      const age = this.nowMs - trace.createdAt;
+      if (age >= trace.lifetimeMs) {
+        this.traces.splice(index, 1);
+        continue;
+      }
+      const fadeStart = trace.lifetimeMs - GAME_CONFIG.perception.traceFadeMs;
+      if (age <= fadeStart) trace.strength = 1;
+      else {
+        const progress = Math.min(1, Math.max(0,
+          (age - fadeStart) / GAME_CONFIG.perception.traceFadeMs));
+        const smooth = progress * progress * (3 - 2 * progress);
+        trace.strength = 1 - smooth;
+      }
     }
   }
 
-  reset(): void { this.traces.length = 0; this.nowMs = 0; }
+  reset(): void {
+    this.traces.length = 0;
+    this.nowMs = 0;
+    this.generationRemainingMs = 0;
+    this.lastFootprintPosition = null;
+    this.nextId = 1;
+  }
 }
 
 export interface LastSeen { position: Point; timeMs: number }

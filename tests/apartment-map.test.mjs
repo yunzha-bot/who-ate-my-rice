@@ -174,7 +174,7 @@ test('actor-sized space reaches every room, rice point and spawn through open do
 });
 
 test('five persistent rice portions keep the global 30% threshold and finish only together', () => {
-  const ids = selectRiceCandidates(() => 0.2).map(point => point.id);
+  const ids = RICE_CANDIDATES.slice(0, 5).map(point => point.id);
   const field = new RiceField(ids, 5000, 400);
   assert.equal(field.totalMaxProgressMs, 25_000);
   field.update(5400, ids[0], true);

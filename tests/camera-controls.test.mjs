@@ -342,6 +342,7 @@ test('primary observer drives camera, sound, vision and trace despite temporary 
   sound.emit('FOOTSTEP', deepseek, 'DEEPSEEK');
   vision.update(100, human, deepseek, geometry);
   traces.recordProgress('rice-1', deepseek, 0, 200);
+  traces.recordMovement({ x: deepseek.x + 0.7, z: deepseek.z });
   const trace = createRiceTraceView(traces.traces[0], controls.informationObserver === 'HUMAN');
 
   for (const expected of ['HUMAN', 'DEEPSEEK', 'HUMAN']) {
@@ -362,8 +363,10 @@ test('primary observer drives camera, sound, vision and trace despite temporary 
     assert.equal(controls.selectedFaction, expected);
     assert.notEqual(controls.temporaryInputTarget, expected);
   }
-  trace.geometry.dispose();
-  trace.material.dispose();
+  trace.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  });
 });
 
 test('quick restart after Tab restores the selected faction and every round subsystem', () => {

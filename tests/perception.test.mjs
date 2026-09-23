@@ -87,38 +87,95 @@ test('sound arrow matches all eight camera-relative screen directions', () => {
   }
 });
 
-test('rice trace needs actual progress, fades and expires', () => {
+test('rice progress opens a five second window and only movement at step distance leaves footprints', () => {
   const traces = new RiceTraceSystem();
-  const point = { x: 2, z: 3 };
-  traces.recordProgress('A', point, 0, 0);
+  const start = { x: 2, z: 3 };
+  traces.recordProgress('A', start, 0, 0);
   assert.equal(traces.traces.length, 0);
-  traces.recordProgress('A', point, 0, 100);
+  assert.equal(traces.generationRemainingMs, 0);
+  traces.recordProgress('A', start, 0, 100);
+  assert.equal(traces.generationRemainingMs, GAME_CONFIG.perception.traceGenerationMs);
+  traces.recordMovement(start);
+  traces.recordMovement({ x: 2.2, z: 3 });
+  assert.equal(traces.traces.length, 0);
+  traces.recordMovement({ x: 2.7, z: 3 });
   assert.equal(traces.traces.length, 1);
-  traces.advance(GAME_CONFIG.perception.traceLifetimeMs / 2);
-  assert.ok(traces.traces[0].strength > 0 && traces.traces[0].strength < 1);
-  traces.advance(GAME_CONFIG.perception.traceLifetimeMs / 2);
+  assert.equal(traces.traces[0].strength, 1);
+});
+
+test('trace window expires, refreshes on later eating and pause freezes all timers', () => {
+  const traces = new RiceTraceSystem();
+  traces.recordProgress('A', { x: 0, z: 0 }, 0, 100);
+  traces.advance(2_000);
+  traces.advance(9_000, false);
+  assert.equal(traces.generationRemainingMs, 3_000);
+  assert.equal(traces.nowMs, 2_000);
+  traces.advance(3_000);
+  assert.equal(traces.generationRemainingMs, 0);
+  traces.recordMovement({ x: 1, z: 0 });
+  assert.equal(traces.traces.length, 0);
+  traces.recordProgress('A', { x: 1, z: 0 }, 100, 200);
+  assert.equal(traces.generationRemainingMs, 5_000);
+  traces.recordMovement({ x: 1.7, z: 0 });
+  assert.equal(traces.traces.length, 1);
+});
+
+test('each footprint owns an independent fifteen second lifetime and only fades at the end', () => {
+  const traces = new RiceTraceSystem();
+  traces.recordProgress('A', { x: 0, z: 0 }, 0, 100);
+  traces.recordMovement({ x: 0.7, z: 0 });
+  const firstId = traces.traces[0].id;
+  traces.advance(4_000);
+  traces.recordProgress('A', { x: 0.7, z: 0 }, 100, 200);
+  traces.recordMovement({ x: 1.4, z: 0 });
+  const secondId = traces.traces[1].id;
+  traces.advance(8_000);
+  assert.equal(traces.traces.find(trace => trace.id === firstId).strength, 1);
+  assert.equal(traces.traces.find(trace => trace.id === secondId).strength, 1);
+  traces.advance(1_500);
+  assert.ok(traces.traces.find(trace => trace.id === firstId).strength < 1);
+  assert.equal(traces.traces.find(trace => trace.id === secondId).strength, 1);
+  traces.advance(1_500);
+  assert.equal(traces.traces.some(trace => trace.id === firstId), false);
+  assert.equal(traces.traces.some(trace => trace.id === secondId), true);
+  traces.advance(2_500);
+  assert.ok(traces.traces[0].strength < 1);
+  traces.advance(1_500);
   assert.equal(traces.traces.length, 0);
 });
 
-test('rice trace marker is gray, raised, Human-visible and follows freshness', () => {
+test('rice footprint pair is gray, raised, Human-visible and follows freshness', () => {
   const traces = new RiceTraceSystem();
-  traces.recordProgress('A', { x: 2, z: 3 }, 0, 0);
-  assert.equal(traces.traces.length, 0);
   traces.recordProgress('A', { x: 2, z: 3 }, 0, 100);
+  traces.recordMovement({ x: 2.7, z: 3 });
   const view = createRiceTraceView(traces.traces[0], true);
-  assert.equal(view.position.y, 0.07);
-  assert.equal(view.material.color.getHex(), 0x364049);
+  assert.equal(view.position.y, 0.075);
+  assert.equal(view.children.length, 2);
+  assert.ok(view.children.every(child => child.material.color.getHex() === 0x9aa4aa));
   assert.equal(view.visible, true);
-  assert.ok(view.material.opacity > 0.8);
-  traces.advance(GAME_CONFIG.perception.traceLifetimeMs / 2);
+  assert.ok(view.children.every(child => child.material.opacity > 0.8));
+  traces.advance(GAME_CONFIG.perception.traceLifetimeMs - GAME_CONFIG.perception.traceFadeMs / 2);
   syncRiceTraceView(view, traces.traces[0], true);
-  assert.ok(view.material.opacity > 0.4 && view.material.opacity < 0.5);
+  assert.ok(view.children.every(child => child.material.opacity > 0 && child.material.opacity < 0.88));
   syncRiceTraceView(view, traces.traces[0], false);
   assert.equal(view.visible, false);
-  traces.advance(GAME_CONFIG.perception.traceLifetimeMs / 2);
+  traces.advance(GAME_CONFIG.perception.traceFadeMs / 2);
   assert.equal(traces.traces.length, 0);
-  view.geometry.dispose();
-  view.material.dispose();
+  view.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  });
+});
+
+test('rice trace reset clears footprints, generation window and timer', () => {
+  const traces = new RiceTraceSystem();
+  traces.recordProgress('A', { x: 0, z: 0 }, 0, 100);
+  traces.recordMovement({ x: 0.7, z: 0 });
+  traces.advance(1_000);
+  traces.reset();
+  assert.equal(traces.traces.length, 0);
+  assert.equal(traces.generationRemainingMs, 0);
+  assert.equal(traces.nowMs, 0);
 });
 
 test('vision blocks on walls and closed/locked doors, but crosses open doors', () => {

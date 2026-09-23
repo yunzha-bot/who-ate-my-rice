@@ -6,9 +6,9 @@ import type { Point } from './map/apartmentMap.ts';
 export type SoundDistanceBand = 'FAR' | 'MID' | 'NEAR';
 
 const COLORS: Record<SoundDistanceBand, number> = {
-  FAR: 0x54aaff,
-  MID: 0xffd45f,
-  NEAR: 0xff635b,
+  FAR: GAME_CONFIG.perception.soundVisual.colors.far,
+  MID: GAME_CONFIG.perception.soundVisual.colors.mid,
+  NEAR: GAME_CONFIG.perception.soundVisual.colors.near,
 };
 
 export function soundDistanceBand(distance: number,
@@ -92,8 +92,10 @@ export class SoundVisualView {
     this.currentBand = soundDistanceBand(distance, this.currentBand);
     this.waveGroup.rotation.y = soundWorldAngle(listener, source);
     this.waveGroup.scale.setScalar(1 + Math.sin(nowMs * 0.014) * 0.045);
-    const intensity = Math.min(1, heard.audibleStrength / 0.45);
-    const fade = Math.min(1, heard.remainingMs / 420);
+    const intensity = Math.min(1,
+      heard.audibleStrength / GAME_CONFIG.perception.soundVisual.waveFullStrength);
+    const fade = Math.min(1,
+      heard.remainingMs / GAME_CONFIG.perception.soundVisual.waveFadeMs);
     this.waveMaterials.forEach((material, index) => {
       material.color.setHex(COLORS[this.currentBand!]);
       material.opacity = (0.9 - index * 0.12) * (0.42 + intensity * 0.58) * fade;

@@ -1,3 +1,4 @@
+import { GAME_CONFIG } from '../config/gameConfig.ts';
 import type { DoorActor } from './DoorSystem.ts';
 import { DoorSystem } from './DoorSystem.ts';
 import type { GamePhase } from './GameStateSystem.ts';
@@ -133,7 +134,8 @@ export class MinesweeperLockSystem {
   }
 
   private placeMines(board: MineBoard, safeIndex: number): void {
-    const available = board.cells.map((_, index) => index).filter(index => index !== safeIndex);
+    const available = board.cells.map((_, index) => index)
+      .filter(index => !GAME_CONFIG.pulseLock.firstRevealSafe || index !== safeIndex);
     for (let count = 0; count < this.mines; count += 1) {
       const pick = Math.min(available.length - 1,
         Math.max(0, Math.floor(this.random() * available.length)));

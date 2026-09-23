@@ -31,6 +31,20 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 新大阶段、核心玩法架构或状态机重构、输入/地图结构重构、跨系统高耦合修改、高风险 Git/发布操作，或连续多次实现错误的功能，才使用详细执行模式。`AGENTS.md` 只在长期规则或正式阶段状态变化时更新。已知 Vite bundle 超过 500 kB 是非阻断提示；除非体积异常增长或出现实际性能问题，不反复长篇说明，也不因此阻断普通任务。
 
+## 统一数值管理规则
+
+- 新增或调整的可调玩法参数统一定义在 `src/config/gameConfig.ts` 的 `GAME_CONFIG` 中；角色速度、冲刺、进食、抓捕、技能冷却、门锁、扫雷、声音、视野、米痕与对局时间均遵循此规则。各系统读取配置，不新增重复配置或散落的可调参数。
+- 每个新增参数应有简短注释，写明单位、用途和默认值。已有开发/正式模式差异应在配置中明确区分并保留切换方式。
+- 新增或调整参数后，同步维护 `docs/GAME_BALANCE_CONFIG.md`，核对真实变量名、默认值、单位、作用和修改注意事项与源码一致。
+- 只集中管理可调玩法参数。地图坐标、状态枚举、数学常量，以及无需调节的算法和视觉实现常量可留在对应模块；若某实现常量变成设计调节项，再迁入 `GAME_CONFIG`。
+
+## 视觉表现与玩法逻辑分离
+
+- 声音感知计算由 `PerceptionSystem` 负责；声音场景效果由 `SoundVisualView` 负责，HUD 由 `ThreeGame` / CSS 显示。
+- 后续替换声音提示美术时，优先调整 `SoundVisualView` 的几何体、材质、纹理，以及 HUD 图标与 CSS；声音距离、遮挡、方向等玩法计算保持在感知系统，不随美术替换改动。
+- 正式声音 UI 资源建议放在 `public/assets/ui/sound/`，场景声音 VFX 建议放在 `public/assets/vfx/sound/`。这些是未来建议目录，本规则不要求现在创建。
+- 新增同类视觉效果时，尽量通过独立 View / UI 模块接入；美术资源路径不要写进 `PerceptionSystem`。
+
 ## 日志字段
 
 每条新日志至少记录：日期时间、任务名称、当前开发阶段、本次目标、实际完成内容、新增文件、修改文件、删除文件、依赖变化、测试结果、已知问题、下一步建议、Git commit 信息（如已提交）。任务失败时还要记录失败步骤、错误摘要、已尝试方法，以及当前项目是否仍可运行。若推送失败，在日志中如实记录，不将其写成已成功。
@@ -58,8 +72,10 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S6A 正式大米循环 —— Gate = PASS。
 - S6B 门系统 —— Gate = PASS。
 - S6C Human 反制 / Minesweeper Lock Counterplay —— Gate = PASS。
+- S6D 双向信息系统 —— Gate = PASS；声音、米痕、视野及调试主控切换已通过人工验收。
+- S6 游戏玩法 Alpha —— Gate = PASS；里程碑 `v0.2.0-alpha` 以实际推送结果为准。
 
-当前下一阶段：S6D —— 双向信息系统；进入仍需用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前下一阶段：S7A —— Human AI；须等待用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
 
@@ -80,11 +96,12 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - Human 在可达的 LOCKED Door 旁按 E 打开 4×4 / 3 雷扫雷盘；长按或连点 E 不推进解锁。× / Esc 可退出，同一 Lock Core 的盘面在本局保留；面板开启时世界继续运行，Human 不能移动，Capture Zone 仍有效。扫雷成功使 Core `ACTIVE → DISABLED`、Door `LOCKED → CLOSED` 并释放 Active Lock Slot；Human 需再次 E 开门。失败时门保持 LOCKED、对局继续；扫雷不消耗强破冷却。
 - Human 按 Space 可免费快速打开普通 CLOSED Door，即使强破正在冷却也有效；对 LOCKED Door 则立即强破 Core 并 OPEN，触发 30 秒冷却。冷却中不能再强破锁门，但仍可 E 扫雷。DISABLED Core 本局不可重新上锁；Restart 或新 Match 恢复 Core、扫雷盘与技能。门交互采用较宽容的最近有效门判定，不可隔墙操作。
 - 角色视觉 Mesh 与 Gameplay Collider 必须解耦。当前角色使用 XZ Circle Footprint，环境使用 AABB，并以 Circle-vs-AABB、Axis-Separated Movement 和 Wall Sliding 解析碰撞；Sprint 使用同一规则。不要轻易恢复 Player Box / AABB Footprint，因为方形碰撞体在门框和墙角斜向移动时容易卡脚。
+- 双向信息系统按声音事件的距离和墙/门遮挡计算可听强度，场景中以声源方向显示远蓝、中黄、近红的声波；Vision 区分当前可见、被墙或关门阻挡、超出范围，Last Seen 独立短暂保留。DeepSeek 实际进食增长后开启或刷新 5 秒米痕生成窗口，窗口内移动按步距留下脚印；每个脚印独立保留 15 秒后淡出。暂停冻结相关计时，新局清空米痕。
 
 ## 输入与暂停长期规则
 
-- Esc 是统一 Pause Menu 入口；菜单提供 Continue、Restart、Return to Faction Select，开发模式可提供 Switch Controlled Faction。
-- `selectedFaction` 表示正式本局阵营，`controlledFaction` 表示开发调试控制角色，两者语义必须保持分离。
+- Esc 是统一 Pause Menu 入口；菜单提供 Continue、Restart、Return to Faction Select，开发模式可提供“切换主控阵营”。
+- `selectedFaction` 是正式主控及声音、Vision、Last Seen、Rice Trace 的信息观察者，相机始终跟随它。开发模式鼠标点角色只改变临时 WASD 输入目标；Esc 菜单切换正式主控时同步切换镜头、信息观察者及默认输入目标，不重开或重置对局。
 - `development.directHotkeysEnabled` 默认保持 `false`；正常正式对局中不启用裸 R / M / Tab，避免误触。需要调试切换时从暂停菜单进入。
 
 ## Build Environment
