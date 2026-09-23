@@ -54,6 +54,18 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.humanAI.searchRadius` / `searchRoomCount` | 12 / 3 | 世界单位 / 间；追丢后的邻近搜索范围和上限 | 不提供目标实时位置，目标来自 Last Seen。 |
 | `C.humanAI.searchDwellMs` / `searchMaxMs` | 900 / 15,000 | 毫秒；搜索点停留和一次搜索时限 | 超时恢复巡逻，避免反复搜索同处。 |
 
+## DeepSeek AI（S7B-1 开发参数）
+
+仅在玩家正式选择 Human 且没有开发调试接管 DeepSeek 时运行。选米评分为导航路径长度按 DeepSeek 基础速度换算的行走毫秒数，加该米剩余进食毫秒数和既有准备时间；导航网格与关门路径代价复用现有 NavigationSystem，不复制配置。
+
+| 变量 | 当前值 | 单位 / 作用 | 修改注意 |
+|---|---:|---|---|
+| `C.deepseekAI.waypointTolerance` | 0.25 | 世界单位；路径节点到达容差 | 需与共用网格及碰撞圆一同检查，避免拐角抖动。 |
+| `C.deepseekAI.stuckRepathMs` | 800 | 毫秒；节点持续无进展后的重寻路阈值 | 调小会增加寻路次数。 |
+| `C.deepseekAI.stuckProgressEpsilon` | 0.05 | 世界单位；卡路窗口内至少应靠近节点的距离 | 不改变玩家移动速度或碰撞体。 |
+| `C.deepseekAI.maxStuckRepathsPerTarget` | 2 | 次；同一米堆连续卡路后暂避并换目标 | 有进展时重新计数。 |
+| `C.deepseekAI.retryMs` | 1,500 | 毫秒；不可达米堆暂避及无目标重试间隔 | 门状态改变会立即触发重新规划。 |
+
 ## 角色动作表现（S7A 占位接口）
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |

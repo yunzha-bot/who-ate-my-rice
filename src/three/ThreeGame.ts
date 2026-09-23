@@ -11,6 +11,8 @@ import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
 import { HumanAIController, humanAiMovementSpeed, shouldRunHumanAI }
   from '../systems/HumanAIController';
+import { DeepSeekAIController, shouldRunDeepSeekAI,
+  type DeepSeekAICommand } from '../systems/DeepSeekAIController';
 import { resolveCharacterAction } from '../systems/CharacterAction';
 import { NavigationSystem } from '../systems/NavigationSystem';
 import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
@@ -70,6 +72,8 @@ export class ThreeGame {
   private collision: CollisionWorld;
   private humanAI: HumanAIController;
   private humanAiWasActive = false;
+  private deepseekAI: DeepSeekAIController;
+  private deepseekAiWasActive = false;
   private debugPanel: HTMLElement;
   private debugContent: HTMLElement;
   private debugToggle: HTMLButtonElement;
@@ -82,6 +86,7 @@ export class ThreeGame {
   private traceDetails: HTMLElement;
   private debugPossession: HTMLElement;
   private humanAiDetails: HTMLElement;
+  private deepseekAiDetails: HTMLElement;
   private actionDetails: HTMLElement;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
@@ -113,9 +118,9 @@ export class ThreeGame {
 
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
       buildApartment(this.scene));
-    this.humanAI = new HumanAIController(
-      new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES),
-      ROOMS, DOOR_NODES);
+    const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
+    this.humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES);
+    this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES);
     DOOR_NODES.forEach((door, index) => {
       const view = new DoorView(door, index, DEBUG_MAP);
       this.scene.add(view.object);
@@ -162,11 +167,13 @@ export class ThreeGame {
     this.traceDetails = this.label(this.perceptionHud, 'trace-details');
     this.debugPossession = this.label(this.perceptionHud, 'debug-possession');
     this.humanAiDetails = this.label(this.perceptionHud, 'human-ai-details');
+    this.deepseekAiDetails = this.label(this.perceptionHud, 'deepseek-ai-details');
     this.actionDetails = this.label(this.perceptionHud, 'action-details');
     const controlsSection = this.label(this.debugContent, 'debug-section');
     const controlsTitle = this.label(controlsSection, 'debug-section-title');
     controlsTitle.textContent = '控制 / 玩法调试';
-    controlsSection.append(this.debugPossession, this.humanAiDetails, this.actionDetails);
+    controlsSection.append(this.debugPossession, this.humanAiDetails,
+      this.deepseekAiDetails, this.actionDetails);
     this.actionDetails.hidden = !import.meta.env.DEV;
     if (this.debugPossessionEnabled) {
       for (const faction of ['HUMAN', 'DEEPSEEK'] as const) {
@@ -408,6 +415,35 @@ export class ThreeGame {
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
     const doorInteraction = this.handleDoorInteractions();
     const ratio = this.rice.progressRatio;
+    const deepseekAiEnabled = shouldRunDeepSeekAI(this.match.phase,
+      this.control.selectedFaction, this.control.temporaryInputTarget,
+      debug, this.debugPossessionEnabled) && this.sprint.state === 'NORMAL';
+    let deepseekCommand: DeepSeekAICommand | null = null;
+    if (deepseekAiEnabled) {
+      if (!this.deepseekAiWasActive) this.deepseekAI.resumeAfterManualControl();
+      deepseekCommand = this.deepseekAI.update({
+        deltaMs,
+        deepseek: this.player.position,
+        rice: this.rice.states.map(rice => {
+          const point = this.riceViews.get(rice.id)!.position;
+          return { id: rice.id, x: point.x, z: point.z,
+            progressMs: rice.progressMs, maxProgressMs: rice.maxProgressMs,
+            completed: rice.completed };
+        }),
+        doors: this.doorSystem.doors,
+        canOpenDoor: id => {
+          const node = this.doorSystem.definition(id);
+          return !!node && canInteractWithDoorXZ(this.collision, this.player.position, node);
+        },
+      });
+      if (deepseekCommand.openDoorId) {
+        const result = this.doorSystem.toggle(deepseekCommand.openDoorId, 'DEEPSEEK');
+        this.applyDoorResult(deepseekCommand.openDoorId, result, 'DEEPSEEK');
+      }
+    }
+    this.deepseekAiWasActive = deepseekAiEnabled;
+    const activeDeepseekDirection = deepseekCommand
+      ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
     if (this.input.consumePress('Space')) {
       if (this.control.isControlling('DEEPSEEK')) {
         this.sprint.tryStart(direction, ratio);
@@ -427,11 +463,11 @@ export class ThreeGame {
       }
     }
     const previousSprintState = this.sprint.state;
-    this.sprint.advance(deltaMs, direction);
+    this.sprint.advance(deltaMs, activeDeepseekDirection);
     if (previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED') {
       this.sound.emit('FALL', this.player.position, 'DEEPSEEK');
     }
-    const movement = this.sprint.movementDirection(direction);
+    const movement = this.sprint.movementDirection(activeDeepseekDirection);
     const speed = C.player.speed / U *
       (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
     const oldDeepseek = this.player.position.clone();
@@ -495,8 +531,17 @@ export class ThreeGame {
     this.emitMovementSound('HUMAN', oldHuman, this.human.position, false);
     const nearest = this.nearestRice();
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
+    const aiRice = deepseekCommand?.eatRiceId
+      ? this.rice.get(deepseekCommand.eatRiceId) : null;
+    const aiRicePosition = aiRice && this.riceViews.get(aiRice.rice.id)?.position;
+    const aiInRange = !!aiRicePosition &&
+      distance(this.player.position, aiRicePosition) <= C.rice.interactionRange / U;
     const previousRice = new Map(this.rice.states.map(state => [state.id, state.progressMs]));
-    this.rice.update(deltaMs, inRange ? nearest!.id : null,
+    this.rice.update(deltaMs,
+      deepseekCommand ? aiInRange ? deepseekCommand.eatRiceId : null
+        : inRange ? nearest!.id : null,
+      deepseekCommand ? aiInRange && this.sprint.state === 'NORMAL' &&
+        activeDeepseekDirection.x === 0 && activeDeepseekDirection.y === 0 :
       this.control.isControlling('DEEPSEEK') &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
       !doorInteraction.doorOwnsInteraction && inRange && direction.x === 0 && direction.y === 0);
@@ -771,6 +816,8 @@ export class ThreeGame {
     this.vision.reset();
     this.humanAI.reset();
     this.humanAiWasActive = false;
+    this.deepseekAI.reset();
+    this.deepseekAiWasActive = false;
     this.lastStepMs = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
     this.lastRiceSoundMs = -Infinity;
     this.clearTraceViews();
@@ -825,6 +872,7 @@ export class ThreeGame {
       INTERRUPTED: '已中断', COMPLETED: '已完成' };
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
     const hint = this.rice.completed ? `${ACTIVE_RICE_COUNT} 份大米已吃完`
+      : this.deepseekAiWasActive ? 'DeepSeek AI 正在自主寻找或进食'
       : this.control.isControlling('HUMAN') ? '当前控制 Human，不能进食'
       : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
       : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
@@ -948,6 +996,7 @@ export class ThreeGame {
       `脚印生成窗口：${(this.traces.generationRemainingMs / 1000).toFixed(1)}s\n` +
       `当前有效脚印：${this.traces.traces.length}`;
     this.humanAiDetails.hidden = !this.debugPossessionEnabled;
+    this.deepseekAiDetails.hidden = !this.debugPossessionEnabled;
     if (this.debugPossessionEnabled) {
       const active = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
         this.control.temporaryInputTarget, this.input.debugDirection(),
@@ -970,6 +1019,22 @@ export class ThreeGame {
         `搜索房间：${this.humanAI.searchTargetRoomId ?? '无'}\n` +
         `切换原因：${this.humanAI.lastTransitionReason}\n` +
         `路径事件：${this.humanAI.lastNavigationReason}`;
+      const deepseekActive = shouldRunDeepSeekAI(this.match.phase,
+        this.control.selectedFaction, this.control.temporaryInputTarget,
+        this.input.debugDirection(), this.debugPossessionEnabled) &&
+        this.sprint.state === 'NORMAL';
+      const deepseekPath = this.deepseekAI.getPathProgress();
+      const deepseekMode = this.match.phase === 'PAUSED' ? 'PAUSED'
+        : this.match.phase === 'READY' ? 'STANDBY'
+          : deepseekActive ? this.deepseekAI.state : 'MANUAL';
+      this.deepseekAiDetails.textContent = `DeepSeek AI：${deepseekMode}\n` +
+        `目标米堆：${this.deepseekAI.targetRiceId ?? '无'}\n` +
+        `预计完成：${this.deepseekAI.targetScoreMs === null ? '无' :
+          `${(this.deepseekAI.targetScoreMs / 1000).toFixed(1)}s`}\n` +
+        `路径节点：${deepseekPath ? `${deepseekPath.index}/${deepseekPath.total} ` +
+          `(${deepseekPath.waypoint.x.toFixed(1)}, ${deepseekPath.waypoint.z.toFixed(1)})` : '无'}\n` +
+        `重选原因：${this.deepseekAI.lastSelectionReason}\n` +
+        `路径事件：${this.deepseekAI.lastNavigationReason}`;
     }
     this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
   }

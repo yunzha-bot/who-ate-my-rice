@@ -45,6 +45,13 @@ export const GAME_CONFIG = {
     searchDwellMs: 900, // 每个搜索点的观察停留：毫秒。
     searchMaxMs: 15_000, // 一次追丢搜索总时限：毫秒。
   },
+  deepseekAI: {
+    waypointTolerance: 0.25, // 路径节点到达容差：XZ 世界单位。
+    stuckRepathMs: 800, // 持续未靠近节点后重新寻路的时间：毫秒。
+    stuckProgressEpsilon: 0.05, // 上述时间内应缩短的最小节点距离：世界单位。
+    maxStuckRepathsPerTarget: 2, // 同一米堆连续卡路后允许的重寻路次数。
+    retryMs: 1_500, // 米堆暂不可达或全无路线时的重选等待：毫秒。
+  },
   characterAnimation: {
     fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。
     transitionMs: 120, // 毫秒；未来 AnimationMixer 片段交叉淡入时间。

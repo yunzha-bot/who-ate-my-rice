@@ -379,3 +379,16 @@
 - 新增文件：无。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`，并纳入此前未提交的 S7A 配置文档、Human AI、寻路、调试面板及测试修改。删除文件：无用途的 `public/assets/.gitkeep`。依赖变化：无。
 - 已知非阻断问题：Vite 主 JS chunk 约 624.28 kB，高于 500 kB 提示线；当前 Codex 若再次以无仓库写入权限的受限执行构建，仍可能在其他 `dist` 文件遇到 EPERM，需按项目写入边界处理；一般 Windows 文件占用风险未被证明为零。S16 待办：复评 Human AI 自动解锁速度。
 - Git commit 信息：计划 `feat: complete s7a human ai`，实际 hash 与推送结果以本次 Git 执行和最终汇报为准；本阶段不创建 Tag。
+
+## 2026-09-23 18:41 +08:00｜S7B-1 DeepSeek AI 人工验收与 WIP 检查点
+
+- 任务名称：记录 S7B-1 自主找米与进食验收并建立 Git WIP 安全检查点。当前阶段：S7B-1 PASS；整个 S7B 未完成，CURRENT = S7B-2 威胁感知与逃跑。
+- 本次目标：保存用户确认的六项浏览器验收及本次验证通过的 S7B-1 实现。
+- 人工 Gate：用户确认自主找米、连续吃完五份米、普通门开启与锁门绕行、目标及路径显示、暂停与重开、临时接管与玩家控制均 PASS。
+- 实际实现：独立 DeepSeek AI 状态机按路径行走时间 + 剩余进食时间 + 既有准备时间选取预计完成总时间最短的未完成米堆；复用共享 NavigationSystem、Circle Collision、DoorSystem 和唯一 RiceField 进食更新，使用原有准备、中断保留、声音/米痕/动作和 5/5 胜利规则。普通 CLOSED Door 可开，LOCKED Door 不穿越；不可达及卡路会重试或换目标。只在 Human 正式主控时运行，暂停、DeepSeek 正式主控及开发临时接管时不抢输入；重开重置 AI。
+- 配置：新增 GAME_CONFIG.deepseekAI 五项卡路/重试参数（路径容差 0.25 世界单位、卡路重算 800 ms、最小进度 0.05 世界单位、同目标最多 2 次、重试 1,500 ms），已同步 docs/GAME_BALANCE_CONFIG.md；未调整既有玩法数值。
+- 新增文件：src/systems/DeepSeekAIController.ts、tests/deepseek-ai.test.mjs。修改文件：src/three/ThreeGame.ts、src/config/gameConfig.ts、docs/GAME_BALANCE_CONFIG.md、AGENTS.md；本条为末尾追加。删除文件：无。依赖变化：无。
+- 测试结果：本次 npm test 172/172 PASS；npm run build PASS（含 tsc --noEmit）；git diff --check PASS。构建有已知 Vite 主包超过 500 kB 的非阻断提示。
+- 已知问题：S7B-1 是本阶段通过，不代表整个 S7B 完成；本次不创建 Tag。新 WIP 提交 hash 与 push 结果以 Git 实际执行及最终汇报为准。
+- 下一步建议：进入 S7B-2 威胁感知与逃跑前，由用户另行安排；本次不开始下一轮。
+- Git commit 信息：wip: preserve s7b1 rice seeking ai（本次执行）。
