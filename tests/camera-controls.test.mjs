@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { OrthographicCamera, Vector3 } from 'three';
+import { BoxGeometry, Mesh, MeshBasicMaterial, OrthographicCamera, Vector2, Vector3 } from 'three';
 import { cameraRelativeDirection, positionCameraOnTarget } from '../src/three/CameraRelativeMovement.ts';
-import { LocalControl } from '../src/three/LocalControl.ts';
+import { LocalControl, pickActorFaction } from '../src/three/LocalControl.ts';
 import { InputManager } from '../src/three/InputManager.ts';
 import { GameStateSystem } from '../src/systems/GameStateSystem.ts';
 import { RiceSystem } from '../src/systems/RiceSystem.ts';
@@ -12,6 +12,8 @@ import { RiceField } from '../src/systems/RiceField.ts';
 import { resolveDirectControlSwitch, resolveRoundShortcut } from '../src/three/RoundShortcuts.ts';
 import { DOOR_NODES, selectRiceCandidates } from '../src/three/map/apartmentMap.ts';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
+import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem } from '../src/systems/PerceptionSystem.ts';
+import { createRiceTraceView, syncRiceTraceView } from '../src/three/RiceTraceView.ts';
 
 const camera = new OrthographicCamera(-8, 8, 5, -5, 0.1, 100);
 camera.position.set(12, 14, 12);
@@ -90,6 +92,47 @@ test('Tab-style control switching changes only controlled faction and keeps IJKL
   assert.equal(controls.toggleControlled(), true);
   assert.equal(controls.controlledFaction, 'DEEPSEEK');
   assert.deepEqual(controls.directions(local, debug), { deepseek: local, human: debug });
+});
+
+test('development mouse pick switches temporary input, not selected observer or camera target', () => {
+  const controls = new LocalControl();
+  controls.choose('HUMAN');
+  const camera = new OrthographicCamera(-4, 4, 4, -4, 0.1, 100);
+  const human = new Mesh(new BoxGeometry(0.5, 0.7, 0.5), new MeshBasicMaterial());
+  const deepseek = new Mesh(new BoxGeometry(0.5, 0.7, 0.5), new MeshBasicMaterial());
+  human.position.set(0, 0.35, 0);
+  deepseek.position.set(1.5, 0.35, 0);
+  positionCameraOnTarget(camera, controls.selected(deepseek, human).position,
+    new Vector3(5, 7, 5));
+  camera.updateMatrixWorld();
+  human.updateMatrixWorld();
+  deepseek.updateMatrixWorld();
+  const cameraPosition = camera.position.clone();
+  const pointer = actor => {
+    const projected = actor.position.clone().project(camera);
+    return new Vector2(projected.x, projected.y);
+  };
+  assert.equal(pickActorFaction(camera, pointer(deepseek), deepseek, human), 'DEEPSEEK');
+  controls.setTemporaryInputTarget('DEEPSEEK');
+  assert.equal(controls.selectedFaction, 'HUMAN');
+  assert.equal(controls.controlledFaction, 'DEEPSEEK');
+  assert.equal(controls.temporaryInputTarget, 'DEEPSEEK');
+  assert.equal(controls.cameraTarget, 'HUMAN');
+  assert.equal(controls.informationObserver, 'HUMAN');
+  assert.equal(controls.selected(deepseek, human), human);
+  assert.deepEqual(controls.directions({ x: 1, y: 0 }, { x: 0, y: 0 }).deepseek,
+    { x: 1, y: 0 });
+  positionCameraOnTarget(camera, controls.selected(deepseek, human).position,
+    new Vector3(5, 7, 5));
+  assert.ok(camera.position.distanceTo(cameraPosition) < 1e-10);
+  assert.equal(pickActorFaction(camera, pointer(human), deepseek, human), 'HUMAN');
+  controls.setTemporaryInputTarget('HUMAN');
+  assert.equal(controls.controlledFaction, 'HUMAN');
+  assert.equal(controls.selectedFaction, 'HUMAN');
+  human.geometry.dispose();
+  deepseek.geometry.dispose();
+  human.material.dispose();
+  deepseek.material.dispose();
 });
 
 test('Tab key uses a press edge and prevents browser focus only while gameplay capture is enabled', () => {
@@ -229,7 +272,7 @@ test('direct R, M and Tab controls are edge-triggered but disabled by default', 
   }
 });
 
-test('pause menu continue and debug switch preserve all gameplay state', () => {
+test('pause menu primary switch preserves all gameplay state in both directions', () => {
   const controls = new LocalControl();
   const match = new GameStateSystem(0, 350);
   const rice = new RiceField(selectRiceCandidates(() => 0.2).map(point => point.id), 5000, 400);
@@ -251,9 +294,12 @@ test('pause menu continue and debug switch preserve all gameplay state', () => {
 
   assert.equal(match.pause(), true);
   assert.equal(match.phase, 'PAUSED');
-  controls.toggleControlled();
-  assert.equal(controls.selectedFaction, 'DEEPSEEK');
+  controls.setTemporaryInputTarget('HUMAN');
+  assert.equal(controls.switchPrimaryFaction(), true);
+  assert.equal(controls.selectedFaction, 'HUMAN');
   assert.equal(controls.controlledFaction, 'HUMAN');
+  assert.equal(controls.cameraTarget, 'HUMAN');
+  assert.equal(controls.informationObserver, 'HUMAN');
   assert.equal(match.phase, 'PAUSED');
   assert.deepEqual({
     elapsed: match.elapsedMs,
@@ -263,11 +309,61 @@ test('pause menu continue and debug switch preserve all gameplay state', () => {
     locks: doors.activeLockedDoorCount,
   }, before);
 
+  controls.setTemporaryInputTarget('DEEPSEEK');
+  assert.equal(controls.switchPrimaryFaction(), true);
+  assert.equal(controls.selectedFaction, 'DEEPSEEK');
+  assert.equal(controls.temporaryInputTarget, 'DEEPSEEK');
+  assert.equal(controls.cameraTarget, 'DEEPSEEK');
+  assert.equal(controls.informationObserver, 'DEEPSEEK');
+  assert.equal(match.phase, 'PAUSED');
+  assert.deepEqual({ elapsed: match.elapsedMs, capture: match.captureProgressMs,
+    rice: rice.progressMs, sprint: sprint.sprintRemainingMs,
+    locks: doors.activeLockedDoorCount }, before);
+
   assert.equal(match.resume(), true);
   assert.equal(match.phase, 'PLAYING');
   assert.equal(match.pause(), true);
   assert.equal(match.returnToFactionSelect(), true);
   assert.equal(match.phase, 'FACTION_SELECT');
+});
+
+test('primary observer drives camera, sound, vision and trace despite temporary WASD possession', () => {
+  const controls = new LocalControl();
+  const following = new OrthographicCamera(-8, 8, 5, -5, 0.1, 100);
+  const deepseek = new Vector3(1, 0.35, 0);
+  const human = new Vector3(0, 0.35, 0);
+  const offset = new Vector3(12, 14, 12);
+  const geometry = new PerceptionGeometry([], [], () => []);
+  const sound = new SoundEventSystem();
+  const vision = new VisionSystem();
+  const traces = new RiceTraceSystem();
+  controls.choose('HUMAN');
+  controls.setTemporaryInputTarget('DEEPSEEK');
+  sound.emit('FOOTSTEP', deepseek, 'DEEPSEEK');
+  vision.update(100, human, deepseek, geometry);
+  traces.recordProgress('rice-1', deepseek, 0, 200);
+  const trace = createRiceTraceView(traces.traces[0], controls.informationObserver === 'HUMAN');
+
+  for (const expected of ['HUMAN', 'DEEPSEEK', 'HUMAN']) {
+    if (controls.selectedFaction !== expected) controls.switchPrimaryFaction();
+    controls.setTemporaryInputTarget(expected === 'HUMAN' ? 'DEEPSEEK' : 'HUMAN');
+    const target = controls.cameraTarget === 'HUMAN' ? human : deepseek;
+    positionCameraOnTarget(following, target, offset);
+    following.updateMatrixWorld();
+    const centered = target.clone().project(following);
+    assert.ok(Math.abs(centered.x) < 1e-10 && Math.abs(centered.y) < 1e-10);
+    assert.equal(controls.informationObserver, expected);
+    assert.equal(vision.get(controls.informationObserver).lastSeen.position.x,
+      expected === 'HUMAN' ? deepseek.x : human.x);
+    assert.equal(!!sound.heardBy(target, controls.informationObserver, following, geometry),
+      expected === 'HUMAN');
+    syncRiceTraceView(trace, traces.traces[0], controls.informationObserver === 'HUMAN');
+    assert.equal(trace.visible, expected === 'HUMAN');
+    assert.equal(controls.selectedFaction, expected);
+    assert.notEqual(controls.temporaryInputTarget, expected);
+  }
+  trace.geometry.dispose();
+  trace.material.dispose();
 });
 
 test('quick restart after Tab restores the selected faction and every round subsystem', () => {

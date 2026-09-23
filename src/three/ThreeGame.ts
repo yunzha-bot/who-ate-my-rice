@@ -7,16 +7,20 @@ import { DoorSystem, doorIntersectsActor, type DoorActionResult,
   type NearbyDoor } from '../systems/DoorSystem';
 import { HumanDoorSkill } from '../systems/HumanDoorSkill';
 import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
+import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
+  type SoundType } from '../systems/PerceptionSystem';
 import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
 import { DoorView } from './DoorView';
 import { InputManager } from './InputManager';
 import { RiceView } from './RiceView';
+import { createRiceTraceView, syncRiceTraceView } from './RiceTraceView';
+import { SoundVisualView } from './SoundVisualView';
 import { resolveDirectControlSwitch, resolveRoundShortcut } from './RoundShortcuts';
 import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './CaptureZone';
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
-import { LocalControl, type Faction } from './LocalControl';
+import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { buildApartment } from './map/MapBuilder';
-import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, SPAWNS,
+import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, SPAWNS, WALLS,
   selectRiceCandidates } from './map/apartmentMap';
 
 const U = C.three.pixelsPerUnit;
@@ -45,11 +49,26 @@ export class ThreeGame {
   private minesweeper = new MinesweeperLockSystem(
     this.doorSystem, C.pulseLock.rows, C.pulseLock.cols, C.pulseLock.mines);
   private doorViews = new Map<string, DoorView>();
+  private sound = new SoundEventSystem();
+  private soundVisual: SoundVisualView;
+  private traces = new RiceTraceSystem();
+  private vision = new VisionSystem();
+  private perceptionGeometry = new PerceptionGeometry(WALLS, DOOR_NODES,
+    () => this.doorSystem.doors);
+  private traceViews = new Map<string, THREE.Mesh>();
+  private lastStepMs: Record<Faction, number> = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
+  private lastRiceSoundMs = -Infinity;
   private doorStatusMessage = '';
   private mineFailureRemainingMs = 0;
   private collision: CollisionWorld;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
+  private perceptionHud: HTMLElement;
+  private soundArrow: HTMLElement;
+  private soundDetails: HTMLElement;
+  private visionDetails: HTMLElement;
+  private traceDetails: HTMLElement;
+  private debugPossession: HTMLElement;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
   private pauseActions: HTMLElement;
@@ -59,9 +78,11 @@ export class ThreeGame {
   private mineTitle: HTMLElement;
   private mineGrid: HTMLElement;
   private frame = 0;
+  private readonly debugPossessionEnabled = import.meta.env.DEV && C.development.factionSwitchEnabled;
 
   constructor(container: HTMLElement) {
     this.scene.background = new THREE.Color(C.backgroundColor);
+    this.soundVisual = new SoundVisualView(this.scene);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
     container.append(this.renderer.domElement);
@@ -98,6 +119,22 @@ export class ThreeGame {
 
     this.hud = this.label(container, 'game-hud');
     this.riceHud = this.label(container, 'rice-hud');
+    this.perceptionHud = this.label(container, 'perception-hud');
+    this.soundArrow = this.label(this.perceptionHud, 'sound-arrow');
+    this.soundDetails = this.label(this.perceptionHud, 'sound-details');
+    this.visionDetails = this.label(this.perceptionHud, 'vision-details');
+    this.traceDetails = this.label(this.perceptionHud, 'trace-details');
+    this.debugPossession = this.label(this.perceptionHud, 'debug-possession');
+    if (this.debugPossessionEnabled) {
+      for (const faction of ['HUMAN', 'DEEPSEEK'] as const) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = `临时控制 ${faction === 'HUMAN' ? 'Human' : 'DeepSeek 娘'}`;
+        button.addEventListener('click', () => this.setTemporaryInputTarget(faction));
+        this.debugPossession.append(button);
+      }
+      this.renderer.domElement.addEventListener('click', this.onActorClick);
+    }
     this.overlay = this.label(container, 'game-overlay');
     this.overlayText = this.label(this.overlay, 'overlay-text');
     this.pauseActions = this.label(this.overlay, 'pause-actions');
@@ -115,9 +152,9 @@ export class ThreeGame {
     pauseMenuButton.addEventListener('click', () => this.returnToFactionSelect());
     const debugSwitchButton = document.createElement('button');
     debugSwitchButton.type = 'button';
-    debugSwitchButton.textContent = '开发调试：切换控制角色';
-    debugSwitchButton.hidden = !C.development.factionSwitchEnabled;
-    debugSwitchButton.addEventListener('click', () => this.switchControlledFactionFromPause());
+    debugSwitchButton.textContent = '开发调试：切换主控阵营';
+    debugSwitchButton.hidden = !this.debugPossessionEnabled;
+    debugSwitchButton.addEventListener('click', () => this.switchPrimaryFactionFromPause());
     this.pauseActions.append(
       continueButton, pauseRestartButton, pauseMenuButton, debugSwitchButton);
     this.resultActions = this.label(this.overlay, 'result-actions');
@@ -185,10 +222,30 @@ export class ThreeGame {
   }
 
   private followCamera(): void {
-    const target = this.control.controlled(this.player, this.human);
+    const target = this.control.cameraTarget === 'DEEPSEEK' ? this.player
+      : this.control.cameraTarget === 'HUMAN' ? this.human : null;
     if (!target) return;
     positionCameraOnTarget(this.camera, target.position, this.cameraOffset);
   }
+
+  private setTemporaryInputTarget(faction: Faction): void {
+    if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
+        this.minesweeper.isOpen || !this.control.setTemporaryInputTarget(faction)) return;
+    this.input.clear();
+    this.updateHud(this.nearestRice());
+    this.updatePerceptionHud();
+  }
+
+  private onActorClick = (event: MouseEvent): void => {
+    if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
+        this.minesweeper.isOpen || event.button !== 0) return;
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const pointer = new THREE.Vector2(
+      (event.clientX - rect.left) / rect.width * 2 - 1,
+      -(event.clientY - rect.top) / rect.height * 2 + 1);
+    const faction = pickActorFaction(this.camera, pointer, this.player, this.human);
+    if (faction) this.setTemporaryInputTarget(faction);
+  };
 
   private box(w: number, h: number, d: number, color: number, x: number, y: number, z: number): THREE.Mesh {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
@@ -277,15 +334,18 @@ export class ThreeGame {
         this.updatePlaying(deltaMs);
       }
     }
-    if (this.control.controlledFaction !== null) {
+    if (this.control.selectedFaction !== null) {
       this.followCamera();
     }
     this.updateHud(this.nearestRice());
+    this.updatePerceptionHud();
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
   };
 
   private updatePlaying(deltaMs: number): void {
+    this.sound.advance(deltaMs);
+    this.traces.advance(deltaMs);
     this.humanDoorSkill.advance(deltaMs, this.match.phase);
     if (this.mineFailureRemainingMs > 0) {
       this.mineFailureRemainingMs = Math.max(0, this.mineFailureRemainingMs - deltaMs);
@@ -317,11 +377,18 @@ export class ThreeGame {
         }
       }
     }
+    const previousSprintState = this.sprint.state;
     this.sprint.advance(deltaMs, direction);
+    if (previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED') {
+      this.sound.emit('FALL', this.player.position, 'DEEPSEEK');
+    }
     const movement = this.sprint.movementDirection(direction);
     const speed = C.player.speed / U *
       (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
+    const oldDeepseek = this.player.position.clone();
     this.move(this.player, movement.x * speed * deltaMs / 1000, movement.y * speed * deltaMs / 1000);
+    this.emitMovementSound('DEEPSEEK', oldDeepseek, this.player.position,
+      this.sprint.state === 'SPRINT_RUNNING');
     this.player.rotation.z = this.sprint.state === 'STUNNED' ? Math.PI / 2 : 0;
     (this.player.material as THREE.MeshStandardMaterial).color.setHex(
       this.sprint.state === 'STUNNED' ? 0xff7777 : C.player.color);
@@ -329,17 +396,31 @@ export class ThreeGame {
     const humanSpeed = C.player.speed / U * C.human.speedMultiplier;
     const activeHumanDirection = doorInteraction.humanMovementLocked
       ? { x: 0, y: 0 } : humanDirection;
+    const oldHuman = this.human.position.clone();
     this.move(this.human, activeHumanDirection.x * humanSpeed * deltaMs / 1000,
       activeHumanDirection.y * humanSpeed * deltaMs / 1000);
+    this.emitMovementSound('HUMAN', oldHuman, this.human.position, false);
     const nearest = this.nearestRice();
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
+    const previousRice = new Map(this.rice.states.map(state => [state.id, state.progressMs]));
     this.rice.update(deltaMs, inRange ? nearest!.id : null,
       this.control.isControlling('DEEPSEEK') &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
       !doorInteraction.doorOwnsInteraction && inRange && direction.x === 0 && direction.y === 0);
     for (const portion of this.rice.portions) {
       this.riceViews.get(portion.rice.id)!.sync(portion.rice);
+      const position = this.riceViews.get(portion.rice.id)!.position;
+      this.traces.recordProgress(portion.rice.id, position,
+        previousRice.get(portion.rice.id) ?? 0, portion.rice.progressMs);
+      if (portion.rice.progressMs > (previousRice.get(portion.rice.id) ?? 0) &&
+          this.sound.nowMs - this.lastRiceSoundMs >= C.perception.riceSoundIntervalMs) {
+        this.sound.emit('RICE_EAT', position, 'DEEPSEEK');
+        this.lastRiceSoundMs = this.sound.nowMs;
+      }
     }
+    this.syncTraceViews();
+    this.vision.update(deltaMs, this.human.position, this.player.position,
+      this.perceptionGeometry);
     const insideCaptureRadius = isInsideCaptureZoneXZ(
       this.human.position, this.player.position, C.match.captureRadius);
     this.captureZoneBlocked = insideCaptureRadius &&
@@ -464,6 +545,15 @@ export class ThreeGame {
     if (id && (result === 'OPENED' || result === 'CLOSED' ||
         result === 'LOCKED' || result === 'UNLOCKED' || result === 'FORCE_OPENED')) {
       this.syncDoor(id);
+      const soundType: SoundType = result === 'OPENED' ? 'DOOR_OPEN'
+        : result === 'CLOSED' ? 'DOOR_CLOSE'
+        : result === 'LOCKED' ? 'DOOR_LOCK'
+        : result === 'FORCE_OPENED' ? 'FORCE_BREAK' : 'LOCK_BREAK';
+      const sourceFaction = result === 'LOCKED' ? 'DEEPSEEK' :
+        result === 'FORCE_OPENED' || result === 'UNLOCKED' ? 'HUMAN'
+          : this.control.controlledFaction;
+      const door = this.doorSystem.definition(id);
+      if (door && sourceFaction) this.sound.emit(soundType, door, sourceFaction);
     }
     this.doorStatusMessage = result === 'OPENED' ? '门已打开'
       : result === 'CLOSED' ? '门已关闭'
@@ -511,13 +601,14 @@ export class ThreeGame {
     this.updateHud(this.nearestRice());
   }
 
-  private switchControlledFactionFromPause(): void {
+  private switchPrimaryFactionFromPause(): void {
     if (this.match.phase !== 'PAUSED' || this.minesweeper.isOpen ||
-        !C.development.factionSwitchEnabled) return;
-    this.control.toggleControlled();
+        !this.debugPossessionEnabled || !this.control.switchPrimaryFaction()) return;
     this.input.clear();
     this.followCamera();
+    this.syncTraceViews();
     this.updateHud(this.nearestRice());
+    this.updatePerceptionHud();
   }
 
   private restart(): void {
@@ -558,6 +649,12 @@ export class ThreeGame {
     this.captureZoneActive = false;
     this.captureZoneBlocked = false;
     this.captureZone.reset();
+    this.sound.reset();
+    this.traces.reset();
+    this.vision.reset();
+    this.lastStepMs = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
+    this.lastRiceSoundMs = -Infinity;
+    this.clearTraceViews();
     this.input.clear();
   }
 
@@ -577,8 +674,8 @@ export class ThreeGame {
     const controlledName = this.control.controlledFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
       : this.control.controlledFaction === 'HUMAN' ? 'Human' : '未选择';
     const directHotkeyHint = C.development.directHotkeysEnabled ? '｜直达 R / M / Tab 已开启' : '';
-    const developmentControl = C.development.factionSwitchEnabled
-      ? `当前控制：${controlledName}｜Esc 菜单可切换控制${directHotkeyHint}\n` : '';
+    const developmentControl = this.debugPossessionEnabled
+      ? `正式主控：${factionName}｜临时输入目标：${controlledName}｜Camera：${factionName}｜信息观察者：${factionName}${directHotkeyHint}\n` : '';
     const doorHint = this.control.isControlling('DEEPSEEK')
       ? `门：E 开/关｜Q 锁门  锁：${this.doorSystem.activeLockedDoorCount} / ${C.door.maxActiveLocks}`
       : '门：E 开/关或扫雷｜Space 普通门快开 / 锁门强破';
@@ -643,11 +740,91 @@ export class ThreeGame {
     return this.minesweeper.entries.find(entry => entry.state === 'OPEN') ?? null;
   }
 
+  private emitMovementSound(faction: Faction, before: THREE.Vector3,
+    after: THREE.Vector3, sprinting: boolean): void {
+    if (distance(before, after) < 0.002) return;
+    const interval = sprinting ? C.perception.sprintStepIntervalMs : C.perception.footstepIntervalMs;
+    if (this.sound.nowMs - this.lastStepMs[faction] < interval) return;
+    this.sound.emit(sprinting ? 'SPRINT' : 'FOOTSTEP', after, faction);
+    this.lastStepMs[faction] = this.sound.nowMs;
+  }
+
+  private clearTraceViews(): void {
+    for (const view of this.traceViews.values()) {
+      this.scene.remove(view);
+      view.geometry.dispose();
+      (view.material as THREE.Material).dispose();
+    }
+    this.traceViews.clear();
+  }
+
+  private syncTraceViews(): void {
+    const active = new Set(this.traces.traces.map(trace => trace.riceId));
+    for (const [id, view] of this.traceViews) {
+      if (active.has(id)) continue;
+      this.scene.remove(view);
+      view.geometry.dispose();
+      (view.material as THREE.Material).dispose();
+      this.traceViews.delete(id);
+    }
+    for (const trace of this.traces.traces) {
+      let view = this.traceViews.get(trace.riceId);
+      if (!view) {
+        view = createRiceTraceView(trace, this.control.informationObserver === 'HUMAN');
+        this.scene.add(view);
+        this.traceViews.set(trace.riceId, view);
+      }
+      syncRiceTraceView(view, trace, this.control.informationObserver === 'HUMAN');
+    }
+  }
+
+  private updatePerceptionHud(): void {
+    const faction = this.control.informationObserver;
+    this.perceptionHud.hidden = !faction || this.match.phase === 'FACTION_SELECT';
+    if (!faction) {
+      this.soundVisual.update(null, null, false, this.sound.nowMs);
+      return;
+    }
+    const listener = faction === 'HUMAN' ? this.human.position : this.player.position;
+    const heard = this.sound.heardBy(listener, faction, this.camera, this.perceptionGeometry);
+    const probe = heard ?? this.sound.analyzeBy(listener, faction, this.camera, this.perceptionGeometry);
+    // Development display also exposes heavily occluded events; production stays audible-only.
+    this.soundVisual.update(listener, this.debugPossessionEnabled ? probe : heard,
+      this.match.phase !== 'FINISHED', this.sound.nowMs);
+    const sight = this.vision.get(faction);
+    const seen = sight.lastSeen;
+    const newestTrace = this.traces.traces.at(-1);
+    this.soundArrow.hidden = !heard;
+    this.soundArrow.textContent = heard?.direction ?? '';
+    this.perceptionHud.style.color = heard
+      ? heard.audibleStrength >= 0.55 ? '#ffad6d' : heard.audibleStrength >= 0.25 ? '#ffe18a' : '#b7d4e8'
+      : '#c9d6df';
+    this.soundDetails.textContent = probe
+      ? `${heard ? '最近声音' : '声音探针（不可听）'}：${probe.event.type}  剩余 ${(probe.remainingMs / 1000).toFixed(1)}s\n` +
+        `Raw ${probe.rawStrength.toFixed(2)} × Distance ${probe.distanceFactor.toFixed(2)} × ` +
+        `Occlusion ${probe.occlusionMultiplier.toFixed(2)} = Final ${probe.audibleStrength.toFixed(2)}\n` +
+        `遮挡：${probe.occlusion}`
+      : '最近声音：无';
+    const blockerIndex = DOOR_NODES.findIndex(node => node.id === sight.blocker);
+    const blockerLabel = blockerIndex >= 0
+      ? `Door D${String(blockerIndex + 1).padStart(2, '0')}` : sight.blocker;
+    this.visionDetails.textContent = `Vision：${sight.status}` +
+      (blockerLabel ? `（${blockerLabel}）` : '') + '\n' +
+      `Last Seen：${seen ? `(${seen.position.x.toFixed(1)}, ${seen.position.z.toFixed(1)}) ` +
+        `${((this.vision.nowMs - seen.timeMs) / 1000).toFixed(1)} 秒前` : '无'}`;
+    this.traceDetails.textContent = `Rice Trace：${this.traces.traces.length}  最新：` +
+      (newestTrace ? `${((this.traces.nowMs - newestTrace.createdAt) / 1000).toFixed(1)}s` : '无');
+    this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
+  }
+
   dispose(): void {
     cancelAnimationFrame(this.frame);
+    this.renderer.domElement.removeEventListener('click', this.onActorClick);
     window.removeEventListener('resize', this.resize);
     this.input.dispose();
     this.captureZone.dispose();
+    this.soundVisual.dispose();
+    this.clearTraceViews();
     for (const view of this.doorViews.values()) view.dispose();
     this.renderer.dispose();
   }
