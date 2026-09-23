@@ -21,6 +21,11 @@ export interface HumanAICommand {
   direction: Point;
   openDoorId: string | null;
 }
+export interface HumanAIPathProgress {
+  waypoint: NavStep;
+  index: number;
+  total: number;
+}
 
 const distance = (a: Point, b: Point): number => Math.hypot(a.x - b.x, a.z - b.z);
 
@@ -37,7 +42,9 @@ export class HumanAIController {
   target: Point | null = null;
   targetRoomId: string | null = null;
   lastTransitionReason = 'ROUND_START';
-  private patrolIndex = 0;
+  lastNavigationReason = 'NONE';
+  private readonly visitedPatrolRooms = new Set<string>();
+  private investigationSource: 'SOUND' | 'LAST_SEEN' | null = null;
   private dwellRemainingMs = 0;
   private handledSound: HeardSound['event'] | null = null;
   private handledLastSeenTime = -1;
@@ -45,11 +52,13 @@ export class HumanAIController {
   private pathIndex = 0;
   private repathRemainingMs = 0;
   private pathDoorSignature = '';
-  private lastPosition: Point | null = null;
   private lastCommandedMovement = false;
   private stuckMs = 0;
+  private progressWaypointKey = '';
+  private progressAnchorDistance = Infinity;
+  private avoidedWaypoint: Point | null = null;
   private readonly doorNodes: Map<string, DoorNode>;
-  private readonly patrolPoints: Point[];
+  private readonly patrolRooms: Room[];
   private readonly navigation: NavigationSystem;
   private readonly rooms: readonly Room[];
 
@@ -57,7 +66,7 @@ export class HumanAIController {
     this.navigation = navigation;
     this.rooms = rooms;
     this.doorNodes = new Map(doors.map(door => [door.id, door]));
-    this.patrolPoints = rooms.filter(room => room.major).map(room => ({ x: room.x, z: room.z }));
+    this.patrolRooms = rooms.filter(room => room.major);
   }
 
   reset(): void {
@@ -65,7 +74,9 @@ export class HumanAIController {
     this.target = null;
     this.targetRoomId = null;
     this.lastTransitionReason = 'ROUND_START';
-    this.patrolIndex = 0;
+    this.lastNavigationReason = 'NONE';
+    this.visitedPatrolRooms.clear();
+    this.investigationSource = null;
     this.dwellRemainingMs = 0;
     this.handledSound = null;
     this.handledLastSeenTime = -1;
@@ -73,42 +84,59 @@ export class HumanAIController {
     this.pathIndex = 0;
     this.repathRemainingMs = 0;
     this.pathDoorSignature = '';
-    this.lastPosition = null;
     this.lastCommandedMovement = false;
     this.stuckMs = 0;
+    this.progressWaypointKey = '';
+    this.progressAnchorDistance = Infinity;
+    this.avoidedWaypoint = null;
+  }
+
+  resumeAfterManualControl(): void {
+    this.path = [];
+    this.pathIndex = 0;
+    this.repathRemainingMs = 0;
+    this.progressWaypointKey = '';
+    this.progressAnchorDistance = Infinity;
+    this.stuckMs = 0;
+    this.avoidedWaypoint = null;
+    this.lastCommandedMovement = false;
+  }
+
+  getPathProgress(): HumanAIPathProgress | null {
+    const waypoint = this.path[this.pathIndex];
+    return this.state === 'CAPTURE' || !waypoint ? null
+      : { waypoint: { ...waypoint }, index: this.pathIndex + 1, total: this.path.length };
   }
 
   update(input: HumanAIInput): HumanAICommand {
     const cfg = GAME_CONFIG.humanAI;
     const deltaMs = Math.max(0, input.deltaMs);
     this.repathRemainingMs = Math.max(0, this.repathRemainingMs - deltaMs);
-    if (this.lastPosition && this.lastCommandedMovement &&
-        distance(input.human, this.lastPosition) < GAME_CONFIG.collision.contactEpsilon * 10) {
-      this.stuckMs += deltaMs;
-      if (this.stuckMs >= cfg.stuckRepathMs) {
-        this.repathRemainingMs = 0;
-        this.stuckMs = 0;
-      }
-    } else this.stuckMs = 0;
-    this.lastPosition = { x: input.human.x, z: input.human.z };
+    this.trackPathProgress(input.human, deltaMs);
 
     if (input.visibleTarget) {
+      this.investigationSource = null;
       this.setState(input.captureEligible ? 'CAPTURE' : 'CHASE',
         input.captureEligible ? 'CAPTURE_RANGE' : 'VISION_TARGET');
       this.setTarget(input.visibleTarget, null);
-    } else if (input.heard && input.heard.event !== this.handledSound) {
+    } else if ((this.state === 'CHASE' || this.state === 'CAPTURE') &&
+        input.lastSeen && input.lastSeen.timeMs !== this.handledLastSeenTime) {
+      this.handledLastSeenTime = input.lastSeen.timeMs;
+      this.setState('INVESTIGATE', 'LOST_SIGHT');
+      this.investigationSource = 'LAST_SEEN';
+      this.setTarget(input.lastSeen.position, this.roomFor(input.lastSeen.position)?.id ?? null);
+      this.dwellRemainingMs = cfg.investigationDwellMs;
+    } else if (this.investigationSource !== 'LAST_SEEN' &&
+        input.heard && input.heard.event !== this.handledSound) {
       this.handledSound = input.heard.event;
       const room = this.roomFor(input.heard.event.position);
-      if (room) {
+      if (room && !(this.state === 'INVESTIGATE' &&
+          this.investigationSource === 'SOUND' && this.targetRoomId === room.id)) {
         this.setState('INVESTIGATE', 'SOUND_HEARD');
+        this.investigationSource = 'SOUND';
         this.setTarget({ x: room.x, z: room.z }, room.id);
         this.dwellRemainingMs = cfg.investigationDwellMs;
       }
-    } else if (input.lastSeen && input.lastSeen.timeMs !== this.handledLastSeenTime) {
-      this.handledLastSeenTime = input.lastSeen.timeMs;
-      this.setState('INVESTIGATE', 'LOST_SIGHT');
-      this.setTarget(input.lastSeen.position, this.roomFor(input.lastSeen.position)?.id ?? null);
-      this.dwellRemainingMs = cfg.investigationDwellMs;
     } else if (this.state === 'CHASE' || this.state === 'CAPTURE') {
       this.setState('PATROL', 'TARGET_LOST');
       this.target = null;
@@ -121,12 +149,13 @@ export class HumanAIController {
     if (!goal) return this.unreachable(input);
     if (distance(input.human, goal) <= cfg.waypointTolerance) {
       if (this.state === 'PATROL') {
-        this.patrolIndex = (this.patrolIndex + 1) % this.patrolPoints.length;
+        if (this.targetRoomId) this.visitedPatrolRooms.add(this.targetRoomId);
         this.choosePatrol(input.human, input.doors);
       } else if (this.state === 'INVESTIGATE') {
         this.dwellRemainingMs -= deltaMs;
         if (this.dwellRemainingMs <= 0) {
           this.setState('PATROL', 'AREA_SEARCH_COMPLETE');
+          this.investigationSource = null;
           this.choosePatrol(input.human, input.doors);
         } else return this.command(0, 0, null);
       }
@@ -135,7 +164,11 @@ export class HumanAIController {
     const signature = input.doors.map(door => `${door.id}:${door.state}`).join('|');
     if (!this.path.length || this.repathRemainingMs === 0 ||
         signature !== this.pathDoorSignature) {
-      this.path = this.navigation.findPath(input.human, this.target, input.doors) ?? [];
+      this.path = this.navigation.findPath(input.human, this.target, input.doors,
+        this.avoidedWaypoint ?? undefined) ?? [];
+      if (!this.path.length && this.avoidedWaypoint)
+        this.path = this.navigation.findPath(input.human, this.target, input.doors) ?? [];
+      this.avoidedWaypoint = null;
       this.pathIndex = 0;
       this.pathDoorSignature = signature;
       this.repathRemainingMs = cfg.repathIntervalMs;
@@ -170,14 +203,27 @@ export class HumanAIController {
   }
 
   private choosePatrol(human: Point, doors: readonly DoorState[]): void {
-    if (!this.patrolPoints.length) return;
-    for (let attempts = 0; attempts < this.patrolPoints.length; attempts++) {
-      const point = this.patrolPoints[this.patrolIndex];
-      if (this.navigation.findPath(human, point, doors)) {
-        this.setTarget(point, this.roomFor(point)?.id ?? null);
-        return;
-      }
-      this.patrolIndex = (this.patrolIndex + 1) % this.patrolPoints.length;
+    if (!this.patrolRooms.length) return;
+    if (this.visitedPatrolRooms.size === this.patrolRooms.length)
+      this.visitedPatrolRooms.clear();
+    const reachable = (unvisitedOnly: boolean): { room: Room; path: NavStep[] | null }[] =>
+      this.patrolRooms
+        .filter(room => !unvisitedOnly || !this.visitedPatrolRooms.has(room.id))
+        .map(room => ({ room, path: this.navigation.findPath(human, room, doors) }))
+        .filter(candidate => candidate.path !== null)
+        .sort((a, b) => a.path!.length - b.path!.length ||
+          distance(human, a.room) - distance(human, b.room));
+    let candidates = reachable(true);
+    // Locked doors can isolate some rooms. Keep visiting reachable rooms until
+    // their routes become available, instead of stopping at the end of a cycle.
+    if (!candidates.length) {
+      this.visitedPatrolRooms.clear();
+      candidates = reachable(false);
+    }
+    if (candidates.length) {
+      const room = candidates[0].room;
+      this.setTarget({ x: room.x, z: room.z }, room.id);
+      return;
     }
     this.target = null;
     this.lastTransitionReason = 'NO_PATROL_ROUTE';
@@ -204,5 +250,32 @@ export class HumanAIController {
   private command(x: number, z: number, openDoorId: string | null): HumanAICommand {
     this.lastCommandedMovement = x !== 0 || z !== 0;
     return { direction: { x, z }, openDoorId };
+  }
+
+  private trackPathProgress(human: Point, deltaMs: number): void {
+    const waypoint = this.path[this.pathIndex];
+    if (!this.lastCommandedMovement || !waypoint) {
+      this.stuckMs = 0;
+      return;
+    }
+    const key = `${waypoint.x},${waypoint.z}`;
+    const remaining = distance(human, waypoint);
+    if (key !== this.progressWaypointKey) {
+      this.progressWaypointKey = key;
+      this.progressAnchorDistance = remaining;
+      this.stuckMs = 0;
+    } else if (this.progressAnchorDistance - remaining >=
+        GAME_CONFIG.humanAI.stuckProgressEpsilon) {
+      this.progressAnchorDistance = remaining;
+      this.stuckMs = 0;
+    } else {
+      this.stuckMs += deltaMs;
+      if (this.stuckMs >= GAME_CONFIG.humanAI.stuckRepathMs) {
+        this.avoidedWaypoint = { x: waypoint.x, z: waypoint.z };
+        this.repathRemainingMs = 0;
+        this.stuckMs = 0;
+        this.lastNavigationReason = 'PATH_STALLED_REPATH';
+      }
+    }
   }
 }

@@ -43,6 +43,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.humanAI.waypointTolerance` | 0.25 | 世界单位；路径点到达容差 | 应与网格间距和角色步长一起调整，避免原地抖动。 |
 | `C.humanAI.investigationDwellMs` | 3,000 | 毫秒；到达声音/最后目击区域后等待时间 | 调整搜索节奏，不改变感知范围。 |
 | `C.humanAI.stuckRepathMs` | 800 | 毫秒；受阻后强制重新寻路阈值 | 太短可能频繁重算。 |
+| `C.humanAI.stuckProgressEpsilon` | 0.05 | 世界单位；受阻检测窗口内至少应缩短的路径节点距离 | 太大可能将正常绕行误判为卡路；太小可能漏掉原地抖动。 |
 | `C.humanAI.closedDoorPathCost` | 3 | 无量纲；路径经过普通关门格的额外成本 | 锁门始终不可走；普通关门由 AI 通过现有 DoorSystem 打开。 |
 
 ## 角色动作表现（S7A 占位接口）

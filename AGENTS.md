@@ -40,7 +40,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 ## 视觉表现与玩法逻辑分离
 
-- 角色动作由既有移动、进食、冲刺、抓捕等玩法状态单向驱动，经独立 `CharacterActionView` 表现；玩家和 AI 共用动作接口。后续 Q 版 GLB / AnimationMixer 正式美术只替换动画表现层与资源，不让动画反向改写速度、碰撞、进食或抓捕规则。
+- 玩家和 AI 共用 `IDLE / WALK / RUN / EAT / STARTLED / FALL / STUN / INTERACT / CAPTURE` 角色动作接口；动作由既有玩法状态单向驱动，经独立 `CharacterActionView` 表现。正式 Q 版角色与动作资源尚未导入；后续通过独立表现层和预留的 GLB / AnimationMixer 接口替换白模表现，不让动画反向改写速度、碰撞、进食或抓捕规则。
 
 - 声音感知计算由 `PerceptionSystem` 负责；声音场景效果由 `SoundVisualView` 负责，HUD 由 `ThreeGame` / CSS 显示。
 - 后续替换声音提示美术时，优先调整 `SoundVisualView` 的几何体、材质、纹理，以及 HUD 图标与 CSS；声音距离、遮挡、方向等玩法计算保持在感知系统，不随美术替换改动。
@@ -77,7 +77,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S6D 双向信息系统 —— Gate = PASS；声音、米痕、视野及调试主控切换已通过人工验收。
 - S6 游戏玩法 Alpha —— Gate = PASS；里程碑 `v0.2.0-alpha` 以实际推送结果为准。
 
-当前下一阶段：S7A —— Human AI；须等待用户明确任务。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前阶段：S7A —— Human AI，进行中。S7A-0 角色动作接口专项 = PASS；S7A-1 Human AI 基础行为 = PASS。CURRENT = S7A-2 Human AI 高级决策；整个 S7A 尚未完成，不得据前两项通过将整个 S7A 标记完成。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
 

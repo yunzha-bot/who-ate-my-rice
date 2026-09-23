@@ -15,9 +15,14 @@ export class NavigationSystem {
   private readonly depth: number;
   private readonly staticFree: boolean[] = [];
   private readonly doorAt: (string | null)[] = [];
+  private readonly edgeCache = new Map<number, { free: boolean; doorId: string | null }>();
+  private readonly world: CollisionWorld;
+  private readonly doorNodes: readonly DoorNode[];
 
   constructor(world: CollisionWorld, width: number, depth: number,
     doors: readonly DoorNode[]) {
+    this.world = world;
+    this.doorNodes = doors;
     this.width = width;
     this.depth = depth;
     this.columns = Math.ceil(width / this.cell);
@@ -30,7 +35,8 @@ export class NavigationSystem {
     }
   }
 
-  findPath(start: Point, goal: Point, doors: readonly DoorState[]): NavStep[] | null {
+  findPath(start: Point, goal: Point, doors: readonly DoorState[],
+    avoid?: Point): NavStep[] | null {
     const states = new Map(doors.map(door => [door.id, door.state]));
     const passable = (index: number): boolean =>
       this.staticFree[index] &&
@@ -38,6 +44,7 @@ export class NavigationSystem {
     const first = this.nearestPassable(start, passable);
     const last = this.nearestPassable(goal, passable);
     if (first < 0 || last < 0) return null;
+    const avoided = avoid ? this.nearestPassable(avoid, () => true) : -1;
     const total = this.columns * this.rows;
     const cost = new Float64Array(total).fill(Infinity);
     const previous = new Int32Array(total).fill(-1);
@@ -83,7 +90,9 @@ export class NavigationSystem {
       if (current === last) {
         const path: NavStep[] = [];
         for (let at = last; at >= 0; at = previous[at]) {
-          path.push({ ...this.point(at), doorId: this.doorAt[at] });
+          const before = previous[at];
+          path.push({ ...this.point(at), doorId: before < 0
+            ? this.doorAt[at] : this.edgeInfo(before, at).doorId });
         }
         return path.reverse();
       }
@@ -95,10 +104,13 @@ export class NavigationSystem {
         const x = cx + dx, z = cz + dz;
         if (x < 0 || x >= this.columns || z < 0 || z >= this.rows) continue;
         const next = z * this.columns + x;
-        if (closed[next] || !passable(next)) continue;
+        if (closed[next] || !passable(next) ||
+            (next === avoided && next !== first && next !== last)) continue;
         if (dx && dz && (!passable(cz * this.columns + x) ||
             !passable(z * this.columns + cx))) continue;
-        const doorCost = this.doorAt[next] && states.get(this.doorAt[next]!) === 'CLOSED'
+        const edge = this.edgeInfo(current, next);
+        if (!edge.free || (edge.doorId && states.get(edge.doorId) === 'LOCKED')) continue;
+        const doorCost = edge.doorId && states.get(edge.doorId) === 'CLOSED'
           ? GAME_CONFIG.humanAI.closedDoorPathCost : 0;
         const nextCost = cost[current] + (dx && dz ? Math.SQRT2 : 1) + doorCost;
         if (nextCost >= cost[next]) continue;
@@ -131,6 +143,34 @@ export class NavigationSystem {
   private point(index: number): Point {
     return { x: -this.width / 2 + (index % this.columns + 0.5) * this.cell,
       z: -this.depth / 2 + (Math.floor(index / this.columns) + 0.5) * this.cell };
+  }
+
+  // A free cell center alone does not prove that the actor circle fits between
+  // two centers, especially beside a thin wall or a convex furniture corner.
+  private edgeInfo(from: number, to: number): { free: boolean; doorId: string | null } {
+    const total = this.columns * this.rows;
+    const key = Math.min(from, to) * total + Math.max(from, to);
+    const cached = this.edgeCache.get(key);
+    if (cached) return cached;
+    const a = this.point(from), b = this.point(to);
+    const samples = Math.ceil(Math.hypot(a.x - b.x, a.z - b.z) /
+      GAME_CONFIG.collision.maxMovementSubstep);
+    let doorId = this.doorAt[from] ?? this.doorAt[to];
+    let free = true;
+    for (let step = 1; step < samples; step++) {
+      const fraction = step / samples;
+      const sample = { x: a.x + (b.x - a.x) * fraction,
+        z: a.z + (b.z - a.z) * fraction };
+      if (!this.world.canOccupyStaticXZ(sample.x, sample.z,
+        GAME_CONFIG.collision.playerRadius, GAME_CONFIG.three.actorHeight)) {
+        free = false;
+        break;
+      }
+      doorId ??= this.doorNodes.find(door => this.touchesDoor(sample, door))?.id ?? null;
+    }
+    const result = { free, doorId };
+    this.edgeCache.set(key, result);
+    return result;
   }
 
   private touchesDoor(point: Point, door: DoorNode): boolean {

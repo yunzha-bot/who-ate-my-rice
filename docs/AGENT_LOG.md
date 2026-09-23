@@ -326,3 +326,31 @@
 - 已知问题：整个 S7A 尚未完成正式人工验收；Human AI 完整体验仍待验收。
 - 下一步建议：等待 S7A 后续人工验收与阶段 Gate；本检查点不代表阶段封版。
 - Git commit 信息：`wip: preserve s7a human ai and action interface`；hash 与推送结果以本次执行汇报为准。
+
+## 2026-09-23 15:33 +08:00｜S6～S7A 文档状态同步
+
+- 任务名称：同步 S6 与 S7A 项目进度、动作接口长期规则和参数索引。
+- 当前阶段：S7A Human AI 进行中。角色动作接口专项人工验收 PASS；整个 S7A 尚未正式验收或完成。
+- 本次目标：核对正式 Tag、最近 WIP 检查点、Human AI 实际实现与统一数值文档，并同步项目长期状态。
+- S6 状态：S6A～S6D 及 S6 已完成。仓库 Tag 查询确认 `v0.2.0-alpha` 存在；本次只读远程 Tag 查询返回对象 `fff6f8a29223bce3c5b780a9a39738fa54ca1ca2`。未发现 `docs/SHARED_GAMEPLAY_SPEC.md`，未新建该文件。
+- S7A 实现进度：Human AI 已有 `PATROL / INVESTIGATE / CHASE / CAPTURE` 状态；读取现有声音、Vision / Last Seen，使用房间级声音调查和 XZ A* 导航，普通 CLOSED Door 可沿路径开启，锁门不可通行；抓捕由既有 Capture / Match 规则结算。已接入暂停/准备阶段停更、开发控制接管和重开重置。Human AI 完整浏览器行为尚待人工验收，S7A 不记为完成。
+- 动作接口：用户确认专项人工验收 PASS。玩家与 AI 共用 `IDLE / WALK / RUN / EAT / STARTLED / FALL / STUN / INTERACT / CAPTURE` 接口；DEV HUD 可观察双方动作与切换原因。正式角色及动作资源尚未导入；GLB / AnimationMixer 仅有预留接口，尚无正式动画片段。
+- 配置核对：`docs/GAME_BALANCE_CONFIG.md` 中 Human AI 参数及 `C.characterAnimation.fallPoseMs = 220 ms`、`transitionMs = 120 ms`、`stunColor = 0xff7777` 与 `src/config/gameConfig.ts` 一致；未发现需要改数值表的差异。
+- WIP 检查点：`2205b32de17385edb684fa24928d5d976b6dd42f`（`wip: preserve s7a human ai and action interface`），此前执行结果为 push 成功；提交时自动测试 153/153 PASS、build PASS、`git diff --check` PASS。本次远程 Tag 查询成功，但远程 `main` 实时查询因无法连接 GitHub 失败；本地 `main` 与 `origin/main` 跟踪指针均指向该提交。
+- 本次文档修改：更新 `AGENTS.md` 的阶段状态和角色动作长期规则；本条追加于日志末尾。未修改游戏代码、参数或共享规范。
+- 测试：本次仅文档维护，未重跑游戏自动测试；`git diff --check` PASS。
+- 下一步：进行 Human AI 基础行为人工验收；之后再按 Gate 结果决定 S7A 状态。
+- Git：不 commit、不 push、不创建 Tag。
+
+## 2026-09-23 16:24 +08:00｜S7A-1 Human AI 基础行为验收
+
+- 任务名称：S7A-1 Human AI 基础行为收尾。
+- 当前阶段：S7A-0 角色动作接口专项与 S7A-1 Human AI 基础行为均通过；整个 S7A 尚未完成，CURRENT = S7A-2 Human AI 高级决策。
+- 本次目标：记录用户确认的 S7A-1 浏览器人工验收并保存实际自动验证结果。
+- 人工 Gate：用户确认巡逻、循声调查、视觉追逐、追丢后搜索、普通门与拐角寻路正常；玩家控制 Human 时 AI 不抢控制，S7A-1 = PASS。此前 S7A-0 动作接口专项人工 PASS 见前序记录。
+- 实际完成内容：巡逻覆盖所有主要房间；最后目击调查优先于声音调查；网格路径增加沿边圆形碰撞采样，防止窄墙角斜穿；路径节点长时间没有接近进度时避开该节点重新寻路。普通关门使用既有开门接口，锁门绕行；DEV HUD 显示路径节点、状态切换原因及路径事件。
+- 配置：新增 `C.humanAI.stuckProgressEpsilon = 0.05` 世界单位，并已同步 `docs/GAME_BALANCE_CONFIG.md`；未调整既有玩法平衡值。
+- 测试结果：`npm test` 159/159 PASS；`npm run build` PASS（含 TypeScript 检查）；`git diff --check` PASS。构建前已正常停止本项目 Vite 预览。Vite 615.80 kB 主包超过 500 kB 的提示为已知非阻断警告。
+- 新增文件：无。修改文件：Human AI、寻路、ThreeGame DEV HUD、Human AI / Navigation 测试、`src/config/gameConfig.ts`、`docs/GAME_BALANCE_CONFIG.md`、`AGENTS.md` 与本日志。删除文件：无。依赖变化：无。
+- 已有检查点：本工作基于 `2205b32`（`wip: preserve s7a human ai and action interface`）；本次阶段提交 hash 与 push 结果以 Git 实际执行为准。
+- 下一步：进入 S7A-2 Human AI 高级决策的计划与开发；本次不开始 S7A-2。

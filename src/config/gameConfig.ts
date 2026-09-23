@@ -30,6 +30,7 @@ export const GAME_CONFIG = {
     waypointTolerance: 0.25, // 通过路径点的距离：世界单位。
     investigationDwellMs: 3_000, // 到达声音/目击区域后观察时间：毫秒。
     stuckRepathMs: 800, // 移动受阻后的重新寻路时间：毫秒。
+    stuckProgressEpsilon: 0.05, // 卡路检测窗口内靠近路径节点的最小距离：世界单位。
     closedDoorPathCost: 3, // 普通关门格的额外无量纲寻路代价。
   },
   characterAnimation: {

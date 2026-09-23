@@ -68,6 +68,7 @@ export class ThreeGame {
   private mineFailureRemainingMs = 0;
   private collision: CollisionWorld;
   private humanAI: HumanAIController;
+  private humanAiWasActive = false;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
   private perceptionHud: HTMLElement;
@@ -414,8 +415,10 @@ export class ThreeGame {
       this.perceptionGeometry);
     const aiEnabled = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
       this.control.temporaryInputTarget, debug, this.debugPossessionEnabled);
+    const aiCanAct = aiEnabled && !doorInteraction.humanMovementLocked;
     let aiHumanDirection: { x: number; y: number } | null = null;
-    if (aiEnabled && !doorInteraction.humanMovementLocked) {
+    if (aiCanAct) {
+      if (!this.humanAiWasActive) this.humanAI.resumeAfterManualControl();
       const sight = this.vision.get('HUMAN');
       const captureEligible = isCaptureEligibleXZ(
         this.human.position, this.player.position, C.match.captureRadius,
@@ -438,6 +441,7 @@ export class ThreeGame {
       }
       aiHumanDirection = { x: command.direction.x, y: command.direction.z };
     }
+    this.humanAiWasActive = aiCanAct;
     const humanSpeed = C.player.speed / U * C.human.speedMultiplier;
     const activeHumanDirection = doorInteraction.humanMovementLocked
       ? { x: 0, y: 0 } : aiHumanDirection ?? humanDirection;
@@ -721,6 +725,7 @@ export class ThreeGame {
     this.traces.reset();
     this.vision.reset();
     this.humanAI.reset();
+    this.humanAiWasActive = false;
     this.lastStepMs = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
     this.lastRiceSoundMs = -Infinity;
     this.clearTraceViews();
@@ -902,13 +907,17 @@ export class ThreeGame {
         this.control.temporaryInputTarget, this.input.debugDirection(),
         this.debugPossessionEnabled);
       const goal = this.humanAI.target;
+      const path = this.humanAI.getPathProgress();
       const mode = this.match.phase === 'PAUSED' ? 'PAUSED'
         : this.match.phase === 'READY' ? 'STANDBY'
           : active ? this.humanAI.state : 'MANUAL';
       this.humanAiDetails.textContent = `Human AI：${mode}\n` +
         `目标：${goal ? `${this.humanAI.targetRoomId ?? '位置'} ` +
           `(${goal.x.toFixed(1)}, ${goal.z.toFixed(1)})` : '无'}\n` +
-        `切换原因：${this.humanAI.lastTransitionReason}`;
+        `路径节点：${path ? `${path.index}/${path.total} ` +
+          `(${path.waypoint.x.toFixed(1)}, ${path.waypoint.z.toFixed(1)})` : '无'}\n` +
+        `切换原因：${this.humanAI.lastTransitionReason}\n` +
+        `路径事件：${this.humanAI.lastNavigationReason}`;
     }
     this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
   }

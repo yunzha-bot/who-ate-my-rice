@@ -84,6 +84,58 @@ test('lost sight leads to last seen investigation, dwell, and patrol', () => {
   assert.equal(ai.target, null);
 });
 
+test('last seen search outranks sound and repeated footsteps cannot reset its dwell', () => {
+  const ai = new HumanAIController(fakeNavigation, rooms, []);
+  const lastSeen = { position: { x: 7, z: 1 }, timeMs: 80 };
+  ai.update(input({ visibleTarget: lastSeen.position, lastSeen }));
+  ai.update(input({ lastSeen, heard: sound({ x: 0, z: 0 }, 100) }));
+  assert.equal(ai.state, 'INVESTIGATE');
+  assert.deepEqual(ai.target, lastSeen.position);
+  assert.equal(ai.lastTransitionReason, 'LOST_SIGHT');
+  ai.update(input({ human: lastSeen.position, lastSeen, deltaMs: 2000,
+    heard: sound({ x: 0, z: 0 }, 200) }));
+  assert.equal(ai.state, 'INVESTIGATE');
+  ai.update(input({ human: lastSeen.position, lastSeen, deltaMs: 1000 }));
+  assert.equal(ai.state, 'PATROL');
+});
+
+test('patrol selects nearest unvisited reachable room and resumes after manual control', () => {
+  const calls = [];
+  const nav = { nearestFree: goal => goal, findPath: (start, goal, doors, avoid) => {
+    calls.push(avoid);
+    return [{ ...start, doorId: null }, { ...goal, doorId: null }];
+  } };
+  const ai = new HumanAIController(nav, rooms, []);
+  ai.update(input());
+  assert.equal(ai.targetRoomId, 'living'); // Kitchen was reached at the spawn.
+  assert.ok(ai.getPathProgress());
+  const target = { ...ai.target };
+  ai.resumeAfterManualControl();
+  assert.equal(ai.getPathProgress(), null);
+  assert.deepEqual(ai.target, target);
+  ai.update(input());
+  assert.ok(ai.getPathProgress());
+  ai.reset();
+  assert.equal(ai.target, null);
+  assert.equal(ai.getPathProgress(), null);
+  assert.equal(calls.length > 0, true);
+});
+
+test('moving sideways without nearing the path node triggers an alternate replan', () => {
+  const avoided = [];
+  const nav = { nearestFree: goal => goal, findPath: (start, goal, doors, avoid) => {
+    avoided.push(avoid);
+    return [{ ...start, doorId: null }, { x: 2, z: 0, doorId: null },
+      { ...goal, doorId: null }];
+  } };
+  const ai = new HumanAIController(nav, rooms, []);
+  for (let frame = 0; frame < 20; frame++) {
+    ai.update(input({ deltaMs: 100, human: { x: 0, z: frame % 2 ? 0.04 : 0 } }));
+  }
+  assert.ok(avoided.some(point => point && point.x === 2 && point.z === 0));
+  assert.equal(ai.lastNavigationReason, 'PATH_STALLED_REPATH');
+});
+
 test('AI can request only an accessible ordinary door on its chosen path', () => {
   const node = { id: 'd', x: 0.6, z: 0, width: 1.2, rotation: Math.PI / 2 };
   const nav = { nearestFree: goal => goal, findPath: (start, goal) => [
