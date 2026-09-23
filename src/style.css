@@ -19,7 +19,8 @@ canvas { display: block; }
 .sound-arrow { font-size: clamp(42px, 5vw, 72px); font-weight: 800; line-height: 1;
   color: #ffe18a; text-shadow: 0 2px 12px #000a; }
 .sound-arrow[hidden], .debug-possession[hidden] { display: none; }
-.sound-details, .vision-details, .trace-details { margin-top: 4px; }
+.sound-details, .vision-details, .trace-details, .action-details { margin-top: 4px; }
+.action-details[hidden] { display: none; }
 .debug-possession { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px;
   pointer-events: auto; }
 .debug-possession button { cursor: pointer; padding: 4px 7px; }

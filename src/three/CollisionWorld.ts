@@ -45,6 +45,15 @@ export class CollisionWorld {
     return this.dynamicObstacles.size;
   }
 
+  // Navigation samples the movement footprint, but plans through openable doors.
+  canOccupyStaticXZ(x: number, z: number, radius: number, height: number): boolean {
+    if (x - radius < -this.halfWidth || x + radius > this.halfWidth ||
+        z - radius < -this.halfDepth || z + radius > this.halfDepth) return false;
+    return !this.obstacles.some(obstacle =>
+      obstacle.max.y > 0 && obstacle.min.y < height &&
+      circleIntersectsAabbXZ(x, z, radius, obstacle, GAME_CONFIG.collision.contactEpsilon));
+  }
+
   move(position: Vector3, deltaX: number, deltaZ: number,
     radius: number, actorHeight: number): Vector3 {
     const next = position.clone();
@@ -158,13 +167,11 @@ export class CollisionWorld {
   }
 
   private canOccupy(x: number, z: number, radius: number, height: number): boolean {
-    if (x - radius < -this.halfWidth || x + radius > this.halfWidth ||
-        z - radius < -this.halfDepth || z + radius > this.halfDepth) return false;
-    return !this.allObstacles().some((obstacle) => {
-      if (obstacle.max.y <= 0 || obstacle.min.y >= height) return false;
-      return circleIntersectsAabbXZ(
-        x, z, radius, obstacle, GAME_CONFIG.collision.contactEpsilon);
-    });
+    return this.canOccupyStaticXZ(x, z, radius, height) &&
+      ![...this.dynamicObstacles.values()].some(obstacle =>
+        obstacle.max.y > 0 && obstacle.min.y < height &&
+        circleIntersectsAabbXZ(x, z, radius, obstacle,
+          GAME_CONFIG.collision.contactEpsilon));
   }
 
   private allObstacles(): Box3[] {

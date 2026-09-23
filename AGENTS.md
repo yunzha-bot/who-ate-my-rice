@@ -40,6 +40,8 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 ## 视觉表现与玩法逻辑分离
 
+- 角色动作由既有移动、进食、冲刺、抓捕等玩法状态单向驱动，经独立 `CharacterActionView` 表现；玩家和 AI 共用动作接口。后续 Q 版 GLB / AnimationMixer 正式美术只替换动画表现层与资源，不让动画反向改写速度、碰撞、进食或抓捕规则。
+
 - 声音感知计算由 `PerceptionSystem` 负责；声音场景效果由 `SoundVisualView` 负责，HUD 由 `ThreeGame` / CSS 显示。
 - 后续替换声音提示美术时，优先调整 `SoundVisualView` 的几何体、材质、纹理，以及 HUD 图标与 CSS；声音距离、遮挡、方向等玩法计算保持在感知系统，不随美术替换改动。
 - 正式声音 UI 资源建议放在 `public/assets/ui/sound/`，场景声音 VFX 建议放在 `public/assets/vfx/sound/`。这些是未来建议目录，本规则不要求现在创建。

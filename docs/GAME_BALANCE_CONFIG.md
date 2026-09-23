@@ -32,6 +32,27 @@
 | `C.match.readyMs` | 3,000 | 毫秒；开局准备时间 | 与正式对局已进行时间分开。 |
 | `C.match.maxFrameDeltaMs` | 50 | 毫秒；单帧规则推进上限 | 为浏览器切换/卡帧稳定性服务，修改会影响所有逐帧计时。 |
 
+## Human AI（S7A 第一轮开发参数）
+
+AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声源所在区域，目视追逐才使用目标实时位置；抓捕仍由原有 `C.match` 规则裁决。
+
+| 变量 | 当前值 | 单位 / 作用 | 修改注意 |
+|---|---:|---|---|
+| `C.humanAI.navCellSize` | 0.4 | 世界单位；XZ 寻路网格边长 | 改大可能漏掉门洞；改小会增加 A* 开销，须复测全图可达。 |
+| `C.humanAI.repathIntervalMs` | 500 | 毫秒；追逐时最长路径刷新间隔 | 太大可能跟丢移动目标。 |
+| `C.humanAI.waypointTolerance` | 0.25 | 世界单位；路径点到达容差 | 应与网格间距和角色步长一起调整，避免原地抖动。 |
+| `C.humanAI.investigationDwellMs` | 3,000 | 毫秒；到达声音/最后目击区域后等待时间 | 调整搜索节奏，不改变感知范围。 |
+| `C.humanAI.stuckRepathMs` | 800 | 毫秒；受阻后强制重新寻路阈值 | 太短可能频繁重算。 |
+| `C.humanAI.closedDoorPathCost` | 3 | 无量纲；路径经过普通关门格的额外成本 | 锁门始终不可走；普通关门由 AI 通过现有 DoorSystem 打开。 |
+
+## 角色动作表现（S7A 占位接口）
+
+| 变量 | 当前值 | 单位 / 作用 | 修改注意 |
+|---|---:|---|---|
+| `C.characterAnimation.fallPoseMs` | 220 | 毫秒；FALL 白模姿态持续时间 | 只影响画面，不改变 `C.sprint.stunMs`。 |
+| `C.characterAnimation.transitionMs` | 120 | 毫秒；未来 AnimationMixer 片段切换淡入 | 当前无正式动画片段，不影响玩法。 |
+| `C.characterAnimation.stunColor` | `0xff7777` | 颜色；白模 FALL/STUN 反馈 | 纯视觉，角色基础色仍取 `C.player.color` / `C.human.color`。 |
+
 ## Rice 与米痕
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |

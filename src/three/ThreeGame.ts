@@ -9,8 +9,12 @@ import { HumanDoorSkill } from '../systems/HumanDoorSkill';
 import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
+import { HumanAIController, shouldRunHumanAI } from '../systems/HumanAIController';
+import { resolveCharacterAction } from '../systems/CharacterAction';
+import { NavigationSystem } from '../systems/NavigationSystem';
 import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
 import { DoorView } from './DoorView';
+import { CharacterActionView } from './CharacterActionView';
 import { InputManager } from './InputManager';
 import { RiceView } from './RiceView';
 import { createRiceTraceView, syncRiceTraceView } from './RiceTraceView';
@@ -20,7 +24,7 @@ import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './C
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { buildApartment } from './map/MapBuilder';
-import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, SPAWNS, WALLS,
+import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, ROOMS, SPAWNS, WALLS,
   selectRiceCandidates } from './map/apartmentMap';
 
 const U = C.three.pixelsPerUnit;
@@ -39,6 +43,8 @@ export class ThreeGame {
   private sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold, C.sprint.stunMs);
   private player: THREE.Mesh;
   private human: THREE.Mesh;
+  private playerAction: CharacterActionView;
+  private humanAction: CharacterActionView;
   private captureZone: CaptureZoneView;
   private captureZoneActive = false;
   private captureZoneBlocked = false;
@@ -61,6 +67,7 @@ export class ThreeGame {
   private doorStatusMessage = '';
   private mineFailureRemainingMs = 0;
   private collision: CollisionWorld;
+  private humanAI: HumanAIController;
   private hud: HTMLElement;
   private riceHud: HTMLElement;
   private perceptionHud: HTMLElement;
@@ -69,6 +76,8 @@ export class ThreeGame {
   private visionDetails: HTMLElement;
   private traceDetails: HTMLElement;
   private debugPossession: HTMLElement;
+  private humanAiDetails: HTMLElement;
+  private actionDetails: HTMLElement;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
   private pauseActions: HTMLElement;
@@ -99,6 +108,9 @@ export class ThreeGame {
 
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
       buildApartment(this.scene));
+    this.humanAI = new HumanAIController(
+      new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES),
+      ROOMS, DOOR_NODES);
     DOOR_NODES.forEach((door, index) => {
       const view = new DoorView(door, index, DEBUG_MAP);
       this.scene.add(view.object);
@@ -110,6 +122,8 @@ export class ThreeGame {
       SPAWNS.deepseek.x, actorHeight / 2, SPAWNS.deepseek.z);
     this.human = this.box(actorWidth, actorHeight, actorWidth, C.human.color,
       SPAWNS.human.x, actorHeight / 2, SPAWNS.human.z);
+    this.playerAction = new CharacterActionView(this.player, 'DEEPSEEK');
+    this.humanAction = new CharacterActionView(this.human, 'HUMAN');
     this.captureZone = new CaptureZoneView(this.human, C.match.captureRadius, actorHeight);
     this.resetRice();
     this.camera.position.copy(this.cameraOffset);
@@ -125,6 +139,9 @@ export class ThreeGame {
     this.visionDetails = this.label(this.perceptionHud, 'vision-details');
     this.traceDetails = this.label(this.perceptionHud, 'trace-details');
     this.debugPossession = this.label(this.perceptionHud, 'debug-possession');
+    this.humanAiDetails = this.label(this.perceptionHud, 'human-ai-details');
+    this.actionDetails = this.label(this.perceptionHud, 'action-details');
+    this.actionDetails.hidden = !import.meta.env.DEV;
     if (this.debugPossessionEnabled) {
       for (const faction of ['HUMAN', 'DEEPSEEK'] as const) {
         const button = document.createElement('button');
@@ -390,13 +407,40 @@ export class ThreeGame {
     this.traces.recordMovement(this.player.position);
     this.emitMovementSound('DEEPSEEK', oldDeepseek, this.player.position,
       this.sprint.state === 'SPRINT_RUNNING');
-    this.player.rotation.z = this.sprint.state === 'STUNNED' ? Math.PI / 2 : 0;
-    (this.player.material as THREE.MeshStandardMaterial).color.setHex(
-      this.sprint.state === 'STUNNED' ? 0xff7777 : C.player.color);
 
+    // The AI observes the same S6 vision/sound results as the HUD. Refresh
+    // before its decision, then refresh current visibility after Human moves.
+    this.vision.update(deltaMs, this.human.position, this.player.position,
+      this.perceptionGeometry);
+    const aiEnabled = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
+      this.control.temporaryInputTarget, debug, this.debugPossessionEnabled);
+    let aiHumanDirection: { x: number; y: number } | null = null;
+    if (aiEnabled && !doorInteraction.humanMovementLocked) {
+      const sight = this.vision.get('HUMAN');
+      const captureEligible = isCaptureEligibleXZ(
+        this.human.position, this.player.position, C.match.captureRadius,
+        this.collision.isLineBlockedXZ(this.human.position, this.player.position));
+      const command = this.humanAI.update({
+        deltaMs, human: this.human.position,
+        visibleTarget: sight.visible ? this.player.position : null,
+        lastSeen: sight.lastSeen,
+        heard: this.sound.heardBy(this.human.position, 'HUMAN', this.camera,
+          this.perceptionGeometry),
+        captureEligible, doors: this.doorSystem.doors,
+        canOpenDoor: id => {
+          const node = this.doorSystem.definition(id);
+          return !!node && canInteractWithDoorXZ(this.collision, this.human.position, node);
+        },
+      });
+      if (command.openDoorId) {
+        const result = this.doorSystem.toggle(command.openDoorId, 'HUMAN');
+        this.applyDoorResult(command.openDoorId, result, 'HUMAN');
+      }
+      aiHumanDirection = { x: command.direction.x, y: command.direction.z };
+    }
     const humanSpeed = C.player.speed / U * C.human.speedMultiplier;
     const activeHumanDirection = doorInteraction.humanMovementLocked
-      ? { x: 0, y: 0 } : humanDirection;
+      ? { x: 0, y: 0 } : aiHumanDirection ?? humanDirection;
     const oldHuman = this.human.position.clone();
     this.move(this.human, activeHumanDirection.x * humanSpeed * deltaMs / 1000,
       activeHumanDirection.y * humanSpeed * deltaMs / 1000);
@@ -420,7 +464,7 @@ export class ThreeGame {
       }
     }
     this.syncTraceViews();
-    this.vision.update(deltaMs, this.human.position, this.player.position,
+    this.vision.update(0, this.human.position, this.player.position,
       this.perceptionGeometry);
     const insideCaptureRadius = isInsideCaptureZoneXZ(
       this.human.position, this.player.position, C.match.captureRadius);
@@ -435,6 +479,28 @@ export class ThreeGame {
       this.rice.interrupt();
       this.closeMinesweeper();
     }
+    // The action layer observes resolved gameplay; it never feeds back into movement or rules.
+    const playerMoved = distance(oldDeepseek, this.player.position) > C.collision.contactEpsilon;
+    const humanMoved = distance(oldHuman, this.human.position) > C.collision.contactEpsilon;
+    const riceState = this.rice.activeId ? this.rice.get(this.rice.activeId)?.rice.interactionState : null;
+    this.playerAction.update(resolveCharacterAction({
+      moving: playerMoved,
+      running: this.sprint.state === 'SPRINT_RUNNING',
+      falling: previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED',
+      stunned: this.sprint.state === 'STUNNED',
+      eating: riceState === 'PREPARING' || riceState === 'EATING',
+      startled: this.match.captureProgressMs > 0,
+      interacting: this.control.isControlling('DEEPSEEK') &&
+        (this.input.isHeld('KeyQ') || this.input.isHeld('KeyE')) &&
+        !!this.nearestInteractableDoor(this.player.position),
+    }), deltaMs);
+    this.humanAction.update(resolveCharacterAction({
+      moving: humanMoved,
+      running: humanMoved && aiEnabled && this.humanAI.state === 'CHASE',
+      capturing: this.captureZoneActive,
+      interacting: this.minesweeper.isOpen || (this.control.isControlling('HUMAN') &&
+        this.input.isHeld('KeyE') && !!this.nearestInteractableDoor(this.human.position)),
+    }), deltaMs);
   }
 
   private handleDoorInteractions(): {
@@ -542,7 +608,8 @@ export class ThreeGame {
         radius, C.door.leafThickness);
   }
 
-  private applyDoorResult(id: string | null, result: DoorActionResult): void {
+  private applyDoorResult(id: string | null, result: DoorActionResult,
+    actorOverride?: Faction): void {
     if (id && (result === 'OPENED' || result === 'CLOSED' ||
         result === 'LOCKED' || result === 'UNLOCKED' || result === 'FORCE_OPENED')) {
       this.syncDoor(id);
@@ -552,7 +619,7 @@ export class ThreeGame {
         : result === 'FORCE_OPENED' ? 'FORCE_BREAK' : 'LOCK_BREAK';
       const sourceFaction = result === 'LOCKED' ? 'DEEPSEEK' :
         result === 'FORCE_OPENED' || result === 'UNLOCKED' ? 'HUMAN'
-          : this.control.controlledFaction;
+          : actorOverride ?? this.control.controlledFaction;
       const door = this.doorSystem.definition(id);
       if (door && sourceFaction) this.sound.emit(soundType, door, sourceFaction);
     }
@@ -645,14 +712,15 @@ export class ThreeGame {
     this.mineFailureRemainingMs = 0;
     this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
     this.human.position.set(SPAWNS.human.x, C.three.actorHeight / 2, SPAWNS.human.z);
-    this.player.rotation.z = 0;
-    (this.player.material as THREE.MeshStandardMaterial).color.setHex(C.player.color);
+    this.playerAction.reset();
+    this.humanAction.reset();
     this.captureZoneActive = false;
     this.captureZoneBlocked = false;
     this.captureZone.reset();
     this.sound.reset();
     this.traces.reset();
     this.vision.reset();
+    this.humanAI.reset();
     this.lastStepMs = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
     this.lastRiceSoundMs = -Infinity;
     this.clearTraceViews();
@@ -786,6 +854,12 @@ export class ThreeGame {
   }
 
   private updatePerceptionHud(): void {
+    if (import.meta.env.DEV) {
+      this.actionDetails.textContent =
+        `Human 动作：${this.humanAction.action}｜切换原因：${this.humanAction.lastTransitionReason}\n` +
+        `DeepSeek 动作：${this.playerAction.action}｜切换原因：${this.playerAction.lastTransitionReason}\n` +
+        '预留：Human EAT / STARTLED / FALL / STUN；DeepSeek CAPTURE';
+    }
     const faction = this.control.informationObserver;
     this.perceptionHud.hidden = !faction || this.match.phase === 'FACTION_SELECT';
     if (!faction) {
@@ -822,6 +896,20 @@ export class ThreeGame {
     this.traceDetails.textContent =
       `脚印生成窗口：${(this.traces.generationRemainingMs / 1000).toFixed(1)}s\n` +
       `当前有效脚印：${this.traces.traces.length}`;
+    this.humanAiDetails.hidden = !this.debugPossessionEnabled;
+    if (this.debugPossessionEnabled) {
+      const active = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
+        this.control.temporaryInputTarget, this.input.debugDirection(),
+        this.debugPossessionEnabled);
+      const goal = this.humanAI.target;
+      const mode = this.match.phase === 'PAUSED' ? 'PAUSED'
+        : this.match.phase === 'READY' ? 'STANDBY'
+          : active ? this.humanAI.state : 'MANUAL';
+      this.humanAiDetails.textContent = `Human AI：${mode}\n` +
+        `目标：${goal ? `${this.humanAI.targetRoomId ?? '位置'} ` +
+          `(${goal.x.toFixed(1)}, ${goal.z.toFixed(1)})` : '无'}\n` +
+        `切换原因：${this.humanAI.lastTransitionReason}`;
+    }
     this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
   }
 

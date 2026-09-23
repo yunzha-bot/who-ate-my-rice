@@ -24,6 +24,19 @@ export const GAME_CONFIG = {
     speedMultiplier: 1.08, // 相对 DeepSeek 基础速度的倍率。
     color: 0xf28b45,
   },
+  humanAI: {
+    navCellSize: 0.4, // 寻路网格边长：XZ 世界单位。
+    repathIntervalMs: 500, // 目标移动后的最长重新寻路间隔：毫秒。
+    waypointTolerance: 0.25, // 通过路径点的距离：世界单位。
+    investigationDwellMs: 3_000, // 到达声音/目击区域后观察时间：毫秒。
+    stuckRepathMs: 800, // 移动受阻后的重新寻路时间：毫秒。
+    closedDoorPathCost: 3, // 普通关门格的额外无量纲寻路代价。
+  },
+  characterAnimation: {
+    fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。
+    transitionMs: 120, // 毫秒；未来 AnimationMixer 片段交叉淡入时间。
+    stunColor: 0xff7777, // 白模摔倒/眩晕颜色；仅视觉表现。
+  },
   sprint: {
     speedMultiplier: 1.6, // 相对 DeepSeek 基础速度的倍率。
     durationMs: 2_500, // 冲刺持续时间：毫秒。

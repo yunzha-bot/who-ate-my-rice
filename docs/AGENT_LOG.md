@@ -312,3 +312,17 @@
 - 测试结果：本次 `npm test` 141/141 PASS，`npm run build` PASS（含 TypeScript 检查），`git diff --check` PASS。构建前未发现明确属于本项目的 Vite/npm 进程；未修改 ACL、Vite 配置或游戏平衡。
 - 已知非阻断问题：Vite 主 JS chunk 约 599.97 kB，超过 500 kB 提示线；开发米仍为 5 秒，正式发布前需切回 60 秒。没有对局倒计时功能。未发现本次封版自动检查阻断问题。
 - Git：已有 S6D WIP 安全检查点 `3a29926`（`wip: preserve s6d information systems`）；本次正式封版 commit、main 推送及 `v0.2.0-alpha` Tag 结果以实际执行和最终汇报为准，不预填尚未产生的 hash。
+
+## 2026-09-23 15:14 +08:00｜S7A WIP 安全检查点
+
+- 任务名称：保存 S7A Human AI 与角色动作接口工作进度。
+- 当前开发阶段：S7A 开发中；角色动作接口专项人工验收 PASS，整个 S7A 尚未正式验收或标记完成。
+- 本次目标：通过自动验证后，将当前 S7A 相关代码、配置、测试及文档保存为 WIP 检查点。
+- 实际完成内容：保留 Human AI 巡逻、调查、追逐、导航和门处理实现；保留独立角色动作接口、DEV 双角色动作状态与切换原因显示，以及动作参数说明。用户确认角色动作接口专项人工验收 PASS；该结果不代表整个 S7A Gate 通过。
+- 新增文件：`src/systems/CharacterAction.ts`、`src/systems/HumanAIController.ts`、`src/systems/NavigationSystem.ts`、`src/three/CharacterActionView.ts`、`tests/character-action.test.mjs`、`tests/human-ai.test.mjs`、`tests/navigation.test.mjs`。
+- 修改文件：`AGENTS.md`、`docs/GAME_BALANCE_CONFIG.md`、`src/config/gameConfig.ts`、`src/style.css`、`src/three/CollisionWorld.ts`、`src/three/ThreeGame.ts`；本条为追加日志。
+- 删除文件：无。依赖变化：无。密钥、`dist/`、`node_modules/` 和 `.env` 未加入版本控制。
+- 测试结果：`npm test` 153/153 PASS；`npm run build` PASS；`git diff --check` PASS。构建有已知 Vite 612.95 kB（超过 500 kB）非阻断提示。
+- 已知问题：整个 S7A 尚未完成正式人工验收；Human AI 完整体验仍待验收。
+- 下一步建议：等待 S7A 后续人工验收与阶段 Gate；本检查点不代表阶段封版。
+- Git commit 信息：`wip: preserve s7a human ai and action interface`；hash 与推送结果以本次执行汇报为准。
