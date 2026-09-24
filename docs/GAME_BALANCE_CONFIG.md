@@ -65,7 +65,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.stuckProgressEpsilon` | 0.05 | 世界单位；卡路窗口内至少应靠近节点的距离 | 不改变玩家移动速度或碰撞体。 |
 | `C.deepseekAI.maxStuckRepathsPerTarget` | 2 | 次；同一米堆连续卡路后暂避并换目标 | 有进展时重新计数。 |
 | `C.deepseekAI.retryMs` | 1,500 | 毫秒；不可达米堆暂避及无目标重试间隔 | 门状态改变会立即触发重新规划。 |
-| `C.deepseekAI.visionEvadeDistance` | 7 | 世界单位；目视 Human 的逃跑距离 | 过大容易频繁中断进食。 |
+| `C.deepseekAI.visionEvadeDistance` | 5 | 世界单位；目视 Human 的逃跑距离 | 过大容易频繁中断进食。 |
 | `C.deepseekAI.soundEvadeStrength` | 0.09 | 最终可听强度；声音触发逃跑阈值 | 仍须通过现有听觉距离与遮挡判定。 |
 | `C.deepseekAI.soundThreatProjection` | 4 | 世界单位；沿可听声音八方向估计威胁 | 不是隐藏 Human 的真实位置。 |
 | `C.deepseekAI.lastSeenAlertMs` | 2,500 | 毫秒；最后目击点的短期警戒 | 已拉开安全距离时，不把旧目击信息当成强制静止。 |
@@ -80,7 +80,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.escapeDeadEndPenalty` | 6 | 评分；少于两个可用门出口的惩罚 | 避免优先逃入死胡同。 |
 | `C.deepseekAI.escapeTravelPenalty` | 0.7 | 每世界单位路线的评分惩罚 | 与安全间距及遮挡奖励共同评估。 |
 | `C.deepseekAI.escapeTowardThreatPenalty` | 3 | 评分；起步接近估计威胁的惩罚 | 绕路必要时仍允许选取。 |
-| `C.deepseekAI.escapeGoalHoldMs` | 2,500 | 毫秒；常规逃跑目标最短保持时长 | 断路或目标明显不安全可提前换路。 |
+| `C.deepseekAI.escapeGoalHoldMs` | 1,500 | 毫秒；常规逃跑目标最短保持时长 | 断路或目标明显不安全可提前换路。 |
 | `C.deepseekAI.escapeSwitchScoreMargin` | 2.5 | 评分；新目标超过旧目标才切换的差值 | 提高可减少相邻目标来回切换。 |
 | `C.deepseekAI.escapeVisitMemoryMs` | 12,000 | 毫秒；近期房间访问记忆窗口 | 到期后访问惩罚自然消失，暂停期间 AI 时间冻结。 |
 | `C.deepseekAI.escapeRecentVisitCount` | 4 | 房间/区域记录条数 | 只保留最近的实际经过区域。 |
@@ -89,8 +89,10 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.escapeNearScoreBand` | 0.8 | 评分；允许随机挑选的近最高分区间 | 明显低分或危险候选不参与随机选择。 |
 | `C.deepseekAI.safeObservationMs` | 2,500 | 毫秒；缺少可用威胁方位时的持续观察时间 | 已知威胁方位且拉开距离时，可提前进入移动恢复。 |
 | `C.deepseekAI.soundCautionStrength` | 0.045 | 最终可听强度；弱声音仍阻止脱险的阈值 | 低于此值的远处声音不阻止恢复。 |
-| `C.deepseekAI.dangerRiceAvoidMs` | 8,000 | 毫秒；暂避已知威胁附近米堆或其路径 | 不清除已有进食进度；仅逃跑后生效。 |
+| `C.deepseekAI.dangerRiceAvoidMs` | 3,000 | 毫秒；暂避已知威胁附近米堆或其路径 | 不清除已有进食进度；仅逃跑后生效。 |
 | `C.deepseekAI.dangerRouteRadius` | 3 | 世界单位；米堆或路径靠近最后威胁点的判定半径 | 过大可能使多个米堆暂不可选。 |
+| `C.deepseekAI.safeWaitFailureThreshold` | 2 | 次；同一米堆与入口重复遭遇目视危险后的安全等待门槛 | 只阻止无条件重闯；Human 变化或出现安全路线时重新评估。 |
+| `C.deepseekAI.safeWaitRecheckMs` | 2,500 | 毫秒；SAFE_WAIT 重新评估安全路线的间隔 | 门状态变化会提前评估；未确认安全时继续等待。 |
 | `C.deepseekAI.escapeExtraExitBonus` | 1.2 | 评分；每个额外可用房间出口的奖励 | LOCKED 门不算可用出口。 |
 | `C.deepseekAI.escapeAlternateRouteBonus` | 2 | 评分；被堵出口可绕路时的奖励 | 替代路线仍需通过原有导航。 |
 | `C.deepseekAI.escapeBlockedExitPenalty` | 9 | 评分；Human 靠近首个出口且不可绕时的惩罚 | 不允许把锁门当可通行捷径。 |
@@ -103,6 +105,16 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.safeSprintDistance` | 5 | 世界单位；低进食风险时的目视冲刺阈值 | 使用原 SprintSystem 时长与能量规则。 |
 | `C.deepseekAI.riskySprintDistance` | 2.2 | 世界单位；高进食风险时的紧急目视冲刺阈值 | 达到既有 30% 风险后冲刺结束会摔倒。 |
 | `C.deepseekAI.sprintSoundStrength` | 0.22 | 最终可听强度；未目视且低风险时冲刺阈值 | 不能绕过声音遮挡。 |
+| `C.deepseekAI.curiosityStillMs` / `curiosityChance` | 5,000 / 0.10 | 毫秒 / 概率；Human 实际连续静止达到门槛后，目视时每次静止事件只判定一次 | 静止计时不受遮挡影响；当前没有正式动画资源。 |
+| `C.deepseekAI.curiosityMovementEpsilon` | 0.05 | 世界单位；Human 相对静止锚点的实际位移容差 | 超过即重置静止事件；遮挡不会清零，微小抖动不会误触发。 |
+| `C.deepseekAI.curiositySafeDistance` | 2 | 世界单位；试探点及绕行路径距当前可见 Human 的下限 | 应明显大于 `C.match.captureRadius`，不能为追逐提供额外免疫。 |
+| `C.deepseekAI.curiosityObserveMs` / `curiosityCooldownMs` | 1,800 / 12,000 | 毫秒；安全点观察时长及一次试探结束后的冷却 | 冷却不影响正常找米、逃跑或玩家控制。 |
+| `C.deepseekAI.curiosityApproachTolerance` | 0.5 | 世界单位；观察点到达容差及额外站距 | 调整时检查导航网格、碰撞与安全距离。 |
+| `C.deepseekAI.stationaryPassageChance` | 1.00 | 概率；可见 Human 静止满 5 秒并挡住当前米路线时，每次静止事件触发一次安全通行尝试 | 100% 只保证开始尝试；无安全路径时仍会拒绝通行；与普通 10% 好奇观察分开。 |
+| `C.deepseekAI.stationaryPassageSafetyMargin` | 0.20 | 世界单位；加在 `C.match.captureRadius` 外的动态通行避让余量 | 当前动态半径为 0.90 世界单位；必须保持正余量，不能允许进入有效抓捕圈。 |
+| `C.deepseekAI.stationaryPassageBlockRadius` | 1.5 | 世界单位；默认路线靠近静止 Human 的判定半径 | 同时检查 Human 到目标米堆是否落在 `dangerRouteRadius` 内。 |
+| `C.deepseekAI.stationaryPassageObserveDistance` | 2.0 | 世界单位；安全通行观察点距 Human 的期望距离 | 只是候选评分，实际路线仍须满足抓捕圈外避让。 |
+| `C.deepseekAI.stationaryPassageCheckIntervalMs` | 500 | 毫秒；静止挡路条件的重查间隔 | 避免每帧运行多次 A*；数值越大，许可响应可能越慢。 |
 
 ## 角色动作表现（S7A 占位接口）
 

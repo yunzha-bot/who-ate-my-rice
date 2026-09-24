@@ -53,6 +53,21 @@ test('XZ falloff, max range and source faction filter prevent global hearing', (
     GAME_CONFIG.perception.sounds.SPRINT.range);
 });
 
+test('a louder door event does not mask a separate audible movement warning', () => {
+  const sound = new SoundEventSystem();
+  const geometry = new PerceptionGeometry([], [], () => []);
+  const human = { x: 1, z: 0 };
+  sound.emit('DOOR_CLOSE', human, 'HUMAN');
+  sound.emit('FOOTSTEP', human, 'HUMAN');
+  const listener = { x: 0, z: 0 };
+  assert.equal(sound.heardBy(listener, 'DEEPSEEK', cam, geometry).event.type,
+    'DOOR_CLOSE');
+  const pursuit = sound.heardBy(listener, 'DEEPSEEK', cam, geometry,
+    event => event.type === 'FOOTSTEP' || event.type === 'SPRINT');
+  assert.equal(pursuit?.event.type, 'FOOTSTEP');
+  assert.ok(pursuit.audibleStrength >= GAME_CONFIG.deepseekAI.soundEvadeStrength);
+});
+
 test('wall and closed/locked doors attenuate sound, open door does not', () => {
   const a = { x: 0, z: 0 }, b = { x: 4, z: 0 };
   const clear = new PerceptionGeometry([], [], () => []);

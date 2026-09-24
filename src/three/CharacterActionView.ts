@@ -121,13 +121,19 @@ export class CharacterActionView {
     if (action === 'STUN') return '摔倒姿态结束，仍在眩晕';
     if (action === 'INTERACT') return this.faction === 'DEEPSEEK'
       ? '靠门按住 E 或 Q' : '扫雷面板打开或靠门按住 E';
+    if (action === 'CURIOUS_PEEK') return '好奇试探：预留探头 GLB 片段';
+    if (action === 'CURIOUS_LOOK') return '好奇观察：预留左右观察 GLB 片段';
     return '有效抓捕圈内';
   }
 
   private playClip(): void {
     if (!this.mixer) return;
-    const clip = this.clips[this.action];
-    if (!clip) return; // White-box fallback until GLB clips exist.
+    const clip = this.clips[this.action] ?? this.clips.IDLE;
+    if (!clip) {
+      this.activeClip?.stop();
+      this.activeClip = null; // White-box fallback until GLB clips exist.
+      return;
+    }
     const next = this.mixer.clipAction(clip);
     if (next === this.activeClip) return;
     next.reset().play();

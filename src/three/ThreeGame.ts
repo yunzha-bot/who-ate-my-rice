@@ -11,13 +11,18 @@ import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
 import { HumanAIController, humanAiMovementSpeed, shouldRunHumanAI }
   from '../systems/HumanAIController';
-import { DeepSeekAIController, shouldRunDeepSeekAI,
+import { DeepSeekAIController, isHumanPursuitSound, shouldRunDeepSeekAI,
   type DeepSeekAICommand } from '../systems/DeepSeekAIController';
+import { AILogCollector } from '../systems/AILogCollector';
+import { AISafetyPathView } from './AISafetyPathView';
+import { HumanStillness } from '../systems/HumanStillness';
 import { resolveCharacterAction } from '../systems/CharacterAction';
 import { NavigationSystem } from '../systems/NavigationSystem';
 import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
 import { DoorView } from './DoorView';
 import { CharacterActionView } from './CharacterActionView';
+import { DebugDetailsPanel, escapeCandidateProperties,
+  type DebugCategory, type DebugProperty } from './DebugDetailsPanel';
 import { InputManager } from './InputManager';
 import { RiceView } from './RiceView';
 import { createRiceTraceView, syncRiceTraceView } from './RiceTraceView';
@@ -28,13 +33,14 @@ import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativ
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { buildApartment } from './map/MapBuilder';
 import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, ROOMS, SPAWNS, WALLS,
-  selectRiceCandidates } from './map/apartmentMap';
+  roomAt, selectRiceCandidates } from './map/apartmentMap';
 
 const U = C.three.pixelsPerUnit;
 const distance = (a: THREE.Vector3, b: THREE.Vector3) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export class ThreeGame {
   private scene = new THREE.Scene();
+  private safetyPaths = new AISafetyPathView(this.scene);
   private camera = new THREE.OrthographicCamera();
   private renderer = new THREE.WebGLRenderer({ antialias: true });
   private clock = new THREE.Clock();
@@ -73,21 +79,10 @@ export class ThreeGame {
   private humanAI: HumanAIController;
   private humanAiWasActive = false;
   private deepseekAI: DeepSeekAIController;
+  private humanStillness: HumanStillness;
   private deepseekAiWasActive = false;
-  private debugPanel: HTMLElement;
-  private debugContent: HTMLElement;
-  private debugToggle: HTMLButtonElement;
-  private hud: HTMLElement;
-  private riceHud: HTMLElement;
-  private perceptionHud: HTMLElement;
-  private soundArrow: HTMLElement;
-  private soundDetails: HTMLElement;
-  private visionDetails: HTMLElement;
-  private traceDetails: HTMLElement;
-  private debugPossession: HTMLElement;
-  private humanAiDetails: HTMLElement;
-  private deepseekAiDetails: HTMLElement;
-  private actionDetails: HTMLElement;
+  private aiLogCollector = new AILogCollector();
+  private debugPanel: DebugDetailsPanel;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
   private pauseActions: HTMLElement;
@@ -121,6 +116,7 @@ export class ThreeGame {
     const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
     this.humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES);
     this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
+    this.humanStillness = new HumanStillness(SPAWNS.human);
     DOOR_NODES.forEach((door, index) => {
       const view = new DoorView(door, index, DEBUG_MAP);
       this.scene.add(view.object);
@@ -141,48 +137,17 @@ export class ThreeGame {
     window.addEventListener('resize', this.resize);
     this.resize();
 
-    this.debugPanel = this.label(container, 'debug-panel');
-    this.debugToggle = document.createElement('button');
-    this.debugToggle.type = 'button';
-    this.debugToggle.className = 'debug-toggle';
-    this.debugToggle.textContent = 'DEV ▾';
-    this.debugToggle.setAttribute('aria-expanded', 'false');
-    this.debugToggle.addEventListener('click', () => this.toggleDebugPanel());
-    this.debugPanel.append(this.debugToggle);
-    this.debugContent = this.label(this.debugPanel, 'debug-content');
-    this.debugContent.hidden = true;
-
-    const matchSection = this.label(this.debugContent, 'debug-section');
-    const matchTitle = this.label(matchSection, 'debug-section-title');
-    matchTitle.textContent = '对局状态';
-    this.hud = this.label(matchSection, 'game-hud');
-    this.riceHud = this.label(matchSection, 'rice-hud');
-
-    this.perceptionHud = this.label(this.debugContent, 'debug-section perception-hud');
-    const perceptionTitle = this.label(this.perceptionHud, 'debug-section-title');
-    perceptionTitle.textContent = '感知 / 信息';
-    this.soundArrow = this.label(this.perceptionHud, 'sound-arrow');
-    this.soundDetails = this.label(this.perceptionHud, 'sound-details');
-    this.visionDetails = this.label(this.perceptionHud, 'vision-details');
-    this.traceDetails = this.label(this.perceptionHud, 'trace-details');
-    this.debugPossession = this.label(this.perceptionHud, 'debug-possession');
-    this.humanAiDetails = this.label(this.perceptionHud, 'human-ai-details');
-    this.deepseekAiDetails = this.label(this.perceptionHud, 'deepseek-ai-details');
-    this.actionDetails = this.label(this.perceptionHud, 'action-details');
-    const controlsSection = this.label(this.debugContent, 'debug-section');
-    const controlsTitle = this.label(controlsSection, 'debug-section-title');
-    controlsTitle.textContent = '控制 / 玩法调试';
-    controlsSection.append(this.debugPossession, this.humanAiDetails,
-      this.deepseekAiDetails, this.actionDetails);
-    this.actionDetails.hidden = !import.meta.env.DEV;
+    this.debugPanel = new DebugDetailsPanel(container, {
+      developerMode: import.meta.env.DEV,
+      onTemporaryControl: faction => this.setTemporaryInputTarget(faction),
+      onExportLog: () => this.exportAILog(),
+      onSafetyPaths: enabled => {
+        this.safetyPaths.enabled = enabled;
+        this.updatePerceptionHud();
+      },
+      onExpanded: () => this.updatePerceptionHud(),
+    });
     if (this.debugPossessionEnabled) {
-      for (const faction of ['HUMAN', 'DEEPSEEK'] as const) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = `临时控制 ${faction === 'HUMAN' ? 'Human' : 'DeepSeek 娘'}`;
-        button.addEventListener('click', () => this.setTemporaryInputTarget(faction));
-        this.debugPossession.append(button);
-      }
       this.renderer.domElement.addEventListener('click', this.onActorClick);
     }
     this.overlay = this.label(container, 'game-overlay');
@@ -259,12 +224,6 @@ export class ThreeGame {
     element.className = className;
     parent.append(element);
     return element;
-  }
-
-  private toggleDebugPanel(): void {
-    this.debugContent.hidden = !this.debugContent.hidden;
-    this.debugToggle.textContent = this.debugContent.hidden ? 'DEV ▾' : '收起 DEV ▴';
-    this.debugToggle.setAttribute('aria-expanded', String(!this.debugContent.hidden));
   }
 
   private chooseFaction(faction: Faction): void {
@@ -404,6 +363,7 @@ export class ThreeGame {
     this.traces.advance(deltaMs);
     this.vision.update(deltaMs, this.human.position, this.player.position,
       this.perceptionGeometry);
+    this.humanStillness.update(this.human.position, deltaMs);
     this.humanDoorSkill.advance(deltaMs, this.match.phase);
     if (this.mineFailureRemainingMs > 0) {
       this.mineFailureRemainingMs = Math.max(0, this.mineFailureRemainingMs - deltaMs);
@@ -421,20 +381,29 @@ export class ThreeGame {
       this.control.selectedFaction, this.control.temporaryInputTarget,
       debug, this.debugPossessionEnabled);
     let deepseekCommand: DeepSeekAICommand | null = null;
+    this.aiLogCollector.advance(deltaMs, this.match.phase === 'PLAYING');
     if (deepseekAiEnabled) {
       if (!this.deepseekAiWasActive) this.deepseekAI.resumeAfterManualControl();
       const sight = this.vision.get('DEEPSEEK');
+      const heardHuman = this.sound.heardBy(this.player.position, 'DEEPSEEK',
+        this.camera, this.perceptionGeometry);
+      const heardHumanDanger = this.sound.heardBy(this.player.position, 'DEEPSEEK',
+        this.camera, this.perceptionGeometry,
+        event => isHumanPursuitSound(event.type));
       deepseekCommand = this.deepseekAI.update({
         deltaMs,
         deepseek: this.player.position,
         visibleHuman: sight.visible ? this.human.position : null,
-        heardHuman: this.sound.heardBy(this.player.position, 'DEEPSEEK',
-          this.camera, this.perceptionGeometry),
+        humanStillMs: sight.visible ? this.humanStillness.stillMs : undefined,
+        humanStillEventId: sight.visible ? this.humanStillness.eventId : undefined,
+        heardHuman,
+        heardHumanDanger,
         lastSeenHuman: sight.lastSeen,
         perceptionNowMs: this.vision.nowMs,
         geometry: this.perceptionGeometry,
         riceProgressRatio: ratio,
         sprintState: this.sprint.state,
+        captureProgressMs: this.match.captureProgressMs,
         rice: this.rice.states.map(rice => {
           const point = this.riceViews.get(rice.id)!.position;
           return { id: rice.id, x: point.x, z: point.z,
@@ -451,6 +420,50 @@ export class ThreeGame {
         const result = this.doorSystem.toggle(deepseekCommand.openDoorId, 'DEEPSEEK');
         this.applyDoorResult(deepseekCommand.openDoorId, result, 'DEEPSEEK');
       }
+      const dsRoom = roomAt(this.player.position.x, this.player.position.z);
+      this.aiLogCollector.diffSnapshot({
+        state: this.deepseekAI.state,
+        targetRiceId: this.deepseekAI.targetRiceId,
+        threatLevel: this.deepseekAI.threatLevel,
+        threatSource: this.deepseekAI.threatSource,
+        lastSelectionReason: this.deepseekAI.lastSelectionReason,
+        lastNavigationReason: this.deepseekAI.lastNavigationReason,
+        lastTransitionReason: this.deepseekAI.lastTransitionReason,
+        lastEscapeSwitchReason: this.deepseekAI.lastEscapeSwitchReason,
+        escapeRoomId: this.deepseekAI.escapeRoomId,
+        noMovementReason: this.deepseekAI.noMovementReason,
+        localLoopTriggered: this.deepseekAI.localLoopTriggered,
+        sprintDecision: this.deepseekAI.sprintDecision,
+        recoveryBlockReason: this.deepseekAI.recoveryBlockReason,
+        curiosityRollResult: this.deepseekAI.curiosityRollResult,
+        curiosityInterruptReason: this.deepseekAI.curiosityInterruptReason,
+        curiosityBypassActive: this.deepseekAI.curiosityBypassActive,
+        passageRollResult: this.deepseekAI.passageRollResult,
+        passageGateReason: this.deepseekAI.passageGateReason,
+        passageCancelReason: this.deepseekAI.passageCancelReason,
+        passageRouteSafe: this.deepseekAI.passageRouteSafe,
+        passageActive: this.deepseekAI.passageActive,
+        safetyGeometry: structuredClone(this.deepseekAI.safetyDebug),
+        safeWaitRiceId: this.deepseekAI.safeWaitRiceId,
+        safeWaitEntryId: this.deepseekAI.safeWaitEntryId,
+        safeWaitFailureCount: this.deepseekAI.safeWaitFailureCount,
+        safeWaitReason: this.deepseekAI.safeWaitReason,
+        safeWaitRemainingMs: this.deepseekAI.safeWaitRemainingMs,
+        roomId: dsRoom?.id ?? null,
+        humanVisible: sight.visible,
+        humanStillMs: this.humanStillness.stillMs,
+        stillnessEventId: this.humanStillness.eventId,
+        lastSeenValid: sight.lastSeen !== null,
+        heardSoundType: heardHuman?.event.type ?? null,
+        heardAudibleStrength: heardHuman?.audibleStrength ?? null,
+        heardRemainingMs: heardHuman?.remainingMs ?? null,
+        heardSoundTimestampMs: heardHuman?.event.timestamp ?? null,
+        heardDangerSoundType: heardHumanDanger?.event.type ?? null,
+        heardDangerAudibleStrength: heardHumanDanger?.audibleStrength ?? null,
+        humanVisibleDistance: sight.visible
+          ? Math.hypot(this.player.position.x - this.human.position.x,
+            this.player.position.z - this.human.position.z) : null,
+      });
     }
     this.deepseekAiWasActive = deepseekAiEnabled;
     const activeDeepseekDirection = deepseekCommand
@@ -542,6 +555,7 @@ export class ThreeGame {
     const oldHuman = this.human.position.clone();
     this.move(this.human, activeHumanDirection.x * humanSpeed * deltaMs / 1000,
       activeHumanDirection.y * humanSpeed * deltaMs / 1000);
+    this.humanStillness.update(this.human.position, 0);
     this.emitMovementSound('HUMAN', oldHuman, this.human.position, false);
     const nearest = this.nearestRice();
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
@@ -597,6 +611,10 @@ export class ThreeGame {
       stunned: this.sprint.state === 'STUNNED',
       eating: riceState === 'PREPARING' || riceState === 'EATING',
       startled: this.match.captureProgressMs > 0,
+      curiosityPeek: deepseekAiEnabled && this.deepseekAI.state === 'CURIOUS_OBSERVE' &&
+        this.deepseekAI.curiosityObserveRemainingMs > C.deepseekAI.curiosityObserveMs / 2,
+      curiosityLook: deepseekAiEnabled && this.deepseekAI.state === 'CURIOUS_OBSERVE' &&
+        this.deepseekAI.curiosityObserveRemainingMs <= C.deepseekAI.curiosityObserveMs / 2,
       interacting: this.control.isControlling('DEEPSEEK') &&
         (this.input.isHeld('KeyQ') || this.input.isHeld('KeyE')) &&
         !!this.nearestInteractableDoor(this.player.position),
@@ -787,6 +805,21 @@ export class ThreeGame {
     this.updatePerceptionHud();
   }
 
+  private exportAILog(): void {
+    const data = this.aiLogCollector.export();
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `who-ate-my-rice-ai-log-${stamp}.json`;
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
   private restart(): void {
     if (this.match.phase === 'FACTION_SELECT' || this.control.selectedFaction === null) return;
     this.match.reset();
@@ -820,6 +853,7 @@ export class ThreeGame {
     this.mineFailureRemainingMs = 0;
     this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
     this.human.position.set(SPAWNS.human.x, C.three.actorHeight / 2, SPAWNS.human.z);
+    this.humanStillness.reset(this.human.position);
     this.playerAction.reset();
     this.humanAction.reset();
     this.captureZoneActive = false;
@@ -832,6 +866,7 @@ export class ThreeGame {
     this.humanAiWasActive = false;
     this.deepseekAI.reset();
     this.deepseekAiWasActive = false;
+    this.aiLogCollector.startMatch();
     this.lastStepMs = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
     this.lastRiceSoundMs = -Infinity;
     this.clearTraceViews();
@@ -845,60 +880,6 @@ export class ThreeGame {
       : phase === 'PLAYING' ? '对局中' : phase === 'PAUSED' ? '已暂停' : '已结束';
     const seconds = Math.floor(this.match.elapsedMs / 1000);
     const time = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-    const ratio = this.rice.progressRatio;
-    const risk = this.sprint.state === 'NORMAL'
-      ? ratio >= C.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
-      : this.sprint.riskMode === 'FALL_ON_END' ? 'RISK SPRINT' : 'SAFE SPRINT';
-    const factionName = this.control.selectedFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
-      : this.control.selectedFaction === 'HUMAN' ? '人类' : '未选择';
-    const controlledName = this.control.controlledFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
-      : this.control.controlledFaction === 'HUMAN' ? 'Human' : '未选择';
-    const directHotkeyHint = C.development.directHotkeysEnabled ? '｜直达 R / M / Tab 已开启' : '';
-    const developmentControl = this.debugPossessionEnabled
-      ? `正式主控：${factionName}｜临时输入目标：${controlledName}｜Camera：${factionName}｜信息观察者：${factionName}${directHotkeyHint}\n` : '';
-    const doorHint = this.control.isControlling('DEEPSEEK')
-      ? `门：E 开/关｜Q 锁门  锁：${this.doorSystem.activeLockedDoorCount} / ${C.door.maxActiveLocks}`
-      : '门：E 开/关或扫雷｜Space 普通门快开 / 锁门强破';
-    const forceBreak = this.humanDoorSkill.cooldownRemainingMs > 0
-      ? `CD ${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)}s`
-      : 'READY';
-    const mineEntry = this.mineHudEntry();
-    const mineDoor = mineEntry ? this.doorSystem.get(mineEntry.doorId) : null;
-    const mineStatus = !mineEntry ? '未开始'
-      : mineEntry.state === 'DISABLED' ? '锁芯已失效'
-      : mineEntry.state === 'FAILED' ? '破解失败，等待新盘'
-      : mineEntry.state === 'OPEN' ? '扫雷中：Human 暴露'
-      : mineEntry.board ? '盘面已保留' : '未开始';
-    const mineText = `锁芯：${mineDoor?.lockCoreState ?? 'ACTIVE'}｜扫雷：${mineStatus}`;
-    this.hud.textContent = `${phaseText}  时间：${time}\n玩家阵营：${factionName}\n` +
-      developmentControl +
-      'WASD/方向键：当前控制角色｜IJKL：另一角色（调试）\n' +
-      'DeepSeek 娘：E 进食、移动时点 Space 冲刺\n' +
-      `${doorHint}${this.doorStatusMessage ? `｜${this.doorStatusMessage}` : ''}\n` +
-      `强制破锁：${forceBreak}\n` +
-      `${mineText}\n` +
-      `抓捕：${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(C.match.captureMs / 1000).toFixed(2)} 秒\n` +
-      `抓捕区：${this.captureZoneBlocked ? '有阻挡' : this.captureZoneActive ? '圈内' : '圈外'}\n` +
-      `DeepSeek 状态：${this.sprint.state}  米总进度：${Math.round(ratio * 100)}%\n` +
-      `${risk}  冲刺剩余：${(this.sprint.sprintRemainingMs / 1000).toFixed(1)} 秒\n` +
-      `结束摔倒：${this.sprint.riskMode === 'FALL_ON_END' ? 'YES' : 'NO'}  眩晕剩余：${(this.sprint.stunRemainingMs / 1000).toFixed(1)} 秒`;
-    const riceStates = { IDLE: '未交互', PREPARING: '准备中', EATING: '进食中',
-      INTERRUPTED: '已中断', COMPLETED: '已完成' };
-    const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
-    const hint = this.rice.completed ? `${ACTIVE_RICE_COUNT} 份大米已吃完`
-      : this.deepseekAiWasActive ? 'DeepSeek AI 正在自主寻找或进食'
-      : this.control.isControlling('HUMAN') ? '当前控制 Human，不能进食'
-      : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
-      : inRange ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
-    const current = nearest?.portion.rice;
-    const remainingMs = current ? Math.max(0, current.maxProgressMs - current.progressMs) : 0;
-    const activeIds = this.rice.states.map(state => state.id).join(', ');
-    this.riceHud.textContent =
-      `大米：${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}  总进度：${Math.round(ratio * 100)}%\n` +
-      `本局米点：${activeIds}\n` +
-      `当前目标：${current?.id ?? '无'}\n` +
-      `当前 Rice：${((current?.progressMs ?? 0) / 1000).toFixed(1)} / ${((current?.maxProgressMs ?? C.rice.maxProgressMs) / 1000).toFixed(1)} 秒\n` +
-      `剩余：${(remainingMs / 1000).toFixed(1)} 秒  状态：${current ? riceStates[current.interactionState] : '全部完成'}\n${hint}`;
     if (phase === 'PAUSED') this.overlayText.textContent = '游戏已暂停\n按 Esc 或点击按钮继续';
     else if (phase === 'FINISHED') {
       const result = this.match.result!;
@@ -910,7 +891,10 @@ export class ThreeGame {
     this.pauseActions.hidden = phase !== 'PAUSED';
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
-    this.debugPanel.hidden = phase === 'FACTION_SELECT';
+    const controlledFaction = this.control.controlledFaction;
+    this.debugPanel.setVisible(phase !== 'FACTION_SELECT');
+    this.debugPanel.setControlContext(
+      this.debugPossessionEnabled && phase === 'PLAYING', controlledFaction);
   }
 
   private mineHudEntry(): MineEntry | null {
@@ -967,16 +951,9 @@ export class ThreeGame {
   }
 
   private updatePerceptionHud(): void {
-    if (import.meta.env.DEV) {
-      this.actionDetails.textContent =
-        `Human 动作：${this.humanAction.action}｜切换原因：${this.humanAction.lastTransitionReason}\n` +
-        `Human 静止：${this.humanAction.idleSeconds.toFixed(1)}s｜待机插槽：${this.humanAction.currentIdleSlot ?? '无'}\n` +
-        `DeepSeek 动作：${this.playerAction.action}｜切换原因：${this.playerAction.lastTransitionReason}\n` +
-        `DeepSeek 静止：${this.playerAction.idleSeconds.toFixed(1)}s｜待机插槽：${this.playerAction.currentIdleSlot ?? '无'}\n` +
-        '预留：Human EAT / STARTLED / FALL / STUN；DeepSeek CAPTURE';
-    }
+    if (import.meta.env.DEV)
+      this.safetyPaths.update(this.deepseekAI.safetyDebug, this.human.position);
     const faction = this.control.informationObserver;
-    this.perceptionHud.hidden = !faction || this.match.phase === 'FACTION_SELECT';
     if (!faction) {
       this.soundVisual.update(null, null, false, this.sound.nowMs);
       return;
@@ -987,96 +964,213 @@ export class ThreeGame {
     // Development display also exposes heavily occluded events; production stays audible-only.
     this.soundVisual.update(listener, this.debugPossessionEnabled ? probe : heard,
       this.match.phase !== 'FINISHED', this.sound.nowMs);
+    if (!this.debugPanel.isExpanded || this.debugPanel.root.hidden) return;
     const sight = this.vision.get(faction);
+    this.updateDebugDetailsPanel(faction, heard, probe, sight);
+  }
+
+  private updateDebugDetailsPanel(faction: Faction,
+    heard: ReturnType<SoundEventSystem['heardBy']>,
+    probe: ReturnType<SoundEventSystem['analyzeBy']>,
+    sight: ReturnType<VisionSystem['get']>): void {
+    const make = (key: string, label: string, value: string,
+      tone: DebugProperty['tone'] = 'normal', children?: DebugProperty[]): DebugProperty =>
+      ({ key, label, value, tone, children });
+    const stateTone = (state: string): DebugProperty['tone'] =>
+      state === 'EVADE' ? 'danger' : state === 'SAFE_WAIT' ? 'warning'
+        : state.startsWith('CURIOUS') || state === 'SAFE_BYPASS' ? 'curious'
+          : ['COMPLETED', 'DISABLED', 'PASS', 'SUCCESS'].includes(state) ? 'success' : 'normal';
+    const point = (value: { x: number; z: number } | null | undefined) => value
+      ? `(${value.x.toFixed(1)}, ${value.z.toFixed(1)})` : '无';
+    const selectedFaction = this.control.selectedFaction;
+    const factionName = selectedFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
+      : selectedFaction === 'HUMAN' ? '人类' : '未选择';
+    const controlledName = this.control.controlledFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
+      : this.control.controlledFaction === 'HUMAN' ? 'Human' : '未选择';
+    const phaseName = this.match.phase === 'FACTION_SELECT' ? '选择阵营'
+      : this.match.phase === 'READY' ? `准备：${Math.ceil(this.match.readyRemainingMs / 1000)} 秒`
+        : this.match.phase === 'PLAYING' ? '对局中'
+          : this.match.phase === 'PAUSED' ? '已暂停' : '已结束';
+    const seconds = Math.floor(this.match.elapsedMs / 1000);
+    const time = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+    const ratio = this.rice.progressRatio;
+    const risk = this.sprint.state === 'NORMAL'
+      ? ratio >= C.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
+      : this.sprint.riskMode === 'FALL_ON_END' ? 'RISK SPRINT' : 'SAFE SPRINT';
+    const mineEntry = this.mineHudEntry();
+    const mineDoor = mineEntry ? this.doorSystem.get(mineEntry.doorId) : null;
+    const mineStatus = !mineEntry ? '未开始'
+      : mineEntry.state === 'DISABLED' ? '锁芯已失效'
+        : mineEntry.state === 'FAILED' ? '破解失败，等待新盘'
+          : mineEntry.state === 'OPEN' ? '扫雷中：Human 暴露'
+            : mineEntry.board ? '盘面已保留' : '未开始';
+    const nearest = this.nearestRice();
+    const currentRice = nearest?.portion.rice;
+    const remainingRiceMs = currentRice
+      ? Math.max(0, currentRice.maxProgressMs - currentRice.progressMs) : 0;
+    const riceStates = { IDLE: '未交互', PREPARING: '准备中', EATING: '进食中',
+      INTERRUPTED: '已中断', COMPLETED: '已完成' };
+    const riceHint = this.rice.completed ? `${ACTIVE_RICE_COUNT} 份大米已吃完`
+      : this.deepseekAiWasActive ? 'DeepSeek AI 正在自主寻找或进食'
+        : this.control.isControlling('HUMAN') ? '当前控制 Human，不能进食'
+          : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
+            : nearest && nearest.range <= C.rice.interactionRange / U
+              ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
+    const humanSight = this.vision.get('HUMAN');
+    const humanPath = this.humanAI.getPathProgress();
+    const humanActive = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
+      this.control.temporaryInputTarget, this.input.debugDirection(), this.debugPossessionEnabled);
+    const humanMode = this.match.phase === 'PAUSED' ? 'PAUSED'
+      : this.match.phase === 'READY' ? 'STANDBY' : humanActive ? this.humanAI.state : 'MANUAL';
+    const deepseekPath = this.deepseekAI.getPathProgress();
+    const deepseekActive = shouldRunDeepSeekAI(this.match.phase, this.control.selectedFaction,
+      this.control.temporaryInputTarget, this.input.debugDirection(), this.debugPossessionEnabled);
+    const deepseekMode = this.match.phase === 'PAUSED' ? 'PAUSED'
+      : this.match.phase === 'READY' ? 'STANDBY'
+        : deepseekActive ? this.deepseekAI.state : 'MANUAL';
     const seen = sight.lastSeen;
-    this.soundArrow.hidden = !heard;
-    this.soundArrow.textContent = heard?.direction ?? '';
-    this.perceptionHud.style.color = heard
-      ? heard.audibleStrength >= C.perception.soundVisual.hudHighStrength ? '#ffad6d'
-        : heard.audibleStrength >= C.perception.soundVisual.hudMidStrength ? '#ffe18a' : '#b7d4e8'
-      : '#c9d6df';
-    this.soundDetails.textContent = probe
-      ? `${heard ? '最近声音' : '声音探针（不可听）'}：${probe.event.type}  剩余 ${(probe.remainingMs / 1000).toFixed(1)}s\n` +
-        `Raw ${probe.rawStrength.toFixed(2)} × Distance ${probe.distanceFactor.toFixed(2)} × ` +
-        `Occlusion ${probe.occlusionMultiplier.toFixed(2)} = Final ${probe.audibleStrength.toFixed(2)}\n` +
-        `遮挡：${probe.occlusion}`
-      : '最近声音：无';
     const blockerIndex = DOOR_NODES.findIndex(node => node.id === sight.blocker);
     const blockerLabel = blockerIndex >= 0
-      ? `Door D${String(blockerIndex + 1).padStart(2, '0')}` : sight.blocker;
-    this.visionDetails.textContent = `Vision：${sight.status}` +
-      (blockerLabel ? `（${blockerLabel}）` : '') + '\n' +
-      `Last Seen：${seen ? `(${seen.position.x.toFixed(1)}, ${seen.position.z.toFixed(1)}) ` +
-        `${((this.vision.nowMs - seen.timeMs) / 1000).toFixed(1)} 秒前` : '无'}`;
-    this.traceDetails.textContent =
-      `脚印生成窗口：${(this.traces.generationRemainingMs / 1000).toFixed(1)}s\n` +
-      `当前有效脚印：${this.traces.traces.length}`;
-    this.humanAiDetails.hidden = !this.debugPossessionEnabled;
-    this.deepseekAiDetails.hidden = !this.debugPossessionEnabled;
-    if (this.debugPossessionEnabled) {
-      const active = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
-        this.control.temporaryInputTarget, this.input.debugDirection(),
-        this.debugPossessionEnabled);
-      const goal = this.humanAI.target;
-      const path = this.humanAI.getPathProgress();
-      const mode = this.match.phase === 'PAUSED' ? 'PAUSED'
-        : this.match.phase === 'READY' ? 'STANDBY'
-          : active ? this.humanAI.state : 'MANUAL';
-      this.humanAiDetails.textContent = `Human AI：${mode}\n` +
-        `目标：${goal ? `${this.humanAI.targetRoomId ?? '位置'} ` +
-          `(${goal.x.toFixed(1)}, ${goal.z.toFixed(1)})` : '无'}\n` +
-        `路径节点：${path ? `${path.index}/${path.total} ` +
-          `(${path.waypoint.x.toFixed(1)}, ${path.waypoint.z.toFixed(1)})` : '无'}\n` +
-        `锁门决策：${this.humanAI.lockDecision} / ${this.humanAI.targetDoorId ?? '无'}\n` +
-        `选择原因：${this.humanAI.decisionReason}\n` +
-        `解锁：${(this.humanAI.unlockProgressMs / 1000).toFixed(1)}s / ` +
-          `${(C.humanAI.aiUnlockDurationMs / 1000).toFixed(1)}s\n` +
-        `强破 CD：${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)}s\n` +
-        `搜索房间：${this.humanAI.searchTargetRoomId ?? '无'}\n` +
-        `切换原因：${this.humanAI.lastTransitionReason}\n` +
-        `路径事件：${this.humanAI.lastNavigationReason}`;
-      const deepseekActive = shouldRunDeepSeekAI(this.match.phase,
-        this.control.selectedFaction, this.control.temporaryInputTarget,
-        this.input.debugDirection(), this.debugPossessionEnabled);
-      const deepseekPath = this.deepseekAI.getPathProgress();
-      const deepseekMode = this.match.phase === 'PAUSED' ? 'PAUSED'
-        : this.match.phase === 'READY' ? 'STANDBY'
-          : deepseekActive ? this.deepseekAI.state : 'MANUAL';
-      this.deepseekAiDetails.textContent = `DeepSeek AI：${deepseekMode}\n` +
-        `目标米堆：${this.deepseekAI.targetRiceId ?? '无'}\n` +
-        `预计完成：${this.deepseekAI.targetScoreMs === null ? '无' :
-          `${(this.deepseekAI.targetScoreMs / 1000).toFixed(1)}s`}\n` +
-        `路径节点：${deepseekPath ? `${deepseekPath.index}/${deepseekPath.total} ` +
-          `(${deepseekPath.waypoint.x.toFixed(1)}, ${deepseekPath.waypoint.z.toFixed(1)})` : '无'}\n` +
-        `重选原因：${this.deepseekAI.lastSelectionReason}\n` +
-        `路径事件：${this.deepseekAI.lastNavigationReason}\n` +
-        `威胁：${this.deepseekAI.threatLevel} / ${this.deepseekAI.threatSource}\n` +
-        `逃跑目标：${this.deepseekAI.escapeRoomId ?? '无'} ` +
-          `${this.deepseekAI.escapeTarget ? `(${this.deepseekAI.escapeTarget.x.toFixed(1)}, ` +
-            `${this.deepseekAI.escapeTarget.z.toFixed(1)})` : ''}\n` +
-        `目标评分：${this.deepseekAI.escapeGoalScore?.toFixed(1) ?? '无'}\n` +
-        `可达候选数：${this.deepseekAI.escapeCandidateScores.length}\n` +
-        `当前区域：${this.deepseekAI.currentEscapeRoomId ?? '无'} ` +
-          `评分 ${this.deepseekAI.escapeCandidateScores.find(candidate =>
-            candidate.roomId === this.deepseekAI.currentEscapeRoomId)?.score.toFixed(1) ?? '无'}\n` +
-        `候选评分：${this.deepseekAI.escapeCandidateScores.slice(0, 3).map(candidate =>
-          `${candidate.roomId} ${candidate.score.toFixed(1)}` +
-          (candidate.recentVisitPenalty > 0 ? ` 访-${candidate.recentVisitPenalty.toFixed(1)}` : '') +
-          (candidate.covered ? '遮' : '') +
-          (candidate.blockedExit ? '堵' : '') +
-          (candidate.alternateRoute ? '绕' : '')).join(' / ') || '无'}\n` +
-        `上次换目标：${this.deepseekAI.lastEscapeSwitchReason}\n` +
-        `最近访问：${this.deepseekAI.getRecentEscapeRooms().join(' → ') || '无'}\n` +
-        `局部循环重选：${this.deepseekAI.localLoopTriggered ? '是' : '否'}\n` +
-        `最近重新决策：${this.deepseekAI.lastEscapeDecisionReason}\n` +
-        `无移动原因：${this.deepseekAI.noMovementReason}\n` +
-        `冲刺决策：${this.deepseekAI.sprintDecision}\n` +
-        `恢复剩余：${(this.deepseekAI.recoverRemainingMs / 1000).toFixed(1)}s\n` +
-        `恢复阻碍：${this.deepseekAI.recoveryBlockReason}\n` +
-        `上次恢复找米：${this.deepseekAI.lastResumeTrigger}\n` +
-        `切换原因：${this.deepseekAI.lastTransitionReason}`;
-    }
-    this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
+      ? `Door D${String(blockerIndex + 1).padStart(2, '0')}` : sight.blocker ?? '';
+    const categories: DebugCategory[] = [
+      {
+        id: 'human-ai', title: 'Human AI', properties: this.debugPossessionEnabled ? [
+          make('mode', '模式', humanMode, stateTone(humanMode)),
+          make('target', '目标', `${this.humanAI.targetRoomId ?? '位置'} ${point(this.humanAI.target)}`),
+          make('path', '路径节点', humanPath
+            ? `${humanPath.index}/${humanPath.total} ${point(humanPath.waypoint)}` : '无'),
+          make('lock-decision', '锁门决策 / 目标门', `${this.humanAI.lockDecision} / ${this.humanAI.targetDoorId ?? '无'}`),
+          make('decision-reason', '选择原因', this.humanAI.decisionReason),
+          make('unlock-progress', '解锁进度', `${(this.humanAI.unlockProgressMs / 1000).toFixed(1)} / ${(C.humanAI.aiUnlockDurationMs / 1000).toFixed(1)} 秒`),
+          make('force-break-cooldown', '强破 CD', `${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)} 秒`),
+          make('search-room', '搜索区域', this.humanAI.searchTargetRoomId ?? '无'),
+          make('transition-reason', '切换原因', this.humanAI.lastTransitionReason),
+          make('navigation-reason', '路径事件', this.humanAI.lastNavigationReason),
+        ] : [],
+      },
+      {
+        id: 'deepseek-ai', title: 'DeepSeek AI', properties: this.debugPossessionEnabled ? [
+          make('mode', '当前状态', deepseekMode, stateTone(deepseekMode)),
+          make('rice-target', '目标米堆', this.deepseekAI.targetRiceId ?? '无'),
+          make('rice-score', '预计完成评分', this.deepseekAI.targetScoreMs === null
+            ? '无' : `${(this.deepseekAI.targetScoreMs / 1000).toFixed(1)} 秒`),
+          make('path-node', '路径节点', deepseekPath
+            ? `${deepseekPath.index}/${deepseekPath.total} ${point(deepseekPath.waypoint)}` : '无'),
+          make('region', '当前区域', this.deepseekAI.currentEscapeRoomId ?? '无'),
+          make('reselect-reason', '重选原因', this.deepseekAI.lastSelectionReason),
+          make('navigation-reason', '寻路信息', this.deepseekAI.lastNavigationReason),
+        ] : [],
+      },
+      {
+        id: 'threat-escape', title: 'Threat / Escape', properties: this.debugPossessionEnabled ? [
+          make('threat', '威胁等级 / 来源', `${this.deepseekAI.threatLevel} / ${this.deepseekAI.threatSource}`, stateTone(this.deepseekAI.threatLevel)),
+          make('escape-target', '逃跑目标', `${this.deepseekAI.escapeRoomId ?? '无'} ${point(this.deepseekAI.escapeTarget)}`),
+          make('escape-score', '当前目标评分', this.deepseekAI.escapeGoalScore?.toFixed(1) ?? '无'),
+          make('reachable-count', '可达候选数', String(this.deepseekAI.escapeCandidateScores.length)),
+          make('current-room-score', '当前区域评分', `${this.deepseekAI.currentEscapeRoomId ?? '无'} / ${this.deepseekAI.escapeCandidateScores.find(candidate => candidate.roomId === this.deepseekAI.currentEscapeRoomId)?.score.toFixed(1) ?? '无'}`),
+          make('candidate-scores', '候选房间评分', `${this.deepseekAI.escapeCandidateScores.length} 个`, 'normal', escapeCandidateProperties(this.deepseekAI.escapeCandidateScores)),
+          make('last-switch', '上次换目标原因', this.deepseekAI.lastEscapeSwitchReason),
+          make('recent-visits', '最近访问区域', this.deepseekAI.getRecentEscapeRooms().join(' → ') || '无', 'normal', this.deepseekAI.getRecentEscapeRooms().map((roomId, index) => make(`visit-${index}-${roomId}`, `访问 ${index + 1}`, roomId))),
+          make('local-loop', '局部循环重选', this.deepseekAI.localLoopTriggered ? '是' : '否', this.deepseekAI.localLoopTriggered ? 'warning' : 'normal'),
+          make('redecision', '最近重新决策原因', this.deepseekAI.lastEscapeDecisionReason),
+          make('no-movement', '无移动原因', this.deepseekAI.noMovementReason),
+          make('sprint-decision', '冲刺决策', this.deepseekAI.sprintDecision),
+          make('recover-remaining', '恢复剩余', `${(this.deepseekAI.recoverRemainingMs / 1000).toFixed(1)} 秒`),
+          make('recover-block', '恢复阻碍', this.deepseekAI.recoveryBlockReason),
+        ] : [],
+      },
+      {
+        id: 'safe-wait', title: 'SAFE_WAIT', properties: this.debugPossessionEnabled ? [
+          make('active', '是否激活', this.deepseekAI.state === 'SAFE_WAIT' ? '进行中' : '无', stateTone(this.deepseekAI.state)),
+          make('rice-target', '目标米堆', this.deepseekAI.safeWaitRiceId ?? '无'),
+          make('dangerous-entry', '危险入口', this.deepseekAI.safeWaitEntryId ?? '无'),
+          make('failures', '失败次数', String(this.deepseekAI.safeWaitFailureCount)),
+          make('recheck', '重查倒计时', `${(this.deepseekAI.safeWaitRemainingMs / 1000).toFixed(1)} 秒`),
+          make('recheck-result', '重查结果 / 原因', this.deepseekAI.safeWaitReason),
+          make('entry-exit-reason', '进入 / 退出原因', this.deepseekAI.lastTransitionReason),
+        ] : [],
+      },
+      {
+        id: 'curiosity-passage', title: 'Curiosity / Passage', properties: this.debugPossessionEnabled ? [
+          make('human-stillness', 'Human 静止时长 / 事件 ID', `${(this.humanStillness.stillMs / 1000).toFixed(1)} 秒 / ${this.humanStillness.eventId}`),
+          make('curiosity-roll', '好奇触发结果', this.deepseekAI.curiosityRollResult),
+          make('curiosity-state', '好奇状态', this.deepseekAI.state.startsWith('CURIOUS') ? this.deepseekAI.state : this.deepseekAI.curiosityBypassActive ? 'SAFE_BYPASS' : '无', stateTone(this.deepseekAI.state)),
+          make('curiosity-target', '试探目标 / 安全距离', `${point(this.deepseekAI.curiosityTarget)} / ${C.deepseekAI.curiositySafeDistance.toFixed(1)} 世界单位`),
+          make('curiosity-interrupt', '试探中断 / 冷却', `${this.deepseekAI.curiosityInterruptReason} / ${(this.deepseekAI.curiosityCooldownRemainingMs / 1000).toFixed(1)} 秒`),
+          make('passage-roll', '安全通行抽签 / 状态', `${this.deepseekAI.passageRollResult} / ${this.deepseekAI.passageActive ? '通行中' : '未通行'}`),
+          make('passage-result', '通行结果', this.deepseekAI.passageActive ? '已进入安全通行'
+            : this.deepseekAI.passageGateReason === 'TRIGGERED_NO_SAFE_ROUTE' ? '已触发但无安全路线'
+              : this.deepseekAI.passageGateReason.startsWith('INTERRUPTED_') ? '已进入后中断' : '尚未触发',
+            this.deepseekAI.passageActive ? 'success' : 'normal'),
+          make('passage-gate', '通行门控原因', this.deepseekAI.passageGateReason),
+          make('safety-reason', '路径验证结果', this.deepseekAI.safetyDebug.reason),
+          make('safety-eat-position', '验证进食位置', point(this.deepseekAI.safetyDebug.eat)),
+          make('safety-legend', '安全路径图例', '红=实际抓捕圈/危险段；黄=安全余量；紫=米；绿=进食点/验证路线；青=观察点；蓝紫=默认路径；白=AI已知Human位置（非实时透视）'),
+          make('passage-radius', '动态绕行半径', `${this.deepseekAI.passageAvoidRadius.toFixed(2)} 世界单位（抓捕圈 + 余量）`),
+          make('passage-cancel', '通行中断原因', this.deepseekAI.passageCancelReason),
+          make('last-transition', '最近切换原因', this.deepseekAI.lastTransitionReason),
+        ] : [],
+      },
+      {
+        id: 'animation', title: 'Animation', properties: import.meta.env.DEV ? [
+          make('human-action', 'Human 当前动作', this.humanAction.action, stateTone(this.humanAction.action)),
+          make('human-action-reason', 'Human 动作切换原因', this.humanAction.lastTransitionReason),
+          make('human-idle', 'Human 静止时间 / 待机插槽', `${this.humanAction.idleSeconds.toFixed(1)} 秒 / ${this.humanAction.currentIdleSlot ?? '无'}`),
+          make('deepseek-action', 'DeepSeek 当前动作', this.playerAction.action, stateTone(this.playerAction.action)),
+          make('deepseek-action-reason', 'DeepSeek 动作切换原因', this.playerAction.lastTransitionReason),
+          make('deepseek-idle', 'DeepSeek 静止时间 / 待机插槽', `${this.playerAction.idleSeconds.toFixed(1)} 秒 / ${this.playerAction.currentIdleSlot ?? '无'}`),
+          make('reserved-action-states', '预留动作状态', 'Human EAT / STARTLED / FALL / STUN；DeepSeek CAPTURE'),
+        ] : [],
+      },
+      {
+        id: 'other', title: 'Other', properties: [
+          make('match-phase', '对局状态 / 时间', `${phaseName} / ${time}`),
+          make('player-faction', '玩家阵营', factionName),
+          make('primary-control', '正式主控阵营', factionName),
+          make('temporary-control', '临时输入目标', controlledName),
+          make('camera-observer', 'Camera / 信息观察者', `${factionName} / ${selectedFaction === 'DEEPSEEK' ? 'DeepSeek 娘' : selectedFaction === 'HUMAN' ? 'Human' : '未选择'}`),
+          ...(this.debugPossessionEnabled ? [make('direct-hotkeys', '调试快捷键', C.development.directHotkeysEnabled ? 'R / M / Tab 已开启' : '关闭')] : []),
+          make('movement-controls', '移动控制', 'WASD / 方向键：当前控制角色；IJKL：另一角色（调试）'),
+          make('deepseek-controls', 'DeepSeek 操作', 'E 进食；移动时点 Space 冲刺'),
+          make('door-controls', '门操作', this.control.isControlling('DEEPSEEK')
+            ? `E 开/关｜Q 锁门｜锁 ${this.doorSystem.activeLockedDoorCount} / ${C.door.maxActiveLocks}`
+            : 'E 开/关或扫雷｜Space 普通门快开 / 锁门强破'),
+          make('door-message', '门状态消息', this.doorStatusMessage || '无'),
+          make('force-break', '强制破锁', this.humanDoorSkill.cooldownRemainingMs > 0
+            ? `CD ${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)} 秒` : 'READY',
+            this.humanDoorSkill.cooldownRemainingMs > 0 ? 'warning' : 'success'),
+          make('lock-core-mines', '锁芯 / 扫雷状态', `${mineDoor?.lockCoreState ?? 'ACTIVE'} / ${mineStatus}`,
+            mineDoor?.lockCoreState === 'DISABLED' ? 'success' : 'normal'),
+          make('capture-progress', '抓捕进度', `${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(C.match.captureMs / 1000).toFixed(2)} 秒`),
+          make('capture-zone', '抓捕区', this.captureZoneBlocked ? '有阻挡'
+            : this.captureZoneActive ? '圈内' : '圈外'),
+          make('sprint-state', 'DeepSeek 冲刺状态 / 米进度', `${this.sprint.state} / ${Math.round(ratio * 100)}%`, stateTone(this.sprint.state)),
+          make('sprint-risk', '冲刺风险 / 剩余时间', `${risk} / ${(this.sprint.sprintRemainingMs / 1000).toFixed(1)} 秒`),
+          make('sprint-fall-stun', '结束摔倒 / 眩晕剩余', `${this.sprint.riskMode === 'FALL_ON_END' ? 'YES' : 'NO'} / ${(this.sprint.stunRemainingMs / 1000).toFixed(1)} 秒`),
+          make('rice-count', '大米完成数 / 总进度', `${this.rice.completedCount} / ${ACTIVE_RICE_COUNT} / ${Math.round(ratio * 100)}%`, this.rice.completed ? 'success' : 'normal'),
+          make('active-rice', '本局米点', this.rice.states.map(state => state.id).join(', ') || '无', 'normal', this.rice.states.map((state, index) => make(`rice-${index}-${state.id}`, `米点 ${index + 1}`, state.id))),
+          make('rice-target', '当前米堆目标', currentRice?.id ?? '无'),
+          make('rice-progress', '当前 Rice 进度', `${((currentRice?.progressMs ?? 0) / 1000).toFixed(1)} / ${((currentRice?.maxProgressMs ?? C.rice.maxProgressMs) / 1000).toFixed(1)} 秒`),
+          make('rice-remaining-state', '剩余 / 状态', `${(remainingRiceMs / 1000).toFixed(1)} 秒 / ${currentRice ? riceStates[currentRice.interactionState] : '全部完成'}`),
+          make('rice-hint', '操作提示', riceHint),
+          make('sound-arrow', '声音方向', heard?.direction ?? '无', heard ? 'curious' : 'normal'),
+          make('sound-event', '最近声音 / 剩余时间', probe
+            ? `${heard ? '可听' : '不可听探针'} ${probe.event.type} / ${(probe.remainingMs / 1000).toFixed(1)} 秒` : '最近声音：无'),
+          make('sound-raw', 'Raw Strength', probe?.rawStrength.toFixed(2) ?? '无'),
+          make('sound-distance', 'Distance Falloff', probe?.distanceFactor.toFixed(2) ?? '无'),
+          make('sound-occlusion', 'Occlusion Multiplier / 遮挡', probe
+            ? `${probe.occlusionMultiplier.toFixed(2)} / ${probe.occlusion}` : '无'),
+          make('sound-final', 'Final Audible Strength', probe?.audibleStrength.toFixed(2) ?? '无'),
+          make('vision', 'Vision / 阻挡来源', `${sight.status}${blockerLabel ? `（${blockerLabel}）` : ''}`,
+            sight.status === 'VISIBLE' ? 'success' : sight.status === 'BLOCKED' ? 'warning' : 'normal'),
+          make('last-seen', 'Last Seen', seen
+            ? `${point(seen.position)} / ${((this.vision.nowMs - seen.timeMs) / 1000).toFixed(1)} 秒前` : '无'),
+          make('trace-window', '米痕生成窗口', `${(this.traces.generationRemainingMs / 1000).toFixed(1)} 秒`),
+          make('trace-count', '当前有效脚印', String(this.traces.traces.length)),
+        ],
+      },
+    ];
+    this.debugPanel.update(`当前控制对象：${controlledName}`, categories);
   }
 
   dispose(): void {

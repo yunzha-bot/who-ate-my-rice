@@ -5,6 +5,16 @@ import type { DoorNode, Point } from '../three/map/apartmentMap.ts';
 
 export interface NavStep extends Point { doorId: string | null }
 
+/** XZ distance to a travel segment; shared by temporary actor avoidance. */
+export function distanceToXZSegment(point: Point, start: Point, end: Point): number {
+  const dx = end.x - start.x, dz = end.z - start.z;
+  const lengthSquared = dx * dx + dz * dz;
+  const fraction = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1,
+    ((point.x - start.x) * dx + (point.z - start.z) * dz) / lengthSquared));
+  return Math.hypot(point.x - start.x - fraction * dx,
+    point.z - start.z - fraction * dz);
+}
+
 // A small, fixed XZ grid is sufficient for the single authored apartment.
 // Static occupancy comes from the same circle collider as gameplay movement.
 export class NavigationSystem {
@@ -37,11 +47,19 @@ export class NavigationSystem {
 
   findPath(start: Point, goal: Point, doors: readonly DoorState[],
     avoid?: Point, lockedDoorCost: number | null = null,
-    blockedDoors: ReadonlySet<string> = new Set()): NavStep[] | null {
+    blockedDoors: ReadonlySet<string> = new Set(),
+    avoidCircle?: { center: Point; radius: number }): NavStep[] | null {
+    if (avoidCircle && (Math.hypot(start.x - avoidCircle.center.x,
+        start.z - avoidCircle.center.z) < avoidCircle.radius ||
+        Math.hypot(goal.x - avoidCircle.center.x,
+          goal.z - avoidCircle.center.z) < avoidCircle.radius)) return null;
     const states = new Map(doors.map(door => [door.id, door.state]));
     const passable = (index: number): boolean => {
       const id = this.doorAt[index];
-      return this.staticFree[index] && (!id || (!blockedDoors.has(id) &&
+      const point = this.point(index);
+      return (!avoidCircle || Math.hypot(point.x - avoidCircle.center.x,
+        point.z - avoidCircle.center.z) >= avoidCircle.radius) &&
+        this.staticFree[index] && (!id || (!blockedDoors.has(id) &&
         (states.get(id) !== 'LOCKED' || lockedDoorCost !== null)));
     };
     const first = this.nearestPassable(start, passable);
@@ -113,7 +131,9 @@ export class NavigationSystem {
             !passable(z * this.columns + cx))) continue;
         const edge = this.edgeInfo(current, next);
         if (!edge.free || (edge.doorId && (blockedDoors.has(edge.doorId) ||
-            (states.get(edge.doorId) === 'LOCKED' && lockedDoorCost === null)))) continue;
+            (states.get(edge.doorId) === 'LOCKED' && lockedDoorCost === null))) ||
+            (avoidCircle && distanceToXZSegment(avoidCircle.center,
+              this.point(current), this.point(next)) < avoidCircle.radius)) continue;
         const doorCost = edge.doorId && states.get(edge.doorId) === 'CLOSED'
           ? GAME_CONFIG.humanAI.closedDoorPathCost
           : edge.doorId && states.get(edge.doorId) === 'LOCKED'

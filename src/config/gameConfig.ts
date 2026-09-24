@@ -51,7 +51,7 @@ export const GAME_CONFIG = {
     stuckProgressEpsilon: 0.05, // 上述时间内应缩短的最小节点距离：世界单位。
     maxStuckRepathsPerTarget: 2, // 同一米堆连续卡路后允许的重寻路次数。
     retryMs: 1_500, // 米堆暂不可达或全无路线时的重选等待：毫秒。
-    visionEvadeDistance: 7, // 看见 Human 且距离小于此值时逃跑：世界单位。
+    visionEvadeDistance: 5, // 看见 Human 且距离小于此值时逃跑：世界单位。
     soundEvadeStrength: 0.09, // 听到 Human 的最终强度达到此值时逃跑。
     soundThreatProjection: 4, // 未目视时只沿声音八方向投射粗略威胁点：世界单位。
     lastSeenAlertMs: 2_500, // 失去视线后参考最后目击点的短暂警戒：毫秒；已拉开安全距离时不额外强制原地等待。
@@ -66,7 +66,7 @@ export const GAME_CONFIG = {
     escapeDeadEndPenalty: 6, // 可用门出口不足两处时的评分扣分：无量纲。
     escapeTravelPenalty: 0.7, // 每世界单位路线长度的评分扣分。
     escapeTowardThreatPenalty: 3, // 路径起步靠近威胁时的评分扣分：无量纲。
-    escapeGoalHoldMs: 2_500, // 通常至少保持当前逃跑目标的时间：毫秒；紧急危险或断路可提前切换。
+    escapeGoalHoldMs: 1_500, // 通常至少保持当前逃跑目标的时间：毫秒；紧急危险或断路可提前切换。
     escapeSwitchScoreMargin: 2.5, // 新目的地评分需超过当前目标的最小差值，防止来回摆动。
     escapeVisitMemoryMs: 12_000, // 最近访问房间的记忆窗口：毫秒；超时后惩罚消失。
     escapeRecentVisitCount: 4, // 最多保留的近期房间/区域记录数量。
@@ -75,8 +75,10 @@ export const GAME_CONFIG = {
     escapeNearScoreBand: 0.8, // 仅在最高分附近此范围内随机挑选候选房间。
     safeObservationMs: 2_500, // 缺少可用威胁方位时，结束逃跑前的连续观察时长：毫秒。
     soundCautionStrength: 0.045, // 高于此最终可听强度的弱声音仍阻止过早脱险。
-    dangerRiceAvoidMs: 8_000, // 逃跑后暂避位于危险路径上的原米堆：毫秒。
+    dangerRiceAvoidMs: 3_000, // 逃跑后暂避位于危险路径上的原米堆：毫秒。
     dangerRouteRadius: 3, // 最后已知 Human 位置附近的危险米堆/路径范围：世界单位。
+    safeWaitFailureThreshold: 2, // 同一米堆与危险入口重复受阻后进入安全等待：次数。
+    safeWaitRecheckMs: 2_500, // SAFE_WAIT 重新评估安全路线的间隔：毫秒。
     escapeExtraExitBonus: 1.2, // 逃跑房间每个额外可用出口的评分奖励。
     escapeAlternateRouteBonus: 2, // 被堵出口存在可行替代路线时的评分奖励。
     escapeBlockedExitPenalty: 9, // Human 接近首个路径出口且无替代路线时的评分扣分。
@@ -89,6 +91,18 @@ export const GAME_CONFIG = {
     safeSprintDistance: 5, // 低于30%进度时，近距威胁触发冲刺：世界单位。
     riskySprintDistance: 2.2, // 达到30%进度后，仅极近目视威胁可冲刺：世界单位。
     sprintSoundStrength: 0.22, // 未目视时触发安全冲刺的声音最终强度阈值。
+    curiosityStillMs: 5_000, // Human 实际连续静止后的一次试探判定：毫秒；触发时仍需目视。
+    curiosityChance: 0.10, // 每次合格静止事件只抽一次的触发概率。
+    curiosityMovementEpsilon: 0.05, // Human 相对静止锚点的实际位移容差：世界单位；与目视无关。
+    curiositySafeDistance: 2.0, // 试探与绕行路径距目视 Human 的最小安全间距：世界单位。
+    curiosityObserveMs: 1_800, // 到达安全观察点后的观察时间：毫秒。
+    curiosityCooldownMs: 12_000, // 一次试探结束或被打断后的冷却：毫秒。
+    curiosityApproachTolerance: 0.5, // 到达观察点的容差：世界单位。
+    stationaryPassageChance: 1.00, // 可见 Human 静止并挡住米路线时，每次静止事件必触发一次安全通行尝试。
+    stationaryPassageSafetyMargin: 0.20, // 抓捕圈外的动态绕行安全余量：世界单位。
+    stationaryPassageBlockRadius: 1.5, // 判断静止 Human 是否挡住米路线的距离：世界单位。
+    stationaryPassageObserveDistance: 2.0, // 安全通行前选择观察点的期望距离：世界单位。
+    stationaryPassageCheckIntervalMs: 500, // 静止挡路条件的再次检查间隔：毫秒，避免逐帧 A*。
   },
   characterAnimation: {
     fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。

@@ -1,15 +1,22 @@
 import { GAME_CONFIG } from '../config/gameConfig.ts';
 import { distanceToDoorSegment, type DoorState } from './DoorSystem.ts';
-import type { HeardSound, LastSeen, PerceptionGeometry } from './PerceptionSystem.ts';
+import type { HeardSound, LastSeen, PerceptionGeometry, SoundType } from './PerceptionSystem.ts';
 import type { SprintState } from './SprintSystem.ts';
-import type { NavigationSystem, NavStep } from './NavigationSystem.ts';
+import { distanceToXZSegment, type NavigationSystem, type NavStep } from './NavigationSystem.ts';
 import type { GamePhase } from './GameStateSystem.ts';
 import type { DoorNode, Point, Room } from '../three/map/apartmentMap.ts';
 import type { Faction } from '../three/LocalControl.ts';
 
 export type DeepSeekAIState = 'SEEK_RICE' | 'MOVE_TO_RICE' | 'EAT' | 'RESELECT' |
-  'EVADE' | 'RECOVER';
+  'EVADE' | 'RECOVER' | 'SAFE_WAIT' |
+  'CURIOUS_APPROACH' | 'CURIOUS_OBSERVE' | 'CURIOUS_PASSAGE';
 export type DeepSeekThreatSource = 'NONE' | 'VISION' | 'SOUND' | 'LAST_SEEN' | 'MEMORY';
+
+/** Only sounds implying motion or forced entry interrupt an authorized trial. */
+export function isHumanPursuitSound(type: SoundType): boolean {
+  return type === 'FOOTSTEP' || type === 'SPRINT' ||
+    type === 'FALL' || type === 'FORCE_BREAK';
+}
 
 export interface DeepSeekAIRice extends Point {
   id: string;
@@ -25,12 +32,18 @@ export interface DeepSeekAIInput {
   doors: readonly DoorState[];
   canOpenDoor: (id: string) => boolean;
   visibleHuman?: Point | null;
+  /** Supplied only while Human is currently visible; never a hidden position. */
+  humanStillMs?: number;
+  humanStillEventId?: number;
   heardHuman?: HeardSound | null;
+  /** Strongest audible pursuit event, even when an ordinary door sound is louder. */
+  heardHumanDanger?: HeardSound | null;
   lastSeenHuman?: LastSeen | null;
   perceptionNowMs?: number;
   geometry?: PerceptionGeometry;
   riceProgressRatio?: number;
   sprintState?: SprintState;
+  captureProgressMs?: number;
 }
 
 export interface DeepSeekAICommand {
@@ -106,6 +119,29 @@ export class DeepSeekAIController {
   recoveryBlockReason = 'NONE';
   lastResumeTrigger = 'NONE';
   recoverRemainingMs = 0;
+  curiosityStillMs = 0;
+  curiosityCooldownRemainingMs = 0;
+  curiosityObserveRemainingMs = 0;
+  curiosityRollResult = 'NOT_ELIGIBLE';
+  curiosityInterruptReason = 'NONE';
+  curiosityTarget: Point | null = null;
+  curiosityBypassActive = false;
+  passageActive = false;
+  /** Read-only diagnostic geometry: only observed/remembered Human positions. */
+  safetyDebug = { human: null as Point | null, rice: null as Point | null,
+    eat: null as Point | null, observation: null as Point | null,
+    defaultPath: [] as Point[], safePath: [] as Point[], reason: 'NOT_EVALUATED' };
+  private passageEatPosition: Point | null = null;
+  private safeWaitObservation: Point | null = null;
+  passageRollResult = 'NOT_ELIGIBLE';
+  passageGateReason = 'NOT_EVALUATED';
+  passageCancelReason = 'NONE';
+  passageRouteSafe = false;
+  safeWaitRiceId: string | null = null;
+  safeWaitEntryId: string | null = null;
+  safeWaitFailureCount = 0;
+  safeWaitRemainingMs = 0;
+  safeWaitReason = 'NONE';
 
   private readonly navigation: NavigationSystem;
   private readonly doorNodes: Map<string, DoorNode>;
@@ -116,6 +152,7 @@ export class DeepSeekAIController {
   private doorSignature = '';
   private retryRemainingMs = 0;
   private readonly avoidedRiceMs = new Map<string, number>();
+  private readonly dangerousEntryFailures = new Map<string, number>();
   private avoidedWaypoint: Point | null = null;
   private stalledMs = 0;
   private stalledRepaths = 0;
@@ -136,6 +173,10 @@ export class DeepSeekAIController {
   private recentEscapeVisits: EscapeRoomVisit[] = [];
   private loopReplanPending = false;
   private readonly random: () => number;
+  private observedHumanStillEventId: number | null = null;
+  private curiosityRolledForStillEvent = false;
+  private passageRolledForStillEvent = false;
+  private passageCheckRemainingMs = 0;
 
   constructor(navigation: NavigationSystem, doors: readonly DoorNode[],
     rooms: readonly Room[] = [], random: () => number = Math.random) {
@@ -153,6 +194,10 @@ export class DeepSeekAIController {
   }
 
   reset(): void {
+    this.safeWaitObservation = null;
+    this.passageEatPosition = null;
+    this.safetyDebug = { human: null, rice: null, eat: null, observation: null,
+      defaultPath: [], safePath: [], reason: 'NOT_EVALUATED' };
     this.state = 'SEEK_RICE';
     this.targetRiceId = null;
     this.targetScoreMs = null;
@@ -177,6 +222,27 @@ export class DeepSeekAIController {
     this.alertRemainingMs = 0;
     this.evadeElapsedMs = 0;
     this.recoverRemainingMs = 0;
+    this.curiosityStillMs = 0;
+    this.curiosityCooldownRemainingMs = 0;
+    this.curiosityObserveRemainingMs = 0;
+    this.curiosityRollResult = 'NOT_ELIGIBLE';
+    this.curiosityInterruptReason = 'NONE';
+    this.curiosityTarget = null;
+    this.curiosityBypassActive = false;
+    this.passageActive = false;
+    this.passageRollResult = 'NOT_ELIGIBLE';
+    this.passageGateReason = 'NOT_EVALUATED';
+    this.passageCancelReason = 'NONE';
+    this.passageRouteSafe = false;
+    this.safeWaitRiceId = null;
+    this.safeWaitEntryId = null;
+    this.safeWaitFailureCount = 0;
+    this.safeWaitRemainingMs = 0;
+    this.safeWaitReason = 'NONE';
+    this.observedHumanStillEventId = null;
+    this.curiosityRolledForStillEvent = false;
+    this.passageRolledForStillEvent = false;
+    this.passageCheckRemainingMs = 0;
     this.escapeReplanRemainingMs = 0;
     this.escapeGoalHoldRemainingMs = 0;
     this.quietMs = 0;
@@ -192,12 +258,14 @@ export class DeepSeekAIController {
     this.doorSignature = '';
     this.retryRemainingMs = 0;
     this.avoidedRiceMs.clear();
+    this.dangerousEntryFailures.clear();
     this.avoidedWaypoint = null;
     this.resetPathProgress();
     this.stalledRepaths = 0;
   }
 
   resumeAfterManualControl(): void {
+    this.finishPassage('MANUAL_CONTROL_RELEASED');
     this.path = [];
     this.pathIndex = 0;
     this.doorSignature = '';
@@ -216,6 +284,8 @@ export class DeepSeekAIController {
     this.stalledRepaths = 0;
     this.resetPathProgress();
     this.lastNavigationReason = 'MANUAL_CONTROL_RELEASED';
+    this.finishCuriosity('MANUAL_CONTROL_RELEASED');
+    this.curiosityStillMs = 0;
   }
 
   getPathProgress(): DeepSeekAIPathProgress | null {
@@ -239,6 +309,12 @@ export class DeepSeekAIController {
     this.alertRemainingMs = Math.max(0, this.alertRemainingMs - deltaMs);
     this.escapeReplanRemainingMs = Math.max(0, this.escapeReplanRemainingMs - deltaMs);
     this.escapeGoalHoldRemainingMs = Math.max(0, this.escapeGoalHoldRemainingMs - deltaMs);
+    this.curiosityCooldownRemainingMs = Math.max(0,
+      this.curiosityCooldownRemainingMs - deltaMs);
+    this.passageCheckRemainingMs = Math.max(0, this.passageCheckRemainingMs - deltaMs);
+    this.safeWaitRemainingMs = Math.max(0, this.safeWaitRemainingMs - deltaMs);
+    for (const rice of input.rice) if (rice.completed)
+      this.clearDangerousEntryFailures(rice.id);
     this.trackPathProgress(input.deepseek, deltaMs);
 
     const signature = input.doors.map(door =>
@@ -250,9 +326,63 @@ export class DeepSeekAIController {
       this.retryRemainingMs = 0;
       this.escapeReplanRemainingMs = 0;
       this.lastNavigationReason = 'DOOR_STATE_CHANGED';
+      if (this.passageActive) this.passageRouteSafe = false;
+      if (this.state === 'SAFE_WAIT') {
+        this.safeWaitRemainingMs = 0;
+        this.passageCheckRemainingMs = 0;
+        this.safeWaitReason = 'DOOR_STATE_CHANGED_RECHECK';
+      }
     }
 
+    const movedHuman = this.observeHumanStillness(input);
+    if (movedHuman && this.safeWaitRiceId) {
+      const wasWaiting = this.state === 'SAFE_WAIT';
+      this.clearDangerousEntryFailures(this.safeWaitRiceId);
+      if (wasWaiting) {
+        this.state = 'RESELECT';
+        this.retryRemainingMs = 0;
+        this.lastTransitionReason = 'HUMAN_STILL_EVENT_CHANGED_RETRY';
+      }
+    }
+    const urgentHumanSound = this.isUrgentHumanSound(input);
+    if (!this.passageActive &&
+        (this.state !== 'SAFE_WAIT' || this.safeWaitRemainingMs === 0 ||
+          (input.visibleHuman && !this.passageRolledForStillEvent)))
+      this.tryStartPassage(input, urgentHumanSound);
+    else this.passageGateReason = this.passageActive
+      ? 'ACTIVE_SAFE_PASSAGE' : 'SAFE_WAIT_RECHECK_PENDING';
+    if (this.curiosityBypassActive && !input.visibleHuman && !urgentHumanSound) {
+      // Reaching cover is not a new threat: continue the already checked rice
+      // route, but stop discounting any future sighting of the Human.
+      this.curiosityBypassActive = false;
+      this.curiosityTarget = null;
+      this.curiosityInterruptReason = 'BYPASS_REACHED_COVER';
+    }
+    const curiosityActive = this.state === 'CURIOUS_APPROACH' ||
+      this.state === 'CURIOUS_OBSERVE' || this.curiosityBypassActive ||
+      this.passageActive;
+    const knownHuman = this.knownHumanPosition(input);
+    const urgentReason = movedHuman ? 'HUMAN_MOVED' :
+      urgentHumanSound ? 'DANGER_SOUND' :
+      input.sprintState === 'STUNNED' ? 'STUNNED' :
+      (input.captureProgressMs ?? 0) > 0 ? 'CAPTURE_ATTEMPT' :
+      input.visibleHuman && distance(input.deepseek, input.visibleHuman) <
+        (this.passageActive ? this.passageAvoidRadius : cfg.curiositySafeDistance)
+        ? 'SAFETY_DISTANCE_BREACHED' : null;
+    if (curiosityActive && (urgentReason || !knownHuman)) {
+      const reason = urgentReason ?? 'LAST_SEEN_EXPIRED';
+      if (this.passageActive) this.finishPassage(reason);
+      else this.finishCuriosity(reason);
+      if (urgentReason) this.enterEvade(input.visibleHuman ? 'VISION' : 'LAST_SEEN');
+    }
     const threat = this.assessThreat(input);
+    // The discount belongs only to this one observed, stationary Human. It is
+    // withdrawn on movement, a fresh danger or expiry of the last sighting.
+    if ((this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE' ||
+        this.curiosityBypassActive || this.passageActive) &&
+        (threat.source === 'VISION' ||
+          (threat.source === 'SOUND' && !urgentHumanSound)))
+      threat.level = 'CAUTION';
     this.threatSource = threat.source;
     this.threatLevel = threat.level;
     if (threat.point && (threat.source !== 'SOUND' || threat.level === 'HIGH'))
@@ -260,9 +390,15 @@ export class DeepSeekAIController {
     // Last Seen and weak sounds are caution, not a fresh sighting. They may
     // remain available while the escape route is already safe.
     this.quietMs = threat.level === 'HIGH' ? 0 : this.quietMs + deltaMs;
+    if (this.passageActive) return this.updatePassage(input, deltaMs);
+    if (this.state === 'SAFE_WAIT')
+      return this.updateSafeWait(input, threat, urgentHumanSound);
     if (threat.level === 'HIGH') {
       this.alertRemainingMs = cfg.alertHoldMs;
-      if (this.state !== 'EVADE') this.enterEvade(threat.source);
+      if (this.state !== 'EVADE') {
+        this.recordDangerousEntry(input, threat);
+        this.enterEvade(threat.source);
+      }
     } else if (threat.source === 'LAST_SEEN' &&
         this.state === 'EVADE' &&
         input.lastSeenHuman && input.perceptionNowMs !== undefined) {
@@ -272,8 +408,16 @@ export class DeepSeekAIController {
     }
     if (this.state === 'EVADE' || this.state === 'RECOVER')
       return this.updateSafety(input, threat, deltaMs);
+    if (this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE')
+      return this.updateCuriosity(input, deltaMs);
+    if (this.tryStartCuriosity(input, threat)) return this.updateCuriosity(input, 0);
 
     const current = input.rice.find(rice => rice.id === this.targetRiceId);
+    if (this.curiosityBypassActive && this.targetRiceId && (!current || current.completed)) {
+      this.finishCuriosity('BYPASS_TARGET_COMPLETED');
+      this.clearTarget('TARGET_COMPLETED_OR_MISSING');
+      return this.command();
+    }
     if (this.targetRiceId && (!current || current.completed))
       this.clearTarget('TARGET_COMPLETED_OR_MISSING');
 
@@ -287,6 +431,7 @@ export class DeepSeekAIController {
     if (!target) return this.command();
     if (distance(input.deepseek, target) <=
         GAME_CONFIG.rice.interactionRange / GAME_CONFIG.three.pixelsPerUnit) {
+      this.clearDangerousEntryFailures(target.id);
       this.state = 'EAT';
       return this.command(0, 0, null, target.id);
     }
@@ -298,6 +443,12 @@ export class DeepSeekAIController {
         this.path = this.navigation.findPath(input.deepseek, target, input.doors) ?? [];
       this.avoidedWaypoint = null;
       this.pathIndex = 0;
+      if (this.curiosityBypassActive && input.visibleHuman &&
+          (!this.path.length || !this.curiosityPathIsSafe(this.path, input.visibleHuman))) {
+        this.finishCuriosity('BYPASS_ROUTE_INVALID');
+        this.enterEvade('VISION');
+        return this.updateSafety(input, this.assessThreat(input), deltaMs);
+      }
       if (!this.path.length) {
         this.avoidedRiceMs.set(target.id, cfg.retryMs);
         this.clearTarget('NO_ROUTE_TO_RICE');
@@ -306,6 +457,600 @@ export class DeepSeekAIController {
       this.targetScoreMs = this.score(input.deepseek, target, this.path);
     }
     return this.followPath(input, target);
+  }
+
+  private observeHumanStillness(input: DeepSeekAIInput): boolean {
+    if (!input.visibleHuman || input.humanStillEventId === undefined ||
+        input.humanStillMs === undefined) {
+      this.curiosityStillMs = 0;
+      return false;
+    }
+    const changed = this.observedHumanStillEventId !== null &&
+      this.observedHumanStillEventId !== input.humanStillEventId;
+    if (this.observedHumanStillEventId !== input.humanStillEventId) {
+      this.observedHumanStillEventId = input.humanStillEventId;
+      this.curiosityRolledForStillEvent = false;
+      this.passageRolledForStillEvent = false;
+      this.passageCheckRemainingMs = 0;
+    }
+    this.curiosityStillMs = input.humanStillMs;
+    // A different event learned after occlusion is not necessarily movement
+    // now. It still invalidates an OLD permit, never a newly eligible event.
+    return changed && (this.passageActive || this.curiosityBypassActive ||
+      this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE' ||
+      input.humanStillMs < GAME_CONFIG.deepseekAI.curiosityStillMs);
+  }
+
+  private knownHumanPosition(input: DeepSeekAIInput): Point | null {
+    if (input.visibleHuman) return input.visibleHuman;
+    if (input.lastSeenHuman && input.perceptionNowMs !== undefined &&
+        input.perceptionNowMs - input.lastSeenHuman.timeMs <
+          GAME_CONFIG.perception.lastSeenMs)
+      return input.lastSeenHuman.position;
+    return null;
+  }
+
+  private isUrgentHumanSound(input: DeepSeekAIInput): boolean {
+    const heard = input.heardHumanDanger === undefined
+      ? input.heardHuman : input.heardHumanDanger;
+    if (!heard || heard.event.sourceFaction !== 'HUMAN' ||
+        heard.remainingMs <= 0 ||
+        heard.audibleStrength < GAME_CONFIG.deepseekAI.soundEvadeStrength)
+      return false;
+    // A door being operated is audible information, not proof that a
+    // stationary Human is pursuing. Door state/path safety is checked
+    // separately. Movement and force-breaking remain immediate warnings.
+    return isHumanPursuitSound(heard.event.type);
+  }
+
+  get passageAvoidRadius(): number {
+    return GAME_CONFIG.match.captureRadius +
+      GAME_CONFIG.deepseekAI.stationaryPassageSafetyMargin;
+  }
+
+  private pathClearOfHuman(path: readonly Point[], human: Point, radius: number): boolean {
+    for (let index = 0; index < path.length; index++) {
+      if (distance(path[index], human) < radius) return false;
+      if (index > 0 && distanceToXZSegment(human, path[index - 1], path[index]) < radius)
+        return false;
+    }
+    return true;
+  }
+
+  private recordDangerousEntry(input: DeepSeekAIInput, threat: ThreatAssessment): void {
+    if (threat.source !== 'VISION' || !input.visibleHuman || !this.targetRiceId ||
+        (this.state !== 'MOVE_TO_RICE' && this.state !== 'EAT' &&
+          this.state !== 'CURIOUS_PASSAGE')) return;
+    const rice = input.rice.find(candidate => candidate.id === this.targetRiceId);
+    if (!rice || rice.completed) return;
+    const path = this.path.length ? this.path :
+      this.navigation.findPath(input.deepseek, rice, input.doors);
+    if (!path?.length) return;
+    const radius = GAME_CONFIG.deepseekAI.dangerRouteRadius;
+    if (distance(rice, input.visibleHuman) > radius &&
+        this.pathClearOfHuman([input.deepseek, ...path, rice], input.visibleHuman,
+          radius)) return;
+    // The last crossed door identifies the approach into this rice area.
+    const entryId = [...path].reverse().find(step => step.doorId)?.doorId ?? 'IN_ROOM';
+    const key = `${rice.id}|${entryId}`;
+    const count = (this.dangerousEntryFailures.get(key) ?? 0) + 1;
+    this.dangerousEntryFailures.set(key, count);
+    this.safeWaitFailureCount = count;
+    if (count >= GAME_CONFIG.deepseekAI.safeWaitFailureThreshold) {
+      this.safeWaitRiceId = rice.id;
+      this.safeWaitEntryId = entryId;
+      this.safeWaitReason = 'REPEATED_DANGEROUS_ENTRY';
+    }
+  }
+
+  private clearDangerousEntryFailures(riceId: string): void {
+    for (const key of this.dangerousEntryFailures.keys())
+      if (key.startsWith(`${riceId}|`)) this.dangerousEntryFailures.delete(key);
+    if (this.safeWaitRiceId === riceId) {
+      this.safeWaitRiceId = null;
+      this.safeWaitEntryId = null;
+      this.safeWaitRemainingMs = 0;
+      this.safeWaitReason = 'NONE';
+    }
+    this.safeWaitFailureCount = Math.max(0, ...this.dangerousEntryFailures.values());
+  }
+
+  private enterSafeWait(riceId: string): void {
+    this.state = 'SAFE_WAIT';
+    this.targetRiceId = null;
+    this.targetScoreMs = null;
+    this.path = [];
+    this.pathIndex = 0;
+    this.retryRemainingMs = 0;
+    this.safeWaitRemainingMs = GAME_CONFIG.deepseekAI.safeWaitRecheckMs;
+    this.safeWaitReason = 'REPEATED_DANGEROUS_ENTRY';
+    this.lastSelectionReason = `SAFE_WAIT_${riceId}`;
+    this.lastTransitionReason = 'REPEATED_DANGEROUS_ENTRY_SAFE_WAIT';
+    this.noMovementReason = 'SAFE_WAIT_RECHECK';
+    this.resetPathProgress();
+  }
+
+  private updateSafeWait(input: DeepSeekAIInput, threat: ThreatAssessment,
+    urgentHumanSound: boolean): DeepSeekAICommand {
+    const rice = input.rice.find(candidate => candidate.id === this.safeWaitRiceId);
+    if (!rice || rice.completed) {
+      if (this.safeWaitRiceId) this.clearDangerousEntryFailures(this.safeWaitRiceId);
+      this.state = 'RESELECT';
+      this.lastTransitionReason = 'SAFE_WAIT_TARGET_COMPLETED_OR_MISSING';
+      return this.command();
+    }
+    if (input.sprintState === 'STUNNED') {
+      this.safeWaitReason = 'STUNNED';
+      this.noMovementReason = 'STUNNED';
+      return this.command();
+    }
+    if (urgentHumanSound || (input.captureProgressMs ?? 0) > 0 ||
+        (input.visibleHuman && distance(input.deepseek, input.visibleHuman) <=
+          this.passageAvoidRadius)) {
+      this.safeWaitReason = 'IMMEDIATE_DANGER';
+      this.enterEvade(input.visibleHuman ? 'VISION' : 'SOUND');
+      return this.updateSafety(input, threat, input.deltaMs);
+    }
+    if (this.safeWaitRemainingMs > 0) {
+      if (this.safeWaitObservation && this.path.length && !input.visibleHuman) {
+        if (distance(input.deepseek, this.safeWaitObservation) > GAME_CONFIG.deepseekAI.waypointTolerance)
+          return this.followPath(input, this.safeWaitObservation);
+        this.safeWaitObservation = null;
+        this.path = [];
+        this.safeWaitReason = 'OBSERVATION_REACHED_NEED_FRESH_SIGHT';
+      }
+      this.noMovementReason = 'SAFE_WAIT_RECHECK';
+      return this.command();
+    }
+    this.safeWaitRemainingMs = GAME_CONFIG.deepseekAI.safeWaitRecheckMs;
+    const knownHuman = this.knownHumanPosition(input) ?? this.threatEstimate;
+    // Recheck geometry against remembered information, not hidden live data.
+    // Reach only a safe observation prefix; no eating permission until fresh sight.
+    if (!input.visibleHuman && knownHuman && input.geometry) {
+      const plan = this.planSafeEatingRoute(input, rice, knownHuman);
+      const index = plan?.path.findIndex(point =>
+        input.geometry!.visible(point, knownHuman, GAME_CONFIG.perception.visionRange)) ?? -1;
+      if (plan && index >= 0 && distance(input.deepseek, plan.path[index]) >
+          GAME_CONFIG.deepseekAI.waypointTolerance) {
+        this.safeWaitObservation = { ...plan.path[index] };
+        this.path = plan.path.slice(0, index + 1);
+        this.pathIndex = 0;
+        this.safeWaitReason = 'SAFE_OBSERVATION_RECHECK';
+        this.safetyDebug = { human: { ...knownHuman }, rice: { ...rice }, eat: plan.goal,
+          observation: this.safeWaitObservation, defaultPath: [],
+          safePath: [input.deepseek, ...plan.path], reason: 'OBSERVATION_ONLY_NEED_FRESH_SIGHT' };
+        this.resetPathProgress();
+        return this.followPath(input, this.safeWaitObservation);
+      }
+    }
+    // Waiting on one dangerous entrance must not suppress another safe rice.
+    if (threat.level !== 'HIGH') {
+      const alternatives = input.rice.filter(candidate => !candidate.completed &&
+          candidate.id !== rice.id && !this.avoidedRiceMs.has(candidate.id))
+        .map(candidate => {
+          const path = this.navigation.findPath(input.deepseek, candidate, input.doors);
+          return path?.length && (!knownHuman || this.pathClearOfHuman(
+            [input.deepseek, ...path, candidate], knownHuman,
+            GAME_CONFIG.deepseekAI.dangerRouteRadius))
+            ? { rice: candidate, path,
+              score: this.score(input.deepseek, candidate, path) } : null;
+        }).filter((candidate): candidate is NonNullable<typeof candidate> =>
+          candidate !== null)
+        .sort((a, b) => a.score - b.score || a.rice.id.localeCompare(b.rice.id));
+      if (alternatives.length) {
+        const selected = alternatives[0];
+        this.targetRiceId = selected.rice.id;
+        this.targetScoreMs = selected.score;
+        this.path = selected.path;
+        this.pathIndex = 0;
+        this.state = 'MOVE_TO_RICE';
+        this.lastSelectionReason = 'SAFE_WAIT_ALTERNATIVE_RICE';
+        this.lastTransitionReason = 'SAFE_WAIT_ALTERNATIVE_ROUTE_FOUND';
+        this.resetPathProgress();
+        return this.followPath(input, selected.rice);
+      }
+    }
+    const path = this.navigation.findPath(input.deepseek, rice, input.doors);
+    if (!path?.length) {
+      this.safeWaitReason = 'NO_REACHABLE_RICE_ROUTE';
+      this.noMovementReason = 'SAFE_WAIT_NO_ROUTE';
+      return this.command();
+    }
+    if (knownHuman && (distance(rice, knownHuman) <=
+        GAME_CONFIG.deepseekAI.dangerRouteRadius ||
+        !this.pathClearOfHuman([input.deepseek, ...path, rice], knownHuman,
+          GAME_CONFIG.deepseekAI.dangerRouteRadius))) {
+      this.safeWaitReason = 'RICE_OR_ROUTE_STILL_DANGEROUS';
+      this.noMovementReason = 'SAFE_WAIT_THREAT_PERSISTS';
+      return this.command();
+    }
+    if (threat.level === 'HIGH') {
+      this.safeWaitReason = 'CURRENT_THREAT_PERSISTS';
+      this.noMovementReason = 'SAFE_WAIT_THREAT_PERSISTS';
+      return this.command();
+    }
+    this.clearDangerousEntryFailures(rice.id);
+    this.targetRiceId = rice.id;
+    this.targetScoreMs = this.score(input.deepseek, rice, path);
+    this.path = path;
+    this.pathIndex = 0;
+    this.state = 'MOVE_TO_RICE';
+    this.lastSelectionReason = 'SAFE_WAIT_ROUTE_RECHECK_PASSED';
+    this.lastTransitionReason = 'SAFE_WAIT_SAFE_ROUTE_FOUND';
+    this.resetPathProgress();
+    return this.followPath(input, rice);
+  }
+
+  private tryStartPassage(input: DeepSeekAIInput, dangerousSound: boolean): void {
+    const cfg = GAME_CONFIG.deepseekAI;
+    const human = input.visibleHuman;
+    if (!human) { this.passageGateReason = 'NO_VISIBLE_HUMAN'; return; }
+    const retryingSafeWait = this.state === 'SAFE_WAIT' &&
+      this.passageRolledForStillEvent &&
+      (this.passageRollResult === 'NO_SAFE_ROUTE' ||
+        (this.passageRollResult === 'ROLL_PASSED' &&
+          this.curiosityCooldownRemainingMs === 0));
+    if (this.passageRolledForStillEvent && !retryingSafeWait) {
+      this.passageGateReason = this.passageRollResult === 'NO_SAFE_ROUTE'
+        ? 'TRIGGERED_NO_SAFE_ROUTE'
+        : this.passageCancelReason !== 'NONE'
+          ? 'INTERRUPTED_' + this.passageCancelReason
+          : 'ALREADY_TRIED_THIS_STILL_EVENT';
+      return;
+    }
+    if (this.curiosityStillMs < cfg.curiosityStillMs) {
+      this.passageGateReason = 'HUMAN_NOT_STILL_LONG_ENOUGH'; return;
+    }
+    if (this.curiosityCooldownRemainingMs > 0 && !retryingSafeWait) {
+      this.passageGateReason = 'CURIOSITY_COOLDOWN'; return;
+    }
+    if (this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE' ||
+        this.curiosityBypassActive) {
+      this.passageGateReason = 'OTHER_CURIOSITY_ACTIVE'; return;
+    }
+    if (input.sprintState !== 'NORMAL' || dangerousSound ||
+        (input.captureProgressMs ?? 0) > 0 ||
+        distance(input.deepseek, human) <= this.passageAvoidRadius) {
+      this.passageGateReason = 'REAL_DANGER_OR_TOO_CLOSE'; return;
+    }
+    if (this.passageCheckRemainingMs > 0) {
+      this.passageGateReason = 'ROUTE_CHECK_INTERVAL'; return;
+    }
+    this.passageCheckRemainingMs = cfg.stationaryPassageCheckIntervalMs;
+    const active = input.rice.filter(rice => !rice.completed);
+    const planned = active.map(rice => {
+      const path = this.navigation.findPath(input.deepseek, rice, input.doors);
+      return path?.length ? { rice, path,
+        score: this.score(input.deepseek, rice, path) } : null;
+    }).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
+    const intended = planned.find(candidate => candidate.rice.id ===
+      (this.state === 'SAFE_WAIT' ? this.safeWaitRiceId : this.targetRiceId)) ??
+      planned.sort((a, b) => a.score - b.score || a.rice.id.localeCompare(b.rice.id))[0];
+    if (!intended) { this.passageGateReason = 'NO_REACHABLE_RICE'; return; }
+    const humanNearDefaultRoute = !this.pathClearOfHuman(
+      [input.deepseek, ...intended.path, intended.rice], human,
+      cfg.stationaryPassageBlockRadius);
+    // A default A* route may skirt a stationary Human while its destination
+    // rice is still inside the existing danger area. Check both independently.
+    const humanNearRice = distance(intended.rice, human) <= cfg.dangerRouteRadius;
+    if (!humanNearDefaultRoute && !humanNearRice) {
+      this.passageGateReason = 'HUMAN_NOT_ON_RICE_ROUTE';
+      return;
+    }
+    if (!retryingSafeWait) {
+      this.passageRolledForStillEvent = true;
+      this.curiosityRolledForStillEvent = true;
+      if (this.random() >= cfg.stationaryPassageChance) {
+        this.passageRollResult = 'ROLL_FAILED';
+        this.passageGateReason = 'PROBABILITY_REJECTED';
+        return;
+      }
+    }
+    this.passageRollResult = 'ROLL_PASSED';
+    const choices = [intended, ...planned.filter(candidate => candidate !== intended)
+      .sort((a, b) => a.score - b.score || a.rice.id.localeCompare(b.rice.id))];
+    for (const candidate of choices) {
+      this.safetyDebug = { human: { ...human }, rice: { ...candidate.rice },
+        eat: null, observation: null, defaultPath: [input.deepseek, ...candidate.path],
+        safePath: [], reason: 'NO_SAFE_PASSAGE_ROUTE' };
+      const plan = this.planSafeEatingRoute(input, candidate.rice, human);
+      if (!plan) continue;
+      const { path: safePath, goal } = plan;
+      // Observe on the already validated bypass route, before continuing to rice.
+      // Do not pick its final rice waypoint as the observation point.
+      const observationIndex = safePath.slice(0, -1).reduce((best, step, index) => {
+        if (distance(step, input.deepseek) <= cfg.curiosityApproachTolerance) return best;
+        const error = Math.abs(distance(step, human) -
+          cfg.stationaryPassageObserveDistance);
+        return error < best.error ? { index, error } : best;
+      }, { index: -1, error: Infinity }).index;
+      // A short, already-safe route can be observed from its starting point.
+      const observation = observationIndex < 0 ? input.deepseek : safePath[observationIndex];
+      this.targetRiceId = candidate.rice.id;
+      this.targetScoreMs = this.score(input.deepseek, candidate.rice, safePath);
+      this.curiosityTarget = { x: observation.x, z: observation.z };
+      this.passageEatPosition = goal;
+      this.safetyDebug.eat = { ...goal };
+      this.safetyDebug.observation = { ...this.curiosityTarget };
+      this.safetyDebug.safePath = [input.deepseek, ...safePath];
+      this.safetyDebug.reason = 'SAFE_ROUTE_VERIFIED';
+      this.path = observationIndex < 0 ? [] : safePath.slice(0, observationIndex + 1);
+      this.pathIndex = 0;
+      this.passageActive = true;
+      this.safeWaitObservation = null;
+      this.passageRouteSafe = true;
+      this.passageGateReason = 'ACTIVE_SAFE_APPROACH';
+      this.state = 'CURIOUS_APPROACH';
+      this.escapeTarget = null;
+      this.escapeRoomId = null;
+      this.passageCancelReason = 'NONE';
+      this.lastTransitionReason = 'STATIONARY_HUMAN_SAFE_OBSERVATION';
+      this.resetPathProgress();
+      return;
+    }
+    this.passageRollResult = 'NO_SAFE_ROUTE';
+    this.passageGateReason = 'TRIGGERED_NO_SAFE_ROUTE';
+    this.passageCancelReason = 'NO_REACHABLE_ROUTE_OUTSIDE_CAPTURE_ZONE';
+  }
+
+  private updatePassage(input: DeepSeekAIInput, deltaMs: number): DeepSeekAICommand {
+    const target = input.rice.find(rice => rice.id === this.targetRiceId);
+    const human = this.knownHumanPosition(input);
+    if (!target || target.completed || !human) {
+      this.finishPassage(target?.completed ? 'TARGET_COMPLETED' :
+        !human ? 'LAST_SEEN_EXPIRED' : 'TARGET_INVALID');
+      if (target?.completed) this.clearTarget('TARGET_COMPLETED_OR_MISSING');
+      return this.command();
+    }
+    const avoidCircle = { center: human, radius: this.passageAvoidRadius };
+    this.safetyDebug.human = { ...human };
+    if (this.state === 'CURIOUS_APPROACH') {
+      if (!this.curiosityTarget) {
+        this.finishPassage('OBSERVATION_TARGET_INVALID');
+        this.enterEvade('VISION');
+        return this.command();
+      }
+      if (distance(input.deepseek, this.curiosityTarget) <=
+          GAME_CONFIG.deepseekAI.curiosityApproachTolerance) {
+        this.state = 'CURIOUS_OBSERVE';
+        this.curiosityObserveRemainingMs = GAME_CONFIG.deepseekAI.curiosityObserveMs;
+        this.path = [];
+        this.pathIndex = 0;
+        this.lastTransitionReason = 'SAFE_OBSERVATION_POINT_REACHED';
+        return this.command();
+      }
+      if (!this.path.length) {
+        this.path = this.navigation.findPath(input.deepseek, this.curiosityTarget,
+          input.doors, undefined, null, new Set(), avoidCircle) ?? [];
+        this.pathIndex = 0;
+        this.passageRouteSafe = !!this.path.length && this.pathClearOfHuman(
+          [input.deepseek, ...this.path, this.curiosityTarget], human,
+          this.passageAvoidRadius);
+        if (!this.passageRouteSafe) {
+          this.finishPassage('OBSERVATION_ROUTE_NO_LONGER_SAFE');
+          this.enterEvade('VISION');
+          return this.command();
+        }
+      }
+      return this.followPath(input, this.curiosityTarget);
+    }
+    if (this.state === 'CURIOUS_OBSERVE') {
+      this.curiosityObserveRemainingMs = Math.max(0,
+        this.curiosityObserveRemainingMs - deltaMs);
+      if (this.curiosityObserveRemainingMs > 0) return this.command();
+      this.path = [];
+      this.pathIndex = 0;
+      this.curiosityTarget = null;
+      this.state = 'CURIOUS_PASSAGE';
+      this.lastTransitionReason = 'OBSERVED_STILL_HUMAN_SAFE_BYPASS';
+    }
+    if (distance(input.deepseek, target) <=
+        GAME_CONFIG.rice.interactionRange / GAME_CONFIG.three.pixelsPerUnit) {
+      this.clearDangerousEntryFailures(target.id);
+      this.state = 'EAT';
+      return this.command(0, 0, null, target.id);
+    }
+    this.state = 'CURIOUS_PASSAGE';
+    if (!this.path.length) {
+      const plan = this.planSafeEatingRoute(input, target, human);
+      this.passageEatPosition = plan?.goal ?? null;
+      this.path = plan?.path ?? [];
+      this.pathIndex = 0;
+      this.passageRouteSafe = !!this.path.length && this.pathClearOfHuman(
+          [input.deepseek, ...this.path], human,
+          this.passageAvoidRadius);
+      if (!this.passageRouteSafe) {
+        this.finishPassage('ROUTE_NO_LONGER_SAFE');
+        this.enterEvade('VISION');
+        return this.updateSafety(input, this.assessThreat(input), deltaMs);
+      }
+      this.lastNavigationReason = 'PASSAGE_ROUTE_REPLANNED';
+      this.safetyDebug.eat = this.passageEatPosition;
+      this.safetyDebug.safePath = [input.deepseek, ...this.path];
+    }
+    return this.followPath(input, this.passageEatPosition ?? target);
+  }
+
+  private planSafeEatingRoute(input: DeepSeekAIInput, rice: DeepSeekAIRice,
+    human: Point): { goal: Point; path: NavStep[] } | null {
+    const range = GAME_CONFIG.rice.interactionRange / GAME_CONFIG.three.pixelsPerUnit;
+    const cell = GAME_CONFIG.humanAI.navCellSize;
+    const circle = { center: human, radius: this.passageAvoidRadius };
+    // Existing nav grid, not a second pathfinder. Only this authorized trial
+    // considers alternate interaction positions; ordinary rice scoring is unchanged.
+    const goals: Point[] = [rice];
+    for (let x = -range; x <= range; x += cell)
+      for (let z = -range; z <= range; z += cell) {
+        const goal = this.navigation.nearestFree({ x: rice.x + x, z: rice.z + z }, input.doors);
+        if (goal && distance(goal, rice) < range - GAME_CONFIG.collision.contactEpsilon &&
+            !goals.some(p => distance(p, goal) < GAME_CONFIG.collision.contactEpsilon))
+          goals.push(goal);
+      }
+    let best: { goal: Point; path: NavStep[]; length: number } | null = null;
+    for (const goal of goals) {
+      if (distance(goal, human) < circle.radius) continue;
+      const path = this.navigation.findPath(input.deepseek, goal, input.doors,
+        undefined, null, new Set(), circle);
+      if (!path?.length || distance(path[path.length - 1], rice) > range ||
+          !this.pathClearOfHuman([input.deepseek, ...path, goal], human, circle.radius)) continue;
+      const length = this.pathLength(input.deepseek, path, goal);
+      // Prefer the existing center path when safe, preserving its established behavior.
+      if (goal === rice) return { goal, path };
+      if (!best || length < best.length) best = { goal, path, length };
+    }
+    return best;
+  }
+
+  private finishPassage(reason: string): void {
+    if (!this.passageActive) return;
+    this.passageActive = false;
+    this.passageEatPosition = null;
+    this.safetyDebug.reason = reason;
+    this.passageGateReason = 'INTERRUPTED_' + reason;
+    this.passageCancelReason = reason;
+    this.passageRouteSafe = false;
+    this.curiosityTarget = null;
+    this.curiosityObserveRemainingMs = 0;
+    this.curiosityCooldownRemainingMs = GAME_CONFIG.deepseekAI.curiosityCooldownMs;
+    this.path = [];
+    this.pathIndex = 0;
+    this.state = 'SEEK_RICE';
+    this.resetPathProgress();
+  }
+
+  private tryStartCuriosity(input: DeepSeekAIInput, threat: ThreatAssessment): boolean {
+    const cfg = GAME_CONFIG.deepseekAI;
+    if (!input.visibleHuman || threat.level !== 'CAUTION' ||
+        this.state === 'EVADE' || this.state === 'RECOVER' ||
+        input.sprintState !== 'NORMAL' ||
+        this.curiosityCooldownRemainingMs > 0 || this.curiosityRolledForStillEvent ||
+        this.passageRolledForStillEvent ||
+        this.curiosityStillMs < cfg.curiosityStillMs ||
+        this.isUrgentHumanSound(input)) return false;
+    this.curiosityRolledForStillEvent = true;
+    if (this.random() >= cfg.curiosityChance) {
+      this.curiosityRollResult = 'ROLL_FAILED';
+      return false;
+    }
+    this.curiosityRollResult = 'ROLL_PASSED';
+    const human = input.visibleHuman;
+    const standOff = cfg.curiositySafeDistance + cfg.curiosityApproachTolerance;
+    const toward = Math.atan2(input.deepseek.z - human.z, input.deepseek.x - human.x);
+    const offsets = [0, Math.PI / 4, -Math.PI / 4, Math.PI / 2,
+      -Math.PI / 2, 3 * Math.PI / 4, -3 * Math.PI / 4, Math.PI];
+    const candidates = offsets.map(offset => {
+      const desired = { x: human.x + Math.cos(toward + offset) * standOff,
+        z: human.z + Math.sin(toward + offset) * standOff };
+      const goal = this.navigation.nearestFree(desired, input.doors);
+      if (!goal || distance(goal, human) < cfg.curiositySafeDistance) return null;
+      const path = this.navigation.findPath(input.deepseek, goal, input.doors);
+      if (!path?.length || !this.curiosityPathIsSafe(path, human)) return null;
+      // The observation point must also have a traversable way back out.
+      const exit = this.navigation.findPath(goal, input.deepseek, input.doors);
+      if (!exit?.length || !this.curiosityPathIsSafe(exit, human)) return null;
+      return { goal, path, length: this.pathLength(input.deepseek, path, goal) };
+    }).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null)
+      .sort((a, b) => a.length - b.length);
+    if (!candidates.length) {
+      this.curiosityRollResult = 'NO_SAFE_APPROACH';
+      this.curiosityCooldownRemainingMs = cfg.curiosityCooldownMs;
+      return false;
+    }
+    this.state = 'CURIOUS_APPROACH';
+    this.curiosityTarget = candidates[0].goal;
+    this.path = candidates[0].path;
+    this.pathIndex = 0;
+    this.targetRiceId = null;
+    this.targetScoreMs = null;
+    this.resetPathProgress();
+    this.lastTransitionReason = 'STATIONARY_HUMAN_CURIOSITY';
+    return true;
+  }
+
+  private curiosityPathIsSafe(path: readonly NavStep[], human: Point): boolean {
+    const cfg = GAME_CONFIG.deepseekAI;
+    for (let index = 0; index < path.length; index++) {
+      if (distance(path[index], human) < cfg.curiositySafeDistance) return false;
+      if (index === 0) continue;
+      const previous = path[index - 1], next = path[index];
+      const samples = Math.ceil(distance(previous, next) /
+        GAME_CONFIG.collision.maxMovementSubstep);
+      for (let sample = 1; sample < samples; sample++) {
+        const ratio = sample / samples;
+        if (distance({ x: previous.x + (next.x - previous.x) * ratio,
+          z: previous.z + (next.z - previous.z) * ratio }, human) <
+            cfg.curiositySafeDistance) return false;
+      }
+    }
+    return true;
+  }
+
+  private updateCuriosity(input: DeepSeekAIInput, deltaMs: number): DeepSeekAICommand {
+    const human = this.knownHumanPosition(input);
+    if (!human || !this.curiosityTarget) return this.command();
+    const cfg = GAME_CONFIG.deepseekAI;
+    if (this.state === 'CURIOUS_APPROACH') {
+      if (distance(input.deepseek, this.curiosityTarget) <= cfg.curiosityApproachTolerance) {
+        this.state = 'CURIOUS_OBSERVE';
+        this.curiosityObserveRemainingMs = cfg.curiosityObserveMs;
+        this.path = [];
+        this.pathIndex = 0;
+        this.lastTransitionReason = 'SAFE_OBSERVATION_POINT_REACHED';
+        return this.command();
+      }
+      if (!this.path.length) {
+        this.path = this.navigation.findPath(input.deepseek, this.curiosityTarget,
+          input.doors) ?? [];
+        this.pathIndex = 0;
+        if (!this.path.length || !this.curiosityPathIsSafe(this.path, human)) {
+          this.finishCuriosity('APPROACH_ROUTE_INVALID');
+          this.enterEvade('VISION');
+          return this.updateSafety(input, this.assessThreat(input), deltaMs);
+        }
+      }
+      return this.followPath(input, this.curiosityTarget);
+    }
+    this.curiosityObserveRemainingMs = Math.max(0,
+      this.curiosityObserveRemainingMs - deltaMs);
+    if (this.curiosityObserveRemainingMs > 0) return this.command();
+    const safeRice = input.rice.filter(rice => !rice.completed).map(rice => {
+      if (distance(rice, human) < cfg.curiositySafeDistance) return null;
+      const path = this.navigation.findPath(input.deepseek, rice, input.doors);
+      return path?.length && this.curiosityPathIsSafe(path, human)
+        ? { rice, path, score: this.score(input.deepseek, rice, path) } : null;
+    }).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null)
+      .sort((a, b) => a.score - b.score || a.rice.id.localeCompare(b.rice.id));
+    if (!safeRice.length) {
+      this.finishCuriosity('NO_SAFE_RICE_BYPASS');
+      this.enterEvade('VISION');
+      return this.updateSafety(input, this.assessThreat(input), deltaMs);
+    }
+    const chosen = safeRice[0];
+    this.targetRiceId = chosen.rice.id;
+    this.targetScoreMs = chosen.score;
+    this.path = chosen.path;
+    this.pathIndex = 0;
+    this.state = 'MOVE_TO_RICE';
+    this.curiosityBypassActive = true;
+    this.curiosityCooldownRemainingMs = cfg.curiosityCooldownMs;
+    this.curiosityRollResult = 'SAFE_BYPASS';
+    this.lastTransitionReason = 'OBSERVED_STILL_HUMAN_SAFE_BYPASS';
+    this.resetPathProgress();
+    return this.followPath(input, chosen.rice);
+  }
+
+  private finishCuriosity(reason: string): void {
+    if (this.state !== 'CURIOUS_APPROACH' && this.state !== 'CURIOUS_OBSERVE' &&
+        !this.curiosityBypassActive) return;
+    this.curiosityInterruptReason = reason;
+    this.curiosityBypassActive = false;
+    this.curiosityTarget = null;
+    this.curiosityObserveRemainingMs = 0;
+    this.curiosityCooldownRemainingMs = GAME_CONFIG.deepseekAI.curiosityCooldownMs;
+    this.path = [];
+    this.pathIndex = 0;
+    if (this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE')
+      this.state = 'SEEK_RICE';
   }
 
   private assessThreat(input: DeepSeekAIInput): ThreatAssessment {
@@ -515,6 +1260,7 @@ export class DeepSeekAIController {
     }
     if (!this.targetRiceId && this.retryRemainingMs === 0) {
       this.selectRice(input);
+      if (this.state === 'SAFE_WAIT') return this.command();
       this.state = 'RECOVER';
     }
     const target = input.rice.find(rice => rice.id === this.targetRiceId);
@@ -749,9 +1495,16 @@ export class DeepSeekAIController {
   }
 
   private followPath(input: DeepSeekAIInput, goal: Point): DeepSeekAICommand {
+    const passageHuman = this.passageActive ? this.knownHumanPosition(input) :
+      this.safeWaitObservation ? this.threatEstimate : null;
     while (this.pathIndex < this.path.length &&
         distance(input.deepseek, this.path[this.pathIndex]) <=
-        GAME_CONFIG.deepseekAI.waypointTolerance) this.pathIndex++;
+        GAME_CONFIG.deepseekAI.waypointTolerance) {
+      const next = this.path[this.pathIndex + 1] ?? goal;
+      if (passageHuman && distanceToXZSegment(passageHuman, input.deepseek, next) <
+          this.passageAvoidRadius) break;
+      this.pathIndex++;
+    }
     for (let index = this.pathIndex; index < this.path.length; index++) {
       const id = this.path[index].doorId;
       const door = input.doors.find(candidate => candidate.id === id);
@@ -770,12 +1523,16 @@ export class DeepSeekAIController {
     const waypoint = this.path[this.pathIndex] ?? goal;
     const dx = waypoint.x - input.deepseek.x, dz = waypoint.z - input.deepseek.z;
     const length = Math.hypot(dx, dz);
-    return length > 0 ? this.command(dx / length, dz / length) : this.command();
+    // A trial must not cut a safe grid corner or overshoot its waypoint into
+    // the avoided circle. This does not change ordinary navigation/player speed.
+    const stride = passageHuman ? Math.max(length, moveSpeed() * input.deltaMs / 1000) : length;
+    return length > 0 ? this.command(dx / stride, dz / stride) : this.command();
   }
 
   private selectRice(input: DeepSeekAIInput): boolean {
     const candidates = input.rice
-      .filter(rice => !rice.completed && !this.avoidedRiceMs.has(rice.id))
+      .filter(rice => !rice.completed && !this.avoidedRiceMs.has(rice.id) &&
+        rice.id !== this.safeWaitRiceId)
       .map(rice => {
         const path = this.navigation.findPath(input.deepseek, rice, input.doors);
         return path?.length ? { rice, path, score: this.score(input.deepseek, rice, path) } : null;
@@ -784,6 +1541,11 @@ export class DeepSeekAIController {
       .sort((a, b) => a.score - b.score || a.rice.id.localeCompare(b.rice.id));
     const selected = candidates[0];
     if (!selected) {
+      if (this.safeWaitRiceId && input.rice.some(rice =>
+          rice.id === this.safeWaitRiceId && !rice.completed)) {
+        this.enterSafeWait(this.safeWaitRiceId);
+        return false;
+      }
       this.state = 'RESELECT';
       this.retryRemainingMs = GAME_CONFIG.deepseekAI.retryMs;
       this.lastSelectionReason = input.rice.every(rice => rice.completed)
@@ -831,6 +1593,24 @@ export class DeepSeekAIController {
       this.stalledRepaths = 0;
     } else if ((this.stalledMs += deltaMs) >= GAME_CONFIG.deepseekAI.stuckRepathMs) {
       this.stalledRepaths++;
+      if (this.passageActive) {
+        if (this.stalledRepaths >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
+          this.finishPassage('PASSAGE_PATH_STALLED');
+          this.enterEvade('VISION');
+        } else {
+          this.path = [];
+          this.pathIndex = 0;
+          this.passageRouteSafe = false;
+          this.lastNavigationReason = 'PASSAGE_STALLED_REPATH';
+          this.resetPathProgress();
+        }
+        return;
+      }
+      if (this.state === 'CURIOUS_APPROACH' || this.curiosityBypassActive) {
+        this.finishCuriosity('CURIOSITY_PATH_STALLED');
+        this.enterEvade('VISION');
+        return;
+      }
       if (this.state === 'EVADE') {
         if (this.stalledRepaths >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
           this.avoidedEscapeRoomId = this.escapeRoomId;

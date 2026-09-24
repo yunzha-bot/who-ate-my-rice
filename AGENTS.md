@@ -78,7 +78,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S6 游戏玩法 Alpha —— Gate = PASS；里程碑 `v0.2.0-alpha` 以实际推送结果为准。
 - S7A Human AI —— S7A-0 动作接口、S7A-1 基础行为、S7A-2 高级决策及可收纳调试面板人工验收 PASS；Gate = PASS。
 - S7B-1 DeepSeek AI 自主找米与进食 —— 用户确认人工验收 PASS；S7B 尚未完成。
-- S7B-2 DeepSeek AI 威胁感知与逃跑 —— 用户确认人工验收 PASS；偶发原地停留列为后续 AI 优化项。
+- S7B-2 DeepSeek AI 威胁感知与逃跑 —— 用户确认人工验收 PASS；偶发原地停留列为后续 AI 优化项。静止 Human 好奇安全通行定向修复本轮人工验收 PASS；此专项通过不代表整个 S7B 完成。
 
 当前下一阶段：S7B-3 —— DeepSeek 主动关门与锁门决策。整个 S7B 尚未完成。Human AI 移动倍率 0.92 与自动解锁耗时 8,750 毫秒暂按用户决定接受；自动解锁速度留到 S16 平衡阶段继续调整。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 

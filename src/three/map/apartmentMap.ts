@@ -104,7 +104,7 @@ const WALL_THICKNESS = 0.18;
 export const WALL_HEIGHT = 1.5;
 const xs = [...new Set(ROOMS.flatMap(value => [value.minX, value.maxX]))].sort((a, b) => a - b);
 const zs = [...new Set(ROOMS.flatMap(value => [value.minZ, value.maxZ]))].sort((a, b) => a - b);
-const roomAt = (x: number, z: number) => ROOMS.find(value =>
+export const roomAt = (x: number, z: number) => ROOMS.find(value =>
   x > value.minX && x < value.maxX && z > value.minZ && z < value.maxZ);
 
 function wallPieces(start: number, end: number, door: DoorNode | undefined,

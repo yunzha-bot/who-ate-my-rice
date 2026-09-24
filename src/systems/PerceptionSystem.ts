@@ -143,17 +143,17 @@ export class SoundEventSystem {
   }
 
   heardBy(listener: Point, faction: Faction, camera: Camera,
-    geometry: PerceptionGeometry): HeardSound | null {
-    const candidate = this.analyzeBy(listener, faction, camera, geometry);
+    geometry: PerceptionGeometry, filter?: (event: SoundEvent) => boolean): HeardSound | null {
+    const candidate = this.analyzeBy(listener, faction, camera, geometry, filter);
     return candidate && candidate.audibleStrength >= GAME_CONFIG.perception.minimumAudibleStrength
       ? candidate : null;
   }
 
   analyzeBy(listener: Point, faction: Faction, camera: Camera,
-    geometry: PerceptionGeometry): HeardSound | null {
+    geometry: PerceptionGeometry, filter?: (event: SoundEvent) => boolean): HeardSound | null {
     let strongest: HeardSound | null = null;
     for (const event of this.events) {
-      if (event.sourceFaction === faction) continue;
+      if (event.sourceFaction === faction || (filter && !filter(event))) continue;
       const range = GAME_CONFIG.perception.sounds[event.type].range;
       const distance = Math.hypot(listener.x - event.position.x, listener.z - event.position.z);
       if (distance >= range) continue;

@@ -224,11 +224,12 @@ test('AI sprint reuses normal SprintSystem risk and stun rules', () => {
 
 test('approaching Human triggers the existing sprint without changing its risk rule', () => {
   const ai = new DeepSeekAIController(nav, [], rooms);
+  const firstDistance = C.deepseekAI.visionEvadeDistance;
   const first = ai.update({ ...base(), riceProgressRatio: 0.5,
-    visibleHuman: { x: 5.8, z: 0 } });
+    visibleHuman: { x: firstDistance, z: 0 } });
   assert.equal(first.startSprint, false);
   const second = ai.update({ ...base(), riceProgressRatio: 0.5,
-    visibleHuman: { x: 5.5, z: 0 } });
+    visibleHuman: { x: firstDistance - 0.3, z: 0 } });
   assert.equal(second.startSprint, true);
   assert.equal(ai.sprintDecision, 'PURSUER_CLOSING_SPRINT');
   const sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold,
@@ -494,7 +495,13 @@ test('authored apartment recovery keeps moving after Human leaves the area', () 
 });
 
 test('stationary visible Human cannot pin DeepSeek at a reached escape goal', () => {
-  const ai = new DeepSeekAIController(nav, [], rooms);
+  const radius = Math.max(2, C.deepseekAI.visionEvadeDistance - 1);
+  const escapeRooms = [
+    { id: 'east', x: radius, z: 0 },
+    { id: 'west', x: -radius, z: 0 },
+    { id: 'north', x: 0, z: -radius },
+  ];
+  const ai = new DeepSeekAIController(nav, [], escapeRooms);
   const human = { x: 1, z: 0 };
   let position = { x: 0, z: 0 };
   const chosenRooms = [];
