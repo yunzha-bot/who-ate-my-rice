@@ -51,10 +51,51 @@ export const GAME_CONFIG = {
     stuckProgressEpsilon: 0.05, // 上述时间内应缩短的最小节点距离：世界单位。
     maxStuckRepathsPerTarget: 2, // 同一米堆连续卡路后允许的重寻路次数。
     retryMs: 1_500, // 米堆暂不可达或全无路线时的重选等待：毫秒。
+    visionEvadeDistance: 7, // 看见 Human 且距离小于此值时逃跑：世界单位。
+    soundEvadeStrength: 0.09, // 听到 Human 的最终强度达到此值时逃跑。
+    soundThreatProjection: 4, // 未目视时只沿声音八方向投射粗略威胁点：世界单位。
+    lastSeenAlertMs: 2_500, // 失去视线后参考最后目击点的短暂警戒：毫秒；已拉开安全距离时不额外强制原地等待。
+    alertHoldMs: 1_800, // 最后一次高威胁后的警戒记忆：毫秒；安全路线已成立时可转入移动恢复。
+    minimumEvadeMs: 900, // 单次逃跑最短时间，避免吃米/逃跑来回抖动：毫秒。
+    recoverMs: 1_200, // 威胁降低后沿安全米点路线移动的警戒上限：毫秒，不强制静止。
+    escapeReplanMs: 700, // 逃跑中允许重新选择路线的最短间隔：毫秒。
+    escapeMinSeparation: 3, // 候选逃跑点与已知威胁点的优先安全间距：世界单位。
+    escapeMinTravel: 2, // 避免把当前位置选为逃跑目标：世界单位。
+    escapeGoalTolerance: 0.8, // 到达逃跑房间中心的距离：世界单位。
+    escapeCoverBonus: 4, // 有墙或关门遮挡时的逃跑评分加分：无量纲。
+    escapeDeadEndPenalty: 6, // 可用门出口不足两处时的评分扣分：无量纲。
+    escapeTravelPenalty: 0.7, // 每世界单位路线长度的评分扣分。
+    escapeTowardThreatPenalty: 3, // 路径起步靠近威胁时的评分扣分：无量纲。
+    escapeGoalHoldMs: 2_500, // 通常至少保持当前逃跑目标的时间：毫秒；紧急危险或断路可提前切换。
+    escapeSwitchScoreMargin: 2.5, // 新目的地评分需超过当前目标的最小差值，防止来回摆动。
+    escapeVisitMemoryMs: 12_000, // 最近访问房间的记忆窗口：毫秒；超时后惩罚消失。
+    escapeRecentVisitCount: 4, // 最多保留的近期房间/区域记录数量。
+    escapeRecentVisitPenalty: 5, // 刚访问过的房间每次最多扣除的逃跑评分，随时间衰减。
+    escapeLoopMinDistanceGain: 1, // 重返近期区域时须增加的最小安全距离：世界单位。
+    escapeNearScoreBand: 0.8, // 仅在最高分附近此范围内随机挑选候选房间。
+    safeObservationMs: 2_500, // 缺少可用威胁方位时，结束逃跑前的连续观察时长：毫秒。
+    soundCautionStrength: 0.045, // 高于此最终可听强度的弱声音仍阻止过早脱险。
+    dangerRiceAvoidMs: 8_000, // 逃跑后暂避位于危险路径上的原米堆：毫秒。
+    dangerRouteRadius: 3, // 最后已知 Human 位置附近的危险米堆/路径范围：世界单位。
+    escapeExtraExitBonus: 1.2, // 逃跑房间每个额外可用出口的评分奖励。
+    escapeAlternateRouteBonus: 2, // 被堵出口存在可行替代路线时的评分奖励。
+    escapeBlockedExitPenalty: 9, // Human 接近首个路径出口且无替代路线时的评分扣分。
+    escapeRouteThreatPenalty: 3, // 路径节点靠近已知 Human 方位时每世界单位的评分扣分。
+    exitBlockRadius: 2.5, // 估计 Human 占据路径出口的距离：世界单位。
+    alternateRouteMaxRatio: 2, // 绕开被堵出口的路线最多允许为原路线的倍数。
+    approachSprintDistance: 6, // Human 明显逼近时允许提前冲刺的目视距离：世界单位。
+    approachSpeedThreshold: 0.35, // 判定 Human 逼近的最小相对速度：世界单位/秒。
+    blockedExitSprintDistance: 3.5, // 已知 Human 靠近路径出口时的紧急冲刺距离：世界单位。
+    safeSprintDistance: 5, // 低于30%进度时，近距威胁触发冲刺：世界单位。
+    riskySprintDistance: 2.2, // 达到30%进度后，仅极近目视威胁可冲刺：世界单位。
+    sprintSoundStrength: 0.22, // 未目视时触发安全冲刺的声音最终强度阈值。
   },
   characterAnimation: {
     fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。
     transitionMs: 120, // 毫秒；未来 AnimationMixer 片段交叉淡入时间。
+    specialIdleTriggerMs: 5_000, // 连续普通 IDLE 后尝试播放特殊待机的时间：毫秒。
+    specialIdleRepeatIntervalMs: 15_000, // 特殊待机两次开始之间的最短间隔：毫秒。
+    specialIdleSlots: ['IDLE_01', 'IDLE_02', 'IDLE_03', 'IDLE_04', 'IDLE_05'], // 允许接入的特殊待机插槽；缺失片段会被忽略。
     stunColor: 0xff7777, // 白模摔倒/眩晕颜色；仅视觉表现。
   },
   sprint: {

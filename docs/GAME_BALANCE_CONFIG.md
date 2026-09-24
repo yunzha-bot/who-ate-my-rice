@@ -54,7 +54,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.humanAI.searchRadius` / `searchRoomCount` | 12 / 3 | 世界单位 / 间；追丢后的邻近搜索范围和上限 | 不提供目标实时位置，目标来自 Last Seen。 |
 | `C.humanAI.searchDwellMs` / `searchMaxMs` | 900 / 15,000 | 毫秒；搜索点停留和一次搜索时限 | 超时恢复巡逻，避免反复搜索同处。 |
 
-## DeepSeek AI（S7B-1 开发参数）
+## DeepSeek AI（S7B 开发参数）
 
 仅在玩家正式选择 Human 且没有开发调试接管 DeepSeek 时运行。选米评分为导航路径长度按 DeepSeek 基础速度换算的行走毫秒数，加该米剩余进食毫秒数和既有准备时间；导航网格与关门路径代价复用现有 NavigationSystem，不复制配置。
 
@@ -65,6 +65,44 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.stuckProgressEpsilon` | 0.05 | 世界单位；卡路窗口内至少应靠近节点的距离 | 不改变玩家移动速度或碰撞体。 |
 | `C.deepseekAI.maxStuckRepathsPerTarget` | 2 | 次；同一米堆连续卡路后暂避并换目标 | 有进展时重新计数。 |
 | `C.deepseekAI.retryMs` | 1,500 | 毫秒；不可达米堆暂避及无目标重试间隔 | 门状态改变会立即触发重新规划。 |
+| `C.deepseekAI.visionEvadeDistance` | 7 | 世界单位；目视 Human 的逃跑距离 | 过大容易频繁中断进食。 |
+| `C.deepseekAI.soundEvadeStrength` | 0.09 | 最终可听强度；声音触发逃跑阈值 | 仍须通过现有听觉距离与遮挡判定。 |
+| `C.deepseekAI.soundThreatProjection` | 4 | 世界单位；沿可听声音八方向估计威胁 | 不是隐藏 Human 的真实位置。 |
+| `C.deepseekAI.lastSeenAlertMs` | 2,500 | 毫秒；最后目击点的短期警戒 | 已拉开安全距离时，不把旧目击信息当成强制静止。 |
+| `C.deepseekAI.alertHoldMs` | 1,800 | 毫秒；最后一次高威胁后的警戒记忆 | 安全路线已成立时可转入移动恢复，防止进食与逃跑逐帧抖动。 |
+| `C.deepseekAI.minimumEvadeMs` | 900 | 毫秒；单次逃跑最短时长 | 与警戒时长共同决定恢复时机。 |
+| `C.deepseekAI.recoverMs` | 1,200 | 毫秒；脱险后沿安全米点路线移动的警戒上限 | 不强制原地等待；结束后恢复进食，保留既有大米进度。 |
+| `C.deepseekAI.escapeReplanMs` | 700 | 毫秒；逃跑选路最短重算间隔 | 过短会增加网格寻路开销。 |
+| `C.deepseekAI.escapeMinSeparation` | 3 | 世界单位；优先逃跑目标与估计威胁的间距 | 不可达时允许退回其他候选。 |
+| `C.deepseekAI.escapeMinTravel` | 2 | 世界单位；避免原地选点的最短路程 | 地图空间受限时须留可达候选。 |
+| `C.deepseekAI.escapeGoalTolerance` | 0.8 | 世界单位；逃跑目标到达容差 | 太小可能导致到点抖动。 |
+| `C.deepseekAI.escapeCoverBonus` | 4 | 评分；有墙或关门遮挡的奖励 | 仅在路线可达时加分。 |
+| `C.deepseekAI.escapeDeadEndPenalty` | 6 | 评分；少于两个可用门出口的惩罚 | 避免优先逃入死胡同。 |
+| `C.deepseekAI.escapeTravelPenalty` | 0.7 | 每世界单位路线的评分惩罚 | 与安全间距及遮挡奖励共同评估。 |
+| `C.deepseekAI.escapeTowardThreatPenalty` | 3 | 评分；起步接近估计威胁的惩罚 | 绕路必要时仍允许选取。 |
+| `C.deepseekAI.escapeGoalHoldMs` | 2,500 | 毫秒；常规逃跑目标最短保持时长 | 断路或目标明显不安全可提前换路。 |
+| `C.deepseekAI.escapeSwitchScoreMargin` | 2.5 | 评分；新目标超过旧目标才切换的差值 | 提高可减少相邻目标来回切换。 |
+| `C.deepseekAI.escapeVisitMemoryMs` | 12,000 | 毫秒；近期房间访问记忆窗口 | 到期后访问惩罚自然消失，暂停期间 AI 时间冻结。 |
+| `C.deepseekAI.escapeRecentVisitCount` | 4 | 房间/区域记录条数 | 只保留最近的实际经过区域。 |
+| `C.deepseekAI.escapeRecentVisitPenalty` | 5 | 评分；刚访问房间每次的最大扣分 | 按访问年龄线性衰减；唯一可达房间仍可选择。 |
+| `C.deepseekAI.escapeLoopMinDistanceGain` | 1 | 世界单位；重访区域应取得的最小安全距离增益 | 未达到时触发一次跨区域重新决策。 |
+| `C.deepseekAI.escapeNearScoreBand` | 0.8 | 评分；允许随机挑选的近最高分区间 | 明显低分或危险候选不参与随机选择。 |
+| `C.deepseekAI.safeObservationMs` | 2,500 | 毫秒；缺少可用威胁方位时的持续观察时间 | 已知威胁方位且拉开距离时，可提前进入移动恢复。 |
+| `C.deepseekAI.soundCautionStrength` | 0.045 | 最终可听强度；弱声音仍阻止脱险的阈值 | 低于此值的远处声音不阻止恢复。 |
+| `C.deepseekAI.dangerRiceAvoidMs` | 8,000 | 毫秒；暂避已知威胁附近米堆或其路径 | 不清除已有进食进度；仅逃跑后生效。 |
+| `C.deepseekAI.dangerRouteRadius` | 3 | 世界单位；米堆或路径靠近最后威胁点的判定半径 | 过大可能使多个米堆暂不可选。 |
+| `C.deepseekAI.escapeExtraExitBonus` | 1.2 | 评分；每个额外可用房间出口的奖励 | LOCKED 门不算可用出口。 |
+| `C.deepseekAI.escapeAlternateRouteBonus` | 2 | 评分；被堵出口可绕路时的奖励 | 替代路线仍需通过原有导航。 |
+| `C.deepseekAI.escapeBlockedExitPenalty` | 9 | 评分；Human 靠近首个出口且不可绕时的惩罚 | 不允许把锁门当可通行捷径。 |
+| `C.deepseekAI.escapeRouteThreatPenalty` | 3 | 每世界单位评分；路径节点靠近已知威胁的惩罚 | 计算基于导航节点，而非仅目标直线距离。 |
+| `C.deepseekAI.exitBlockRadius` | 2.5 | 世界单位；认为 Human 正接近路径出口的半径 | 仅使用目视或最后已知方位，不读取隐藏实时坐标。 |
+| `C.deepseekAI.alternateRouteMaxRatio` | 2 | 倍率；绕开被堵出口允许的最长路程比 | 避免为绕门选择过长路线。 |
+| `C.deepseekAI.approachSprintDistance` | 6 | 世界单位；Human 明显逼近时可提前冲刺的距离 | 仍受原有 30% 摔倒规则约束。 |
+| `C.deepseekAI.approachSpeedThreshold` | 0.35 | 世界单位/秒；相邻目视距离缩短达到此值视为逼近 | 不增加 AI 移动速度。 |
+| `C.deepseekAI.blockedExitSprintDistance` | 3.5 | 世界单位；Human 逼近路径出口时的紧急冲刺距离 | 冲刺仍使用现有持续时间与眩晕。 |
+| `C.deepseekAI.safeSprintDistance` | 5 | 世界单位；低进食风险时的目视冲刺阈值 | 使用原 SprintSystem 时长与能量规则。 |
+| `C.deepseekAI.riskySprintDistance` | 2.2 | 世界单位；高进食风险时的紧急目视冲刺阈值 | 达到既有 30% 风险后冲刺结束会摔倒。 |
+| `C.deepseekAI.sprintSoundStrength` | 0.22 | 最终可听强度；未目视且低风险时冲刺阈值 | 不能绕过声音遮挡。 |
 
 ## 角色动作表现（S7A 占位接口）
 
@@ -72,6 +110,9 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 |---|---:|---|---|
 | `C.characterAnimation.fallPoseMs` | 220 | 毫秒；FALL 白模姿态持续时间 | 只影响画面，不改变 `C.sprint.stunMs`。 |
 | `C.characterAnimation.transitionMs` | 120 | 毫秒；未来 AnimationMixer 片段切换淡入 | 当前无正式动画片段，不影响玩法。 |
+| `C.characterAnimation.specialIdleTriggerMs` | 5,000 | 毫秒；连续普通 IDLE 后开始播放特殊待机的门槛 | 仅动画表现；没有已接入片段时维持白模 IDLE。 |
+| `C.characterAnimation.specialIdleRepeatIntervalMs` | 15,000 | 毫秒；特殊待机两次开始之间的最短间隔 | 只影响播放频率；移动或更高优先级动作会中断待机。 |
+| `C.characterAnimation.specialIdleSlots` | `IDLE_01`～`IDLE_05` | 片段插槽名单 | 只从此名单中已经由 AnimationMixer 接入的片段抽选，缺失资源忽略。 |
 | `C.characterAnimation.stunColor` | `0xff7777` | 颜色；白模 FALL/STUN 反馈 | 纯视觉，角色基础色仍取 `C.player.color` / `C.human.color`。 |
 
 ## Rice 与米痕

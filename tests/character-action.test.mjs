@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Mesh, BoxGeometry, MeshStandardMaterial } from 'three';
+import { AnimationClip, AnimationMixer, BoxGeometry, Mesh, MeshStandardMaterial,
+  NumberKeyframeTrack } from 'three';
 import { resolveCharacterAction } from '../src/systems/CharacterAction.ts';
 import { CharacterActionView } from '../src/three/CharacterActionView.ts';
 import { GAME_CONFIG as C } from '../src/config/gameConfig.ts';
@@ -45,4 +46,73 @@ test('white-box actions preserve collision anchors and fall pose ends before stu
   assert.deepEqual(human.position.toArray(), [4, 0.5, 5]);
   assert.deepEqual(deepseek.scale.toArray(), [1, 1, 1]);
   assert.deepEqual(human.scale.toArray(), [1, 1, 1]);
+});
+
+test('special idle slots require configured real clips and start after continuous idle', () => {
+  const mesh = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+  const view = new CharacterActionView(mesh, 'DEEPSEEK', () => 0);
+  const mixer = new AnimationMixer(mesh);
+  const clip = new AnimationClip('idle-01', 0.1, [
+    new NumberKeyframeTrack('.rotation[y]', [0, 0.1], [0, 0.2]),
+  ]);
+  view.attachMixer(mixer, {}, { IDLE_01: clip, NOT_A_CONFIGURED_SLOT: clip });
+  view.update('IDLE', C.characterAnimation.specialIdleTriggerMs - 50);
+  assert.equal(view.currentIdleSlot, null);
+  view.update('IDLE', 50);
+  assert.equal(view.action, 'IDLE');
+  assert.equal(view.currentIdleSlot, 'IDLE_01');
+  assert.match(view.lastTransitionReason, /IDLE_01/);
+  assert.deepEqual(C.characterAnimation.specialIdleSlots,
+    ['IDLE_01', 'IDLE_02', 'IDLE_03', 'IDLE_04', 'IDLE_05']);
+});
+
+test('missing special idle clips keep ordinary white-box idle without errors', () => {
+  const mesh = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+  const view = new CharacterActionView(mesh, 'HUMAN');
+  view.attachMixer(new AnimationMixer(mesh), {});
+  view.update('IDLE', C.characterAnimation.specialIdleTriggerMs * 4);
+  assert.equal(view.action, 'IDLE');
+  assert.equal(view.currentIdleSlot, null);
+});
+
+test('special idle is interrupted by gameplay actions, then reset clears its timer', () => {
+  const mesh = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+  const view = new CharacterActionView(mesh, 'DEEPSEEK', () => 0);
+  const mixer = new AnimationMixer(mesh);
+  const clip = new AnimationClip('idle-01', 5, [
+    new NumberKeyframeTrack('.rotation[y]', [0, 5], [0, 0.2]),
+  ]);
+  view.attachMixer(mixer, {}, { IDLE_01: clip });
+  view.update('IDLE', C.characterAnimation.specialIdleTriggerMs);
+  assert.equal(view.currentIdleSlot, 'IDLE_01');
+  view.update('EAT', 50);
+  assert.equal(view.action, 'EAT');
+  assert.equal(view.currentIdleSlot, null);
+  assert.equal(view.idleSeconds, 0);
+  view.update('IDLE', 1_000);
+  const pausedSeconds = view.idleSeconds;
+  // Pause freezes this presentation clock because the game does not call update while paused.
+  assert.equal(view.idleSeconds, pausedSeconds);
+  view.reset();
+  assert.equal(view.action, 'IDLE');
+  assert.equal(view.idleSeconds, 0);
+  assert.equal(view.currentIdleSlot, null);
+});
+
+test('special idle returns to ordinary idle and avoids immediate same-slot repetition', () => {
+  const mesh = new Mesh(new BoxGeometry(), new MeshStandardMaterial());
+  const view = new CharacterActionView(mesh, 'DEEPSEEK', () => 0);
+  const mixer = new AnimationMixer(mesh);
+  const clip = new AnimationClip('idle', 0.1, [
+    new NumberKeyframeTrack('.rotation[y]', [0, 0.1], [0, 0.2]),
+  ]);
+  view.attachMixer(mixer, {}, { IDLE_01: clip, IDLE_02: clip });
+  view.update('IDLE', C.characterAnimation.specialIdleTriggerMs);
+  assert.equal(view.currentIdleSlot, 'IDLE_01');
+  view.update('IDLE', 150);
+  assert.equal(view.currentIdleSlot, null);
+  assert.equal(view.action, 'IDLE');
+  assert.match(view.lastTransitionReason, /恢复普通 IDLE/);
+  view.update('IDLE', C.characterAnimation.specialIdleRepeatIntervalMs - 150);
+  assert.equal(view.currentIdleSlot, 'IDLE_02');
 });

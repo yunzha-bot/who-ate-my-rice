@@ -120,7 +120,7 @@ export class ThreeGame {
       buildApartment(this.scene));
     const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
     this.humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES);
-    this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES);
+    this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
     DOOR_NODES.forEach((door, index) => {
       const view = new DoorView(door, index, DEBUG_MAP);
       this.scene.add(view.object);
@@ -402,6 +402,8 @@ export class ThreeGame {
   private updatePlaying(deltaMs: number): void {
     this.sound.advance(deltaMs);
     this.traces.advance(deltaMs);
+    this.vision.update(deltaMs, this.human.position, this.player.position,
+      this.perceptionGeometry);
     this.humanDoorSkill.advance(deltaMs, this.match.phase);
     if (this.mineFailureRemainingMs > 0) {
       this.mineFailureRemainingMs = Math.max(0, this.mineFailureRemainingMs - deltaMs);
@@ -417,13 +419,22 @@ export class ThreeGame {
     const ratio = this.rice.progressRatio;
     const deepseekAiEnabled = shouldRunDeepSeekAI(this.match.phase,
       this.control.selectedFaction, this.control.temporaryInputTarget,
-      debug, this.debugPossessionEnabled) && this.sprint.state === 'NORMAL';
+      debug, this.debugPossessionEnabled);
     let deepseekCommand: DeepSeekAICommand | null = null;
     if (deepseekAiEnabled) {
       if (!this.deepseekAiWasActive) this.deepseekAI.resumeAfterManualControl();
+      const sight = this.vision.get('DEEPSEEK');
       deepseekCommand = this.deepseekAI.update({
         deltaMs,
         deepseek: this.player.position,
+        visibleHuman: sight.visible ? this.human.position : null,
+        heardHuman: this.sound.heardBy(this.player.position, 'DEEPSEEK',
+          this.camera, this.perceptionGeometry),
+        lastSeenHuman: sight.lastSeen,
+        perceptionNowMs: this.vision.nowMs,
+        geometry: this.perceptionGeometry,
+        riceProgressRatio: ratio,
+        sprintState: this.sprint.state,
         rice: this.rice.states.map(rice => {
           const point = this.riceViews.get(rice.id)!.position;
           return { id: rice.id, x: point.x, z: point.z,
@@ -444,6 +455,9 @@ export class ThreeGame {
     this.deepseekAiWasActive = deepseekAiEnabled;
     const activeDeepseekDirection = deepseekCommand
       ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
+    if (deepseekCommand?.startSprint) {
+      this.sprint.tryStart(activeDeepseekDirection, ratio);
+    }
     if (this.input.consumePress('Space')) {
       if (this.control.isControlling('DEEPSEEK')) {
         this.sprint.tryStart(direction, ratio);
@@ -478,7 +492,7 @@ export class ThreeGame {
 
     // The AI observes the same S6 vision/sound results as the HUD. Refresh
     // before its decision, then refresh current visibility after Human moves.
-    this.vision.update(deltaMs, this.human.position, this.player.position,
+    this.vision.update(0, this.human.position, this.player.position,
       this.perceptionGeometry);
     const aiEnabled = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
       this.control.temporaryInputTarget, debug, this.debugPossessionEnabled);
@@ -956,7 +970,9 @@ export class ThreeGame {
     if (import.meta.env.DEV) {
       this.actionDetails.textContent =
         `Human 动作：${this.humanAction.action}｜切换原因：${this.humanAction.lastTransitionReason}\n` +
+        `Human 静止：${this.humanAction.idleSeconds.toFixed(1)}s｜待机插槽：${this.humanAction.currentIdleSlot ?? '无'}\n` +
         `DeepSeek 动作：${this.playerAction.action}｜切换原因：${this.playerAction.lastTransitionReason}\n` +
+        `DeepSeek 静止：${this.playerAction.idleSeconds.toFixed(1)}s｜待机插槽：${this.playerAction.currentIdleSlot ?? '无'}\n` +
         '预留：Human EAT / STARTLED / FALL / STUN；DeepSeek CAPTURE';
     }
     const faction = this.control.informationObserver;
@@ -1021,8 +1037,7 @@ export class ThreeGame {
         `路径事件：${this.humanAI.lastNavigationReason}`;
       const deepseekActive = shouldRunDeepSeekAI(this.match.phase,
         this.control.selectedFaction, this.control.temporaryInputTarget,
-        this.input.debugDirection(), this.debugPossessionEnabled) &&
-        this.sprint.state === 'NORMAL';
+        this.input.debugDirection(), this.debugPossessionEnabled);
       const deepseekPath = this.deepseekAI.getPathProgress();
       const deepseekMode = this.match.phase === 'PAUSED' ? 'PAUSED'
         : this.match.phase === 'READY' ? 'STANDBY'
@@ -1034,7 +1049,32 @@ export class ThreeGame {
         `路径节点：${deepseekPath ? `${deepseekPath.index}/${deepseekPath.total} ` +
           `(${deepseekPath.waypoint.x.toFixed(1)}, ${deepseekPath.waypoint.z.toFixed(1)})` : '无'}\n` +
         `重选原因：${this.deepseekAI.lastSelectionReason}\n` +
-        `路径事件：${this.deepseekAI.lastNavigationReason}`;
+        `路径事件：${this.deepseekAI.lastNavigationReason}\n` +
+        `威胁：${this.deepseekAI.threatLevel} / ${this.deepseekAI.threatSource}\n` +
+        `逃跑目标：${this.deepseekAI.escapeRoomId ?? '无'} ` +
+          `${this.deepseekAI.escapeTarget ? `(${this.deepseekAI.escapeTarget.x.toFixed(1)}, ` +
+            `${this.deepseekAI.escapeTarget.z.toFixed(1)})` : ''}\n` +
+        `目标评分：${this.deepseekAI.escapeGoalScore?.toFixed(1) ?? '无'}\n` +
+        `可达候选数：${this.deepseekAI.escapeCandidateScores.length}\n` +
+        `当前区域：${this.deepseekAI.currentEscapeRoomId ?? '无'} ` +
+          `评分 ${this.deepseekAI.escapeCandidateScores.find(candidate =>
+            candidate.roomId === this.deepseekAI.currentEscapeRoomId)?.score.toFixed(1) ?? '无'}\n` +
+        `候选评分：${this.deepseekAI.escapeCandidateScores.slice(0, 3).map(candidate =>
+          `${candidate.roomId} ${candidate.score.toFixed(1)}` +
+          (candidate.recentVisitPenalty > 0 ? ` 访-${candidate.recentVisitPenalty.toFixed(1)}` : '') +
+          (candidate.covered ? '遮' : '') +
+          (candidate.blockedExit ? '堵' : '') +
+          (candidate.alternateRoute ? '绕' : '')).join(' / ') || '无'}\n` +
+        `上次换目标：${this.deepseekAI.lastEscapeSwitchReason}\n` +
+        `最近访问：${this.deepseekAI.getRecentEscapeRooms().join(' → ') || '无'}\n` +
+        `局部循环重选：${this.deepseekAI.localLoopTriggered ? '是' : '否'}\n` +
+        `最近重新决策：${this.deepseekAI.lastEscapeDecisionReason}\n` +
+        `无移动原因：${this.deepseekAI.noMovementReason}\n` +
+        `冲刺决策：${this.deepseekAI.sprintDecision}\n` +
+        `恢复剩余：${(this.deepseekAI.recoverRemainingMs / 1000).toFixed(1)}s\n` +
+        `恢复阻碍：${this.deepseekAI.recoveryBlockReason}\n` +
+        `上次恢复找米：${this.deepseekAI.lastResumeTrigger}\n` +
+        `切换原因：${this.deepseekAI.lastTransitionReason}`;
     }
     this.debugPossession.hidden = !this.debugPossessionEnabled || this.match.phase !== 'PLAYING';
   }

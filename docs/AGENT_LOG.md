@@ -368,6 +368,24 @@
 - 下一步建议：等待用户复验上述两项平衡调整；在整个 S7A Gate 通过前不进入 S7B。
 - Git commit 信息：未提交；未 push；未创建 Tag。
 
+## 2026-09-24 10:55 +08:00｜S7B-2 最终人工验收补记
+
+- 用户最终确认：S7B-2 逃跑与脱险恢复人工验收 PASS，包含跨房间逃跑、移动警戒恢复与静止对峙处理；IDLE_01～IDLE_05 多待机动作接口专项五项人工验收 PASS。此结果更新前面“等待验收”的当时状态，不改写旧记录。S7B-2 = PASS，NEXT = S7B-3 DeepSeek 主动关门与锁门决策；整个 S7B 尚未完成。
+- 剩余待办：偶发原地停留作为后续 AI 优化；正式 GLB 待机片段接入及视觉验收延至 S10；Human AI 自动解锁速度留待 S16 平衡复评。
+- 本次检查：`npm test` 204/204 PASS；`npm run build` PASS（含 TypeScript 检查，Vite 654.54 kB bundle 提示非阻断）；`git diff --check` PASS。`GAME_CONFIG` 与 `docs/GAME_BALANCE_CONFIG.md` 的新增待机参数一致。
+- Git：本次保存为 `wip: preserve s7b2 escape ai and idle slots`；基础检查点为 `7061b33ae111bd2ea68e324895cf81f1715be63a`。提交 hash 和 push 结果待 Git 操作后报告；不创建 Tag，不开始 S7B-3。
+
+## 2026-09-24 10:54 +08:00｜S7B-2 最终验收与 WIP 安全检查点
+
+- 任务名称：记录 S7B-2 最终人工验收并保存逃跑 AI / 特殊待机接口 WIP。当前阶段：S7B-2 = PASS；NEXT = S7B-3 DeepSeek 主动关门与锁门决策；整个 S7B 尚未完成。
+- 人工 Gate：用户确认 S7B-2 逃跑与脱险恢复验收 PASS，涵盖跨房间逃跑、移动警戒恢复及静止对峙路线处理；确认 IDLE_01～IDLE_05 多待机动作接口专项五项人工验收 PASS。偶发原地停留是后续 AI 优化项，不阻塞 S7B-2。
+- 本轮核实的待机表现接口：沿用玩家与 AI 共用的 `CharacterActionView` / `AnimationMixer`；连续普通 IDLE 5 秒后从实际已接入的配置片段中抽选，完成后回到普通 IDLE，更高优先级动作打断，暂停冻结计时、重开清零。当前没有正式 GLB 待机动画资源，动画视觉验收延后至 S10；缺资源时白模保持普通 IDLE。
+- 配置：`GAME_CONFIG.characterAnimation.specialIdleTriggerMs = 5,000 ms`、`specialIdleRepeatIntervalMs = 15,000 ms`、`specialIdleSlots = IDLE_01..IDLE_05` 已与 `docs/GAME_BALANCE_CONFIG.md` 对齐。未调整玩法平衡值。
+- 保留待办：偶发原地停留的后续 AI 优化；S10 正式 GLB 待机动画接入与视觉验收；Human AI 自动解锁速度按既有决定留待 S16 平衡复评。
+- 验证：`npm test` 204/204 PASS；`npm run build` PASS（含 TypeScript 检查），Vite 主 bundle 654.54 kB 的 >500 kB 提示为非阻断；`git diff --check` PASS。构建使用项目目录授权执行，未改 ACL 或绕过构建错误。
+- 新增文件：`tests/deepseek-evade.test.mjs`（S7B-2 回归测试）。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`docs/GAME_BALANCE_CONFIG.md`、`src/config/gameConfig.ts`、`src/systems/DeepSeekAIController.ts`、`src/three/CharacterActionView.ts`、`src/three/ThreeGame.ts`、`tests/character-action.test.mjs`。删除文件：无。依赖变化：无。
+- Git 检查点：基于已存在且 `main` / `origin/main` 同步的 S7B-1 检查点 `7061b33ae111bd2ea68e324895cf81f1715be63a`；本次计划创建 `wip: preserve s7b2 escape ai and idle slots`。本日志随该 WIP 提交保存；实际提交 hash 与推送结果以 Git 回报为准。不创建 Tag，不开始 S7B-3。
+
 ## 2026-09-23 18:00 +08:00｜S7A Human AI 正式封版
 
 - 任务名称：修复构建环境阻断并完成 S7A 阶段收尾。当前开发阶段：S7A Gate = PASS；下一阶段 S7B DeepSeek AI，本次不开始。
@@ -392,3 +410,16 @@
 - 已知问题：S7B-1 是本阶段通过，不代表整个 S7B 完成；本次不创建 Tag。新 WIP 提交 hash 与 push 结果以 Git 实际执行及最终汇报为准。
 - 下一步建议：进入 S7B-2 威胁感知与逃跑前，由用户另行安排；本次不开始下一轮。
 - Git commit 信息：wip: preserve s7b1 rice seeking ai（本次执行）。
+
+## 2026-09-24 10:36 +08:00｜S7B-2 验收记录与特殊待机插槽
+
+- 任务名称：记录 S7B-2 人工验收，并为玩家与 AI 共用动作表现层增加 DeepSeek 特殊待机插槽。
+- 当前阶段：用户确认 S7B-2 = PASS；NEXT = S7B-3 主动锁门。整个 S7B 尚未完成。偶发原地停留为后续 AI 优化项。本轮特殊待机插槽功能等待人工验收，不表示 S7B-3 已开始。
+- 实际完成内容：在既有 `CharacterActionView` / `AnimationMixer` 接口增加 `IDLE_01`～`IDLE_05` 插槽；只从配置名单中已实际接入的片段抽选。连续普通 IDLE 达到 5 秒后可播放，后续播放间隔至少 15 秒；多片段时避免连续重复同一插槽。片段结束恢复普通 IDLE，移动、进食及其他非 IDLE 玩法动作立即中断。动作计时在暂停时随游戏更新冻结，重开清零，不参与 AI 决策、移动或玩法判定。
+- 资源状态：正式 GLB / 特殊待机动画目前尚未导入。无可用片段时维持普通白模 IDLE，且不在每帧重试查找缺失资源；此时等待人工验收的是白模回退、DEV 计时及优先级行为，特殊动画视觉需待资源接入后验收。
+- 配置：新增 `characterAnimation.specialIdleTriggerMs = 5,000` 毫秒、`specialIdleRepeatIntervalMs = 15,000` 毫秒及 `specialIdleSlots`；已同步 `docs/GAME_BALANCE_CONFIG.md`。均为表现参数，不改变玩法数值。
+- 新增文件：无。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`src/config/gameConfig.ts`、`src/three/CharacterActionView.ts`、`src/three/ThreeGame.ts`、`docs/GAME_BALANCE_CONFIG.md`、`tests/character-action.test.mjs`。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` 200/200 PASS；`npm run build` PASS（含 TypeScript 检查）；`git diff --check` PASS。构建仍有 Vite 主 bundle 大于 500 kB 的非阻断提示。
+- 已知问题：无正式特殊待机片段可供当前版本播放。S7B-2 偶发原地停留不再阻断 Gate，保留为后续 AI 优化事项。
+- 下一步建议：人工检查 DEV 面板静止计时、无资源白模回退、动作打断、暂停冻结与重开清零；之后由用户安排 S7B-3。
+- Git commit 信息：未提交；未 push；未创建 Tag。
