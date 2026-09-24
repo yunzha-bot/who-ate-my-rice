@@ -9,6 +9,7 @@ import { GAME_CONFIG } from '../config/gameConfig.ts';
  */
 
 export interface AILogSnapshot {
+  doorEscapeEvents?: readonly { type: string; reason: string }[];
   passageActive?: boolean;
   safetyGeometry?: { human: { x: number; z: number } | null;
     rice: { x: number; z: number } | null; eat: { x: number; z: number } | null;
@@ -137,6 +138,13 @@ export class AILogCollector {
   diffSnapshot(snapshot: AILogSnapshot): void {
     if (this.truncated) return;
     const t = this.nowMs - this.matchStartMs;
+
+    for (const event of snapshot.doorEscapeEvents ?? []) {
+      this.pushEvent({ t, type: event.type, state: snapshot.state,
+        prevState: null, reason: event.reason,
+        riceTargetId: snapshot.targetRiceId, roomId: snapshot.roomId,
+        count: 1, firstT: t, lastT: t, context: { ...snapshot } });
+    }
 
     if (!this.previous) {
       this.pushEvent({

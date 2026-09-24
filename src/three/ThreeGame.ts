@@ -3,7 +3,7 @@ import { GAME_CONFIG as C } from '../config/gameConfig';
 import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
-import { DoorSystem, doorIntersectsActor, type DoorActionResult,
+import { DoorSystem, doorIntersectsActor, distanceToDoorSegment, type DoorActionResult,
   type NearbyDoor } from '../systems/DoorSystem';
 import { HumanDoorSkill } from '../systems/HumanDoorSkill';
 import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
@@ -415,13 +415,31 @@ export class ThreeGame {
           const node = this.doorSystem.definition(id);
           return !!node && canInteractWithDoorXZ(this.collision, this.player.position, node);
         },
+        canCloseDoor: id => {
+          const node = this.doorSystem.definition(id);
+          return !!node && this.canCloseDoor(id) &&
+            canInteractWithDoorXZ(this.collision, this.player.position, node);
+        },
       });
       if (deepseekCommand.openDoorId) {
         const result = this.doorSystem.toggle(deepseekCommand.openDoorId, 'DEEPSEEK');
         this.applyDoorResult(deepseekCommand.openDoorId, result, 'DEEPSEEK');
       }
+      if (deepseekCommand.closeDoorId) {
+        const id = deepseekCommand.closeDoorId;
+        const node = this.doorSystem.definition(id);
+        const valid = !!node && this.doorSystem.get(id)?.state === 'OPEN' &&
+          distanceToDoorSegment(this.player.position.x, this.player.position.z, node) <=
+            C.door.interactionRange &&
+          canInteractWithDoorXZ(this.collision, this.player.position, node) &&
+          this.canCloseDoor(id);
+        const result = valid ? this.doorSystem.toggle(id, 'DEEPSEEK', true) : 'BLOCKED_BY_ACTOR';
+        this.applyDoorResult(id, result, 'DEEPSEEK');
+        this.deepseekAI.onDoorEscapeResult(id, result);
+      }
       const dsRoom = roomAt(this.player.position.x, this.player.position.z);
       this.aiLogCollector.diffSnapshot({
+        doorEscapeEvents: this.deepseekAI.drainDoorEscapeEvents(),
         state: this.deepseekAI.state,
         targetRiceId: this.deepseekAI.targetRiceId,
         threatLevel: this.deepseekAI.threatLevel,
@@ -1077,6 +1095,23 @@ export class ThreeGame {
           make('sprint-decision', '冲刺决策', this.deepseekAI.sprintDecision),
           make('recover-remaining', '恢复剩余', `${(this.deepseekAI.recoverRemainingMs / 1000).toFixed(1)} 秒`),
           make('recover-block', '恢复阻碍', this.deepseekAI.recoveryBlockReason),
+        ] : [],
+      },
+      {
+        id: 'door-escape', title: 'Door Escape / 关门逃脱',
+        properties: this.debugPossessionEnabled ? [
+          make('candidate', '当前候选门', this.deepseekAI.doorEscapeCandidateId ?? '无'),
+          make('distance', '候选门距离', this.deepseekAI.doorEscapeDistance === null
+            ? '无' : `${this.deepseekAI.doorEscapeDistance.toFixed(2)} 世界单位`),
+          make('passed', '已安全通过门', this.deepseekAI.doorEscapePassed ? '是' : '否'),
+          make('human-side', 'Human 位于另一侧', this.deepseekAI.doorEscapeHumanOpposite === null
+            ? '未知（不使用隐藏位置）' : this.deepseekAI.doorEscapeHumanOpposite ? '是' : '否'),
+          make('route', '关闭后逃生路线', this.deepseekAI.doorEscapeRouteSafe ? '可达' : '未确认'),
+          make('benefit', '关门收益 / 依据', this.deepseekAI.doorEscapeReason),
+          make('result', '最近关门结果', this.deepseekAI.doorEscapeLastResult),
+          make('skip', '放弃关门原因', this.deepseekAI.doorEscapeSkipReason),
+          make('cooldown', '当前关门冷却',
+            `${(this.deepseekAI.doorEscapeCooldownRemainingMs / 1000).toFixed(1)} 秒`),
         ] : [],
       },
       {

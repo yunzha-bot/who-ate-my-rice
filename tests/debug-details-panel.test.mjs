@@ -7,9 +7,9 @@ import {
   filterDebugCategories,
 } from '../src/three/DebugDetailsPanel.ts';
 
-test('Details panel defines the seven requested categories and defaults', () => {
+test('Details panel includes the collapsible escape-door category and keeps defaults', () => {
   assert.deepEqual(DEBUG_CATEGORY_DEFINITIONS.map(({ id }) => id), [
-    'human-ai', 'deepseek-ai', 'threat-escape', 'safe-wait',
+    'human-ai', 'deepseek-ai', 'threat-escape', 'door-escape', 'safe-wait',
     'curiosity-passage', 'animation', 'other',
   ]);
   assert.deepEqual(DEFAULT_EXPANDED_DEBUG_CATEGORIES, [

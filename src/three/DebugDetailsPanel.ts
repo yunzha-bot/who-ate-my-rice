@@ -101,6 +101,7 @@ export const DEBUG_CATEGORY_DEFINITIONS = [
   { id: 'human-ai', title: 'Human AI' },
   { id: 'deepseek-ai', title: 'DeepSeek AI' },
   { id: 'threat-escape', title: 'Threat / Escape' },
+  { id: 'door-escape', title: 'Door Escape / 关门逃脱' },
   { id: 'safe-wait', title: 'SAFE_WAIT' },
   { id: 'curiosity-passage', title: 'Curiosity / Passage' },
   { id: 'animation', title: 'Animation' },

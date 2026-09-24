@@ -31,6 +31,7 @@ export interface DeepSeekAIInput {
   rice: readonly DeepSeekAIRice[];
   doors: readonly DoorState[];
   canOpenDoor: (id: string) => boolean;
+  canCloseDoor?: (id: string) => boolean;
   visibleHuman?: Point | null;
   /** Supplied only while Human is currently visible; never a hidden position. */
   humanStillMs?: number;
@@ -49,6 +50,7 @@ export interface DeepSeekAIInput {
 export interface DeepSeekAICommand {
   direction: Point;
   openDoorId: string | null;
+  closeDoorId: string | null;
   eatRiceId: string | null;
   startSprint: boolean;
 }
@@ -142,6 +144,15 @@ export class DeepSeekAIController {
   safeWaitFailureCount = 0;
   safeWaitRemainingMs = 0;
   safeWaitReason = 'NONE';
+  doorEscapeCandidateId: string | null = null;
+  doorEscapeDistance: number | null = null;
+  doorEscapePassed = false;
+  doorEscapeHumanOpposite: boolean | null = null;
+  doorEscapeRouteSafe = false;
+  doorEscapeReason = 'NOT_EVALUATED';
+  doorEscapeSkipReason = 'NONE';
+  doorEscapeLastResult = 'NONE';
+  doorEscapeCooldownRemainingMs = 0;
 
   private readonly navigation: NavigationSystem;
   private readonly doorNodes: Map<string, DoorNode>;
@@ -177,6 +188,11 @@ export class DeepSeekAIController {
   private curiosityRolledForStillEvent = false;
   private passageRolledForStillEvent = false;
   private passageCheckRemainingMs = 0;
+  private readonly lastDoorSide = new Map<string, number>();
+  private readonly recentDoorCrossing = new Map<string, number>();
+  private readonly closedDoorAt = new Map<string, number>();
+  private lastDoorDecision = '';
+  private doorEscapeEvents: { type: string; reason: string }[] = [];
 
   constructor(navigation: NavigationSystem, doors: readonly DoorNode[],
     rooms: readonly Room[] = [], random: () => number = Math.random) {
@@ -194,6 +210,20 @@ export class DeepSeekAIController {
   }
 
   reset(): void {
+    this.doorEscapeCandidateId = null;
+    this.doorEscapeDistance = null;
+    this.doorEscapePassed = false;
+    this.doorEscapeHumanOpposite = null;
+    this.doorEscapeRouteSafe = false;
+    this.doorEscapeReason = 'NOT_EVALUATED';
+    this.doorEscapeSkipReason = 'NONE';
+    this.doorEscapeLastResult = 'NONE';
+    this.doorEscapeCooldownRemainingMs = 0;
+    this.lastDoorSide.clear();
+    this.recentDoorCrossing.clear();
+    this.closedDoorAt.clear();
+    this.lastDoorDecision = '';
+    this.doorEscapeEvents = [];
     this.safeWaitObservation = null;
     this.passageEatPosition = null;
     this.safetyDebug = { human: null, rice: null, eat: null, observation: null,
@@ -299,6 +329,9 @@ export class DeepSeekAIController {
     const cfg = GAME_CONFIG.deepseekAI;
     const deltaMs = Math.max(0, input.deltaMs);
     this.elapsedMs += deltaMs;
+    this.trackDoorCrossings(input);
+    this.doorEscapeCooldownRemainingMs = Math.max(0,
+      this.doorEscapeCooldownRemainingMs - deltaMs);
     this.recentEscapeVisits = this.recentEscapeVisits.filter(visit =>
       this.elapsedMs - visit.atMs < cfg.escapeVisitMemoryMs);
     for (const [id, remaining] of this.avoidedRiceMs) {
@@ -1202,6 +1235,12 @@ export class DeepSeekAIController {
         ? 'SHORT_GOAL_HOLD_BEFORE_REPLAN' : 'NO_ALTERNATE_REACHABLE_ROUTE';
       return this.command();
     }
+    const closeDoorId = this.evaluateEscapeDoor(input);
+    if (closeDoorId) {
+      this.sprintDecision = 'CLOSING_ESCAPE_DOOR';
+      this.noMovementReason = 'CLOSING_ESCAPE_DOOR';
+      return { ...this.command(), closeDoorId };
+    }
     const movement = this.followPath(input, this.escapeTarget);
     if (movement.openDoorId || (movement.direction.x === 0 && movement.direction.z === 0)) {
       this.sprintDecision = 'WAIT_FOR_ROUTE';
@@ -1233,6 +1272,102 @@ export class DeepSeekAIController {
       this.sprintDecision = risky ? 'RISK_SPRINT_HELD' : 'MOVE_WITHOUT_SPRINT';
     }
     return movement;
+  }
+
+  /** A crossing is physical movement through the open leaf, not merely proximity. */
+  private trackDoorCrossings(input: DeepSeekAIInput): void {
+    for (const door of input.doors) {
+      const node = this.doorNodes.get(door.id);
+      if (!node) continue;
+      const signed = node.rotation === 0
+        ? input.deepseek.z - node.z : input.deepseek.x - node.x;
+      const side = Math.abs(signed) <= GAME_CONFIG.door.leafThickness / 2
+        ? 0 : Math.sign(signed);
+      const previous = this.lastDoorSide.get(door.id);
+      if (side && previous && side !== previous && door.state === 'OPEN' &&
+          distanceToDoorSegment(input.deepseek.x, input.deepseek.z, node) <=
+            GAME_CONFIG.door.interactionRange)
+        this.recentDoorCrossing.set(door.id, this.elapsedMs);
+      if (side) this.lastDoorSide.set(door.id, side);
+    }
+  }
+
+  private doorDecision(type: string, id: string | null, reason: string): void {
+    const signature = `${type}:${id ?? 'NONE'}:${reason}`;
+    if (signature === this.lastDoorDecision) return;
+    this.lastDoorDecision = signature;
+    this.doorEscapeReason = reason;
+    const eventReason = `${id ?? 'NONE'}:${reason}`;
+    if (type === 'DOOR_ESCAPE_SKIP') this.doorEscapeSkipReason = reason;
+    else this.doorEscapeSkipReason = 'NONE';
+    this.doorEscapeEvents.push({ type, reason: eventReason });
+  }
+
+  drainDoorEscapeEvents(): { type: string; reason: string }[] {
+    return this.doorEscapeEvents.splice(0);
+  }
+
+  private evaluateEscapeDoor(input: DeepSeekAIInput): string | null {
+    const cfg = GAME_CONFIG.deepseekAI;
+    const candidates = input.doors.filter(door => door.state === 'OPEN')
+      .map(door => ({ door, node: this.doorNodes.get(door.id) }))
+      .filter((item): item is { door: DoorState; node: DoorNode } => !!item.node)
+      .map(item => ({ ...item, distance: distanceToDoorSegment(
+        input.deepseek.x, input.deepseek.z, item.node) }))
+      .filter(item => item.distance <= GAME_CONFIG.door.interactionRange)
+      .sort((a, b) => a.distance - b.distance);
+    const candidate = candidates[0];
+    this.doorEscapeCandidateId = candidate?.door.id ?? null;
+    this.doorEscapeDistance = candidate?.distance ?? null;
+    this.doorEscapePassed = !!candidate &&
+      this.elapsedMs - (this.recentDoorCrossing.get(candidate.door.id) ?? -Infinity) <=
+        cfg.doorEscapeCrossingWindowMs;
+    this.doorEscapeHumanOpposite = null;
+    this.doorEscapeRouteSafe = false;
+    const reject = (reason: string): null => {
+      this.doorDecision('DOOR_ESCAPE_SKIP', candidate?.door.id ?? null, reason);
+      return null;
+    };
+    if (!candidate) return reject('NO_NEARBY_OPEN_DOOR');
+    const { door, node } = candidate;
+    if (!this.doorEscapePassed) return reject('DOOR_NOT_RECENTLY_PASSED');
+    if (input.sprintState === 'SPRINT_RUNNING') return reject('SPRINT_IN_PROGRESS');
+    if (this.elapsedMs - (this.closedDoorAt.get(door.id) ?? -Infinity) <
+        cfg.doorEscapeCooldownMs) return reject('DOOR_COOLDOWN');
+    // Only current sight gives a reliable side. Sound bearing and stale memory
+    // cannot prove the pursuer is still behind this particular door.
+    if (!input.visibleHuman) return reject('HUMAN_SIDE_UNKNOWN');
+    const deepseekSide = node.rotation === 0
+      ? input.deepseek.z - node.z : input.deepseek.x - node.x;
+    const humanSide = node.rotation === 0
+      ? input.visibleHuman.z - node.z : input.visibleHuman.x - node.x;
+    this.doorEscapeHumanOpposite = deepseekSide * humanSide < 0;
+    if (!this.doorEscapeHumanOpposite) return reject('HUMAN_ALREADY_SAME_SIDE');
+    if (distance(input.deepseek, input.visibleHuman) <
+        cfg.doorEscapeMinHumanDistance) return reject('HUMAN_TOO_CLOSE');
+    if (input.canCloseDoor && !input.canCloseDoor(door.id))
+      return reject('DOOR_OCCUPIED_OR_INACCESSIBLE');
+    if (!this.escapeTarget) return reject('NO_ESCAPE_GOAL');
+    const blocked = new Set([door.id]);
+    const routeAfterClose = this.navigation.findPath(input.deepseek,
+      this.escapeTarget, input.doors, undefined, null, blocked);
+    this.doorEscapeRouteSafe = !!routeAfterClose?.length;
+    if (!this.doorEscapeRouteSafe) return reject('ESCAPE_ROUTE_USES_DOOR');
+    const pursuitRoute = this.navigation.findPath(input.visibleHuman,
+      this.escapeTarget, input.doors);
+    if (!pursuitRoute?.some(step => step.doorId === door.id))
+      return reject('DOOR_DOES_NOT_DELAY_PURSUER');
+    this.doorDecision('DOOR_ESCAPE_EVALUATE', door.id, 'CLOSE_HAS_PURSUIT_VALUE');
+    return door.id;
+  }
+
+  onDoorEscapeResult(id: string, result: string): void {
+    this.doorEscapeLastResult = `${id}:${result}`;
+    // A failed close also waits briefly, rather than attempting every frame.
+    this.closedDoorAt.set(id, this.elapsedMs);
+    this.doorEscapeCooldownRemainingMs = GAME_CONFIG.deepseekAI.doorEscapeCooldownMs;
+    this.doorDecision(result === 'CLOSED' ? 'DOOR_ESCAPE_CLOSE' :
+      'DOOR_ESCAPE_FAILED', id, result);
   }
 
   private beginRecovery(input: DeepSeekAIInput): DeepSeekAICommand {
@@ -1663,6 +1798,7 @@ export class DeepSeekAIController {
   private command(x = 0, z = 0, openDoorId: string | null = null,
     eatRiceId: string | null = null): DeepSeekAICommand {
     this.lastCommandedMovement = x !== 0 || z !== 0;
-    return { direction: { x, z }, openDoorId, eatRiceId, startSprint: false };
+    return { direction: { x, z }, openDoorId, closeDoorId: null,
+      eatRiceId, startSprint: false };
   }
 }

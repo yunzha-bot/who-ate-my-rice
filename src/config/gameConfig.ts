@@ -103,6 +103,9 @@ export const GAME_CONFIG = {
     stationaryPassageBlockRadius: 1.5, // 判断静止 Human 是否挡住米路线的距离：世界单位。
     stationaryPassageObserveDistance: 2.0, // 安全通行前选择观察点的期望距离：世界单位。
     stationaryPassageCheckIntervalMs: 500, // 静止挡路条件的再次检查间隔：毫秒，避免逐帧 A*。
+    doorEscapeMinHumanDistance: 1.5, // EVADE 关门时与当前可见 Human 的最低距离：世界单位；大于实际抓捕圈。
+    doorEscapeCrossingWindowMs: 1_800, // 实际穿过门后允许考虑关门的时间：毫秒；不返回远门。
+    doorEscapeCooldownMs: 5_000, // 同一扇门再次考虑关门的冷却：毫秒；避免 Human 开门后原地振荡。
   },
   characterAnimation: {
     fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。

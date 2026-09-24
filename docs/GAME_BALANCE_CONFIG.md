@@ -115,6 +115,9 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.stationaryPassageBlockRadius` | 1.5 | 世界单位；默认路线靠近静止 Human 的判定半径 | 同时检查 Human 到目标米堆是否落在 `dangerRouteRadius` 内。 |
 | `C.deepseekAI.stationaryPassageObserveDistance` | 2.0 | 世界单位；安全通行观察点距 Human 的期望距离 | 只是候选评分，实际路线仍须满足抓捕圈外避让。 |
 | `C.deepseekAI.stationaryPassageCheckIntervalMs` | 500 | 毫秒；静止挡路条件的重查间隔 | 避免每帧运行多次 A*；数值越大，许可响应可能越慢。 |
+| `C.deepseekAI.doorEscapeMinHumanDistance` | 1.5 | 世界单位；EVADE 关门时与当前可见 Human 的最低间距 | 必须大于实际抓捕圈；太大会减少可用关门机会。 |
+| `C.deepseekAI.doorEscapeCrossingWindowMs` | 1,800 | 毫秒；实际通过门后可考虑关门的窗口 | 过长可能让 AI 返回已远离的门。 |
+| `C.deepseekAI.doorEscapeCooldownMs` | 5,000 | 毫秒；同门再次考虑关门的冷却 | Human 重新开门后 AI 不原地重复关门；暂停时冻结。 |
 
 ## 角色动作表现（S7A 占位接口）
 

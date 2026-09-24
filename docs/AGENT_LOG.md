@@ -368,6 +368,19 @@
 - 下一步建议：等待用户复验上述两项平衡调整；在整个 S7A Gate 通过前不进入 S7B。
 - Git commit 信息：未提交；未 push；未创建 Tag。
 
+## 2026-09-24｜S7B-3A DeepSeek 逃脱关门归档与 Harness 交接
+
+- 任务名称：归档 S7B-3A 条件式逃脱关门、同步长期规则并创建 DeepSeek Harness 交接快照。分支 `main`；开始时 HEAD / `origin/main` 均为 `9da38c0256f3e65cded4e19d6aa315f3c264a781`，工作区已有 S7B-3A 修改及用户未跟踪 `.trae/` 资料。
+- 阶段状态：S7B-3A 已通过用户确认的 5/5 浏览器人工验收；S7B 整体仍未完成；下一项唯一主要任务为 S7B-3B 主动锁门与逃脱策略。本记录不将 S7B 标为完成。
+- S7B-3A 规则：仅 EVADE 时考虑刚实际通过、仍在近距离的 OPEN Door。须当前目视确认 Human 位于另一侧、两角色不占用门叶、Human 距离至少 1.5 世界单位、门在 1,800 毫秒通过窗口内，并验证 DeepSeek 关门后仍能沿不经过该门的路径逃离，同时 Human 的当前可达追击路线会使用该门。条件不成立即继续原逃跑；成功通过 `DoorSystem.toggle` 改变真实门状态并同步碰撞、视线与声音。每门 5,000 毫秒重试冷却避免开关振荡。没有新增 AI 锁门行为。
+- 用户确认的人工结果：正常追逐时安全穿门关门并继续逃跑、Human 已同侧、Human 距离过近、关门会封堵唯一退路、Human 重新开门后 AI 不原地振荡，以上 5 项均 PASS。该结果为用户提供的人工验收，不是本次重新执行的浏览器验收。
+- 调试与日志：DEV Details 新增 `Door Escape / 关门逃脱`，显示候选门/距离、是否通过、Human 另一侧是否可确认、关门后路线、收益依据、最近结果、跳过原因与冷却。AI JSON 日志记录 `DOOR_ESCAPE_EVALUATE`、`DOOR_ESCAPE_CLOSE`、`DOOR_ESCAPE_SKIP`、`DOOR_ESCAPE_FAILED`；相同决策不逐帧重复记录。
+- 配置：`GAME_CONFIG.deepseekAI.doorEscapeMinHumanDistance = 1.5` 世界单位，`doorEscapeCrossingWindowMs = 1,800` 毫秒，`doorEscapeCooldownMs = 5,000` 毫秒；均已同步 `docs/GAME_BALANCE_CONFIG.md`。保留用户其他手动配置数值。
+- 本次自动验证：`npm test` 270/270 PASS；`npm run build` PASS（含 `tsc --noEmit`）；`git diff --check` PASS。Vite 主 JS bundle 约 704.03 kB，>500 kB 为已知非阻断提示。浏览器地址返回 HTTP 200；本次未重做完整手动交互验收。
+- 文件：新增 `docs/DEEPSEEK_HANDOFF.md`、`tests/deepseek-door-escape.test.mjs`；更新 `AGENTS.md`、本日志、`docs/GAME_BALANCE_CONFIG.md`、DeepSeek 控制器、ThreeGame、AILogCollector、DEV Details 类别与既有面板测试。无依赖变更；未纳入 `.trae/`、`dist/`、`node_modules/` 或临时日志。
+- 既有待办：S7B-2 偶发原地停留作为后续 AI 优化；正式 GLB 待机资源与视觉验收留待 S10；Human AI 自动解锁时间留待 S16 平衡评估。S7B-3B 尚未开始。
+- Git：本日志与交接快照纳入本轮 WIP 检查点；实际提交和推送结果由最终 Git 操作报告确认。不创建 Tag。
+
 ## 2026-09-24｜S7B 静止 Human 好奇安全通行定向修复验收
 
 - 任务名称：修复静止 Human 遮挡重见、末份米堆安全进食路线及 SAFE_WAIT 复查问题。当前阶段仍为 S7B；本轮专项人工验收 PASS，不代表 S7B 整体完成。
