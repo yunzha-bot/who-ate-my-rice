@@ -3,8 +3,8 @@ import { GAME_CONFIG as C } from '../config/gameConfig';
 import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
-import { DoorSystem, doorIntersectsActor, distanceToDoorSegment, type DoorActionResult,
-  type NearbyDoor } from '../systems/DoorSystem';
+import { DoorSystem, doorIntersectsActor, distanceToDoorSegment, lockDoorFromCommand,
+  type DoorActionResult, type NearbyDoor } from '../systems/DoorSystem';
 import { HumanDoorSkill } from '../systems/HumanDoorSkill';
 import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
@@ -49,7 +49,8 @@ export class ThreeGame {
   private readonly cameraOffset = new THREE.Vector3(12, 14, 12);
   private match = new GameStateSystem(C.match.readyMs, C.match.captureMs, 'FACTION_SELECT');
   private rice = new RiceField([], C.rice.maxProgressMs, C.rice.prepareMs);
-  private sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold, C.sprint.stunMs);
+  private sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold, C.sprint.stunMs,
+    C.sprint.cooldownMs);
   private player: THREE.Mesh;
   private human: THREE.Mesh;
   private playerAction: CharacterActionView;
@@ -420,6 +421,11 @@ export class ThreeGame {
           return !!node && this.canCloseDoor(id) &&
             canInteractWithDoorXZ(this.collision, this.player.position, node);
         },
+        canLockDoor: id => {
+          const node = this.doorSystem.definition(id);
+          return !!node && canInteractWithDoorXZ(this.collision, this.player.position, node);
+        },
+        activeLockSlots: C.door.maxActiveLocks - this.doorSystem.activeLockedDoorCount,
       });
       if (deepseekCommand.openDoorId) {
         const result = this.doorSystem.toggle(deepseekCommand.openDoorId, 'DEEPSEEK');
@@ -437,9 +443,20 @@ export class ThreeGame {
         this.applyDoorResult(id, result, 'DEEPSEEK');
         this.deepseekAI.onDoorEscapeResult(id, result);
       }
+      // Lock channel only. Nothing in the AI issues lockDoorId yet, so this
+      // branch stays idle until the 3B-1 decision step enables it.
+      if (deepseekCommand.lockDoorId) {
+        const id = deepseekCommand.lockDoorId;
+        const result = lockDoorFromCommand(this.doorSystem, id, this.player.position,
+          node => canInteractWithDoorXZ(this.collision, this.player.position, node),
+          C.door.interactionRange);
+        this.applyDoorResult(id, result, 'DEEPSEEK');
+        this.deepseekAI.onDoorLockResult(id, result);
+      }
       const dsRoom = roomAt(this.player.position.x, this.player.position.z);
       this.aiLogCollector.diffSnapshot({
         doorEscapeEvents: this.deepseekAI.drainDoorEscapeEvents(),
+        doorLockEvents: this.deepseekAI.drainDoorLockEvents(),
         state: this.deepseekAI.state,
         targetRiceId: this.deepseekAI.targetRiceId,
         threatLevel: this.deepseekAI.threatLevel,
@@ -452,6 +469,7 @@ export class ThreeGame {
         noMovementReason: this.deepseekAI.noMovementReason,
         localLoopTriggered: this.deepseekAI.localLoopTriggered,
         sprintDecision: this.deepseekAI.sprintDecision,
+        sprintReadiness: this.sprint.readiness,
         recoveryBlockReason: this.deepseekAI.recoveryBlockReason,
         curiosityRollResult: this.deepseekAI.curiosityRollResult,
         curiosityInterruptReason: this.deepseekAI.curiosityInterruptReason,
@@ -487,11 +505,12 @@ export class ThreeGame {
     const activeDeepseekDirection = deepseekCommand
       ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
     if (deepseekCommand?.startSprint) {
-      this.sprint.tryStart(activeDeepseekDirection, ratio);
+      this.sprint.tryStart(activeDeepseekDirection, ratio,
+        `AI_${this.deepseekAI.sprintDecision}`);
     }
     if (this.input.consumePress('Space')) {
       if (this.control.isControlling('DEEPSEEK')) {
-        this.sprint.tryStart(direction, ratio);
+        this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE');
       } else if (this.control.isControlling('HUMAN') && !this.minesweeper.isOpen) {
         const nearby = this.nearestInteractableDoor(this.human.position);
         if (nearby) {
@@ -776,6 +795,7 @@ export class ThreeGame {
       : result === 'LOCK_LIMIT_REACHED' ? '锁门资源已满'
       : result === 'LOCK_CORE_DISABLED' ? '锁芯已失效，本局不能再次上锁'
       : result === 'NOT_ALLOWED' ? '只有 DeepSeek 娘可以锁门'
+      : result === 'OUT_OF_RANGE' ? '门不在交互范围内'
       : result === 'INVALID_STATE' ? '当前门状态不允许该操作'
       : '附近没有可操作的门';
   }
@@ -1100,18 +1120,63 @@ export class ThreeGame {
       {
         id: 'door-escape', title: 'Door Escape / 关门逃脱',
         properties: this.debugPossessionEnabled ? [
-          make('candidate', '当前候选门', this.deepseekAI.doorEscapeCandidateId ?? '无'),
-          make('distance', '候选门距离', this.deepseekAI.doorEscapeDistance === null
+          make('candidate', '最近评估候选门', this.deepseekAI.doorEscapeCandidateId ?? '无'),
+          make('distance', '最近评估候选门距离', this.deepseekAI.doorEscapeDistance === null
             ? '无' : `${this.deepseekAI.doorEscapeDistance.toFixed(2)} 世界单位`),
-          make('passed', '已安全通过门', this.deepseekAI.doorEscapePassed ? '是' : '否'),
-          make('human-side', 'Human 位于另一侧', this.deepseekAI.doorEscapeHumanOpposite === null
+          make('passed', '最近评估：已通过门（1800ms 内）', this.deepseekAI.doorEscapePassed ? '是' : '否'),
+          make('human-side', '最近评估：Human 在另一侧', this.deepseekAI.doorEscapeHumanOpposite === null
             ? '未知（不使用隐藏位置）' : this.deepseekAI.doorEscapeHumanOpposite ? '是' : '否'),
-          make('route', '关闭后逃生路线', this.deepseekAI.doorEscapeRouteSafe ? '可达' : '未确认'),
-          make('benefit', '关门收益 / 依据', this.deepseekAI.doorEscapeReason),
+          make('route', '最近评估：关闭后路线仍可达', this.deepseekAI.doorEscapeRouteSafe ? '可达' : '未确认'),
+          make('benefit', '最近评估依据', this.deepseekAI.doorEscapeReason),
           make('result', '最近关门结果', this.deepseekAI.doorEscapeLastResult),
-          make('skip', '放弃关门原因', this.deepseekAI.doorEscapeSkipReason),
+          make('skip', '最近放弃关门原因', this.deepseekAI.doorEscapeSkipReason),
           make('cooldown', '当前关门冷却',
             `${(this.deepseekAI.doorEscapeCooldownRemainingMs / 1000).toFixed(1)} 秒`),
+          make('last-crossed', '最近经过的门 / 距过门时间',
+            this.deepseekAI.doorEscapeLastCrossedId === null ? '无'
+              : `${this.deepseekAI.doorEscapeLastCrossedId} / ${(this.deepseekAI.doorEscapeLastCrossedAgeMs ?? 0).toFixed(0)} ms`,
+            (this.deepseekAI.doorEscapeLastCrossedAgeMs ?? 0) <= C.deepseekAI.doorEscapeCrossingWindowMs
+              ? 'normal' : 'warning'),
+          make('sprint-interference', '冲刺中关门次数 / 冲刺中锁门次数',
+            `${this.deepseekAI.doorEscapeDuringSprintCount} / ${this.deepseekAI.doorLockDuringSprintCount}`),
+          make('self-reopen-blocked', '自我重开门被抑制次数',
+            String(this.deepseekAI.doorEscapeSelfReopenBlockedCount),
+            this.deepseekAI.doorEscapeSelfReopenBlockedCount > 0 ? 'warning' : 'normal'),
+        ] : [],
+      },
+      {
+        id: 'sprint', title: 'Sprint / 冲刺',
+        properties: this.debugPossessionEnabled ? [
+          make('sprint-readiness', '冲刺状态 / 就绪度',
+            `${this.sprint.state} / ${this.sprint.readiness}`,
+            this.sprint.readiness === 'READY' ? 'success'
+              : this.sprint.readiness === 'COOLDOWN' ? 'warning' : 'normal'),
+          make('sprint-cooldown', '冷却剩余',
+            `${(this.sprint.cooldownRemainingMs / 1000).toFixed(1)} 秒`),
+          make('sprint-duration-left', '本次冲刺剩余',
+            `${(this.sprint.sprintRemainingMs / 1000).toFixed(1)} 秒`),
+          make('sprint-risk-mode', '风险模式', this.sprint.riskMode ?? '无'),
+          make('sprint-start-reason', '最近开始原因', this.sprint.lastStartReason),
+        ] : [],
+      },
+      {
+        id: 'door-lock', title: 'Door Lock / 主动锁门',
+        properties: this.debugPossessionEnabled ? [
+          make('lock-last-close', '最近成功关闭的门', this.deepseekAI.doorLockLastCloseId ?? '无'),
+          make('lock-pending', 'doorLockPendingId', this.deepseekAI.doorLockPendingId ?? '无',
+            this.deepseekAI.doorLockPendingId ? 'success' : 'normal'),
+          make('lock-window', 'pending 建立于 / 剩余窗口',
+            this.deepseekAI.doorLockPendingSinceMs === null ? '无'
+              : `+${this.deepseekAI.doorLockPendingSinceMs.toFixed(0)} ms / 剩 ${(this.deepseekAI.doorLockWindowRemainingMs / 1000).toFixed(1)} 秒`),
+          make('lock-eval', '最近锁门决策原因（执行成功时显示结果）', this.deepseekAI.doorLockReason),
+          make('lock-evidence', '关门前侧向证据 / 最近一次是否使用',
+            `${this.deepseekAI.doorLockEvidenceDoorId ?? '无'} / ${this.deepseekAI.doorLockUsedEvidence
+              ? '使用中（关门后失视）' : '未使用（以最新目视为准）'}`,
+            this.deepseekAI.doorLockUsedEvidence ? 'warning' : 'normal'),
+          make('lock-skip', '最近拒绝原因', this.deepseekAI.doorLockSkipReason),
+          make('lock-result', '最近锁门执行结果', this.deepseekAI.doorLockLastResult),
+          make('lock-counts', '关门成功 / pending / 提前取消 / 锁门命令 / 锁门成功 / 重复尝试被拒',
+            `${this.deepseekAI.doorEscapeCloseCount} / ${this.deepseekAI.doorLockPendingCount} / ${this.deepseekAI.doorLockCancelCount} / ${this.deepseekAI.doorLockCommandCount} / ${this.deepseekAI.doorLockAppliedCount} / ${this.deepseekAI.doorLockRepeatBlockedCount}`),
         ] : [],
       },
       {

@@ -79,9 +79,12 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S7A Human AI —— S7A-0 动作接口、S7A-1 基础行为、S7A-2 高级决策及可收纳调试面板人工验收 PASS；Gate = PASS。
 - S7B-1 DeepSeek AI 自主找米与进食 —— 用户确认人工验收 PASS；S7B 尚未完成。
 - S7B-2 DeepSeek AI 威胁感知与逃跑 —— 用户确认人工验收 PASS；偶发原地停留列为后续 AI 优化项。静止 Human 好奇安全通行定向修复本轮人工验收 PASS；此专项通过不代表整个 S7B 完成。
-- S7B-3A DeepSeek 逃脱关门 —— 用户确认浏览器人工验收 5/5 PASS；只在 EVADE、实际通过近门、目视确认 Human 位于另一侧且关门后仍有逃生路径时关门。主动锁门尚未实现。
+- S7B-3A DeepSeek 逃脱关门 —— 用户确认浏览器人工验收 5/5 PASS；只在 EVADE、实际通过近门、目视确认 Human 位于另一侧且关门后仍有逃生路径时关门。
+- S7B-3B DeepSeek 主动锁门 —— 3B-0b 接口、3B-1 决策核心、关门侧向证据修复、Sprint 30 秒冷却与冲刺期间门交互协调、3B-2 防振荡、3B-3 定向回归、3B-4 DEV / 日志 / 文档收尾全部完成；主动锁门与 3B-2 防振荡经用户浏览器人工验收 PASS（3B-2 为 5/5）。整个 S7B 仍未完成。
 
-当前下一阶段：S7B-3B —— DeepSeek 主动锁门与逃脱策略。整个 S7B 尚未完成。Human AI 移动倍率 0.92 与自动解锁耗时 8,750 毫秒暂按用户决定接受；自动解锁速度留到 S16 平衡阶段继续调整。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+当前下一阶段：S7B 仍未整体完成（S7B-1 ～ 3B-4 均已通过人工验收）；下一阶段 S7C 尚未开始，需用户另行授权。Human AI 移动倍率 0.92 与自动解锁耗时 8,750 毫秒暂按用户决定接受；自动解锁速度留到 S16 平衡阶段继续调整。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
+
+当前自动化基线（截至 S7B-3B）：`npm test` 333/333 PASS；`npm run build`（含 `tsc --noEmit`）PASS；`git diff --check` PASS。Vite 主 bundle 超过 500 kB 仍为非阻断提示。
 
 单份大米正式设计时长为 60 秒。当前开发测试配置临时使用 5 秒，仅为提高频繁测试效率；Beta / Release Candidate 前必须切回 60 秒并重新测试。
 
@@ -96,15 +99,15 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 ## 当前核心玩法规则摘要
 
 - 可选择 DeepSeek 娘或人类阵营。WASD / 方向键采用 Camera-Relative Movement，所控角色保持在屏幕中央附近；IJKL 暂作另一角色的开发调试控制。
-- DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。
+- DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。冲刺技能有 30 秒冷却（`GAME_CONFIG.sprint.cooldownMs`）：一旦真正开始冲刺即进入冷却，冲刺进行中不刷新、提前结束也不缩短，冷却期间不能再次冲刺；暂停冻结、重开清零。
 - 人类抓捕需要 DeepSeek 娘在 Capture Zone 内连续约 0.35 秒，墙体、家具以及 CLOSED / LOCKED Door 会阻断有效抓捕。
-- Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door。最多同时存在 3 个 Active Lock；Lock Core 在逻辑和表现上独立于 Door Leaf。
+- Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door。最多**同时**存在 3 个 Active Lock（不限制整局总次数）；Lock Core 在逻辑和表现上独立于 Door Leaf。
 - Human 在可达的 LOCKED Door 旁按 E 打开 4×4 / 3 雷扫雷盘；长按或连点 E 不推进解锁。× / Esc 可退出，同一 Lock Core 的盘面在本局保留；面板开启时世界继续运行，Human 不能移动，Capture Zone 仍有效。扫雷成功使 Core `ACTIVE → DISABLED`、Door `LOCKED → CLOSED` 并释放 Active Lock Slot；Human 需再次 E 开门。失败时门保持 LOCKED、对局继续；扫雷不消耗强破冷却。
 - Human 按 Space 可免费快速打开普通 CLOSED Door，即使强破正在冷却也有效；对 LOCKED Door 则立即强破 Core 并 OPEN，触发 30 秒冷却。冷却中不能再强破锁门，但仍可 E 扫雷。DISABLED Core 本局不可重新上锁；Restart 或新 Match 恢复 Core、扫雷盘与技能。门交互采用较宽容的最近有效门判定，不可隔墙操作。
 - 角色视觉 Mesh 与 Gameplay Collider 必须解耦。当前角色使用 XZ Circle Footprint，环境使用 AABB，并以 Circle-vs-AABB、Axis-Separated Movement 和 Wall Sliding 解析碰撞；Sprint 使用同一规则。不要轻易恢复 Player Box / AABB Footprint，因为方形碰撞体在门框和墙角斜向移动时容易卡脚。
 - 双向信息系统按声音事件的距离和墙/门遮挡计算可听强度，场景中以声源方向显示远蓝、中黄、近红的声波；Vision 区分当前可见、被墙或关门阻挡、超出范围，Last Seen 独立短暂保留。DeepSeek 实际进食增长后开启或刷新 5 秒米痕生成窗口，窗口内移动按步距留下脚印；每个脚印独立保留 15 秒后淡出。暂停冻结相关计时，新局清空米痕。
 - Human AI 仅在 DeepSeek 为正式玩家阵营时运行，复用声音、Vision / Last Seen、共享导航、DoorSystem、Capture 和 GameState；DeepSeek AI 仅在 Human 为正式玩家阵营时运行，复用 RiceField 唯一进食更新、共享导航、感知、冲刺和碰撞。AI 不读取被遮挡对手实时坐标；胜负仍由既有米堆及抓捕规则裁决。
-- DeepSeek EVADE 可以评估刚实际通过且仍在近距离的 OPEN Door：只根据当前可见 Human 确认追者仍在门另一侧，检查自身能够在不经该门的路径继续逃离，并通过现有 DoorSystem、碰撞检查和门状态同步关闭。不可确认追者一侧、Human 太近、门被占、收益不足或无后续路线时跳过；门冷却避免反复开关。S7B-3A 不包含主动锁门。
+- DeepSeek 的主动关门与主动锁门只在 EVADE 中评估，门动作是一次性交互、**不打断冲刺**，因此不会逃避 30% 摔倒惩罚。关门：该门为 OPEN、刚实际穿过（≤ 1800 ms 窗口）、同门 5000 ms 冷却已过、目视确认 Human 在另一侧且距离 ≥ 1.5、未占门叶、关门后仍有不经该门的逃生路线、且追者当前路线确实经过该门。关门会让门叶挡住视线，故在确认关门那一帧记录**侧向证据**；下一帧若重新看见 Human 一律以最新目视为准，若失视则只复用同门、同一次连续动作的证据并重新核验当前条件——该证据不得当作 Human 实时位置，也不作为距离仍然安全的证明。锁门：同一连续动作至多尝试一次，且要求逃生路线与至少一处未完成米堆仍可达、锁位与锁芯可用。逃生规划会排除「本门冷却内由自己关上的门」以防立刻重开，若排除后无任何可达房间则一次性回退允许使用该门，避免原地卡死。实现细节见 `docs/S7B3B_DOOR_LOCK_DESIGN.md`。
 - 静止 Human 的好奇试探与 SAFE_WAIT 复查使用独立静止事件、可信感知和抓捕圈外路线。普通目视警戒不得无条件覆盖已获准且仍安全的试探；真实移动、逼近、冲刺或抓捕危险可以中断。SAFE_WAIT 不得循环冲门；不可见 Human 的位置不得用作实时路径或安全许可依据。
 
 ## 输入与暂停长期规则

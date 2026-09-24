@@ -27,6 +27,7 @@
 | `C.sprint.durationMs` | 2,500 | 毫秒；一次冲刺持续时间 | 冲刺开始后不能靠松开方向键取消。 |
 | `C.sprint.riskThreshold` | 0.30 | 进度比例；开始冲刺时全局进度达到该值，结束必摔 | 此数值是已验收的 30% 玩法阈值。 |
 | `C.sprint.stunMs` | 1,000 | 毫秒；摔倒眩晕 | 目前摔倒本身没有独立的持续计时参数。 |
+| `C.sprint.cooldownMs` | 30,000 | 毫秒；冲刺技能冷却 | 冲刺**一开始**即进入冷却并持续计时；冲刺进行中不能刷新冷却，提前结束也不会缩短冷却；暂停冻结、重开清零。DEV「Sprint / 冲刺」分类显示 READY / ACTIVE / COOLDOWN 与剩余时间。 |
 | `C.match.captureRadius` | 0.70 | 世界单位；Human 抓捕圈半径 | 抓捕还须满足无遮挡和持续接触。 |
 | `C.match.captureMs` | 350 | 毫秒；连续有效接触时间 | 离开圈或被墙/关门阻挡时进度清零。 |
 | `C.match.readyMs` | 3,000 | 毫秒；开局准备时间 | 与正式对局已进行时间分开。 |
@@ -154,7 +155,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
 | `C.door.interactionRange` / `interactionEndInset` | 1.3 / 0.08 | 世界单位；可操作门距离和门段端点内缩 | 门交互仍要求可达、不可隔墙；修改需检查门框侧边。 |
-| `C.door.maxActiveLocks` | 3 | 把；同时有效的锁 | 破解/强破后释放一格，失效锁芯本局不能重锁。 |
+| `C.door.maxActiveLocks` | 3 | 把；**同时**有效的锁上限 | **不限制整局总次数**；破解/强破后释放一格，失效锁芯本局不能重锁。 |
 | `C.door.humanFreeOpenClosedDoor` | `true` | 开关；Human Space 免费快速打开普通 CLOSED 门 | 设为 `false` 会禁用该 Space 行为；E 普通开门不受影响。 |
 | `C.door.humanForceBreakCooldownMs` | 30,000 | 毫秒；Space 强破 LOCKED 门的冷却 | 不限制普通门快速开，也不限制 E 扫雷。 |
 | `C.door.leafHeight` / `leafThickness` / `openAngle` | 1.2 / 0.16 / `Math.PI / 2` | 世界单位 / 世界单位 / 弧度；门叶几何 | 门厚会影响碰撞、视线和声音的门遮挡判定。 |

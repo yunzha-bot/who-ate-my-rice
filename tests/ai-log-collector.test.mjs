@@ -16,6 +16,7 @@ const baseSnapshot = () => ({
   noMovementReason: 'NONE',
   localLoopTriggered: false,
   sprintDecision: 'READY',
+  sprintReadiness: 'READY',
   recoveryBlockReason: 'NONE',
   curiosityRollResult: 'NOT_ELIGIBLE',
   curiosityInterruptReason: 'NONE',
@@ -335,4 +336,19 @@ test('curiosity and passage decision events are captured distinctly', () => {
   assert.ok(data.events.some(e => e.type === 'CURIOSITY_RESULT' && e.reason === 'TRIGGERED'));
   assert.ok(data.events.some(e => e.type === 'PASSAGE_RESULT' && e.reason === 'ELIGIBLE'));
   assert.ok(data.events.some(e => e.type === 'PASSAGE_GATE' && e.reason === 'NO_SAFE_ROUTE'));
+});
+
+test('the sprint 30s cooldown lifecycle is traceable through the AI log', () => {
+  const collector = new AILogCollector();
+  collector.diffSnapshot(baseSnapshot());                       // READY
+  collector.advance(100, true);
+  collector.diffSnapshot({ ...baseSnapshot(), sprintReadiness: 'ACTIVE' });   // sprint began
+  collector.advance(C.sprint.durationMs, true);
+  collector.diffSnapshot({ ...baseSnapshot(), sprintReadiness: 'COOLDOWN' }); // sprint over, CD runs
+  collector.advance(C.sprint.cooldownMs, true);
+  collector.diffSnapshot({ ...baseSnapshot(), sprintReadiness: 'READY' });    // CD expired
+  const readiness = collector.export().events
+    .filter(event => event.type === 'SPRINT_READINESS')
+    .map(event => event.reason);
+  assert.deepEqual(readiness, ['ACTIVE', 'COOLDOWN', 'READY']);
 });

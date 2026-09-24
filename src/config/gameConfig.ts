@@ -120,6 +120,7 @@ export const GAME_CONFIG = {
     durationMs: 2_500, // 冲刺持续时间：毫秒。
     riskThreshold: 0.30, // 全局大米进度比例，达到后冲刺结束必摔。
     stunMs: 1_000, // 摔倒后的眩晕时间：毫秒。
+    cooldownMs: 30_000, // 冲刺技能冷却：毫秒；冲刺一开始即进入冷却，期间不能再次冲刺。
   },
   three: {
     pixelsPerUnit: 60,

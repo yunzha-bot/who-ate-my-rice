@@ -27,11 +27,11 @@
 
 ## 2. Git 与资料边界
 
-本次归档开始时，当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`；`HEAD` 与 `origin/main` 均为 `9da38c0256f3e65cded4e19d6aa315f3c264a781`。工作区有本轮 S7B-3A 实现修改，以及未跟踪 `.trae/` 用户资料。`.trae/` 不属于交接提交范围，必须保留且不得提交。
+本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**交接时的提交检查点为 `ca18f61b7e7bad35070a3f16188d10f9c8ba426d`（`wip: archive s7b-3a and prepare deepseek handoff`，已推送，`main` 与 `origin/main` 同步）**。此后 S7B-3B 的全部工作（3B-0b 接口、3B-1 决策核心、关门侧向证据修复、Sprint 30 秒冷却与门协调、3B-2 防振荡、3B-3 定向回归、3B-4 收尾）**尚未提交**，仍留在工作区；另有未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，必须保留且不得提交。
 
 `dist/` 是可再生成的构建产物，`node_modules/` 是安装目录；二者不提交。不要把导出的临时 AI JSON 日志、密钥、个人配置或本机专属配置加入仓库。不要手工改写 `.git/` 历史。并行的 UE 工程不属于此 Web 仓库任务，不得由本次交接触碰。
 
-本次只授权 S7B-3A 交接及对应 WIP 检查点；提交和远程推送状态以本任务最终 Git 命令结果为准。WIP 不代表阶段发布或整个 S7B 完成。
+本次授权的范围止于「完成 S7B-3B 并准备建立 Git 检查点」；是否 commit / push 由用户批准后决定。WIP 不代表阶段发布或整个 S7B 完成。
 
 ## 3. 实际运行架构
 
@@ -56,9 +56,10 @@
 | S7A | Human AI、共享角色动作接口、高级决策和可收纳 DEV 面板已通过 Gate。自动解锁耗时 8,750 ms 仍列为 S16 平衡复评。 |
 | S7B-1 | DeepSeek 自主选米、寻路、开普通门、吃完五份米；用户确认人工验收 PASS。 |
 | S7B-2 | 威胁感知、逃跑、脱险恢复及静止 Human 好奇/安全通行专项通过用户人工验收。偶发原地停留仍是优化待办。 |
-| S7B-3A | 本次关门逃脱实现通过用户提供的 5/5 浏览器验收结果；此次复验自动测试和源码。主动锁门未实现。 |
-| S7B overall | 进行中，未完成。 |
-| 下一项 | S7B-3B：主动锁门与逃脱策略；本次不实现。 |
+| S7B-3A | 主动关门（条件式逃脱关门）：用户 5/5 浏览器人工验收 PASS。 |
+| S7B-3B | 主动锁门与逃脱策略：3B-0b 接口、3B-1 决策核心（含「关门遮挡视线」冲突修复 = 关门侧向证据）、Sprint 30 秒冷却与冲刺期间门交互协调、3B-2 防振荡（用户 5/5 人工验收 PASS）、3B-3 定向回归（333/333）、3B-4 DEV / 日志 / 文档收尾——**全部完成**。代码与人工验收均已完成，但**尚未建立 Git 检查点**，故不并入 S7B Gate。 |
+| S7B overall | 进行中，未完成（S7B-3A / 3B 已完成，S7C 尚未开始）。 |
+| 下一项 | 由用户批准建立 Git 检查点；之后的新阶段（S7C 等）尚未授权。 |
 | S7C 及以后 | 尚未开始；`CHECK_HIDE` 只是保留接口。 |
 
 历史细节与测试结果以 `docs/AGENT_LOG.md` 为准；不要把单项 PASS 扩大解释为 S7B Gate PASS。
@@ -128,6 +129,8 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - S7B-2 偶发原地停留保留为后续 AI 优化项，不阻断其已通过 Gate。
 - 正式 GLB 角色及 IDLE 特殊待机片段未导入；无动画片段时白模保持普通 IDLE，动画视觉验收后续处理。
 - Human AI 自动解锁耗时 8,750 ms 按用户决定留作 S16 平衡复评。
-- 本次构建的主 JavaScript chunk 约 704 kB，Vite >500 kB 警告非阻断。
-- 本次没有重新执行用户所述的 5 项浏览器交互；等待 Harness / 用户后续验收或要求重新实测。
-- S7B-3B 主动锁门未实现，S7B 整体没有完成；S7C 及之后内容尚未开始。
+- 构建的主 JavaScript chunk 约 705 kB，Vite >500 kB 警告非阻断。
+- **S7B-3B 的实机验证口径**：3B-1 主动锁门与 3B-2 防振荡已由用户浏览器人工验收 PASS；但**修复后仍缺一份完整实机 AI JSON**（手上日志产生于侧向证据修复之前），锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍应以新日志复核。
+- 自动化基线：`npm test` 333/333 PASS；`npm run build`（含 `tsc --noEmit`）PASS；`git diff --check` PASS。
+- 本轮同步文档：`docs/AI_DEEPSEEK_STATE_TREE.md`（删除已与源码漂移的重复数值表、补「主动关门与主动锁门」状态机章节）、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`。
+- S7B-3B 代码与人工验收已完成；S7C 及之后内容尚未开始，`CHECK_HIDE` 仍只是保留接口。

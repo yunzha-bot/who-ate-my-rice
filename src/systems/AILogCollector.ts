@@ -10,6 +10,7 @@ import { GAME_CONFIG } from '../config/gameConfig.ts';
 
 export interface AILogSnapshot {
   doorEscapeEvents?: readonly { type: string; reason: string }[];
+  doorLockEvents?: readonly { type: string; reason: string }[];
   passageActive?: boolean;
   safetyGeometry?: { human: { x: number; z: number } | null;
     rice: { x: number; z: number } | null; eat: { x: number; z: number } | null;
@@ -27,6 +28,8 @@ export interface AILogSnapshot {
   noMovementReason: string;
   localLoopTriggered: boolean;
   sprintDecision: string;
+  /** READY / ACTIVE / COOLDOWN / STUNNED — makes the 30s skill cooldown traceable. */
+  sprintReadiness: string;
   recoveryBlockReason: string;
   curiosityRollResult: string;
   curiosityInterruptReason: string;
@@ -113,6 +116,7 @@ const DIFF_RULES: readonly DiffRule[] = [
   { type: 'NO_MOVEMENT', field: 'noMovementReason' },
   { type: 'LOCAL_LOOP', field: 'localLoopTriggered' },
   { type: 'SPRINT_DECISION', field: 'sprintDecision' },
+  { type: 'SPRINT_READINESS', field: 'sprintReadiness' },
 ];
 
 export class AILogCollector {
@@ -140,6 +144,13 @@ export class AILogCollector {
     const t = this.nowMs - this.matchStartMs;
 
     for (const event of snapshot.doorEscapeEvents ?? []) {
+      this.pushEvent({ t, type: event.type, state: snapshot.state,
+        prevState: null, reason: event.reason,
+        riceTargetId: snapshot.targetRiceId, roomId: snapshot.roomId,
+        count: 1, firstT: t, lastT: t, context: { ...snapshot } });
+    }
+
+    for (const event of snapshot.doorLockEvents ?? []) {
       this.pushEvent({ t, type: event.type, state: snapshot.state,
         prevState: null, reason: event.reason,
         riceTargetId: snapshot.targetRiceId, roomId: snapshot.roomId,

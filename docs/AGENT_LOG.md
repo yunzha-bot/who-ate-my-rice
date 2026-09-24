@@ -450,3 +450,155 @@
 - 已知问题：无正式特殊待机片段可供当前版本播放。S7B-2 偶发原地停留不再阻断 Gate，保留为后续 AI 优化事项。
 - 下一步建议：人工检查 DEV 面板静止计时、无资源白模回退、动作打断、暂停冻结与重开清零；之后由用户安排 S7B-3。
 - Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-24 21:57 +08:00｜S7B-3B-0b 主动锁门接口落地（不启用自动锁门）
+
+- 任务名称：按已批准的 v1 规则（A1/B1/C3/D1）落地 S7B-3B 的锁门命令通道与接口。当前阶段：S7B-3B 进行中；本轮只完成 3B-0b，未实现锁门决策，S7B 整体仍未完成。
+- 本次目标：让控制器与 ThreeGame 之间具备完整的锁门命令通道与结果回调，但**正式对局中 `lockDoorId` 恒为 null**，DeepSeek 仍只执行已验收的 S7B-3A 条件关门。
+- 实际完成内容：
+  - `DeepSeekAICommand` 新增 `lockDoorId: string | null`；`command()` 工厂恒返回 `lockDoorId: null`。
+  - `DeepSeekAIInput` 新增只读能力 `canLockDoor?: (id) => boolean` 与 `activeLockSlots?: number`（均不构成新的感知来源）。
+  - `DoorSystem.ts` 新增导出守卫 `lockDoorFromCommand(doors, id, actor, canInteract, interactionRange)` 与结果值 `OUT_OF_RANGE`：复检交互距离与不可隔墙后，把状态/锁芯/锁位规则**全部委托给既有 `DoorSystem.lock()`**，未重写锁门逻辑。
+  - `ThreeGame` 组装输入时注入 `canLockDoor`（复用 `canInteractWithDoorXZ`）与 `activeLockSlots = maxActiveLocks - activeLockedDoorCount`；新增 `lockDoorId` 落地分支，成功后经 `applyDoorResult` 同步门状态、`DoorView`、动态碰撞与 `DOOR_LOCK` 声音。
+  - 控制器新增 `onDoorLockResult(id, result)`、`drainDoorLockEvents()` 与去重的 `doorLockDecision()`；`reset()` 清理锁门状态。日志快照新增 `doorLockEvents` 排水（空队列不产生任何事件，故不新增逐帧日志；亦无队列滞留）。
+  - **未实现**：`evaluateEscapeLock`、`doorLockPendingId` 的设置/消费、EVADE 锁门优先级、SAFE_WAIT/好奇状态锁门、任何硬编码捷径。
+- 源码分析结论（HIGH 威胁冲突，写入设计文档第 2.1 节）：`assessThreat` 中「目视 Human 且距离 ≤ `visionEvadeDistance`(5)」与「可听 Human 声 ≥ `soundEvadeStrength`(0.09)」都判定为 HIGH，而锁门合法窗口 1.5–5 u **完全落在 HIGH 区间**。因此 `threat.level === 'HIGH'` **不能**作为取消待锁门的依据，否则锁门永不触发。已把设计文档中「真实危险 = 威胁 HIGH」改为具体信号：`captureProgressMs > 0`、`sprintState === 'STUNNED'`、或目视距离以 ≥ 0.35 u/s 缩短且 ≤ 2.2 u；3B-1 须沿用 `evaluateEscapeDoor` 那种按条件而非按威胁等级判断的纪律。
+- 新增文件：`tests/deepseek-door-lock.test.mjs`。修改文件：`src/systems/DeepSeekAIController.ts`、`src/systems/DoorSystem.ts`、`src/three/ThreeGame.ts`、`src/systems/AILogCollector.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（最小同步）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。`GAME_CONFIG` 未新增或修改任何数值。
+- 测试结果：`npm test` 280/280 PASS（原 270 + 新增 10）；`npm run build` PASS（`tsc --noEmit` + Vite 构建，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle 约 705 kB，>500 kB 提示仍为非阻断。
+- 已知问题：`threat.level === 'HIGH'` 与锁门窗口重叠的冲突已记录，需在 3B-1 落实修正；锁门通道尚未经浏览器人工验收（本步骤按定义不产生可见行为）。
+- 下一步建议：进入 3B-1 实现 `doorLockPendingId` 连续动作与 `evaluateEscapeLock` 决策，并采用上述真实危险信号；之后 3B-2 防振荡、3B-3 定向回归、3B-4 DEV/日志归档。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-24 22:18 +08:00｜S7B-3B-1 主动锁门决策核心
+
+- 任务名称：实现 DeepSeek 主动锁门决策核心。当前阶段：S7B-3B 进行中；本轮只完成 3B-1，未做 3B-2 防振荡专项，S7B 整体仍未完成。
+- 本次目标：在已验收的 S7B-3A 主动关门成功后，于同一连续动作内按已批准的六项规则（真实危险信号、SPRINT 放弃、单次 A*、保留 OUT_OF_RANGE 守卫、DEV 留 3B-4、事件驱动日志）发起主动锁门。
+- 实际完成内容：
+  - `DeepSeekAIController` 新增 `doorLockPendingId` 与 `doorLockSkipReason`；`onDoorEscapeResult` 在「EVADE 中成功主动关门且仍在 `doorEscapeCrossingWindowMs` 窗口内」时建立 pending，其余结果清空。
+  - 新增 `evaluateEscapeLock(input, approachSpeed)`：依次校验门存在且 CLOSED、过门窗口、`captureProgressMs`、`STUNNED`、`SPRINT_RUNNING`、当前目视 Human 在另一侧、距离 ≥ 1.5、逼近速度（`approachSpeedThreshold` + `riskySprintDistance`）、`canLockDoor`、`activeLockSlots`、锁芯可用、逃生路线（`blockedDoors` A*）、至少一处未完成米堆可达（**临时避让不算完成**，遍历所有未完成米堆）。任一失败 `DOOR_LOCK_SKIP` 并清 pending；通过则 `DOOR_LOCK_EVALUATE` 并返回门 id。
+  - `updateSafety` 在逃跑目标选择后、`evaluateEscapeDoor` 之前调用 `evaluateEscapeLock`，命中即以 `lockDoorId` 命令返回（`LOCKING_ESCAPE_DOOR`）；`onDoorLockResult` 成功/失败均清 pending。
+  - 取消路径全覆盖：`evaluateEscapeLock` 任一 reject、`onDoorLockResult`、`enterEvade`、`beginRecovery`、`updateSafety` 的 STUNNED 早退。
+  - 冷却规则：`onDoorEscapeResult` 的关门冷却结算保持不变；`evaluateEscapeLock` 不查冷却（同一次连续动作例外），锁门失败/取消不重写冷却；Human 重开门后同门冷却仍生效。
+  - 未实现：3B-2 额外防振荡、DEV Door Lock 分类、任何 GAME_CONFIG 新增/调整。`threat.level === 'HIGH'` 未作为取消条件（遵守 3B-0b 源码分析结论）。
+- 新增文件：`tests/deepseek-door-lock-decision.test.mjs`。修改文件：`src/systems/DeepSeekAIController.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（最小同步：状态与实现要点）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。`GAME_CONFIG` 无任何改动。
+- 测试结果：`npm test` 291/291 PASS（原 280 + 新增 11）；`npm run build` PASS（`tsc --noEmit` + Vite，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 已知问题：锁门决策尚需浏览器人工验收；防振荡专项（3B-2）与 DEV 面板（3B-4）未做。
+- 下一步建议：浏览器人工验收「正常追逐穿门→关门→锁门、贴脸/同侧/逼近不锁、锁位满/封退路/封米堆放弃、Human 重开不振荡、SAFE_WAIT/好奇/安全通行不受影响」；通过后再进入 3B-2。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-24 22:37 +08:00｜S7B-3B-1 人工验收问题排查（锁门从未触发）
+
+- 任务名称：排查「长期追逐始终未观察到主动锁门」。当前阶段：S7B-3B-1 人工验收问题排查；未开始 3B-2；S7B 整体未完成。
+- 用户人工验收输入：7 项 PASS（过近/同侧、逼近、锁位满/锁芯失效、自身路线安全、Human 重开门、原有 AI 回归）；第 1 项「正常关门后锁门」**未观察到成功案例**，不等于实现失败。
+- 实机日志分析（`who-ate-my-rice-ai-log-2026-09-24T14-31-10.json`，364.7 s / 1666 事件 / 未截断）：`DOOR_ESCAPE_CLOSE=8`、`DOOR_LOCK_SKIP=4`、`DOOR_LOCK_EVALUATE=0`、`DOOR_LOCK_APPLY=0`、`DOOR_LOCK_FAILED=0`。
+- 根因（源码 + 日志双证）：**关门遮挡视线，使锁门的「Human 当前可见」前提永不成立**。
+  - 8 次成功关门的下一帧全部出现 `THREAT_SOURCE_CHANGE :: LAST_SEEN|SOUND` 与 `PASSAGE_GATE :: NO_VISIBLE_HUMAN`。
+  - `PerceptionSystem.inspectVision`（L83-91）对任何非 `OPEN` 门与视线矩形相交即返回 `BLOCKED`；`ThreeGame.ts:396` 据此把 `visibleHuman` 置 null；`evaluateEscapeLock` 随即 `HUMAN_SIDE_UNKNOWN`。
+  - `evaluateEscapeDoor` 关门时同样要求 `visibleHuman`，故二者在同一连续动作内互斥。
+- 诊断缺陷（已修复）：`doorLockDecision` 只与「上一条决策签名」比较，导致同门连续同因拒绝被吞——8 次拒绝仅记录 4 次。修复方式：建立新 pending 时清空 `lastDoorLockDecision`，使每次连续动作至少记录一次结果；仍保持事件驱动、不逐帧刷屏。
+- 本轮实际改动（不触碰任何安全阈值）：
+  - `DeepSeekAIController`：新增 `clearPendingLock()`；`onDoorEscapeResult` 记录 `doorLockLastCloseId` / `doorEscapeCloseCount` / `doorLockPendingCount` 与 `doorLockPendingSinceMs`；`onDoorLockResult` 统计 `doorLockAppliedCount`；`evaluateEscapeLock` 统计 `doorLockCommandCount`；新增 `doorLockWindowRemainingMs` 每帧刷新；`reset()` 全部清零。
+  - `DebugDetailsPanel` + `ThreeGame`：新增 `Door Lock / 主动锁门` DEV 分类（最近成功关闭的门、doorLockPendingId、pending 建立时间与剩余窗口、最近评估结果、最近拒绝原因、最近执行结果、关门成功/pending/锁门命令/锁门成功四项计数）。
+  - **未修改**：1.5 安全距离、1800 ms 窗口、逃生路线与米堆可达性检查、`DoorSystem` 锁门逻辑、任何 `GAME_CONFIG` 数值。**未做规则层面的修复**，等用户批准。
+- 新增文件：`tests/deepseek-door-lock-integration.test.mjs`（7 项，按真实每帧顺序：过门 → updateSafety → 执行关门 → onDoorEscapeResult → 下一帧重建输入 → evaluateEscapeLock → lockDoorFromCommand → DoorSystem.lock → onDoorLockResult）。修改文件：`src/systems/DeepSeekAIController.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/ThreeGame.ts`、`tests/debug-details-panel.test.mjs`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（新增第 2.2 节）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` 298/298 PASS（原 291 + 新增 7）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 已知问题：锁门在正常追逐下仍不会触发——需用户批准规则冲突的最小改动后才能修复；第 1 项人工验收继续挂起。
+- 下一步建议：批准候选最小改动（用关门时已确认的「Human 在门另一侧」证据，在门保持 `CLOSED` 期间替代新的目视确认），或指定其他方案；之后重新做第 1 项浏览器验收。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-24 22:49 +08:00｜S7B-3B-1 修复：关门侧向证据打通主动锁门
+
+- 任务名称：按用户批准的方案修复「关门遮挡视线导致锁门永不成立」的规则冲突，并修复日志去重问题。当前阶段：S7B-3B-1 人工验收修复；未开始 3B-2；S7B 整体未完成。
+- 批准依据与实现：
+  - `evaluateEscapeDoor` 在关门成功路径记录 `doorLockEvidence = { doorId, deepseekSide }`——仅保存**真实目视**确认过的「Human 在门另一侧」侧向事实，并绑定门 ID。
+  - `onDoorEscapeResult` 仅在「关门成功 + 1800 ms 窗口内 + 该门确有本次确认的侧向证据」时建立 pending；否则记 `DOOR_LOCK_SKIP:NO_CLOSE_SIDE_EVIDENCE`，不建立 pending。
+  - `evaluateEscapeLock`：**重新看见 Human** 时一律以最新目视信息为准（同侧 / 距离 < 1.5 / 逼近 → 取消）；**当前失视**时只复用同门、同一次连续动作的侧向证据，并重新核验门仍 `CLOSED`、DeepSeek 侧别未变（`DEEPSEEK_SIDE_CHANGED`）、`canLockDoor`、锁位、锁芯、逃生路线、米堆可达性。证据不得当作 Human 实时位置，也不作为「距离仍然安全」的证明。
+  - 证据失效：pending 被消费/取消、门重新打开、过门窗口超时、发现 Human 同侧、出现抓捕进度或紧急危险、交互条件不成立。
+  - 未改动：1.5 / 1800 / 5000 三个阈值、抓捕半径与其它手调 `GAME_CONFIG`、全局最多 3 把锁、`DoorSystem` 唯一状态源、锁门帧的执行端交互与墙体复检、SAFE_WAIT / 好奇观察 / 安全通行行为；未新增独立锁门窗口。
+- 日志修复：新增 `DOOR_LOCK_PENDING` 与 `DOOR_LOCK_CANCEL` 事件，配合「建立 pending 时清空 `lastDoorLockDecision`」，使「未建立 pending / 建立后提前取消 / 评估后拒绝 / 发出命令但执行端失败 / 锁门成功」五种结局均可区分，且不逐帧重复输出；新增计数 `doorEscapeCloseCount` / `doorLockPendingCount` / `doorLockCancelCount` / `doorLockCommandCount` / `doorLockAppliedCount` 与 `doorLockEvidenceDoorId` / `doorLockUsedEvidence`。
+- DEV：`Door Lock / 主动锁门` 分类新增「关门前侧向证据 / 最近一次是否使用」（失视复用时标为 warning），计数扩为五项；`clearPendingLock()` 拆为 `clearPendingLockState()`（静默）与 `cancelPendingLock(reason)`（记 `DOOR_LOCK_CANCEL`）。
+- 新增/调整测试：`tests/deepseek-door-lock-decision.test.mjs` 增至 16 项（失视复用证据并上报、最新目视覆盖证据、证据不得跨门/跨动作/过期复用、被消费后不可复用、多次连续动作关键事件不被去重合并）；`tests/deepseek-door-lock-integration.test.mjs` 增至 10 项（原「下一帧跳过」改为「关门侧向证据把失视锁门走通」，并新增无目视证据不建立 pending、重新目视同侧/过近取消、取消后证据不可跨帧复用）。
+- 修改文件：`src/systems/DeepSeekAIController.ts`、`src/three/ThreeGame.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（新增 §2.3 已实施修复）、`docs/AGENT_LOG.md`；测试文件 `tests/deepseek-door-lock-decision.test.mjs`、`tests/deepseek-door-lock-integration.test.mjs`。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` 306/306 PASS（上一轮 298 + 8）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 已知问题：修复后的真实锁门行为尚待浏览器人工验收；第 1 项验收此前未通过，本轮**不预判通过**。
+- 下一步建议：浏览器验收第 1 项，重点观察 DEV `Door Lock` 分类中「最近一次是否使用 = 使用中（关门后失视）」与五项计数 1 / 1 / 0 / 1 / 1，以及 Human 重新开门后不重复锁门。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-24 23:13 +08:00｜Sprint 30 秒冷却 + Sprint⟷门动作冲突排查与协调
+
+- 任务名称：新增 DeepSeek 冲刺 30 秒技能冷却；排查并最小协调 Sprint 与 S7B-3A 关门 / 3B-1 锁门链路的冲突。当前阶段：S7B-3B-1 人工验收修复；未开始 3B-2；S7B 整体未完成。
+- 日志结论（`who-ate-my-rice-ai-log-2026-09-24T14-31-10.json`，364.7 s / 1666 事件）：**该日志早于本轮侧向证据修复**（不含 `DOOR_LOCK_PENDING`，该事件在本轮修复时才引入），因此其中的锁门失败仍是视线冲突所致，**不是 Sprint**。
+  - `DOOR_ESCAPE_EVALUATE=8`、`DOOR_ESCAPE_CLOSE=8`、`DOOR_ESCAPE_FAILED=0` → **主动关门成功 8 次，不是 0**。`DOOR_ESCAPE_APPLY` 这个事件名在代码中不存在，关门回执用 `DOOR_ESCAPE_CLOSE` / `DOOR_ESCAPE_FAILED`。
+  - `DOOR_LOCK_SKIP=4`、`DOOR_LOCK_EVALUATE=0`、`DOOR_LOCK_APPLY=0`。
+  - `DOOR_ESCAPE_SKIP` 原因分布：`NO_NEARBY_OPEN_DOOR=70`、`DOOR_NOT_RECENTLY_PASSED=67`、`SPRINT_IN_PROGRESS=35`、`HUMAN_SIDE_UNKNOWN=23`、`DOOR_OCCUPIED_OR_INACCESSIBLE=7`、`DOOR_DOES_NOT_DELAY_PURSUER=1`、`HUMAN_ALREADY_SAME_SIDE=1`、`DOOR_COOLDOWN=1`。
+  - **Sprint 确实吃掉门机会**：35 次 `SPRINT_IN_PROGRESS` 中 **29 次**在随后 1800 ms 内该门再无任何门事件（机会丢失），仅 6 次被后续评估救回。结构性原因：`C.sprint.durationMs` 2,500 ms **大于** `doorEscapeCrossingWindowMs` 1,800 ms，且冲刺会把 DeepSeek 带出 `interactionRange` 1.3——日志中 skip 后约 200–800 ms 该门即退出候选集（`NO_NEARBY_OPEN_DOOR`）。
+  - 时间线案例：①t=5785 冲刺开始 → 6000 `SPRINT_IN_PROGRESS`（door_bedroom2_study）→ 6201 `NO_NEARBY_OPEN_DOOR`，窗口内再无机会；②t=10410 冲刺开始 → 10625 `SPRINT_IN_PROGRESS`（door_closet_hall）→ 10826 `NO_NEARBY_OPEN_DOOR`，丢失；③t=28257 `SPRINT_IN_PROGRESS`（door_bedroom2_study）→ 28403 冲刺自然结束且窗口仍有效 → `DOOR_ESCAPE_EVALUATE` + `DOOR_ESCAPE_CLOSE` 成功（+146 ms），属 6 次被救回的案例。
+- A. 冲刺 30 秒冷却：`GAME_CONFIG.sprint.cooldownMs = 30_000`；`SprintSystem` 构造函数新增第 4 参（默认 0，兼容既有只测时长/风险/眩晕的测试），新增 `cooldownRemainingMs` / `lastStartReason` / `readiness`（READY / ACTIVE / COOLDOWN / STUNNED）；`tryStart` 在冷却未清或非 NORMAL 时拒绝，成功即置 `cooldownRemainingMs = cooldownMs`；`advance` 每帧扣减（暂停冻结）；`reset` 清零。`ThreeGame` 传入 `C.sprint.cooldownMs` 并记录开始原因（`AI_<sprintDecision>` / `PLAYER_SPACE`）。未改动冲刺速度、持续时间、触发距离与风险阈值。
+- B. Sprint⟷门协调（最小修复）：比较 A/B 后**未采用「停止 Sprint」**——提前结束冲刺会让 AI 躲过 30% 必摔，违反既有「冲刺开始后不能停下规避风险」并构成平衡漏洞。改为：`evaluateEscapeDoor` 与 `evaluateEscapeLock` 不再因 `SPRINT_RUNNING` 拒绝；门动作是一次性交互，`SprintSystem.movementDirection` 在冲刺中恒返回 `lastDirection`，故关门/锁门**不打断冲刺**，冲刺计时与 30% 摔落判定完整保留。其余 S7B-3A / 3B-1 条件（1.5 / 1800 / 5000 / 对侧目视或侧向证据 / 退路 / 米堆可达 / 锁位 / 锁芯 / 不可隔墙 / 交互距离 / STUNNED / 抓捕进度）全部不变。
+- 可观察性：DEV 新增 `Sprint / 冲刺` 分类（状态+就绪度、冷却剩余、本次剩余、风险模式、最近开始原因）；`Door Escape` 分类新增「最近经过的门 / 距过门时间」与「冲刺中关门次数 / 冲刺中锁门次数」；`Door Lock` 保持 PENDING / CANCEL / EVALUATE / APPLY / FAILED 谱系。控制器新增 `doorEscapeLastCrossedId` / `doorEscapeLastCrossedAgeMs` / `doorEscapeDuringSprintCount` / `doorLockDuringSprintCount`（reset 全部清零）。未新增逐帧日志。
+- 新增/调整测试：`tests/sprint.test.mjs` 新增 5 项冷却测试；`tests/deepseek-door-lock-decision.test.mjs` 把「冲刺取消锁门」改为「冲刺不再取消合法锁门」（保留 STUNNED / 门重开 / 窗口超时取消）；`tests/deepseek-door-lock-integration.test.mjs` 把「冲刺后取消」改为「冲刺中仍完成关门→锁门」；`tests/debug-details-panel.test.mjs` 同步新增 `sprint` 分类。
+- 修改文件：`src/config/gameConfig.ts`、`src/systems/SprintSystem.ts`、`src/systems/DeepSeekAIController.ts`、`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` 312/312 PASS（上一轮 306 + 6 项：冲刺冷却 5 + 锁门冲刺行为 1）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 已知问题：**手上没有修复后的实机日志**——现有唯一日志产生于侧向证据修复之前，无法据此判断修复后锁门是否成功。需导出一份**修复后**的对局 AI JSON 再判定。
+- 下一步建议：按汇报第 8 节做浏览器验收；确认后再进入 3B-2。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-24 23:49 +08:00｜S7B-3B-2 防振荡与重复锁门保护
+
+- 任务名称：审计现有防振荡机制并只修复已确认的漏洞。当前阶段：S7B-3B-2 完成、待人工验收；未开始 3B-3 / 3B-4；S7B 整体未完成。
+- 审计结论（读源码逐条核实，未重复实现已生效机制）：
+  - **5000 ms 同门冷却有效**：`evaluateEscapeDoor` 以 `closedDoorAt`（绝对时间）判定，`onDoorEscapeResult` 在每次关门尝试（成功或失败）时写入，**按门 ID 独立**，`reset()` 清除。
+  - **一次关门最多一次锁门尝试**：关门后门变 `CLOSED` 即退出 OPEN 候选集；pending 只在 `onDoorEscapeResult` 建立一次；`evaluateEscapeLock` 成功即发命令、同帧由 `onDoorLockResult` 清 pending，失败/取消即清。
+  - **pending 与侧向证据清理完整**：`clearPendingLockState()`（成功/失败/任一检查不通过）＋ `cancelPendingLock(reason)`（进入 EVADE、转入 RECOVER、STUNNED）＋ `reset()`。
+  - **Human 解锁/强破后不能立即重锁**：冷却未过 → `DOOR_COOLDOWN`；冷却过后仍需新的真实过门 → 否则 `DOOR_NOT_RECENTLY_PASSED`；解锁/强破另将 Lock Core 置 `DISABLED` → `LOCK_CORE_UNAVAILABLE`（本局该门不可再锁）。
+  - **冲刺门交互保留摔倒惩罚**：门动作不触碰 `SprintSystem`，`riskMode` / `sprintRemainingMs` 照常，30% 必摔与眩晕完整。
+- **发现的真实漏洞（有实机证据）**：`followPath` 会打开逃生路径上的非 OPEN 门，而关门后的逃生重规划**未排除刚被自己关上的门**（`NavigationSystem.findPath` 把 `CLOSED` 门视为可通行、代价 +3），于是 DeepSeek 可能**立刻把自己刚关的门重新打开**，抵消关门战术并造成 close↔open 往复。
+  - 证据（`who-ate-my-rice-ai-log-2026-09-24T14-31-10.json`）：t=187551 `DOOR_ESCAPE_CLOSE door_living_entry:CLOSED` → t=187556 `NO_MOVEMENT: OPENING_DOOR`（+5 ms）→ t=187568 视线由 `LAST_SEEN` 恢复为 `VISION`（门被重新打开）→ t=187568 `DOOR_ESCAPE_SKIP door_living_entry:DOOR_COOLDOWN`（证明该门当时已回到 `OPEN`）。8 次关门中出现 1 次。
+- 实施的最小修改（全部复用既有 `doorEscapeCooldownMs`，**无新增数值**）：
+  - 新增 `recentlySelfClosedDoors()` / `isRecentlySelfClosed(id)`：本门冷却内的自关门集合。
+  - `selectEscapeGoal` 新增可选参数 `allowRecentlyClosed`，寻路时传入屏蔽集（含「被堵出口改用替代路线」的第二次寻路）；若屏蔽后候选为空则**回退一次**允许使用该门（`*_SELF_CLOSED_FALLBACK`），避免原地卡死。
+  - `followPath` 遇到自关门则清路径并设 `SELF_CLOSED_DOOR_REPATH`（与既有 `LOCKED_DOOR_REPATH` 同构），并计入 `doorEscapeSelfReopenBlockedCount`。
+  - 重复尝试守卫：`doorLockAttemptedId` 记录已发起尝试的 pending，残留则拒绝第二次并计入 `doorLockRepeatBlockedCount`（正常流程不可达，属显式不变量）。
+- 可观察性（未重做 DEV 面板）：`door-escape` 分类新增「自我重开门被抑制次数」；`door-lock` 计数行扩为 6 项（末位「重复尝试被拒」）。四种情形可区分：合法再次锁门（PENDING→EVALUATE→APPLY）、重复尝试（计数）、冷却阻止重关门（`DOOR_ESCAPE_SKIP:DOOR_COOLDOWN`）、Human 重开门取消（`DOOR_LOCK_SKIP:DOOR_REOPENED`）。
+- 新增文件：`tests/deepseek-door-lock-oscillation.test.mjs`（13 项）。修改文件：`src/systems/DeepSeekAIController.ts`、`src/three/ThreeGame.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（新增 §2.5）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` 325/325 PASS（上一轮 312 + 13）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 已知问题：本次修复尚未经浏览器人工验收；手上仍无「修复后」的最新实机日志（唯一日志产生于侧向证据修复之前）。
+- 下一步建议：浏览器验收（见汇报 F 节）；确认后再进入 3B-3。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-25 00:02 +08:00｜S7B-3B-3 定向回归测试
+
+- 任务名称：S7B-3B 定向回归与长局不变量检查。当前阶段：3B-3 完成、待用户确认；未开始 3B-4；S7B 整体未完成。
+- 覆盖审计（复用既有测试，未重复已覆盖用例）：用户列出的 10 个重点领域在 3B-0b～3B-2 的测试中均已覆盖——①关门→pending→锁门（含关门后失视的侧向证据）由 `deepseek-door-lock-integration` 覆盖；②同侧/过近/逼近/抓捕进度取消、③窗口超时/交互距离失效/门重开由 `deepseek-door-lock-decision` 覆盖；④3 把锁上限与锁芯失效由 `deepseek-door-lock` / `door-system` / `minesweeper-lock` / `human-door-skill` 覆盖；⑤同门与跨门冷却、⑥自关门重开与兜底、⑦一次动作一次尝试与 pending 清理由 `deepseek-door-lock-oscillation` 覆盖；⑧逃生路线与米堆可达由 `-decision` / `-integration` 覆盖；⑨冲刺冷却与不逃避摔倒由 `sprint` / `-oscillation` 覆盖；⑩SAFE_WAIT / 好奇 / 安全通行 / Human AI / 导航 / 门系统由各自套件覆盖。**唯一缺口是「长时间多帧连续对局下的跨系统不变量」**。
+- 新增文件：`tests/deepseek-door-lock-longrun.test.mjs`（7 项，确定性模拟）：
+  1. 同一扇门在 5000 ms 冷却内不会被二次关闭（40 个循环、逐门校验关闭间隔）；
+  2. 不遗留 pending，且单个连续动作至多发出一次锁门命令；
+  3. 同侧 / 过近 / 逼近 / 抓捕进度 / 失视 五类取消条件循环 25 次后均不遗留 pending；
+  4. 被锁门不会封死全部剩余米堆路线；
+  5. 锁门日志事件有界、不在相邻帧重复，且 `PENDING` / `EVALUATE` / `APPLY` / `CANCEL` 事件数与同名计数**逐一相等**（验证关键事件不漏记）；
+  6. 门状态与动态碰撞在 12 次开关循环后仍同步，重开门后不残留障碍；
+  7. 600 帧真实重规划中逃生目标不在相邻帧跳变（防房间间反复折返）。
+- 发现的问题：**游戏代码无缺陷**。本轮 3 次测试失败全部来自新测试自身：(a) 最初绕过 `ai.update()` 直接调用内部 `updateSafety()`，导致 `threatEstimate` 未被赋值 → `selectEscapeGoal` 提前返回 → 关门评估从未执行（表现为「一次关门都没有」，属测试 harness 缺陷）；(b) 一度把「不同连续动作发出相同 `DOOR_LOCK_PENDING` 签名」误判为重复事件，实际这是每条动作必须留痕的正确行为。定位手段：写临时探针打印 `threatEstimate` / `lastEscapeDecisionReason` / `doorEscapeSkipReason`，确认 `skip=NONE` 即评估未执行；探针文件在系统临时目录，已删除。
+- 实际修复：仅修改新测试文件（改用真实入口 `ai.update()`；删除自相矛盾的重复事件断言；补齐被误删的测试开头）。**未改动任何 `src/` 生产代码，未改动任何 `GAME_CONFIG` 数值。**
+- 测试结果：`npm test` 332/332 PASS（上一轮 325 + 7）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。
+- 长局口径：本轮为**确定性模拟长局**（约 40 个门遭遇循环 / 600 帧重规划），**不是实机长局验收**，不能替代浏览器实测。
+- 已知问题：仍缺一份「修复后」的实机 AI JSON；3B-2 / 3B-3 的浏览器验收由用户完成。
+- 下一步建议：确认后可进入 3B-4（DEV / 日志 / 文档收尾）。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-25 00:18 +08:00｜S7B-3B-4 DEV / AI 日志 / 文档收尾
+
+- 任务名称：S7B-3B 收尾（DEV 面板、AI JSON 日志、文档同步）。当前阶段：**S7B-3B 代码与人工验收全部完成**；**未建立 Git 检查点**；未开始 S7C；S7B 整体未完成。
+- 前提：用户确认 3B-2 浏览器人工验收 5/5 PASS、3B-3 定向回归 332/332（本轮收尾后 333/333）。
+- DEV 面板审计（三个分类，只修正确实不准的显示，未重构面板）：
+  - `Door Escape / 关门逃脱`：字段与源码一致；评估类字段（候选门、距离、已通过门、Human 在另一侧、关闭后路线、评估依据）只在 EVADE 的关门评估帧更新，故统一加「最近评估」前缀，避免被读成实时值；`放弃关门原因` → `最近放弃关门原因`。
+  - `Door Lock / 主动锁门`：字段与源码一致；`最近锁门评估结果` 绑定 `doorLockReason`，而该字段在成功/失败回执时会被执行结果覆盖，故改名为 `最近锁门决策原因（执行成功时显示结果）`。确认没有过期或永不触发的原因码被静态展示（原因码均为实时值）。
+  - `Sprint / 冲刺`：状态 / 就绪度、冷却剩余、本次剩余、风险模式、最近开始原因，均与含 30 秒冷却与 `readiness` 的 `SprintSystem` 一致。
+- AI JSON 日志审计：`DOOR_ESCAPE_CLOSE / SKIP`、`DOOR_LOCK_PENDING / CANCEL / SKIP / EVALUATE / APPLY / FAILED`、`SPRINT_DECISION` 的命名、去重、时间戳、门 ID 与原因码一致；`doorDecision` 与 `doorLockDecision` 均按签名去重，不逐帧重复。发现并补两处**确实缺失**的信号（见文件改动）。
+- 实机日志口径：**本轮用户未提供新的实机 JSON**；工作区与附件目录中唯一日志仍是 `who-ate-my-rice-ai-log-2026-09-24T14-31-10.json`（产生于侧向证据修复之前），因此**未用它冒充新版本数据**；锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍需新日志复核。
+- 修改文件：`src/systems/AILogCollector.ts`（新增 `sprintReadiness` 快照字段 + `SPRINT_READINESS` diff 规则）、`src/systems/DeepSeekAIController.ts`（自关门抑制新增带门 ID 的 `DOOR_ESCAPE_SELF_CLOSED` 事件）、`src/three/ThreeGame.ts`（DEV 标签修正 + 传递 `sprintReadiness`）、`tests/ai-log-collector.test.mjs`（+1 项冷却生命周期日志测试）、`tests/deepseek-door-lock-oscillation.test.mjs`（补自关门事件断言）、`docs/AI_DEEPSEEK_STATE_TREE.md`、`docs/GAME_BALANCE_CONFIG.md`、`docs/DEEPSEEK_HANDOFF.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`、`docs/AGENT_LOG.md`。新增文件：无。删除文件：无。依赖变化：无。**未改动任何 `GAME_CONFIG` 数值**（`src/config/gameConfig.ts` 的改动仍来自 Sprint 冷却那一轮的 `cooldownMs`）。
+- 文档收尾要点：`docs/AI_DEEPSEEK_STATE_TREE.md` 此前**严重滞后**——仍写「好奇/安全通行待验收」，且其重复数值表中 `visionEvadeDistance` 7、`escapeGoalHoldMs` 2,500、`dangerRiceAvoidMs` 8,000、`curiositySafeDistance` 3、`stationaryPassageChance` 0.80、`stationaryPassageSafetyMargin` 0.65、抓捕圈余量「合计 1.35 u」均与源码不符。本轮删除该重复表改为指向 `docs/GAME_BALANCE_CONFIG.md`，并新增「主动关门与主动锁门」章节（关门→pending→锁门状态机、侧向证据与关门后失视处理、自关门防折返、冲刺与门、3 把锁同时上限且不限整局次数）。`AGENTS.md` 的阶段状态**未改**——该文件要求 Gate 通过且 commit + push 成功后才更新，本轮未提交。
+- 测试结果：`npm test` 333/333 PASS（3B-3 的 332 + 1）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。
+- 已知问题：仍缺一份「修复后」的实机 AI JSON；Git 检查点待用户批准。
+- 下一步建议：由用户批准建立 Git 检查点（是否 commit / push 由用户决定）。
+- Git commit 信息：本阶段归档为 S7B-3B 稳定检查点 `feat: complete s7b-3b proactive door locking`；实际 commit hash 与 push 结果以本次 Git 执行和最终汇报为准。不创建 Tag。

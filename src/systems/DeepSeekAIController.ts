@@ -32,6 +32,10 @@ export interface DeepSeekAIInput {
   doors: readonly DoorState[];
   canOpenDoor: (id: string) => boolean;
   canCloseDoor?: (id: string) => boolean;
+  /** Read-only lock capability supplied by ThreeGame; never a perception source. */
+  canLockDoor?: (id: string) => boolean;
+  /** Remaining Active Lock slots before a lock command would be rejected. */
+  activeLockSlots?: number;
   visibleHuman?: Point | null;
   /** Supplied only while Human is currently visible; never a hidden position. */
   humanStillMs?: number;
@@ -51,6 +55,7 @@ export interface DeepSeekAICommand {
   direction: Point;
   openDoorId: string | null;
   closeDoorId: string | null;
+  lockDoorId: string | null;
   eatRiceId: string | null;
   startSprint: boolean;
 }
@@ -153,6 +158,26 @@ export class DeepSeekAIController {
   doorEscapeSkipReason = 'NONE';
   doorEscapeLastResult = 'NONE';
   doorEscapeCooldownRemainingMs = 0;
+  doorEscapeLastCrossedId: string | null = null;
+  doorEscapeLastCrossedAgeMs: number | null = null;
+  doorEscapeDuringSprintCount = 0;
+  doorLockDuringSprintCount = 0;
+  doorEscapeSelfReopenBlockedCount = 0;
+  doorLockRepeatBlockedCount = 0;
+  doorLockReason = 'NOT_EVALUATED';
+  doorLockLastResult = 'NONE';
+  doorLockPendingId: string | null = null;
+  doorLockPendingSinceMs: number | null = null;
+  doorLockSkipReason = 'NONE';
+  doorLockLastCloseId: string | null = null;
+  doorEscapeCloseCount = 0;
+  doorLockPendingCount = 0;
+  doorLockCommandCount = 0;
+  doorLockAppliedCount = 0;
+  doorLockCancelCount = 0;
+  doorLockWindowRemainingMs = 0;
+  doorLockUsedEvidence = false;
+  doorLockEvidenceDoorId: string | null = null;
 
   private readonly navigation: NavigationSystem;
   private readonly doorNodes: Map<string, DoorNode>;
@@ -193,6 +218,10 @@ export class DeepSeekAIController {
   private readonly closedDoorAt = new Map<string, number>();
   private lastDoorDecision = '';
   private doorEscapeEvents: { type: string; reason: string }[] = [];
+  private lastDoorLockDecision = '';
+  private doorLockEvidence: { doorId: string; deepseekSide: number } | null = null;
+  private doorLockAttemptedId: string | null = null;
+  private doorLockEvents: { type: string; reason: string }[] = [];
 
   constructor(navigation: NavigationSystem, doors: readonly DoorNode[],
     rooms: readonly Room[] = [], random: () => number = Math.random) {
@@ -219,11 +248,35 @@ export class DeepSeekAIController {
     this.doorEscapeSkipReason = 'NONE';
     this.doorEscapeLastResult = 'NONE';
     this.doorEscapeCooldownRemainingMs = 0;
+    this.doorEscapeLastCrossedId = null;
+    this.doorEscapeLastCrossedAgeMs = null;
+    this.doorEscapeDuringSprintCount = 0;
+    this.doorLockDuringSprintCount = 0;
+    this.doorEscapeSelfReopenBlockedCount = 0;
+    this.doorLockRepeatBlockedCount = 0;
+    this.doorLockAttemptedId = null;
+    this.doorLockReason = 'NOT_EVALUATED';
+    this.doorLockLastResult = 'NONE';
+    this.doorLockPendingId = null;
+    this.doorLockPendingSinceMs = null;
+    this.doorLockSkipReason = 'NONE';
+    this.doorLockLastCloseId = null;
+    this.doorEscapeCloseCount = 0;
+    this.doorLockPendingCount = 0;
+    this.doorLockCommandCount = 0;
+    this.doorLockAppliedCount = 0;
+    this.doorLockCancelCount = 0;
+    this.doorLockWindowRemainingMs = 0;
+    this.doorLockUsedEvidence = false;
+    this.doorLockEvidenceDoorId = null;
+    this.doorLockEvidence = null;
     this.lastDoorSide.clear();
     this.recentDoorCrossing.clear();
     this.closedDoorAt.clear();
     this.lastDoorDecision = '';
     this.doorEscapeEvents = [];
+    this.lastDoorLockDecision = '';
+    this.doorLockEvents = [];
     this.safeWaitObservation = null;
     this.passageEatPosition = null;
     this.safetyDebug = { human: null, rice: null, eat: null, observation: null,
@@ -332,6 +385,13 @@ export class DeepSeekAIController {
     this.trackDoorCrossings(input);
     this.doorEscapeCooldownRemainingMs = Math.max(0,
       this.doorEscapeCooldownRemainingMs - deltaMs);
+    this.doorLockWindowRemainingMs = this.doorLockPendingSinceMs === null ? 0 :
+      Math.max(0, GAME_CONFIG.deepseekAI.doorEscapeCrossingWindowMs -
+        (this.elapsedMs - this.doorLockPendingSinceMs));
+    const crossedAt = this.doorEscapeLastCrossedId === null ? undefined :
+      this.recentDoorCrossing.get(this.doorEscapeLastCrossedId);
+    this.doorEscapeLastCrossedAgeMs = crossedAt === undefined ? null :
+      this.elapsedMs - crossedAt;
     this.recentEscapeVisits = this.recentEscapeVisits.filter(visit =>
       this.elapsedMs - visit.atMs < cfg.escapeVisitMemoryMs);
     for (const [id, remaining] of this.avoidedRiceMs) {
@@ -1124,6 +1184,7 @@ export class DeepSeekAIController {
     this.state = 'EVADE';
     this.localLoopTriggered = false;
     this.loopReplanPending = false;
+    this.cancelPendingLock('ENTER_EVADE');
     this.lastTransitionReason = 'THREAT_' + source;
     this.path = [];
     this.pathIndex = 0;
@@ -1157,6 +1218,7 @@ export class DeepSeekAIController {
       this.sprintDecision = 'STUNNED';
       this.noMovementReason = 'STUNNED';
       this.recoveryBlockReason = 'STUNNED';
+      this.cancelPendingLock('STUNNED');
       return this.command();
     }
     if (this.state === 'RECOVER') return this.updateRecovery(input, deltaMs);
@@ -1223,6 +1285,12 @@ export class DeepSeekAIController {
         threat.visibleDistance !== null &&
         threat.visibleDistance <= cfg.riskySprintDistance)
       this.selectEscapeGoal(input, 'HUMAN_CLOSE_REVIEW');
+    const lockDoorId = this.evaluateEscapeLock(input, approachSpeed);
+    if (lockDoorId) {
+      this.sprintDecision = 'LOCKING_ESCAPE_DOOR';
+      this.noMovementReason = 'LOCKING_ESCAPE_DOOR';
+      return { ...this.command(), lockDoorId };
+    }
     if (!this.escapeTarget || !this.path.length) {
       this.sprintDecision = 'NO_SAFE_ROUTE';
       this.noMovementReason = 'NO_REACHABLE_ESCAPE_ROUTE';
@@ -1286,8 +1354,10 @@ export class DeepSeekAIController {
       const previous = this.lastDoorSide.get(door.id);
       if (side && previous && side !== previous && door.state === 'OPEN' &&
           distanceToDoorSegment(input.deepseek.x, input.deepseek.z, node) <=
-            GAME_CONFIG.door.interactionRange)
+            GAME_CONFIG.door.interactionRange) {
         this.recentDoorCrossing.set(door.id, this.elapsedMs);
+        this.doorEscapeLastCrossedId = door.id;
+      }
       if (side) this.lastDoorSide.set(door.id, side);
     }
   }
@@ -1331,7 +1401,10 @@ export class DeepSeekAIController {
     if (!candidate) return reject('NO_NEARBY_OPEN_DOOR');
     const { door, node } = candidate;
     if (!this.doorEscapePassed) return reject('DOOR_NOT_RECENTLY_PASSED');
-    if (input.sprintState === 'SPRINT_RUNNING') return reject('SPRINT_IN_PROGRESS');
+    // A running sprint no longer voids a real door opportunity. The door action
+    // is a separate one-shot interaction and does not stop the sprint
+    // (SprintSystem.movementDirection keeps using lastDirection), so the sprint
+    // commitment and its 30% risk outcome stay intact.
     if (this.elapsedMs - (this.closedDoorAt.get(door.id) ?? -Infinity) <
         cfg.doorEscapeCooldownMs) return reject('DOOR_COOLDOWN');
     // Only current sight gives a reliable side. Sound bearing and stale memory
@@ -1357,7 +1430,16 @@ export class DeepSeekAIController {
       this.escapeTarget, input.doors);
     if (!pursuitRoute?.some(step => step.doorId === door.id))
       return reject('DOOR_DOES_NOT_DELAY_PURSUER');
-    this.doorDecision('DOOR_ESCAPE_EVALUATE', door.id, 'CLOSE_HAS_PURSUIT_VALUE');
+    const duringSprint = input.sprintState === 'SPRINT_RUNNING';
+    if (duringSprint) this.doorEscapeDuringSprintCount += 1;
+    this.doorDecision('DOOR_ESCAPE_EVALUATE', door.id,
+      duringSprint ? 'CLOSE_DURING_SPRINT' : 'CLOSE_HAS_PURSUIT_VALUE');
+    // Approved fix: the close just confirmed BY SIGHT that the Human is on the
+    // far side of this door. Remember only that confirmed side fact, bound to
+    // this door and this continuous action, so the now-shut leaf blocking sight
+    // cannot invalidate a lock that is still structurally safe.
+    this.doorLockEvidence = { doorId: door.id, deepseekSide: Math.sign(deepseekSide) };
+    this.doorLockEvidenceDoorId = door.id;
     return door.id;
   }
 
@@ -1368,11 +1450,195 @@ export class DeepSeekAIController {
     this.doorEscapeCooldownRemainingMs = GAME_CONFIG.deepseekAI.doorEscapeCooldownMs;
     this.doorDecision(result === 'CLOSED' ? 'DOOR_ESCAPE_CLOSE' :
       'DOOR_ESCAPE_FAILED', id, result);
+    // 3B-1 fix: a successful self-initiated close inside its crossing window
+    // continues into a pending lock ONLY when that same close also recorded the
+    // sight-confirmed far-side evidence for this same door. Any other outcome
+    // leaves nothing pending, and the log distinguishes the three cases:
+    // no pending vs pending-without-evidence vs pending established.
+    const crossing = this.recentDoorCrossing.get(id);
+    const inWindow = crossing !== undefined &&
+      this.elapsedMs - crossing <= GAME_CONFIG.deepseekAI.doorEscapeCrossingWindowMs;
+    if (result === 'CLOSED') {
+      this.doorEscapeCloseCount += 1;
+      this.doorLockLastCloseId = id;
+    }
+    const evidence = this.doorLockEvidence;
+    const evidenceMatches = !!evidence && evidence.doorId === id &&
+      evidence.deepseekSide !== 0;
+    if (result === 'CLOSED' && inWindow && evidenceMatches) {
+      this.doorLockPendingId = id;
+      this.doorLockPendingSinceMs = crossing ?? null;
+      this.doorLockPendingCount += 1;
+      // A fresh continuous action must be able to report its own outcome even
+      // when it repeats the previous door/reason pair; otherwise the dedup in
+      // doorLockDecision silently hides real rejections from the AI log.
+      this.lastDoorLockDecision = '';
+      this.doorLockDecision('DOOR_LOCK_PENDING', id, 'CLOSE_CONFIRMED_FAR_SIDE');
+    } else {
+      this.clearPendingLockState();
+      if (result === 'CLOSED' && inWindow && !evidenceMatches) {
+        this.lastDoorLockDecision = '';
+        this.doorLockDecision('DOOR_LOCK_SKIP', id, 'NO_CLOSE_SIDE_EVIDENCE');
+      }
+    }
+  }
+
+  /** Drops the continuous action silently; the caller already logged the why. */
+  private clearPendingLockState(): void {
+    this.doorLockPendingId = null;
+    this.doorLockPendingSinceMs = null;
+    this.doorLockEvidence = null;
+    this.doorLockEvidenceDoorId = null;
+    this.doorLockAttemptedId = null;
+  }
+
+  /** Doors DeepSeek shut itself inside the same-door cooldown. Re-opening one
+   *  right away would hand the pursuer the very opening we just took away, so
+   *  escape planning avoids them (see selectEscapeGoal / followPath). */
+  private recentlySelfClosedDoors(): Set<string> {
+    const blocked = new Set<string>();
+    for (const [id, at] of this.closedDoorAt)
+      if (this.elapsedMs - at < GAME_CONFIG.deepseekAI.doorEscapeCooldownMs) blocked.add(id);
+    return blocked;
+  }
+
+  private isRecentlySelfClosed(id: string): boolean {
+    const at = this.closedDoorAt.get(id);
+    return at !== undefined &&
+      this.elapsedMs - at < GAME_CONFIG.deepseekAI.doorEscapeCooldownMs;
+  }
+
+  /** Drops the continuous action before evaluation and records the reason. */
+  private cancelPendingLock(reason: string): void {
+    const id = this.doorLockPendingId;
+    this.clearPendingLockState();
+    if (id) {
+      this.doorLockCancelCount += 1;
+      this.doorLockDecision('DOOR_LOCK_CANCEL', id, reason);
+    }
+  }
+
+  /** Mirrors doorDecision: identical outcomes are recorded once, not per frame. */
+  private doorLockDecision(type: string, id: string | null, reason: string): void {
+    const signature = `${type}:${id ?? 'NONE'}:${reason}`;
+    if (signature === this.lastDoorLockDecision) return;
+    this.lastDoorLockDecision = signature;
+    this.doorLockReason = reason;
+    if (type === 'DOOR_LOCK_SKIP') this.doorLockSkipReason = reason;
+    else this.doorLockSkipReason = 'NONE';
+    this.doorLockEvents.push({ type, reason: `${id ?? 'NONE'}:${reason}` });
+  }
+
+  drainDoorLockEvents(): { type: string; reason: string }[] {
+    return this.doorLockEvents.splice(0);
+  }
+
+  /**
+   * 3B-0b channel only: records the outcome of a lock command that ThreeGame
+   * executed. The pending-lock decision is 3B-1 work, so nothing calls this
+   * while lockDoorId stays null.
+   */
+  onDoorLockResult(id: string, result: string): void {
+    this.doorLockLastResult = `${id}:${result}`;
+    if (result === 'LOCKED') this.doorLockAppliedCount += 1;
+    this.doorLockDecision(result === 'LOCKED' ? 'DOOR_LOCK_APPLY' : 'DOOR_LOCK_FAILED',
+      id, result);
+    // Success or failure both end the continuous action; never retry in place.
+    if (this.doorLockPendingId === id) this.clearPendingLockState();
+  }
+
+  /**
+   * 3B-1: evaluates the pending lock created by a successful self-initiated
+   * close. Cheap conditions come first; the two A* reachability checks (escape
+   * route + remaining rice) run once here. The execution side
+   * (lockDoorFromCommand) re-checks the lightweight interaction conditions.
+   * Any failure clears the pending so the same continuous action never retries.
+   */
+  private evaluateEscapeLock(input: DeepSeekAIInput, approachSpeed: number): string | null {
+    const cfg = GAME_CONFIG.deepseekAI;
+    const pendingId = this.doorLockPendingId;
+    if (!pendingId) return null;
+    // One lock attempt per continuous action: if a pending somehow survives an
+    // already-issued attempt, refuse to fire a second one for it.
+    if (this.doorLockAttemptedId === pendingId) {
+      this.doorLockRepeatBlockedCount += 1;
+      return null;
+    }
+    // Sticky for the DEV panel: did the most recent evaluation rely on the
+    // close-time side evidence (blind) or on fresh sight?
+    this.doorLockUsedEvidence = false;
+    const node = this.doorNodes.get(pendingId);
+    const door = input.doors.find(candidate => candidate.id === pendingId);
+    const reject = (reason: string): null => {
+      this.clearPendingLockState();
+      this.doorLockDecision('DOOR_LOCK_SKIP', pendingId, reason);
+      return null;
+    };
+    if (!node || !door) return reject('DOOR_MISSING');
+    if (door.state !== 'CLOSED') return reject('DOOR_REOPENED');
+    const crossing = this.recentDoorCrossing.get(pendingId);
+    if (crossing === undefined ||
+        this.elapsedMs - crossing > cfg.doorEscapeCrossingWindowMs)
+      return reject('CROSSING_WINDOW_EXPIRED');
+    if ((input.captureProgressMs ?? 0) > 0) return reject('CAPTURE_IN_PROGRESS');
+    if (input.sprintState === 'STUNNED') return reject('STUNNED');
+    // A running sprint no longer voids the pending lock either. The lock is a
+    // one-shot door action that never interrupts the sprint, so the sprint
+    // commitment and its 30% risk outcome stay intact. STUNNED still blocks.
+    if (input.sprintState === 'SPRINT_RUNNING') this.doorLockDuringSprintCount += 1;
+    const deepseekSideNow = node.rotation === 0
+      ? input.deepseek.z - node.z : input.deepseek.x - node.x;
+    let usedCloseSideEvidence = false;
+    if (input.visibleHuman) {
+      // Fresh sight always wins: any change of side, distance or approach
+      // invalidates the stored close-time observation.
+      const humanSide = node.rotation === 0
+        ? input.visibleHuman.z - node.z : input.visibleHuman.x - node.x;
+      if (deepseekSideNow * humanSide >= 0) return reject('HUMAN_ALREADY_SAME_SIDE');
+      const humanDistance = distance(input.deepseek, input.visibleHuman);
+      if (humanDistance < cfg.doorEscapeMinHumanDistance) return reject('HUMAN_TOO_CLOSE');
+      if (approachSpeed >= cfg.approachSpeedThreshold &&
+          humanDistance <= cfg.riskySprintDistance) return reject('HUMAN_APPROACHING');
+    } else {
+      // Blind because this very door is now shut. Reuse ONLY the side that sight
+      // confirmed at close time, bound to this door and this continuous action.
+      // It is never treated as a live Human position, nor as proof that the old
+      // distance is still safe: every current fact is re-verified instead.
+      const evidence = this.doorLockEvidence;
+      if (!evidence || evidence.doorId !== pendingId || evidence.deepseekSide === 0)
+        return reject('NO_CLOSE_SIDE_EVIDENCE');
+      if (Math.sign(deepseekSideNow) !== evidence.deepseekSide)
+        return reject('DEEPSEEK_SIDE_CHANGED');
+      usedCloseSideEvidence = true;
+    }
+    if (input.canLockDoor && !input.canLockDoor(pendingId))
+      return reject('DOOR_OCCUPIED_OR_INACCESSIBLE');
+    if ((input.activeLockSlots ?? 0) <= 0) return reject('LOCK_LIMIT_REACHED');
+    if (door.lockCoreState !== 'ACTIVE' || door.locked) return reject('LOCK_CORE_UNAVAILABLE');
+    if (!this.escapeTarget) return reject('NO_ESCAPE_GOAL');
+    const blocked = new Set([pendingId]);
+    const routeAfterLock = this.navigation.findPath(input.deepseek,
+      this.escapeTarget, input.doors, undefined, null, blocked);
+    if (!routeAfterLock?.length) return reject('ESCAPE_ROUTE_USES_DOOR');
+    // Temporary avoidance is not completion: at least one uncompleted rice must
+    // stay reachable, so the AI cannot seal off every future target.
+    const riceReachable = input.rice.some(rice =>
+      !rice.completed &&
+      !!this.navigation.findPath(input.deepseek, rice, input.doors, undefined,
+        null, blocked)?.length);
+    if (!riceReachable) return reject('ALL_RICE_UNREACHABLE');
+    this.doorLockUsedEvidence = usedCloseSideEvidence;
+    this.doorLockDecision('DOOR_LOCK_EVALUATE', pendingId, usedCloseSideEvidence
+      ? 'LOCK_WITH_CLOSE_SIDE_EVIDENCE' : 'LOCK_WITH_CURRENT_SIGHT');
+    this.doorLockCommandCount += 1;
+    this.doorLockAttemptedId = pendingId;
+    return pendingId;
   }
 
   private beginRecovery(input: DeepSeekAIInput): DeepSeekAICommand {
     this.state = 'RECOVER';
     this.loopReplanPending = false;
+    this.cancelPendingLock('RECOVERY_STARTED');
     this.recoverRemainingMs = GAME_CONFIG.deepseekAI.recoverMs;
     this.lastTransitionReason = 'SAFE_SEPARATION_RECOVER';
     this.recoveryBlockReason = 'NONE';
@@ -1502,15 +1768,20 @@ export class DeepSeekAIController {
   }
 
   private selectEscapeGoal(input: DeepSeekAIInput, reason: string, force = false,
-    avoidCurrentRoom = false, preferFresh = false): void {
+    avoidCurrentRoom = false, preferFresh = false, allowRecentlyClosed = false): void {
     if (!this.threatEstimate) return;
     this.lastEscapeDecisionReason = reason;
     const cfg = GAME_CONFIG.deepseekAI;
+    // Never plan an escape that immediately undoes a door we just shut. If that
+    // leaves no route at all, fall back once to using it: re-opening a door is
+    // still better than standing still in front of a pursuer.
+    const blockedDoors = allowRecentlyClosed
+      ? new Set<string>() : this.recentlySelfClosedDoors();
     const candidates = this.rooms.map(room => {
         const goal = this.navigation.nearestFree(room, input.doors);
         if (!goal) return null;
         let path = this.navigation.findPath(input.deepseek, goal, input.doors,
-          this.avoidedWaypoint ?? undefined);
+          this.avoidedWaypoint ?? undefined, null, blockedDoors);
         if (!path?.length) return null;
         const separation = distance(goal, this.threatEstimate!);
         const travel = distance(input.deepseek, goal);
@@ -1522,7 +1793,7 @@ export class DeepSeekAIController {
         let alternateRoute = false;
         if (blockedExit && firstDoorId) {
           const alternative = this.navigation.findPath(input.deepseek, goal,
-            input.doors, undefined, null, new Set([firstDoorId]));
+            input.doors, undefined, null, new Set([firstDoorId, ...blockedDoors]));
           if (alternative?.length && !alternative.some(step => step.doorId === firstDoorId)) {
             const alternateLength = this.pathLength(input.deepseek, alternative, goal);
             if (alternateLength <= length * cfg.alternateRouteMaxRatio) {
@@ -1558,6 +1829,11 @@ export class DeepSeekAIController {
           cover, blockedExit, alternateRoute, recentVisitPenalty };
       })
       .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
+    if (!candidates.length && blockedDoors.size) {
+      this.selectEscapeGoal(input, `${reason}_SELF_CLOSED_FALLBACK`, force,
+        avoidCurrentRoom, preferFresh, true);
+      return;
+    }
     this.escapeCandidateScores = candidates.map(candidate => ({
       roomId: candidate.room.id, score: candidate.score,
       routeLength: candidate.length, exits: candidate.exits,
@@ -1648,6 +1924,16 @@ export class DeepSeekAIController {
       if (door.state === 'LOCKED' || !node) {
         this.path = [];
         this.lastNavigationReason = 'LOCKED_DOOR_REPATH';
+        return this.command();
+      }
+      // Never immediately undo a door we shut ourselves while its cooldown runs.
+      // selectEscapeGoal already excludes these, so this only catches a path
+      // planned before the close; it repaths instead of re-opening.
+      if (this.isRecentlySelfClosed(id)) {
+        this.doorEscapeSelfReopenBlockedCount += 1;
+        this.doorDecision('DOOR_ESCAPE_SELF_CLOSED', id, 'REPATH_AVOID_SELF_CLOSED');
+        this.path = [];
+        this.lastNavigationReason = 'SELF_CLOSED_DOOR_REPATH';
         return this.command();
       }
       if (distanceToDoorSegment(input.deepseek.x, input.deepseek.z, node) <=
@@ -1798,7 +2084,7 @@ export class DeepSeekAIController {
   private command(x = 0, z = 0, openDoorId: string | null = null,
     eatRiceId: string | null = null): DeepSeekAICommand {
     this.lastCommandedMovement = x !== 0 || z !== 0;
-    return { direction: { x, z }, openDoorId, closeDoorId: null,
+    return { direction: { x, z }, openDoorId, closeDoorId: null, lockDoorId: null,
       eatRiceId, startSprint: false };
   }
 }

@@ -1,6 +1,6 @@
 # DeepSeek AI 状态树（当前工作区源码）
 
-依据：src/systems/DeepSeekAIController.ts、NavigationSystem.ts、PerceptionSystem.ts、RiceField.ts、RiceSystem.ts、SprintSystem.ts、DoorSystem.ts、GameStateSystem.ts、src/three/ThreeGame.ts 及 src/config/gameConfig.ts。**SEEK_RICE～RECOVER 属于已接入的 S7B-1/2；CURIOUS_APPROACH、CURIOUS_OBSERVE 和 CURIOUS_PASSAGE 已写进当前未提交工作区，但好奇/安全通行分支尚未完成本轮自动和人工验收。**“已编码”不等于“已验证 PASS”。
+依据：src/systems/DeepSeekAIController.ts、NavigationSystem.ts、PerceptionSystem.ts、RiceField.ts、RiceSystem.ts、SprintSystem.ts、DoorSystem.ts、GameStateSystem.ts、src/three/ThreeGame.ts 及 src/config/gameConfig.ts。SEEK_RICE～RECOVER 属 S7B-1/2；好奇与静止 Human 安全通行已完成专项人工验收；主动关门属 S7B-3A（人工验收 PASS），主动锁门属 S7B-3B（3B-1 锁门、3B-2 防振荡均已人工验收 PASS，3B-3 定向回归 333/333）。数值一律以 `src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 为准，本文件不再维护第二份数值表。
 
 ## 状态树与正交标记
 
@@ -8,8 +8,8 @@ DeepSeekAIState 是扁平联合类型，下面的父节点只作阅读分组，�
 
 - 找米：SEEK_RICE、MOVE_TO_RICE、EAT、RESELECT（已实现）
 - 生存：EVADE、RECOVER（已实现）
-- 好奇：CURIOUS_APPROACH、CURIOUS_OBSERVE（当前工作区已编码，待验收）
-- 静止 Human 安全通行：CURIOUS_PASSAGE（当前工作区已编码，待验收）
+- 好奇：CURIOUS_APPROACH、CURIOUS_OBSERVE（已实现，专项人工验收 PASS）
+- 静止 Human 安全通行：CURIOUS_PASSAGE（已实现，专项人工验收 PASS）
 
 passageActive 可在 AI 的 EAT 状态中仍为 true；curiosityBypassActive 可在 MOVE_TO_RICE 中仍为 true，故二者是**并行许可标志**，不能只看 state 名称判断威胁折扣。ThreatSource NONE / VISION / SOUND / LAST_SEEN / MEMORY 与 threatLevel NONE / CAUTION / HIGH 是感知评估/记忆，不是 AI 状态。SprintState NORMAL / SPRINT_RUNNING / STUNNED 是独立 SprintSystem 状态；RiceInteractionState PREPARING / EATING / INTERRUPTED / COMPLETED 属于 RiceSystem，不是 AI 状态。
 
@@ -41,7 +41,7 @@ stateDiagram-v2
 
 EAT 是“AI 发出 eatRiceId”的意图状态，不代表已过准备阶段。ThreeGame 在静止、Sprint NORMAL 且仍在范围时才把此意图交给唯一 RiceField.update；RiceSystem 负责每次 400 ms 准备、进度保留、完成与 5/5 胜利。EVADE 或移动导致进食中断但不清既有进度。
 
-## 好奇、安全通行及失败分支（已编码、待验收）
+## 好奇、安全通行及失败分支
 
 此图中的“普通状态”表示 SEEK_RICE / MOVE_TO_RICE / EAT / RESELECT；安全通行尝试在每帧普通威胁评估**之前**运行，故也可能在 EVADE/RECOVER 中抢占。图只标实际代码可走的边。
 
@@ -83,11 +83,35 @@ stateDiagram-v2
 
 优先级不是简单固定列表：外部控制门控/比赛阶段先决定是否调用 AI；本帧先推进既有计时/卡路/门签名，再检查可见 Human 的静止事件及 80% 通行，之后取消不安全许可、评估威胁；HIGH 抢占普通找米与好奇，接着处理有效通行、EVADE/RECOVER、好奇、最后普通找米。STUNNED 在生存动作中禁动，最终 SprintSystem.movementDirection 也执行禁动。暂停由 ThreeGame 停止 PLAYING 更新，冻结 AI 计时。开发临时接管与正式控制 DeepSeek 时 AI 不调用，交还后重建路径；重开 reset。
 
+## 主动关门与主动锁门（S7B-3A / S7B-3B）
+
+只在 **EVADE** 中评估。门动作都是**一次性交互**，不会打断冲刺（`SprintSystem.movementDirection` 在 `SPRINT_RUNNING` 时恒返回 `lastDirection`）。
+
+```mermaid
+stateDiagram-v2
+    [*] --> 无
+    无 --> 关门: EVADE 中实际穿过 OPEN 门 ≤1800ms
+    关门 --> 无: 任一检查不通过（记 DOOR_ESCAPE_SKIP）
+    关门 --> 门已关闭: DoorSystem.toggle 成功
+    门已关闭 --> pending: 同一帧已目视确认 Human 在对侧 ⇒ 记录侧向证据
+    门已关闭 --> 无: 无侧向证据或已超窗 ⇒ NO_CLOSE_SIDE_EVIDENCE
+    pending --> 锁门命令: evaluateEscapeLock 全部通过
+    pending --> 无: 检查不通过 / 门重开 / 越窗 / 进入 RECOVER / STUNNED
+    锁门命令 --> 门已上锁: DoorSystem.lock 成功
+    锁门命令 --> 无: 执行端拒绝或锁位/锁芯不满足
+```
+
+- **关门（S7B-3A）**：门为 `OPEN`、DeepSeek 实际刚穿过它（≤ `doorEscapeCrossingWindowMs` 1800ms）、距离 ≤ `door.interactionRange`、同门冷却 `doorEscapeCooldownMs` 5000ms 已过、当前**目视** Human 在门另一侧且距离 ≥ `doorEscapeMinHumanDistance` 1.5、门未被角色占叶、关门后仍有**不经该门**的逃生路线、且 Human 到逃跑目标的当前路线确实经过该门。
+- **侧向证据与关门后失视（关键修复）**：关门这一动作会让门叶挡住视线。因此在确认关门的那一帧记录 `doorLockEvidence = { doorId, deepseekSide }`；下一帧若**重新看见** Human，一律以最新目视信息为准（已同侧 / 距离 < 1.5 / 明显逼近 → 取消）；若**失视**（正因为该门已关闭），只复用同门、同一次连续动作的侧向证据，并重新核验门仍 `CLOSED`、DeepSeek 侧别未变、交互距离与不可隔墙、锁位余量、锁芯可用、逃生路线与米堆可达。该证据**不得**当作 Human 的实时位置，也不作为「距离仍然安全」的证明。
+- **锁门（S7B-3B）**：`pending` 仅在「本次关门成功 + 仍在 1800ms 窗口 + 该门确有本次确认的侧向证据」时建立；每个连续动作**至多一次尝试**；成功、失败、取消一律清 pending 与侧向证据。**同时最多 3 把 Active Lock**（`GAME_CONFIG.door.maxActiveLocks`），**不限制整局总次数**；锁芯被扫雷/强破置 `DISABLED` 后本局该门不可再锁。
+- **自关门防折返**：逃生规划会排除「本门冷却内由自己关上的门」（`recentlySelfClosedDoors`）；`followPath` 遇到这类门清路径并重规划（导航原因 `SELF_CLOSED_DOOR_REPATH`，AI 日志事件 `DOOR_ESCAPE_SELF_CLOSED` 带门 ID）。若排除后**没有任何**可达房间，则回退一次允许使用该门（导航原因 `*_SELF_CLOSED_FALLBACK`），避免原地卡死。
+- **冲刺与门**：`SPRINT_RUNNING` **不再取消**门动作；门动作不触碰 `SprintSystem`，冲刺计时与 30% 必摔完整保留。冲刺技能另有 `GAME_CONFIG.sprint.cooldownMs` 30000ms 冷却，**一开始冲刺即进入冷却**，期间不能再次冲刺；DEV 以 READY / ACTIVE / COOLDOWN / STUNNED 与剩余时间显示，AI 日志以 `SPRINT_READINESS` 事件记录 CD 生命周期。
+
 ## 感知公平性与目标/路径
 
 | 信息 | 实际来源 | 精度/用途 |
 |---|---|---|
-| visibleHuman | VisionSystem 当前无遮挡且范围内才由 ThreeGame 传 Human 当帧位置 | 仅此时可用精确 Human 坐标、距离和静止计时；距离 ≤ 7 u 为 HIGH，较远为 CAUTION |
+| visibleHuman | VisionSystem 当前无遮挡且范围内才由 ThreeGame 传 Human 当帧位置 | 仅此时可用精确 Human 坐标、距离和静止计时；距离 ≤ `visionEvadeDistance`（当前 5 u）为 HIGH，较远为 CAUTION |
 | heardHuman | SoundEventSystem.heardBy 的可听 Human 声音，已计算范围、距离与墙/门遮挡 | 隐身时只把声源方向量化为八方向，再投射 4 u 的**粗略威胁点**；不把声音事件的精确坐标直接用作逃跑目标 |
 | lastSeenHuman | VisionSystem 在上次真看见 Human 时保存的历史点/时间 | AI 仅在失视后 2,500 ms 内作为 CAUTION；不是实时位置 |
 | rice / rooms / doors | 游戏系统给的五份激活米真实状态、地图房间与当前门状态 | 找米和路线所需的对象信息，不属于对 Human 的透视感知 |
@@ -95,31 +119,24 @@ stateDiagram-v2
 
 选米：对未完成、未临时避让的米，用共享 NavigationSystem 的可达路径计算 **路径长度 ÷ DeepSeek 基础速度 + 剩余进食毫秒 + 400 ms 准备**；最小者优先，同分按米 ID。房间级逃跑：对实际可达房间中心评分，综合可信威胁点距离、路线长度和沿路风险、墙/门遮挡、可用出口、死路/堵出口/替代路线、近 4 次房间访问惩罚（12 秒衰减）；近分候选（0.8 分带内）随机选。目标通常保持 2,500 ms，危险增大、路径失效、局部循环或抵达后仍有 HIGH 才重评估。循环检测为重访房间且安全距离没有增加至少 1 u；真正没有可达房间时返回零移动并标原因。动态安全通行使用同一个 NavigationSystem 的临时 avoidCircle，不另建寻路器；最终移动仍经过 CollisionWorld，普通关门可开、锁门不能穿。
 
-## 当前 GAME_CONFIG 数值索引
+## 数值索引
 
-下表均为 src/config/gameConfig.ts 中真实变量；u 为 XZ 世界单位，ms 为毫秒，评分常数无量纲。本轮不改值。
+**唯一数值来源**：`src/config/gameConfig.ts`；完整索引见 `docs/GAME_BALANCE_CONFIG.md`。本文件**不再维护第二份数值表**——此前这里的副本已与源码漂移（`visionEvadeDistance`、`escapeGoalHoldMs`、`dangerRiceAvoidMs`、`curiositySafeDistance`、`stationaryPassageChance/SafetyMargin`、抓捕圈余量等均为旧值），故删除，避免继续误导排查。
 
-| 变量（均以 GAME_CONFIG.deepseekAI. 为前缀，除注明外） | 当前值 | 单位/作用 |
+与 AI 决策最易混淆的几项：
+
+| 变量 | 当前值 | 说明 |
 |---|---:|---|
-| waypointTolerance / stuckRepathMs / stuckProgressEpsilon / maxStuckRepathsPerTarget / retryMs | 0.25 / 800 / 0.05 / 2 / 1,500 | u / ms / u / 次 / ms；路径与换米 |
-| visionEvadeDistance / soundEvadeStrength / soundThreatProjection / lastSeenAlertMs | 7 / 0.09 / 4 / 2,500 | u / 最终声音强度 / u / ms |
-| alertHoldMs / minimumEvadeMs / recoverMs / safeObservationMs / soundCautionStrength | 1,800 / 900 / 1,200 / 2,500 / 0.045 | ms / ms / ms / ms / 强度；警戒恢复 |
-| escapeReplanMs / escapeGoalHoldMs / escapeSwitchScoreMargin / escapeGoalTolerance | 700 / 2,500 / 2.5 / 0.8 | ms / ms / 分 / u；逃跑目标保持 |
-| escapeMinSeparation / escapeMinTravel / escapeVisitMemoryMs / escapeRecentVisitCount / escapeRecentVisitPenalty / escapeLoopMinDistanceGain / escapeNearScoreBand | 3 / 2 / 12,000 / 4 / 5 / 1 / 0.8 | u / u / ms / 条 / 分 / u / 分 |
-| escapeCoverBonus / escapeDeadEndPenalty / escapeTravelPenalty / escapeTowardThreatPenalty / escapeRouteThreatPenalty | 4 / 6 / 0.7 / 3 / 3 | 评分权重；遮挡/死路/路程/朝威胁/路线风险 |
-| escapeExtraExitBonus / escapeAlternateRouteBonus / escapeBlockedExitPenalty / exitBlockRadius / alternateRouteMaxRatio | 1.2 / 2 / 9 / 2.5 / 2 | 分 / 分 / 分 / u / 倍；出口策略 |
-| dangerRiceAvoidMs / dangerRouteRadius | 8,000 / 3 | ms / u；脱险后暂避危险米路线 |
-| approachSprintDistance / approachSpeedThreshold / blockedExitSprintDistance | 6 / 0.35 / 3.5 | u / u每秒 / u；提前冲刺 |
-| safeSprintDistance / riskySprintDistance / sprintSoundStrength | 5 / 2.2 / 0.22 | u / u / 声音强度；安全/风险冲刺 |
-| curiosityStillMs / curiosityChance / curiosityMovementEpsilon | 5,000 / 0.10 / 0.05 | ms / 概率 / u；一次静止事件一次抽签 |
-| curiositySafeDistance / curiosityObserveMs / curiosityCooldownMs / curiosityApproachTolerance | 3 / 1,800 / 12,000 / 0.5 | u / ms / ms / u |
-| stationaryPassageChance / stationaryPassageSafetyMargin / stationaryPassageCheckIntervalMs | 0.80 / 0.65 / 500 | 概率 / u / ms；安全通行 |
-| GAME_CONFIG.match.captureRadius | 0.70 | u；通行避让半径与抓捕圈，合计 1.35 u |
-| GAME_CONFIG.rice.prepareMs / interactionRange / maxProgressMs | 400 / 60 / 5,000 | ms / 像素 / ms；当前开发模式每份 5 秒，正式值 60,000 ms |
-| GAME_CONFIG.sprint.durationMs / speedMultiplier / riskThreshold / stunMs | 2,500 / 1.6 / 0.30 / 1,000 | ms / 倍 / 全局米进度比例 / ms |
-| GAME_CONFIG.perception.visionRange / lastSeenMs / minimumAudibleStrength | 11 / 8,000 / 0.015 | u / ms / 强度；感知输入 |
+| `GAME_CONFIG.deepseekAI.visionEvadeDistance` | 5 | 目视 Human 距离 ≤ 此值为 HIGH，超过为 CAUTION。 |
+| `GAME_CONFIG.match.captureRadius` | 0.70 | 真实抓捕圈半径；**不等于**任何警戒距离。 |
+| `GAME_CONFIG.deepseekAI.stationaryPassageSafetyMargin` | 0.20 | 抓捕圈外的动态绕行余量；当前动态半径 0.70 + 0.20 = 0.90 u。 |
+| `GAME_CONFIG.deepseekAI.doorEscapeMinHumanDistance` | 1.5 | 关门 / 锁门时与目视 Human 的最低距离。 |
+| `GAME_CONFIG.deepseekAI.doorEscapeCrossingWindowMs` | 1,800 | 实际过门后允许考虑关门 / 锁门的窗口。 |
+| `GAME_CONFIG.deepseekAI.doorEscapeCooldownMs` | 5,000 | 同一扇门的关门冷却（按门独立）。 |
+| `GAME_CONFIG.door.maxActiveLocks` | 3 | 同时有效的锁上限；不限制整局总次数。 |
+| `GAME_CONFIG.sprint.cooldownMs` | 30,000 | 冲刺技能冷却；冲刺一开始即计时。 |
 
-声音各事件 range/strength/lifetime 与 wallSoundFactor 0.28、openDoorSoundFactor 1、closedDoorSoundFactor 0.45、lockedDoorSoundFactor 0.35 也由 GAME_CONFIG.perception 配置。好奇可视动作插槽是表现层预留，不改变上表玩法计算。
+声音各事件 range / strength / lifetime 与墙 / 门遮挡倍率同样由 `GAME_CONFIG.perception` 配置，详见 `docs/GAME_BALANCE_CONFIG.md`。
 
 ## 静态风险（不是本轮测试结论）
 
@@ -128,5 +145,5 @@ stateDiagram-v2
 - 可见 Human 的小位移 ≤ 0.05 u 会继续累计“静止”；边界处抖动可能使一次静止事件与视线丢失重置交替。80% 抽签先于 10%，挡路时会抑制好奇观察抽签。
 - EVADE 到达房间中心且 HIGH 时会暂时零方向等待重评估；真正无路、开门等待、STUNNED、RECOVER 无安全米路线、RESELECT 重试间隔也会零方向。它们需要与拐角卡路区分。
 - 非 HIGH 的可听声音仍为 CAUTION；RECOVER 的安全米路线检查和 Last Seen/安静计时可能延迟恢复，安全条件在边界波动时可能再转 EVADE。
-- 门状态签名变化、路径点停滞、目标米失效会清路径或重新选目标；房间评分的近分随机与目标保持、回访惩罚同时存在，仍可能出现局部循环。当前未提交的通行分支**尚未执行本轮自动测试或人工验收**，以上为代码静态风险而非已复现故障。
+- 门状态签名变化、路径点停滞、目标米失效会清路径或重新选目标；房间评分的近分随机与目标保持、回访惩罚同时存在，仍可能出现局部循环。以上为代码静态风险而非已复现故障。
 - resumeAfterManualControl 现会显式撤销 passageActive，再清路径并结束普通好奇；临时接管后归还控制的定向测试已覆盖该状态清理。浏览器手感仍待人工验收。

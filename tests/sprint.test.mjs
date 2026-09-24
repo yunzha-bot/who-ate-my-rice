@@ -136,3 +136,67 @@ test('chase multipliers preserve the 0.35 second capture rule', () => {
   assert.equal(GAME_CONFIG.sprint.speedMultiplier, 1.6);
   assert.equal(GAME_CONFIG.match.captureMs, 350);
 });
+
+const makeCooldownSprint = () => new SprintSystem(2_500, 0.30, 1_000,
+  GAME_CONFIG.sprint.cooldownMs);
+
+test('the sprint skill starts once, arms a 30s cooldown, and records its reason', () => {
+  const sprint = makeCooldownSprint();
+  assert.equal(GAME_CONFIG.sprint.cooldownMs, 30_000);
+  assert.equal(sprint.readiness, 'READY');
+  assert.equal(sprint.tryStart(right, 0.1, 'AI_SAFE_SPRINT'), true);
+  assert.equal(sprint.state, 'SPRINT_RUNNING');
+  assert.equal(sprint.readiness, 'ACTIVE');
+  // The cooldown is armed the moment the sprint really starts, not when it ends.
+  assert.equal(sprint.cooldownRemainingMs, 30_000);
+  assert.equal(sprint.lastStartReason, 'AI_SAFE_SPRINT');
+});
+
+test('the same sprint never refreshes or shortens its own cooldown', () => {
+  const sprint = makeCooldownSprint();
+  sprint.tryStart(right, 0.1);
+  sprint.advance(1_000, right);
+  assert.equal(sprint.cooldownRemainingMs, 29_000);
+  assert.equal(sprint.tryStart(down, 0.1), false);
+  assert.equal(sprint.cooldownRemainingMs, 29_000);
+  assert.equal(sprint.sprintRemainingMs, 1_500);
+  sprint.advance(1_500, right);            // sprint ends
+  const coolingDown = sprint.cooldownRemainingMs;
+  assert.equal(sprint.tryStart(down, 0.1), false);
+  assert.equal(sprint.cooldownRemainingMs, coolingDown);
+});
+
+test('at 29.9s the skill is still cooling down and at 30s it is ready again', () => {
+  const sprint = makeCooldownSprint();
+  sprint.tryStart(right, 0.1);
+  sprint.advance(29_900, stopped);
+  assert.equal(sprint.cooldownRemainingMs, 100);
+  assert.equal(sprint.readiness, 'COOLDOWN');
+  assert.equal(sprint.tryStart(right, 0.1), false);
+  sprint.advance(100, stopped);
+  assert.equal(sprint.cooldownRemainingMs, 0);
+  assert.equal(sprint.readiness, 'READY');
+  assert.equal(sprint.tryStart(right, 0.1), true);
+});
+
+test('pause freezes the cooldown and reset clears it for the next round', () => {
+  const sprint = makeCooldownSprint();
+  sprint.tryStart(right, 0.1);
+  sprint.advance(1_000, right);
+  sprint.advance(10_000, stopped, false);
+  assert.equal(sprint.cooldownRemainingMs, 29_000);
+  sprint.reset();
+  assert.equal(sprint.cooldownRemainingMs, 0);
+  assert.equal(sprint.readiness, 'READY');
+  assert.equal(sprint.lastStartReason, 'NONE');
+});
+
+test('a cooling down skill still lets ordinary movement continue', () => {
+  const sprint = makeCooldownSprint();
+  sprint.tryStart(right, 0.1);
+  sprint.advance(2_500, right);            // sprint over, cooldown remains
+  assert.equal(sprint.state, 'NORMAL');
+  assert.equal(sprint.readiness, 'COOLDOWN');
+  assert.equal(sprint.tryStart(down, 0.1), false);
+  assert.deepEqual(sprint.movementDirection(down), down);
+});

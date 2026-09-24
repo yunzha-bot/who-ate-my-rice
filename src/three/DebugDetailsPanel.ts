@@ -102,6 +102,8 @@ export const DEBUG_CATEGORY_DEFINITIONS = [
   { id: 'deepseek-ai', title: 'DeepSeek AI' },
   { id: 'threat-escape', title: 'Threat / Escape' },
   { id: 'door-escape', title: 'Door Escape / 关门逃脱' },
+  { id: 'door-lock', title: 'Door Lock / 主动锁门' },
+  { id: 'sprint', title: 'Sprint / 冲刺' },
   { id: 'safe-wait', title: 'SAFE_WAIT' },
   { id: 'curiosity-passage', title: 'Curiosity / Passage' },
   { id: 'animation', title: 'Animation' },

@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from '../config/gameConfig.ts';
-import type { DoorNode } from '../three/map/apartmentMap.ts';
+import type { DoorNode, Point } from '../three/map/apartmentMap.ts';
 
 export type DoorStateName = 'OPEN' | 'CLOSED' | 'LOCKED';
 export type LockCoreState = 'ACTIVE' | 'DISABLED';
@@ -7,7 +7,8 @@ export type DoorActor = 'DEEPSEEK' | 'HUMAN';
 export type DoorActionResult =
   | 'OPENED' | 'CLOSED' | 'LOCKED' | 'UNLOCKED' | 'FORCE_OPENED'
   | 'BLOCKED_BY_ACTOR' | 'LOCK_LIMIT_REACHED'
-  | 'LOCK_CORE_DISABLED' | 'INVALID_STATE' | 'NOT_ALLOWED' | 'NOT_FOUND';
+  | 'LOCK_CORE_DISABLED' | 'INVALID_STATE' | 'NOT_ALLOWED' | 'NOT_FOUND'
+  | 'OUT_OF_RANGE';
 
 export interface DoorState {
   id: string;
@@ -149,4 +150,18 @@ export function doorIntersectsActor(door: DoorNode, actorX: number, actorZ: numb
   const nearestX = Math.max(door.x - halfWidth, Math.min(actorX, door.x + halfWidth));
   const nearestZ = Math.max(door.z - halfDepth, Math.min(actorZ, door.z + halfDepth));
   return Math.hypot(actorX - nearestX, actorZ - nearestZ) < actorRadius;
+}
+
+/**
+ * Execution-side guard for a DeepSeek lock command. ThreeGame re-checks the
+ * actor's interactive reach instead of trusting the AI decision, then delegates
+ * every door-state rule to DoorSystem.lock(); lock rules are never re-implemented.
+ */
+export function lockDoorFromCommand(doors: DoorSystem, id: string, actor: Point,
+  canInteract: (node: DoorNode) => boolean, interactionRange: number): DoorActionResult {
+  const node = doors.definition(id);
+  if (!node || !doors.get(id)) return 'NOT_FOUND';
+  if (distanceToDoorSegment(actor.x, actor.z, node) > interactionRange ||
+      !canInteract(node)) return 'OUT_OF_RANGE';
+  return doors.lock(id, 'DEEPSEEK');
 }
