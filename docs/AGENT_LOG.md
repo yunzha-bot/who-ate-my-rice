@@ -788,3 +788,19 @@
 - 测试结果：`git diff --check` 退出码 0。**`npm test` 与 `npm run build` 本轮未跑**：纯文档轮、源码零改动（`git status --porcelain` 中不出现 `src/`、`tests/`、`vite.config.ts`、`docs/GAME_BALANCE_CONFIG.md`）。编码核对：`AGENTS.md` 266 行 / `docs/DEEPSEEK_HANDOFF.md` 165 行，均 U+FFFD 0、无 BOM、纯 LF。
 - 已知问题：本轮未做浏览器验证（无游戏代码改动，无需人工验收）；S7B-3B 修复后仍缺一份完整实机 AI JSON（既有待办）。
 - Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：计划提交标题 `docs: establish project-wide development prerequisites`，仅含上述 3 个文件、不创建 Tag；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。
+
+## 2026-09-26 +08:00｜AGENTS.md 长期规则去重整理与两处歧义表述修正
+
+- 任务名称：`AGENTS.md` 小范围去重整理。当前开发阶段：`HEAD` = `21e5d18`，S7C-1A 与 DEV 场景热编辑器 V1 均已 Gate = PASS。本轮**只改文档**，不改任何生产代码 / 测试 / `GAME_CONFIG`，不开发 DEV-A / DEV-B / S7C-1B。
+- 本次目标（用户 9 条原则）：「每次任务的执行顺序」只保留每轮操作流程与精简 / 详细两种执行模式；「长期开发路线与全阶段开发前置条件」负责保存长期约束，**每条重要规则尽量只有一处完整定义、其他章节使用准确引用**；「最终汇报」只保留报告格式；同时检查「Git 与安全边界」「日志字段」「Build Environment」「阶段状态维护规则」的直接重复，但不整篇重写；**Gate 完成条件只保留一处权威定义**；保留前置条件 1–11 的稳定编号；不改变项目进度、功能设计、阶段授权、Git 安全规则与验收标准（尤其**不得降低测试要求、擅自允许提交或放宽用户文件保护**）；不为了缩短文件而删除重要约束；对确实存在的歧义或冲突**只报告、不自行改变实际要求**。
+- 实际完成内容：
+  1. 把 7 组重复内容改为「单一权威定义 + 准确引用」：「每次任务的执行顺序」第 1 / 3 / 4 / 5 条、「Git 与安全边界」第 2 / 3 条、「Build Environment」末条、前置条件 7 的 Gate 条、前置条件 10 的 force push 条、前置条件 11 的纯文档轮条、「阶段状态维护规则」首句。
+  2. **Gate = PASS 的唯一权威定义落在前置条件 10**；前置条件 7 与「阶段状态维护规则」改为引用，不再各自重复定义。
+  3. 核对中**发现并补回两处被引用吞掉的显式条款**：`端口被占用时直接报错退出、不静默切换到 5174` 补进前置条件 8（引用化后曾全库 0 命中）；`日志只写实际完成的内容` 补进前置条件 11。
+  4. 按用户指定修正两处易歧义表述：**前置条件 1** 明确「禁止改写任何已推送的 Git 历史（含对已推送提交的 `--amend`、rebase、`reset --hard` 与强制推送）；尚未推送的本地提交，只有经过用户明确批准，才允许用 `git commit --amend` 修正」；**前置条件 7** 明确「游戏代码开发阶段必须执行 `npm test`、`npm run build`、`git diff --check`；纯文档或纯 Git 任务按适用性执行检查并说明未运行游戏测试的原因；不得因此降低游戏代码开发的测试要求」。
+  5. 结果：`AGENTS.md` 行数 **266 → 266**，改动为 **14 insertions / 14 deletions**（全部同位置改写、无净删除行）；前置条件编号 1–11、阶段状态与授权范围未变。
+- 新增文件：无。删除文件：无。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`（本条）。依赖变化：无。
+- 测试结果：`git diff --check` 退出码 0。**`npm test` 与 `npm run build` 本轮未跑**：纯文档轮、源码零改动（`git status --porcelain` 中不出现 `src/`、`tests/`、`vite.config.ts`、`docs/GAME_BALANCE_CONFIG.md`）。
+- 已知问题：本轮未做浏览器验证（无游戏代码改动，无需人工验收）；`docs/AGENT_LOG.md` 更早一轮留下的一条重复「Git commit 信息」行继续按规则保留。
+- 下一步建议：如需继续推进，先由用户逐条批准设计文档第 6 节第 3–14 项参数（S7C-1B），或另行批准 DEV-A / DEV-B 提案。
+- Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：计划提交标题 `docs: deduplicate project development rules`，仅含上述 2 个文件、不创建 Tag；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。
