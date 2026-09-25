@@ -774,3 +774,17 @@
 - 已知问题：①本轮未做浏览器验证（无游戏代码改动，无需浏览器验收）；②S7B-3B 修复后仍缺一份完整实机 AI JSON；③窗口高度很矮（实测 762×484）时场景编辑器属性区布局偏紧；④`AGENT_LOG.md` 更早一轮留下的一条完全重复的「Git commit 信息」行，按「不修改历史内容」规则继续保留；⑤`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §1 的源码行号仍是 S7C-0 审计时快照，本轮未回改（历史记录）。
 - 下一步建议：请用户确认本轮文件清单与关键差异后，再建立文档检查点（commit / push 需用户明确授权）；之后若要推进，先由用户逐条批准设计文档第 6 节第 3–14 项参数（S7C-1B），或另行批准 DEV-A / DEV-B 提案。
 - Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：本轮**未 commit、未 push、未创建 Tag**。计划提交标题（供用户确认后使用）：`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。不将 S7C 整体标记完成。
+
+## 2026-09-26 +08:00｜AGENTS.md 长期规则拆分（全阶段通用 + 已规划阶段专属）
+
+- 任务名称：《谁吃了我的米》`AGENTS.md` 长期开发规则结构重构。当前开发阶段：`HEAD` = `a889d3c`，S7C-1A 与 DEV 场景热编辑器 V1 均已 Gate = PASS。本轮**只改文档**，不改任何生产代码 / 测试 / `GAME_CONFIG`，不开发 DEV-A / DEV-B / S7C-1B，不启动开发服务器。
+- 本次目标（用户要求）：把章节「长期开发路线与下一阶段开发前置条件」更名为「**长期开发路线与全阶段开发前置条件**」，并检查章节内各条的适用范围，避免未来尚未规划的阶段错误继承当前阶段的具体要求。
+- 实际完成内容：
+  1. **`AGENTS.md` 拆分为两部分**：「**一、全阶段通用前置条件**」（Git 基线与工作区保护、开发阶段授权、测试与人工验收、开发环境、现有功能保护）适用于本项目**所有**开发阶段，包括未来尚未规划的新阶段、新子阶段、DEV 工具轮与专项任务；「**二、当前已规划阶段的专属前置条件**」（DEV-A、DEV-B、S7C-1B、S7C-2 / 2b / 3）只适用于其中点名的阶段，**未来其他阶段不自动继承**。条目编号 1–9 **保持不变**（只调整归属与标题），以免破坏其他文档中「见 `AGENTS.md` 前置条件 3 / 4 / 5」的既有引用；节首注明「编号是稳定 ID、不代表执行顺序或分组」。
+  2. **新增长期 Git 归档与文档维护要求**：新增前置条件 10「Git 归档与提交报告」（Gate = PASS 需验收 + 日志 + commit + push 全部完成；Tag 只在用户明确要求时创建；提交前复核暂存清单、只暂存本阶段文件；推送后报告完整提交编号并确认 `HEAD == origin/main`；只有**未推送**的本地提交才可经用户批准 `--amend`；禁用「未提交 / 未推送」这类提交后即失真的措辞）与前置条件 11「文档维护」（每阶段结束同步 `docs/AGENT_LOG.md` / `AGENTS.md` / `docs/DEEPSEEK_HANDOFF.md` 及本轮实际改动的设计文档；`docs/AGENT_LOG.md` 只追加、不删除不改写旧记录；**检查点与版本号一律用 `git log -1` / `git ls-remote origin refs/heads/main` 查询，不得写死「当前」SHA**；冲突先报告；纯文档轮只跑 `git diff --check`）。
+  3. **现有阶段状态及授权边界不变**：「当前项目状态」节一字未改；「长期开发路线」补记「**尚未授权 ≠ 进行中**」，并明确调整本节标题、分组或顺序都不改变实际项目进度。S7C-1B / S7C-2 / 2b / 3 与 DEV-A / DEV-B 仍**未授权**，S7B 与 S7C 整体仍**未完成**。已确认的设计边界全部保留（现有单一 anchor、圆形／扇形未批准、不提前实现 `HideSystem` 与按键藏身与 Human `CHECK_HIDE`、不覆盖正式 `GAME_CONFIG` 与平衡配置、不建立第二套地图数据真相、新增按钮不得覆盖 DEV 入口、READY 计时不得接 PLAYING 冻结源）。
+  4. **`docs/DEEPSEEK_HANDOFF.md` 已同步章节引用**：§2 的旧章节标题引用改为新标题并写明新的两部分结构；其余引用（`HANDOFF` §4、§11 与 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 的「前置条件 3 / 4 / 5」）因编号保持稳定而无需改动。`docs/AGENT_LOG.md` 中含旧标题字样的历史条目按「历史日志只追加」规则刻意未回改。
+- 新增文件：无。删除文件：无。修改文件：`AGENTS.md`、`docs/DEEPSEEK_HANDOFF.md`、`docs/AGENT_LOG.md`（本条）。依赖变化：无。
+- 测试结果：`git diff --check` 退出码 0。**`npm test` 与 `npm run build` 本轮未跑**：纯文档轮、源码零改动（`git status --porcelain` 中不出现 `src/`、`tests/`、`vite.config.ts`、`docs/GAME_BALANCE_CONFIG.md`）。编码核对：`AGENTS.md` 266 行 / `docs/DEEPSEEK_HANDOFF.md` 165 行，均 U+FFFD 0、无 BOM、纯 LF。
+- 已知问题：本轮未做浏览器验证（无游戏代码改动，无需人工验收）；S7B-3B 修复后仍缺一份完整实机 AI JSON（既有待办）。
+- Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：计划提交标题 `docs: establish project-wide development prerequisites`，仅含上述 3 个文件、不创建 Tag；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。
