@@ -173,6 +173,13 @@ export const FURNITURE: readonly Rect[] = [
   furnishing('study_desk', -3.1, 9.2, 1.7, 1.0, 0.65),
   furnishing('study_bookshelf', -0.1, 12.1, 0.6, 2.1, 1.1),
   furnishing('entry_bench', 7.1, 11.5, 1.4, 0.6, 0.45),
+  // S7C-1A hiding cartons: plain white-box furniture, no formal art. A single
+  // row is enough because MapBuilder.addObstacle draws the box, registers the
+  // static collider and outlines it under DEBUG_MAP from this data.
+  furnishing('living_carton', 7.9, 3.9, 0.9, 0.9, 0.75),
+  // Kept on the storage west wall but moved off the authored z = -2.6, where the
+  // carton covered the rice_08 marker at (16.1, -3.3) and broke the map test.
+  furnishing('storage_carton', 15.7, -4.8, 0.9, 0.9, 0.75),
 ];
 
 export const RICE_CANDIDATES: readonly MapPoint[] = [
@@ -197,13 +204,55 @@ export const SPAWNS = {
   human: { id: 'human_spawn', roomId: 'kitchen', x: 10.3, z: -4.4 },
 } as const;
 
-export const HIDE_SPOTS: readonly MapPoint[] = [
-  { id: 'hide_main_wardrobe', roomId: 'main_bedroom', x: -16.1, z: -7.8 },
-  { id: 'hide_second_bed', roomId: 'second_bedroom', x: -13, z: 10 },
-  { id: 'hide_study_bookshelf', roomId: 'study', x: -0.1, z: 12.1 },
-  { id: 'hide_storage_shelf', roomId: 'storage', x: 17.35, z: -7.5 },
-  { id: 'hide_closet', roomId: 'closet', x: -4.1, z: -7.6 },
+export type HideSpotKind = 'WARDROBE' | 'BED' | 'SHELF' | 'CARTON';
+
+// S7C-1A map configuration only: hide spots are authored data, never a second
+// collider or navigation obstacle. `MapPoint.x/z` is the one legal approach
+// position (enter = exit) measured against the real actor circle; the furniture
+// centre is derived from `furnitureId`, so it is deliberately not stored twice.
+// Beds keep their solid 0.45-high collider: `main_bed` / `second_bed` use a
+// bed-side anchor and stay presentation-only until a bed-frame collider is
+// approved separately.
+export interface HideSpot extends MapPoint {
+  kind: HideSpotKind;
+  furnitureId: string;
+  // Radians: atan2(furniture.z - z, furniture.x - x) from the anchor towards
+  // the furniture centre, for the presentation layer only.
+  facing: number;
+  label: string; // DEBUG_MAP marker text only
+}
+
+export const HIDE_SPOTS: readonly HideSpot[] = [
+  { id: 'hide_main_bed', roomId: 'main_bedroom', x: -14.4, z: -6.15, kind: 'BED',
+    furnitureId: 'main_bed', facing: 0.6877, label: '主卧床' },
+  { id: 'hide_second_bed', roomId: 'second_bedroom', x: -14.4, z: 8.9, kind: 'BED',
+    furnitureId: 'second_bed', facing: 0.666, label: '次卧床' },
+  { id: 'hide_main_wardrobe', roomId: 'main_bedroom', x: -16.65, z: -6.6,
+    kind: 'WARDROBE', furnitureId: 'main_wardrobe', facing: -1.141, label: '主卧衣柜' },
+  { id: 'hide_closet', roomId: 'closet', x: -3.57, z: -8.8, kind: 'WARDROBE',
+    furnitureId: 'closet_wardrobe', facing: 1.9867, label: '衣帽间衣柜' },
+  { id: 'hide_study_bookshelf', roomId: 'study', x: -0.8, z: 11.05, kind: 'SHELF',
+    furnitureId: 'study_bookshelf', facing: 0.9828, label: '书房书柜' },
+  { id: 'hide_storage_shelf', roomId: 'storage', x: 16.8, z: -8.75, kind: 'SHELF',
+    furnitureId: 'storage_shelf', facing: 1.1563, label: '储物间货架' },
+  { id: 'hide_living_carton', roomId: 'living', x: 7, z: 3.6, kind: 'CARTON',
+    furnitureId: 'living_carton', facing: 0.3218, label: '客厅纸箱' },
+  { id: 'hide_storage_carton', roomId: 'storage', x: 16.6, z: -4.8, kind: 'CARTON',
+    furnitureId: 'storage_carton', facing: 3.1416, label: '储物间纸箱' },
 ];
+
+// S7C-1A debug markers. A normal player view must never receive hide spot
+// information, so nothing is produced while the debug map labels are disabled.
+// `spots` defaults to the authored map so the DEV scene editor can render the
+// same marker format for an edited (committed) anchor list.
+export function hideSpotDebugMarkers(enabled: boolean,
+  spots: readonly HideSpot[] = HIDE_SPOTS):
+readonly { x: number; z: number; text: readonly string[] }[] {
+  if (!enabled) return [];
+  return spots.map(spot => ({ x: spot.x, z: spot.z,
+    text: [`${spot.label} ${spot.id}`,
+      `${spot.kind} (${spot.x.toFixed(2)}, ${spot.z.toFixed(2)})`] }));
+}
 
 export const ROUTE_LOOPS: readonly (readonly string[])[] = [
   ['living', 'dining', 'kitchen', 'living'],

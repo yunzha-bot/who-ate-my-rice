@@ -8,7 +8,7 @@
 
 - 主工程：Web / Three.js 3D 灰盒 Alpha，面向桌面 Chrome / Edge。
 - 技术：Vite、TypeScript、Three.js、原生 HTML / CSS；Phaser 不属于运行时技术栈。
-- 启动：`npm install`（仅新环境需要），`npm run dev -- --host 127.0.0.1 --port 5174`。
+- 启动：`npm install`（仅新环境需要），`npm run dev`——根目录 `vite.config.ts` 固定 `host 127.0.0.1` / `port 5173` / `strictPort: true`，端口被占用时直接报错退出而不是静默换端口；网址固定 `http://127.0.0.1:5173/`（用 IP，不要用 `localhost`）。
 - 检查：`npm test`、`npm run build`、`git diff --check`。`build` 执行 `tsc --noEmit && vite build`。当前 >500 kB 的 Vite chunk 警告是已知非阻断事项。
 - 正式设计的大米时长为 60 秒；当前开发配置从 `GAME_CONFIG` 的开发/正式模式选择，当前开发测试值为 5 秒。发布前须切回正式值并重新验收。
 
@@ -27,11 +27,11 @@
 
 ## 2. Git 与资料边界
 
-本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**交接时的提交检查点为 `ca18f61b7e7bad35070a3f16188d10f9c8ba426d`（`wip: archive s7b-3a and prepare deepseek handoff`，已推送，`main` 与 `origin/main` 同步）**。此后 S7B-3B 的全部工作（3B-0b 接口、3B-1 决策核心、关门侧向证据修复、Sprint 30 秒冷却与门协调、3B-2 防振荡、3B-3 定向回归、3B-4 收尾）**尚未提交**，仍留在工作区；另有未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，必须保留且不得提交。
+本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**当前 HEAD = `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`（`feat: complete s7b-3b proactive door locking`，已推送，`main` 与 `origin/main` 双向同步；上一检查点为 `ca18f61`）**，S7B-3B 已并入该检查点。此后 **S7C-1A（8 藏身点数据 + 2 纸箱）与 DEV 场景热编辑器 V1 轮的人工验收均已通过，但二者的改动仍未提交**，留在工作区（10 个已跟踪文件被修改 + 11 个新文件，含根目录 `vite.config.ts`）；另有未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，必须保留且不得提交。
 
 `dist/` 是可再生成的构建产物，`node_modules/` 是安装目录；二者不提交。不要把导出的临时 AI JSON 日志、密钥、个人配置或本机专属配置加入仓库。不要手工改写 `.git/` 历史。并行的 UE 工程不属于此 Web 仓库任务，不得由本次交接触碰。
 
-本次授权的范围止于「完成 S7B-3B 并准备建立 Git 检查点」；是否 commit / push 由用户批准后决定。WIP 不代表阶段发布或整个 S7B 完成。
+本次授权的范围止于「S7C-1A 与 DEV 场景热编辑器 V1 的验收收尾与 Git 检查点审计」；是否 commit / push 由用户批准后决定。WIP 不代表阶段发布、S7C 整体完成或 S7C-1B 已授权。
 
 ## 3. 实际运行架构
 
@@ -57,10 +57,12 @@
 | S7B-1 | DeepSeek 自主选米、寻路、开普通门、吃完五份米；用户确认人工验收 PASS。 |
 | S7B-2 | 威胁感知、逃跑、脱险恢复及静止 Human 好奇/安全通行专项通过用户人工验收。偶发原地停留仍是优化待办。 |
 | S7B-3A | 主动关门（条件式逃脱关门）：用户 5/5 浏览器人工验收 PASS。 |
-| S7B-3B | 主动锁门与逃脱策略：3B-0b 接口、3B-1 决策核心（含「关门遮挡视线」冲突修复 = 关门侧向证据）、Sprint 30 秒冷却与冲刺期间门交互协调、3B-2 防振荡（用户 5/5 人工验收 PASS）、3B-3 定向回归（333/333）、3B-4 DEV / 日志 / 文档收尾——**全部完成**。代码与人工验收均已完成，但**尚未建立 Git 检查点**，故不并入 S7B Gate。 |
-| S7B overall | 进行中，未完成（S7B-3A / 3B 已完成，S7C 尚未开始）。 |
-| 下一项 | 由用户批准建立 Git 检查点；之后的新阶段（S7C 等）尚未授权。 |
-| S7C 及以后 | 尚未开始；`CHECK_HIDE` 只是保留接口。 |
+| S7B-3B | 主动锁门与逃脱策略：3B-0b 接口、3B-1 决策核心（含「关门遮挡视线」冲突修复 = 关门侧向证据）、Sprint 30 秒冷却与冲刺期间门交互协调、3B-2 防振荡（用户 5/5 人工验收 PASS）、3B-3 定向回归、3B-4 DEV / 日志 / 文档收尾——**全部完成并已并入检查点 `6a92c5d`**。 |
+| S7B overall | 进行中，未完成（S7B-1 ～ 3B-4 均已通过人工验收）。 |
+| S7C-1A | 藏身点白模与地图配置：8 条 `HideSpot` 数据 + 2 个纸箱 `FURNITURE`，**未接入任何玩法**。**用户浏览器人工验收 PASS（2026-09-26）**；尚未建立 Git 检查点。 |
+| DEV 场景热编辑器 V1 + 双阵营调试冻结 | 独立 DEV 工具轮（不计入 S7C）：`DevFreezeSystem`、`MapEditModel`、`SceneEditorView / SceneEditorPanel / SceneEditor`。**用户浏览器人工验收 PASS（2026-09-26，五项）**；尚未建立 Git 检查点。 |
+| 下一项 | 由用户确认提交清单后建立 Git 检查点；S7C-1B（玩家基础藏身交互）需单独授权，开工前须逐条确认本仓设计文档第 6 节第 3–14 行参数。 |
+| S7C 后续 | S7C-1B / 2 / 2b / 3 尚未授权；Human `CHECK_HIDE` 仍只是保留接口。 |
 
 历史细节与测试结果以 `docs/AGENT_LOG.md` 为准；不要把单项 PASS 扩大解释为 S7B Gate PASS。
 
@@ -99,9 +101,11 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 
 用户提供的人工验收 5/5：正常追逐穿门关门后继续逃跑；Human 同侧跳过；Human 过近跳过；关门会封唯一退路时放弃；Human 重新开门后不原地振荡。它是本次交接采用的已确认历史结果，不是本次代理重新执行的浏览器交互结果。
 
-## 6. 下一项：S7B-3B 主动锁门与逃脱策略
+## 6. S7B-3B 主动锁门与逃脱策略（**已完成**，保留开工前的原始约束记录）
 
-这是唯一下一项主要任务，本次没有开始。实现前先明确是否锁门确实能延迟 Human、DeepSeek 是否安全离开门口、锁门是否会封住自身后续路线，以及全局 Active Lock Slot 是否可用。应复用 `DoorSystem.lock(id, 'DEEPSEEK')`、Core 状态、最大锁数和现有门碰撞/导航/感知同步；锁门仍只能作用于允许的 CLOSED Door，LOCKED Door 必须继续阻断角色、抓捕和 LOS。状态变化后重算路径，不能让 AI 计划或通过已经锁住的门。
+> 本节是 3B 开工前写下的范围约束与风险清单。该任务已于 2026-09-24 完成、经用户浏览器人工验收 PASS，并并入检查点 `6a92c5d`；**当前下一项是 S7C-1B（玩家基础藏身交互），需用户单独授权**，且开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 行参数。
+
+实现前先明确是否锁门确实能延迟 Human、DeepSeek 是否安全离开门口、锁门是否会封住自身后续路线，以及全局 Active Lock Slot 是否可用。应复用 `DoorSystem.lock(id, 'DEEPSEEK')`、Core 状态、最大锁数和现有门碰撞/导航/感知同步；锁门仍只能作用于允许的 CLOSED Door，LOCKED Door 必须继续阻断角色、抓捕和 LOS。状态变化后重算路径，不能让 AI 计划或通过已经锁住的门。
 
 需特别避免与 S7B-3A 关门冷却、Human 同时开/关门、共享锁位、S6C 锁芯失效和 SAFE_WAIT 复查相互覆盖。不得先假定距离、收益阈值、冷却或锁门优先级的具体数值；如需新增可调值，先按统一数值规则增入 `GAME_CONFIG` 并写入配置表。禁止引入锁门陷阱、AI 透视、复杂团队策略或 S7C 藏身内容，除非后续任务另有明确授权。
 
@@ -119,7 +123,7 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 ## 8. 开发及验收流程
 
 1. 先读 `AGENTS.md`、`docs/AGENT_LOG.md` 最近相关记录、`docs/GAME_BALANCE_CONFIG.md` 及当前系统接口。检查分支、status、已有提交；保留用户未提交资料。
-2. 运行开发预览：`npm run dev -- --host 127.0.0.1 --port 5174`，人工测试后导出 DEV 面板工具栏中的本局 AI JSON。导出文件是诊断产物，默认不入库。
+2. 运行开发预览：`npm run dev`（根目录 `vite.config.ts` 固定 `http://127.0.0.1:5173/`，端口被占用时直接报错而不是换端口），人工测试后导出 DEV 面板工具栏中的本局 AI JSON。导出文件是诊断产物，默认不入库。
 3. S7B 控制器与相关回归重点：`tests/deepseek-ai.test.mjs`、`tests/deepseek-evade.test.mjs`、`tests/deepseek-curiosity.test.mjs`、`tests/deepseek-curiosity-priority.test.mjs`、`tests/deepseek-passage.test.mjs`、`tests/deepseek-safe-wait.test.mjs`、`tests/deepseek-safety-regression.test.mjs`、`tests/deepseek-door-escape.test.mjs`、`tests/door-system.test.mjs`、`tests/navigation.test.mjs`、`tests/capture-zone.test.mjs`、`tests/ai-log-collector.test.mjs`。
 4. 游戏代码改动运行 `npm test`、`npm run build`、`git diff --check`。构建遵守 `AGENTS.md` 的 Vite/EPERM 规则；不以提高警告阈值掩盖失败，不提交 `dist/`。
 5. 自动测试不替代人工 Gate。人工通过后按用户指令更新阶段；通常只暂存任务范围内文件，提交前复核 staged 清单，不强推、不重写历史、不删除 `.trae/`。
@@ -129,8 +133,27 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - S7B-2 偶发原地停留保留为后续 AI 优化项，不阻断其已通过 Gate。
 - 正式 GLB 角色及 IDLE 特殊待机片段未导入；无动画片段时白模保持普通 IDLE，动画视觉验收后续处理。
 - Human AI 自动解锁耗时 8,750 ms 按用户决定留作 S16 平衡复评。
-- 构建的主 JavaScript chunk 约 705 kB，Vite >500 kB 警告非阻断。
+- 构建的主 JavaScript chunk 约 762 kB，Vite >500 kB 警告非阻断。
 - **S7B-3B 的实机验证口径**：3B-1 主动锁门与 3B-2 防振荡已由用户浏览器人工验收 PASS；但**修复后仍缺一份完整实机 AI JSON**（手上日志产生于侧向证据修复之前），锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍应以新日志复核。
-- 自动化基线：`npm test` 333/333 PASS；`npm run build`（含 `tsc --noEmit`）PASS；`git diff --check` PASS。
-- 本轮同步文档：`docs/AI_DEEPSEEK_STATE_TREE.md`（删除已与源码漂移的重复数值表、补「主动关门与主动锁门」状态机章节）、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`。
-- S7B-3B 代码与人工验收已完成；S7C 及之后内容尚未开始，`CHECK_HIDE` 仍只是保留接口。
+- 自动化基线：`npm test` **370/370 PASS**；`npm run build`（含 `tsc --noEmit`）PASS；`git diff --check` PASS。
+- 文档同步（历史）：`docs/AI_DEEPSEEK_STATE_TREE.md`（删除与源码漂移的重复数值表、补「主动关门与主动锁门」状态机章节）、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`。
+- 当前状态：S7B-3B 已并入检查点 `6a92c5d`；S7C-1A 与 DEV 场景热编辑器 V1 均已人工验收 PASS 但**尚未提交**；S7C-1B 未授权，Human `CHECK_HIDE` 仍只是保留接口。
+
+## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（人工验收 PASS，2026-09-26）
+
+独立 DEV 工具任务，**不接入任何藏身玩法**；入口只在开发环境显示（`sceneEditorEnabled(import.meta.env.DEV, factionSwitchEnabled)`），生产构建不出现。
+
+- **两个时间缝必须分清**：`DevFreezeSystem.gameplayDelta(phase, dt)`（冻结期间或 `phase !== 'PLAYING'` 返回 0，门控 `updatePlaying`）与 `DevFreezeSystem.readyDelta(deltaMs)`（READY 阶段计时器，**永不被冻结门控**，喂 `advanceReady`）。误把 `gameplayDelta` 喂给 READY 会导致对局永远停在 READY（双方不动、编辑器又因 `NOT_PLAYING` 被拒）。`tick()` 只在 `gameplayMs > 0` 时调用 `updatePlaying`，冻结帧只 `input.clear()`，`clock.getDelta()` 仍每帧读取 → 恢复不跳时间。
+- **冻结原因两个可叠加**：`MANUAL_DEV_FREEZE`（DEV「冻结双阵营」按钮）+ `SCENE_EDITOR`（打开编辑器自动冻结），全部解除才回到 `RUNNING`；关闭编辑器只移除 `SCENE_EDITOR`，手动冻结仍在。切换只在 `PLAYING` 允许；编辑期间点「恢复双阵营」被拒绝并给出 `SCENE_EDITOR_ACTIVE`。
+- **文件**：`src/systems/DevFreezeSystem.ts`（纯逻辑）、`src/three/map/MapEditModel.ts`（原始 / 草稿 / 已应用三层数据 + 校验 + JSON 导出）、`src/three/SceneEditorView.ts`（Raycaster / 锚点 gizmo / 拖动预览）、`src/three/SceneEditorPanel.ts`（DOM）、`src/three/SceneEditor.ts`（编排）。
+- **入口位置纪律**：`DEV ▾` 与「场景编辑」同处 `DebugDetailsPanel.topRow`（`.debug-top-row`）作为 flex 项——**禁止**再用绝对定位覆盖层（曾盖住 `DEV ▾`，使整个 DEV 面板不可达）。打开编辑器时 DEV 面板会整体左移让位，因此**任何缓存的控件坐标在开合前后都会失效**。
+- **拒绝必须可见**：纯函数 `sceneEditorRefusalNotice(phase, rejection)` + `.scene-editor-notice`（8 秒自动隐藏）。被拒绝的操作必须有可见反馈；且「面板还在」不等于「点得到」，需用 `elementFromPoint` 证明未被遮挡。
+- **热重建路径**：`ThreeGame.rebuildApartment()` = `ApartmentBuild.dispose()` → 用**已应用数据** `buildApartment` → 新 `CollisionWorld` + `NavigationSystem` → 两套 AI `rebindNavigation()` → `syncAllDoors()`。
+- **刻意的边界**：家具朝向只支持 0/90/180/270°（AABB 碰撞模型的限制，自由旋转需 OBB 碰撞 + 导航重建）；无撤销 / 重做；已应用编辑只在内存，刷新即回到 `apartmentMap.ts`；`EDIT_LIMITS` 等校验常量**刻意不放进 `GAME_CONFIG`**（灰盒创作约束，不是玩法数值）。
+- 已知非阻断项：窗口高度很矮（实测 762×484）时编辑器对象列表与属性区互相挤压，需要内部滚动。
+
+## 11. S7C-1A 藏身点地图数据（人工验收 PASS，2026-09-26）
+
+`HIDE_SPOTS` 共 8 条；`HideSpot` = `MapPoint`（`x/z` 即唯一锚点 = 进入点 = 退出点）+ `kind`（`WARDROBE / BED / SHELF / CARTON`）+ `furnitureId` + `facing`（弧度）+ `label`，家具中心由 `furnitureId` 反查，**不存第二份坐标**。锚点：`hide_main_bed (-14.40,-6.15)`、`hide_second_bed (-14.40,8.90)`、`hide_main_wardrobe (-16.65,-6.60)`、`hide_closet (-3.57,-8.80)`（ID 未改名）、`hide_study_bookshelf (-0.80,11.05)`、`hide_storage_shelf (16.80,-8.75)`、`hide_living_carton (7.00,3.60)`、`hide_storage_carton (16.60,-4.80)`；前 6 条为用户批准的表 3.1 原值，一个坐标都没改。2 个新纸箱 `living_carton (7.9, 3.9)`、`storage_carton (15.7, -4.8)`（0.9×0.9×0.75）只加 `FURNITURE` 数据，复用 `MapBuilder.addObstacle` 建盒 + 静态碰撞 + `DEBUG_MAP` 轮廓。
+
+**藏身玩法仍未实现**：没有 `HideSystem`、没有进入 / 退出藏身键、没有 `VisionSystem` 改动、没有 Human `CHECK_HIDE`、没有地图随机化；`DEBUG_MAP` 标记由纯函数 `hideSpotDebugMarkers(enabled)` 产出，关闭时返回空数组（有测试断言）。S7C-1B 的参数（进入 400 ms、与 Human ≥ 1.5、交互距离 1.0 或 1.3、表现 V1/V2/V3、`HIDE_*` 事件）**仍属建议值，不构成授权**。床底不做实心碰撞改动（真钻床底需「床框 + 空洞」专项设计单独批准）。

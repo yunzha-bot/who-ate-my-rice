@@ -82,7 +82,7 @@ export class HumanAIController {
   private forceBreakCooldownMs = 0;
   private readonly doorNodes: Map<string, DoorNode>;
   private readonly patrolRooms: Room[];
-  private readonly navigation: NavigationSystem;
+  private navigation: NavigationSystem;
   private readonly rooms: readonly Room[];
   private readonly random: () => number;
 
@@ -129,6 +129,21 @@ export class HumanAIController {
     this.progressWaypointKey = '';
     this.progressAnchorDistance = Infinity;
     this.avoidedWaypoint = null;
+  }
+
+  // DEV map editor: after a validated map rebuild the shared navigation grid is
+  // replaced and cached paths are dropped, so the AI never follows a stale route.
+  rebindNavigation(navigation: NavigationSystem): void {
+    this.navigation = navigation;
+    this.path = [];
+    this.pathIndex = 0;
+    this.repathRemainingMs = 0;
+    this.pathDoorSignature = '';
+    this.progressWaypointKey = '';
+    this.progressAnchorDistance = Infinity;
+    this.stuckMs = 0;
+    this.lastCommandedMovement = false;
+    this.lastNavigationReason = 'MAP_REBUILT';
   }
 
   resumeAfterManualControl(): void {

@@ -179,7 +179,7 @@ export class DeepSeekAIController {
   doorLockUsedEvidence = false;
   doorLockEvidenceDoorId: string | null = null;
 
-  private readonly navigation: NavigationSystem;
+  private navigation: NavigationSystem;
   private readonly doorNodes: Map<string, DoorNode>;
   private readonly rooms: readonly Room[];
   private readonly hasRoomGeometry: boolean;
@@ -236,6 +236,23 @@ export class DeepSeekAIController {
 
   getRecentEscapeRooms(): readonly string[] {
     return this.recentEscapeVisits.map(visit => visit.roomId);
+  }
+
+  // DEV map editor: after a validated map rebuild the shared navigation grid is
+  // replaced and cached paths are dropped, so the AI never follows a stale route.
+  rebindNavigation(navigation: NavigationSystem): void {
+    this.navigation = navigation;
+    this.path = [];
+    this.pathIndex = 0;
+    this.doorSignature = '';
+    this.retryRemainingMs = 0;
+    this.avoidedWaypoint = null;
+    this.stalledMs = 0;
+    this.stalledRepaths = 0;
+    this.progressWaypointKey = '';
+    this.progressAnchorDistance = Infinity;
+    this.lastCommandedMovement = false;
+    this.lastNavigationReason = 'MAP_REBUILT';
   }
 
   reset(): void {

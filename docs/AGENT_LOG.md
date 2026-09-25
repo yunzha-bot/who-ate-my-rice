@@ -602,3 +602,159 @@
 - 已知问题：仍缺一份「修复后」的实机 AI JSON；Git 检查点待用户批准。
 - 下一步建议：由用户批准建立 Git 检查点（是否 commit / push 由用户决定）。
 - Git commit 信息：本阶段归档为 S7B-3B 稳定检查点 `feat: complete s7b-3b proactive door locking`；实际 commit hash 与 push 结果以本次 Git 执行和最终汇报为准。不创建 Tag。
+
+## 2026-09-25 21:53 +08:00｜S7C-0 阶段衔接审计与藏身系统设计
+
+- 任务名称：S7C-0 阶段衔接审计与藏身系统设计。当前阶段：S7B 已全部通过人工验收（S7B-3B 稳定检查点 `6a92c5d`），**S7C 尚未开发**；本轮**只出设计与审计**，未写任何藏身玩法代码。
+- 授权边界（严格执行）：只允许新增本阶段设计文档、必要时追加本日志；**不改生产代码、不改 `GAME_CONFIG`、不 commit / push / tag、不删除或暂存 `.trae/` 与 `.dsh-meow/`、不提前声称 S7C 完成**。
+- 工程验证：`git status -sb` 仅 `?? .dsh-meow/`、`?? .trae/`；`git rev-parse HEAD` = `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`；`git log --oneline -5` 与 `ca18f61` 衔接正常；`.git/MERGE_HEAD`、`REBASE_HEAD`、`CHERRY_PICK_HEAD`、`rebase-merge`、`rebase-apply` 全部不存在。本次重跑 `npm test` 333/333 PASS（0 fail / 0 skipped，退出码 0）、`npx tsc --noEmit` 退出码 0。**未跑 `npm run build`**（无构建产物需求，且其会重写可重建的 `dist/`）。
+- S7B 衔接判定：S7B **没有**未闭合 Gate、**没有**阻断 Bug。逐项分类——①已验收完成：S1–S6、S7A、S7B-1、S7B-2（含好奇/安全通行专项）、S7B-3A、S7B-3B（3B-0b～3B-4）；②不影响进入 S7C 的后续优化：S7B-2 偶发原地停留（`AGENTS.md`、`DEEPSEEK_HANDOFF.md:129`、`AI_STATE_OVERVIEW.md:62` 三处均记为「不阻断、留作后续 AI 优化项」）、正式 GLB 待机资源（S10）、Human AI 自动解锁 8,750 ms（S16）、缺一份「修复后」实机 AI JSON（只影响 3B 实机复核口径）；③必须先解决的阻断问题：**未发现**。本轮**未**把 S7B 标记完成。
+- 藏身能力审计（全部以当前源码为准，不采信旧设计文档）：
+  - 地图：`HIDE_SPOTS` 仅 5 个占位 `MapPoint`（`src/three/map/apartmentMap.ts:200-206`），坐标**恰好等于**对应 `FURNITURE` 家具碰撞矩形中心（`main_wardrobe` / `closet_wardrobe` / `storage_shelf` / `second_bed` / `study_bookshelf`）；仅 `DEBUG_MAP` 下画 `H0X` 调试精灵（`src/three/map/MapBuilder.ts:63-64`）。
+  - **实测结论**：5 个点**都不可站立**（家具 AABB 中心），最近的合法站位在 0.50–1.30 世界单位外；`hide_main_wardrobe` 最近的「-X 侧」空隙是导航网格进不去的窄缝（两出生点 A* 均为 `null`），可用锚点在 +X 侧。实测候选锚点：`-15.55,-7.80` / `-14.30,10.00` / `-0.65,12.10` / `16.85,-7.50` / `-3.55,-7.60`（均对两个出生点可达）。→ S7C-1 必须先补「锚点/类型/家具关联」数据。
+  - 角色与表现：`CharacterAction` 无藏身动作（`src/systems/CharacterAction.ts:2-5`）；`CharacterActionView.paint()` 明确**不移动/不缩放角色根节点**，因为根节点同时锚定碰撞与 Capture Zone（`src/three/CharacterActionView.ts:101-110`），`CaptureZoneView` 还是 Human 根节点的子对象（`ThreeGame.ts:134`）。
+  - 交互可复用：`ThreeGame.handleDoorInteractions()`（`669-711`）+`nearestInteractableDoor()`（`759-762`）+ 进食范围 `rice.interactionRange / U = 1.0`（`597-612`）已构成 `E` 键统一仲裁链，藏身应并入而不是新开一套交互。
+  - 感知：`PerceptionGeometry.inspectVision`（`src/systems/PerceptionSystem.ts:77-93`）只认墙体与非 OPEN 门叶；`VisionSystem`（`269-290`）只做一次 human↔deepseek 全局 LOS。**系统内没有任何「角色被隐藏」概念**，因此「藏身不可见」必须在感知层/输入层表达。
+  - `CHECK_HIDE`：全项目仅出现于 `HumanAIState` 类型联合（`src/systems/HumanAIController.ts:10`，注释「stays reserved until S7C」），**无赋值、无转移、无输入字段**；`docs/AI_HUMAN_STATE_TREE.md:11,52`、`docs/AI_STATE_OVERVIEW.md:9` 一致承认为空接口。
+  - 交互影响面：抓捕按 `captureRadius 0.70` + 视线未阻挡判定（`CaptureZone.ts:17-24`、`ThreeGame.ts:627-632`），而**藏身锚点在开阔地面**上 → 若不显式门控，藏身者会被照常抓捕；冲刺 `tryStart` 仅 `NORMAL` 且冷却为 0（`SprintSystem.ts:40-56`）；进食需 `NORMAL` + 零位移（`ThreeGame.ts:605-612`）。
+  - 随机化影响面：门初始状态来自 `DoorNode.initialState` 常量（`apartmentMap.ts:68,76`，恒 `CLOSED`），被 `DoorSystem` 构造/`reset()`（`38,122`）与 `PerceptionSystem` 回退分支（`63,84`）使用 → **不能改常量**，须给 `DoorSystem` 运行时初始状态入口；米堆已支持注入随机源（`selectRiceCandidates(random)`），但 `ThreeGame.ts:281` 目前用默认 `Math.random`。
+- 新增文件：`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（S7C 设计与实施计划：现状审计、数据/系统分层、S7C-1/2/3 拆解、待确认参数表、推荐最小闭环、审计命令与结果）。修改文件：`docs/AGENT_LOG.md`（本条）。删除文件：无。依赖变化：无。**未改任何生产代码、未改 `GAME_CONFIG`**。
+- 设计要点（供后续阶段引用）：新增数据字段 `HideSpot.anchor / kind / furnitureId / facing`；新增纯逻辑 `src/systems/HideSystem.ts`（占用、进入前置条件、退出原因、事件，AI 输入不得含占用或对手实时位置）；交互并入 `E` 仲裁并按「扫雷 > 门 > 藏身 > 进食」排序；隐藏期间禁止移动/冲刺/进食/留米痕/发脚步声，且**不计入 Capture 判定**；感知抑制走 `VisionSystem` 单一真源；表现与判定分离（根节点不动）。红线：不传送、不删碰撞、不透视、不新增第二套交互/感知/导航系统、不凭空定数值。
+- 需用户拍板的 18 项已列成表（关键 3 项）：①**DeepSeek AI 主动藏身是否纳入 S7C**（不纳入则玩家选 Human 时藏身玩法不可见、S7C-2 的「玩家检查」没有对象；建议纳入并作为 S7C-2b）；②进入安全条件与距离参数（建议复用 `1.5` 与 `captureProgressMs === 0`，交互距离 1.0 或 1.3）；③表现方案 V1（视觉进柜、根节点不动）/ V2（最保守）/ V3（隐藏根节点，仅 HUD）。
+- 顺序结论：**没有发现必须打乱用户给定顺序 1→2→3 的证据**；建议保持，并在 S7C-3 的校验器里补「藏身锚点可达」一条。若纳入 AI 藏身，建议插为 S7C-2b。
+- 诊断方法留痕：藏身锚点可达性用一次性 Node 脚本（`--experimental-strip-types` + 真实 `CollisionWorld`/`NavigationSystem`）在 `%TEMP%` 计算，**脚本已删除**，仓库内不残留临时文件。
+- 测试结果：`npm test` 333/333 PASS；`npx tsc --noEmit` PASS；本轮无生产代码改动，故基线不变。`git diff --check` 以本次最终检查为准。
+- 已知问题：S7C-1 的锚点数据、18 项参数与表现方案均**待用户确认**；藏身玩法一旦引入，「Human 玩家检查」在玩家选 DeepSeek 时缺少对象（第 1 项待决）；`hide_second_bed` 的「床底」语义需用侧面锚点表现（无法真正钻床）。
+- 下一步建议：等用户批准 S7C-1 正式开发（并按第 6 节表拍板参数与表现方案）；**在用户批准前不写藏身玩法代码、不改 `GAME_CONFIG`**。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-25 22:03 +08:00｜S7C-0 补充轮：真实家具清单、藏身点清单与 1A/1B 拆分
+
+- 任务名称：按用户补充要求重做「真实地图与家具数据」审计，提交藏身点清单、布局建议与最小实施计划。当前阶段：仍为 S7C-0（设计/审计轮）；**未写任何藏身玩法代码**。
+- 用户补充边界（原话要点）：保持现有地图总体结构和已验收的 AI 行为不变；暂不制作正式家具美术；**不开发 Human AI 检查或随机布局**；不调整 `GAME_CONFIG`；**先提交清单与计划，等待确认后再改生产代码**。
+- 家具实测（真实 `FURNITURE`，18 件，全部 `fullyInRoom` 且全部构成静态碰撞）：床 2 件（`main_bed` 主卧 2.1×2.3×0.45〔**无藏身标记**〕、`second_bed` 次卧 2.1×2.2×0.45）；衣柜/柜架 7 件（`main_wardrobe` 0.6×2.1×1.15、`closet_wardrobe` 0.55×2.4×1.1、`study_bookshelf` 0.6×2.1×1.1、`storage_shelf` 0.5×2.5×1.0、`second_cabinet` 0.6×1.4×1.0、`living_tv_cabinet` 1.5×0.6×0.65、`kitchen_fridge` 0.8×0.8×1.2）；其余 9 件为桌台/卫浴/坐具（沙发、茶几、餐桌、操作台、岛台、洗手台、浴缸、书桌、玄关长凳）。**结论：地图中没有任何纸箱/箱体**；已有藏身标记 5 个，但**没有任何交互接口**（只有 `MapBuilder.ts:63-64` 在 `DEBUG_MAP` 下画精灵）。
+- 藏身点清单（6 个复用现有家具的锚点 + 1 个备选，全部满足「可站立、距家具 AABB ≥ 0.05、距最近门段 ≥ 2.0、距最近米点 ≥ 1.2、距可用导航格心 ≤ 0.45、两出生点 A* 可达」）：
+  - 优先复用床：`main_bed` 主卧 (-14.40, -6.15)；`second_bed` 次卧 (-14.40, 8.90)。
+  - 衣柜/柜架：`main_wardrobe` 主卧 (-16.65, -6.60)；`closet_wardrobe` 衣帽间 (-3.57, -8.80)；`study_bookshelf` 书房 (-0.80, 11.05)；`storage_shelf` 储物间 (16.80, -8.75)。
+  - 备选：`second_cabinet` 次卧 (-15.60, 6.00)。
+- 被排除的方案（有实测依据）：`HIDE_SPOTS` 现有主卧衣柜占位点与其正前方旧锚点距米点 `rice_09` 仅 **0.60 u**（落在 1.0 u 进食范围内，会与按住 `E` 进食抢键），故改用衣柜北侧 (-16.65, -6.60)（距最近米 2.23 u）；衣柜西侧贴墙的约 0.05 u 窄缝**导航网格进不去**，一律排除；`storage_shelf` 东侧无合法站位（距东墙 0.5 u）；`living_tv_cabinet`（高 0.65、贴墙）与 `kitchen_fridge`（贴墙、厨房通道紧）不适合。
+- 「床底」物理限制（实测）：床碰撞体是 0.45 高的实心 AABB，角色高 0.7、半径 0.23 → **既不能站进床内也不能真正钻床下**；默认方案为「床边锚点 + 仅表现层画到床沿」，真正钻床需把床碰撞改成「床框 + 空洞」（属地图/碰撞改动，已列为待批选项）。
+- 缺箱体的最简白模方案：**不需要为衣柜做新白模**（衣柜/书柜/货架已有），只缺纸箱；最简实现是**零新代码**，只往 `FURNITURE` 加一行 `furnishing('living_carton', 7.9, 3.9, 0.9, 0.9, 0.75)`，`MapBuilder.addObstacle`（`MapBuilder.ts:46-56`）会自动建 `BoxGeometry`、加入静态碰撞并在 `DEBUG_MAP` 下勾轮廓，再补一条 `HIDE_SPOTS`。已在真实 `CollisionWorld` + `NavigationSystem` 上离线模拟加入纸箱并重算既有地图不变量：`living_carton`(7.9,3.9)、`storage_carton`(15.7,-2.6)、`entry_carton`(3.0,11.6)、`study_carton`(-6.8,13.6) **四个位置全部保持不变量**（房间可达、14 米点可站立且可达、两出生点可站立、18 门及门前后 1 个角色直径处可站立、Human 出生点到所有房间 A* 可达），无纸箱基线自检同样通过。建议只加 `living_carton` + `storage_carton`。
+- 交互冲突审计（新增校验项）：所有采纳锚点距最近门段 ≥ 2.0 u、距最近米点 ≥ 1.2 u，不会与 `E` 开门/锁门、按住 `E` 进食抢占同一位置。`E` 键优先级建议：扫雷面板 > 门 > 藏身点 > 进食。
+- S7C-1 已按用户要求拆为 **S7C-1A 藏身点白模及地图配置**（`HideSpot` 扩展 + 表 3.1 数据 + 可选纸箱 + 锚点/不变量校验测试，**不接入玩法**）与 **S7C-1B 玩家基础藏身交互**（`HideSystem` + `E` 仲裁 + 移动/冲刺/进食/抓捕门控 + `VisionSystem` 隐藏入口 + `HideSpotView` + DEV `Hide` 分类）；S7C-2 / 2b / 3 本轮明确不做。
+- 新增文件：无（本轮只更新已有设计文档与日志）。修改文件：`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（新增 §1.10 家具清单、重写 §3 为 1A/1B 并加入表 3.1 藏身点清单/白模方案/逐点规格、补充 §6 第 19–21 条、更新 §7/§8/文件头）、`docs/AGENT_LOG.md`（本条）。删除文件：无。依赖变化：无。**未改任何生产代码、未改 `GAME_CONFIG`**。
+- 测试结果：`npm test` 333/333 PASS；`npx tsc --noEmit` 退出码 0（本轮无代码改动，基线不变）；`git diff --check` 以本次最终检查为准。
+- 已知问题：6 个锚点坐标与纸箱数量**待用户确认**；「钻床底」需碰撞改动；玩家选 Human 时「检查藏身点」仍缺对象（取决于是否纳入 DeepSeek AI 藏身）。
+- 下一步建议：批准 S7C-1A 后先落地地图数据与校验（零玩法风险），再单独批准 S7C-1B。
+- Git commit 信息：未提交；未 push；未创建 Tag。
+
+## 2026-09-25 22:19 +08:00｜S7C-1A 藏身点白模与地图配置
+
+- 任务名称：S7C-1A 藏身点白模与地图配置（用户已正式批准）。当前阶段：S7B 已全部人工验收，S7C-1A 落地完成，**等待浏览器人工验收**；S7C-1B 仍未授权。
+- 用户批准的布局（原话要点）：使用审计表 3.1 已验证的六个锚点（`main_bed`/主卧、`second_bed`/次卧、`main_wardrobe`/主卧、`closet_wardrobe`/衣帽间、`study_bookshelf`/书房、`storage_shelf`/储物间）；新增两个纸箱白模 `living_carton (7.9, 3.9)` 与 `storage_carton (15.7, -2.6)`，且**这两个位置必须再次通过真实地图导航和碰撞检查**；暂不添加 `second_cabinet`、玄关纸箱、书房纸箱；合计 **8 个藏身点**。床只登记两张床及其床边锚点，**不改床的实心碰撞**。
+- 本轮明确不做（逐条遵守）：`HideSystem`、进入/退出/隐身按键、`Vision`/`Perception` 判定、Human `CHECK_HIDE`、Sprint/抓捕/进食规则、地图随机化、`GAME_CONFIG` 调整、提前开发 S7C-1B。
+- 实现内容：
+  1. `HideSpot` 数据结构 + **8 条数据**（`src/three/map/apartmentMap.ts`）：`kind`（`WARDROBE / BED / SHELF / CARTON`）、`furnitureId`、`facing`（锚点→家具中心的 XZ 方位角，弧度）、`label`（调试显示名）；**`MapPoint.x/z` 就是唯一合法锚点（进入 = 退出）**，不再单列 `anchor`，家具中心由 `furnitureId` 反查而**不存第二份坐标**（原 S7C-0 草案的 `anchor: Point` 已在设计文档 §2.2 记录为落地修正）。
+  2. 8 个锚点：`hide_main_bed (-14.40,-6.15)`、`hide_second_bed (-14.40,8.90)`、`hide_main_wardrobe (-16.65,-6.60)`、`hide_closet (-3.57,-8.80)`、`hide_study_bookshelf (-0.80,11.05)`、`hide_storage_shelf (16.80,-8.75)`（六个均为用户批准的表 3.1 原值，**一个坐标都没改**）、`hide_living_carton (7.00,3.60)`、`hide_storage_carton (16.60,-4.80)`。五个原有占位 ID 保持不变（`hide_closet` 未更名，避免动已批准的 ID）。
+  3. 2 个纸箱白模：`FURNITURE` 追加 `living_carton (7.9, 3.9)`、`storage_carton (15.7, -4.8)`，均 0.9×0.9×0.75；**零 Three.js 新代码**，复用 `MapBuilder.addObstacle`（BoxGeometry + 静态碰撞 + `DEBUG_MAP` 轮廓）。
+  4. `DEBUG_MAP` 调试标记：`hideSpotDebugMarkers(enabled)` 只在调试开启时返回 8 条标记数据；`MapBuilder` 用新增的 `markerLines` 画两行精灵（「中文名 + 藏身点 ID」/「类型 (锚点 x, z)」）并在地面画锚点小方块。非 DEBUG 时函数返回空数组，普通玩家视图不包含任何藏身点信息。原有房名/米点/出生点标记保持单行、参数不变（`marker()` 现在只是 `markerLines(..., 34)` 的包装）。
+  5. 新增 `tests/hide-spot.test.mjs`（9 项）：ID/房间/类型/家具绑定/朝向唯一且完整；`facing` 与反算一致；锚点在房间内且 `canOccupyStaticXZ` 可站立、距所属家具 AABB ≥ 0.05、不落在任何墙/家具盒内；距最近门段 ≥ 2.0；距最近米点 ≥ 1.2（且大于 `rice.interactionRange/U`）；距可用导航格心 ≤ 0.45；从两个出生点 A* 可达；`FURNITURE` 恰好 20 条且只新增这两个纸箱、不与其他盒子重叠、不压门/门前后点/米点；**加纸箱前后「仍可站立格」的连通性对比无孤立格**；非 DEBUG 不产生藏身点标记。
+- 关键实测与修正（用户指定坐标复核）：**用户指定的 `storage_carton (15.7, -2.6)` 未通过真实地图检查**——它距米点 `rice_08 (16.1, -3.3)` 中心 0.81、纸箱 AABB 到米点仅 0.250，而 `tests/apartment-map.test.mjs` 的 `free()` 以 `PLAYER_DIAMETER/2 = 0.2667` 判定，实测报 `rice blocked rice_08`。按「必须通过真实检查」的要求，保留用户指定的 x=15.7（仍贴储物间西墙）而把 z 北移到 **-4.8**：距 `rice_08` 中心 1.55、不压任何门/门前后点/米点，且储物间的可通行性与连通性经对比测试证明未被切断。修正过程与证据写入 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §3.2/§8.1 与 `docs/MAP_SPEC.md`。
+- 锚点余量实测（角色圆半径 0.23）：6 个家具锚点为 0.070–0.220，`hide_main_wardrobe (-16.65,-6.60)` 与 `hide_closet (-3.57,-8.80)` 只剩 **0.030 / 0.025**（来自已批准的表 3.1 原值，本轮未擅自改）。因 1B 的交互按「到锚点距离」判定，玩家不必站到点上，可用性不受影响；更宽松的替代坐标（`(-16.60,-6.40)` / `(-3.40,-8.80)`）与 `living_carton` 距东/南墙各 0.56、东/南两侧各剩约 0.10 宽圆心通道的观察已记入文档，供验收时决定。
+- 修改文件：`src/three/map/apartmentMap.ts`、`src/three/map/MapBuilder.ts`、`docs/MAP_SPEC.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。新增文件：`tests/hide-spot.test.mjs`。删除文件：无。依赖变化：无。**未改 `GAME_CONFIG`、未改门/锁/冲刺/米堆/抓捕/感知规则、未接入任何藏身玩法**。
+- 测试结果：`npm test` **342/342 PASS**（基线 333 + 新增 9，fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（`cmd /c` 复核；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0。临时复核脚本 `verify-hide.tmp.mjs` 在仓库根目录运行后**已删除，未入库**。
+- 已知问题：S7C-1B 仍未授权；`hide_main_wardrobe`/`hide_closet` 锚点余量极小（0.025–0.030）、`living_carton` 两侧通道窄（约 0.10）——两者都不阻断，等浏览器验收决定是否微调；「钻床底」仍需床框+空洞碰撞的专项设计。
+- 下一步建议：请用户按浏览器验收步骤在 `DEBUG_MAP` 下跑图确认 8 个锚点与 2 个纸箱的位置手感；验收通过后再单独批准 S7C-1B（届时才写 `GAME_CONFIG.hide` 与 `HideSystem`）。
+- Git commit 信息：未提交；未 push；未创建 Tag。不将 S7C 整体标记完成，`AGENTS.md` 阶段状态未改（其规则要求 Gate 通过且提交推送成功后才更新）。
+
+## 2026-09-25 22:43 +08:00｜S7C-1A 决策定案（用户确认 ①–④）
+
+- 任务名称：S7C-1A 纯文档决策定案轮（用户已批准）。当前阶段：S7C-1A 已落地、**仍等待浏览器人工验收**；S7C-1B 未授权。本轮**只改文档，不改任何生产代码、测试或 `GAME_CONFIG`**。
+- 用户批准与固定下来的四项决定（原话要点）：
+  1. **接受** `storage_carton` 的 z 由 -2.6 改到 -4.8（原位置会压到 `rice_08`，修正是有明确测试依据的，而且不影响通路）。
+  2. **两个衣柜锚点先不改**：「虽然余量偏小，但 1B 是『靠近锚点即可交互』，并不是要求角色圆心必须精确踩在点上。先浏览器走一遍，真觉得别扭再微调，避免为了理论余量来回改坐标。」
+  3. **`living_carton` 先保持现在的位置**：「它虽然靠角落比较紧，但当前测试显示不挡门、不挡米、不破坏连通性。先看实机视觉效果再决定要不要贴到更里面。」
+  4. **`hide_closet` 暂时不要改名**：「这个 ID 已经存在过，稳定 ID 比命名整齐更重要。」
+- 本轮边界（用户原话要点）：只修改指定的三份 docs 文档；保留当前尚未提交的 S7C-1A 全部成果与 `.trae/`、`.dsh-meow/`；**不得将 S7C-1A 标记为人工验收通过**，不开始 S7C-1B、不 commit / push / tag；1B 参数集中列为待单独确认，**不得因已有建议值或之前生成过开发提示词就视为已经实施或验收**。
+- 实际完成内容：
+  1. `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`：§3.4 末条由「遗留观察（供 1B / 验收决定）」改写为「遗留观察与用户决定（2026-09-25 决策定案）」，保留全部实测数字（锚点余量 0.030 / 0.025、`living_carton` 墙距 0.56、两侧约 0.10 宽圆心通道），记录 ①–④ 四项决定与用户理由原话，原两条「若要更宽松 / 更干净可平移」改标为**未采纳备选值（仅备查）**，并注明任何坐标改动都必须重跑 `tests/hide-spot.test.mjs`、`tests/apartment-map.test.mjs` 与全量 `npm test`；§3.5 开头新增「前置（尚未满足）」块，写明 1B 未授权、需逐条确认第 6 节第 3–14 行参数、**存在建议值不等于已实施或已验收**；第 6 节标题下新增状态声明（第 2 行已由 1A 落地、第 19–21 行已定案、第 3–14 行属 1B 待单独确认、第 1 行与第 15–18 行未授权）；§8.2 新增本轮命令与结果表。
+  2. `docs/MAP_SPEC.md`：S7C-1A 一节「遗留观察」改为「遗留观察与用户决定」，写明两项**按现行值保留**（先浏览器实机走一遍、真别扭再微调；稳定 ID 优先于命名整齐），理由 / 备选值以指针形式指向设计文档 §3.4（**不复制第二份真相**）；补一行「S7C-1B 未授权，本节只有地图数据与调试标记」。
+  3. `docs/AGENT_LOG.md`：本条。
+- 关键前提保留（未变）：四项决定只固定「不改坐标 / 不改名 / 接受 z 修正」，**不包含任何 1B 参数批准**；`hide_main_wardrobe` / `hide_closet` 锚点余量仍为 0.030 / 0.025，`living_carton` 两侧通道仍约 0.10 宽，均不阻断。
+- 修改文件：`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/MAP_SPEC.md`、`docs/AGENT_LOG.md`（本条）。新增文件：无。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` **342 / 342 PASS**（fail 0 / skipped 0，退出码 0）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）；**本轮未跑 `npm run build`**（纯文档轮，且 `vite build` 会重写被忽略的 `dist/`；源码未变，上一轮构建结果仍然有效）。文档措辞自检：「若要更宽松」「若要更干净」「等浏览器验收时决定」在规范性正文中 **0 命中**（命中只出现在本条记录与设计文档 §8.2 引用这三个字符串说明「做过该自检」时，不计入）。
+- 工作区核对：`git status --short` 与 S7C-1A 落地轮结束时完全一致（4 个 ` M` + 4 个未跟踪条目），**本轮未新增任何源码 / 测试改动**；`HEAD = 6a92c5d`，`origin/main...HEAD = 0 0`。设计文档仍是未跟踪文件，是否入库由后续授权轮决定。
+- 已知问题：浏览器人工验收尚未执行（用户侧）；S7C-1B 未授权；「钻床底」仍需床框 + 空洞碰撞的专项设计单独批准。
+- 下一步建议：用户按上一轮报告的浏览器验收步骤在 `DEBUG_MAP` 下跑一遍（8 个锚点 + 2 个纸箱）；验收通过后再单独批准 S7C-1B，并先逐条确认第 6 节第 3–14 行的参数。
+- Git commit 信息：未提交；未 push；未创建 Tag。不将 S7C 整体标记完成，`AGENTS.md` 阶段状态未改（其规则要求 Gate 通过且提交推送成功后才更新）。
+
+## 2026-09-25 23:16 +08:00｜DEV 场景热编辑器 V1 + 双阵营调试冻结
+
+- 任务名称：《谁吃了我的米》独立 DEV 工具任务：场景热编辑器 V1 + 双阵营调试冻结。当前阶段：S7C-1A 已落地并等待浏览器人工验收，S7C-1B 仍未开发；本轮为独立 DEV 工具任务，**不提前开发藏身玩法**。
+- 本轮边界（用户要求，逐条遵守）：不调整现有 `GAME_CONFIG` 游戏平衡参数；不开始 S7C-1B / 2 / 3；不 commit、push、tag；保留 `.trae/` 与 `.dsh-meow/`；不把 S7C 整体标记完成；完成后暂停等待人工验收。先检查 `git status` 并保留全部未提交的 S7C-1A 改动（未重置、未覆盖）。
+- 架构审计结论（决定实现方式）：
+  1. **所有玩法时间都来自 `dt`**：全项目仅两处墙钟（`AILogCollector` 导出时间戳、日志文件名），与冻结无关。因此冻结只需一个时间缝，不需要第二套暂停系统。
+  2. `GameStateSystem` / `RiceField` / `SprintSystem` / `HumanDoorSkill` / 两套 AI / 感知 / 米痕全部由 `updatePlaying(deltaMs)` 推进；`PAUSED` 的实现方式正是「不调用 `updatePlaying`」。
+  3. `CollisionWorld` 的静态盒是构造期 `Box3[]`，`NavigationSystem` 按 `CollisionWorld` + 门预计算格子；两者都**不支持安全增量更新**，因此按用户允许的方案采用「拖动预览 → 校验 → 提交时安全重建」。
+  4. `buildApartment` 原先直接往 scene 建对象并只返回 `Box3[]`，无法按 ID 拾取也无法整体重建 → 重构为返回 `{ root, obstacles, furnitureMeshes, anchorGizmos, dispose() }`（`src/three/ThreeGame.ts` 是唯一调用方）。
+- 实现内容：
+  1. `src/systems/DevFreezeSystem.ts`（纯逻辑）：`MANUAL_DEV_FREEZE` / `SCENE_EDITOR` 两个独立原因可叠加，只有全部解除才回到 `RUNNING`；`manualFreeze` / `manualResume` / `openSceneEditor` / `closeSceneEditor` 只在 `PLAYING` 可用（FINISHED 不被复活）；编辑期间「恢复双阵营」被拒绝并给出 `SCENE_EDITOR_ACTIVE` 原因；`gameplayDelta(phase, dt)` 是唯一时间缝；事件 `DEV_FREEZE_ON / OFF`、`SCENE_EDITOR_OPEN / CLOSE` 只在状态真正变化时写入（不刷屏）；`reset()` 清空原因 / 事件 / 计数。
+  2. `ThreeGame` 接入：`tick()` 改为 `const gameplayMs = devFreeze.gameplayDelta(...)`，仅 `gameplayMs > 0` 才 `updatePlaying`，冻结帧只 `input.clear()`（丢弃按键缓冲，防止恢复后重放）；`clock.getDelta()` 仍每帧读取，恢复不跳时间。DEV 面板新增「冻结双阵营 / 恢复双阵营」按钮 + `RUNNING/FROZEN｜原因` 状态文字；新增 DEV 分类 `dev-freeze`（双阵营状态、冻结原因、进入冻结前的游戏状态快照、最近被拒绝的冻结操作、场景编辑开关、当前选中、草稿合法性、最近拒绝编辑原因、已应用次数、事件计数）。冻结期间不执行 `updatePlaying`，因此 AI JSON 不会出现由冻结造成的卡路 / 追逐失败 / 计时异常。
+  3. `src/three/map/MapEditModel.ts`（纯逻辑，可在 Node 中直接测真碰撞 / 真导航）：三层数据（原始 / 草稿 / 已应用）、28 个可编辑对象（20 家具 + 8 锚点）、只读字段保护、`EDIT_LIMITS`（宽深 0.2–4、高 0.1–1.6、锚点余量 0.05、锚点–家具上限 0.9、0.3 网格）、拒绝码 `ROOM_BOUNDARY / SIZE_OUT_OF_RANGE / NOT_QUARTER_TURN / BLOCKS_DOOR / COVERS_RICE / SPAWN_BLOCKED / ROOM_UNREACHABLE / ANCHOR_INSIDE_OBSTACLE / ANCHOR_DETACHED / OVERLAPS_FURNITURE / INVALID_VALUE / READ_ONLY_FIELD / NOT_FOUND`、拒绝即回滚、`diff()`、`resetTarget()`、`exportJson()`。连通性校验复用 `tests/apartment-map.test.mjs` 同款 `free()` 判据与 0.3 网格洪水填充；锚点用真实 `CollisionWorld.canOccupyStaticXZ` 校验。**原始地图数据从未被修改**（有测试断言）。
+  4. `src/three/SceneEditorView.ts`（Three）：真实 `Raycaster` 拾取家具 mesh 与锚点 gizmo（锚点另有 `opacity: 0` 的可拾取圆柱命中体，被墙 / 家具 / 标签遮挡也能从列表选中）；地面圆环 + 中心点 + 竖直定位线的锚点定位标记与显隐开关；`BoxHelper` 选中高亮；拖动按对象中心水平面求交（不跳点），拖动只写草稿；预览着色（合法绿 / 非法红）。
+  5. `src/three/SceneEditorPanel.ts`（DOM）：右上角「场景编辑」入口（`sceneEditorEnabled(import.meta.env.DEV, factionSwitchEnabled)`，生产不显示）、右侧编辑器面板（可搜索对象列表 = 家具 20 + 锚点 8、只读身份信息、数值输入 + 0/90/180/270 朝向、差异预览、最近拒绝原因、草稿状态、应用 / 放弃 / 恢复初始值 / 聚焦镜头 / 导出 JSON）。
+  6. `src/three/SceneEditor.ts`（编排）：打开时 `openSceneEditor()` 自动冻结；关闭时丢弃未应用草稿并重建（「不保留非法编辑预览」，已应用编辑保留）、只解除 `SCENE_EDITOR`（手动冻结仍在）；应用编辑 → `apply()` → `rebuildApartment()`；拖动 / 输入被拒绝时回滚并提示；镜头聚焦 / 缩放（0.45–2.5，退出编辑器复位）/ 平移；`statusEntries()` 供 DEV 面板。
+  7. 热编辑同步（`ThreeGame.rebuildApartment`）：`ApartmentBuild.dispose()` → 用**已应用数据**重建整棵公寓（`DEBUG_MAP` 藏身标记与锚点 gizmo 一并跟随）→ 新建 `CollisionWorld` + `NavigationSystem` → `humanAI.rebindNavigation()` / `deepseekAI.rebindNavigation()`（换网格、清缓存路径、`lastNavigationReason = 'MAP_REBUILT'`，不重置其他 AI 状态）→ `syncAllDoors()` 重新登记门的动态碰撞盒。
+  8. 测试：新增 `tests/dev-freeze.test.mjs`（11 项：原因叠加、只 PLAYING 可切换、编辑期间拒绝恢复、重开清空、FINISHED 不复活、`gameplayDelta` 表格、**真实系统帧循环 harness** 证明冻结期间对局时间 / 抓捕进度 / 米进度 / 冲刺与冷却 / 破锁冷却 / 门状态 / 结算全部不变且恢复只前进一个 `dt`）与 `tests/scene-editor.test.mjs`（14 项：28 对象与只读字段、原始地图零拒绝、合法移动 / 缩放后真实碰撞与导航同步、90° 旋转 AABB 互换、字段级保护、拒绝回滚、门 / 米 / 出生点 / 连通性 / 锚点各自触发、重叠拒绝、恢复初始值、导出字段与只应用数据、原始模块数据未变、DEV 开关）。更新 `tests/debug-details-panel.test.mjs` 期望（新增 `dev-freeze` 分类）。
+- 新增文件：`src/systems/DevFreezeSystem.ts`、`src/three/map/MapEditModel.ts`、`src/three/SceneEditorView.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditor.ts`、`tests/dev-freeze.test.mjs`、`tests/scene-editor.test.mjs`、`docs/DEV_SCENE_EDITOR_DESIGN.md`。修改文件：`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`src/systems/HumanAIController.ts`、`src/systems/DeepSeekAIController.ts`、`src/style.css`、`tests/debug-details-panel.test.mjs`、`docs/MAP_SPEC.md`、`docs/AGENT_LOG.md`（本条）。删除文件：`verify-edit.tmp.mjs`（本轮临时校验脚本，用完即删、未入库）。依赖变化：无（未新增依赖）。**未改 `GAME_CONFIG`、未改 `docs/GAME_BALANCE_CONFIG.md`、未接入任何藏身玩法、未改门 / 锁 / 冲刺 / 米堆 / 抓捕 / 感知规则。**
+- 测试结果：`npm test` **367 / 367 PASS**（基线 342 + 新增 25，fail 0 / skipped 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 `tsc --noEmit` + vite build）退出码 0（`cmd /c` 复核 `$LASTEXITCODE`；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示；本轮修复了 `src/style.css` 的 EOF 空行）。
+- 开发服务器冒烟（非单元测试）：`npm run dev -- --host 127.0.0.1 --port 5174` 启动成功，`/`、`/src/main.ts`、`/src/systems/DevFreezeSystem.ts`、`/src/three/map/MapEditModel.ts`、`/src/three/SceneEditorView.ts`、`/src/three/SceneEditorPanel.ts`、`/src/three/SceneEditor.ts`、`/src/three/ThreeGame.ts`、`/src/three/DebugDetailsPanel.ts`、`/src/three/map/MapBuilder.ts`、`/src/style.css` 全部 HTTP 200 且无 esbuild 转换错误，说明新增模块在真实开发图里能解析。
+- 已知问题 / 未验证：**浏览器交互（面板 DOM、Raycaster 拾取、拖动预览、镜头聚焦、冻结按钮点击）本轮未由我实机验证**——尝试用 Tabbit Browser 自动冒烟时其 stable launcher 返回 `exit 69`（路由不可用 / 不可达），且当时 Tabbit Browser 进程未运行；按该工具链约定不自行启动或改写其运行时，因此这部分留给浏览器人工验收。家具朝向只支持 90° 整数倍（自由旋转需要 OBB 碰撞，属架构级改动）；拖动不做逐帧校验；无撤销 / 重做；已应用编辑只在内存，刷新即回到 `apartmentMap.ts`。
+- 下一步建议：按 `docs/DEV_SCENE_EDITOR_DESIGN.md` §9 做浏览器人工验收（冻结 / 恢复、编辑期间拒绝恢复、拖动与数值编辑、非法编辑拒绝、锚点显隐与聚焦、JSON 导出、关闭后恢复、重开清理）；验收通过后再单独批准 S7C-1B 并先确认其参数。
+
+## 2026-09-25 23:39 +08:00｜DEV 编辑器轮 FAIL 阻断修复（DEV 调控台被盖住 / 场景编辑无响应 / 双方不能行动）
+
+- 任务名称：修复用户浏览器人工验收 FAIL 的三个阻断问题。当前阶段：S7C-1A 仍等待浏览器验收、S7C-1B 未授权；本轮**只修复阻断问题，不新增场景编辑功能、不改 `GAME_CONFIG`、不开始 S7C-1B / 2 / 3**。
+- 用户报告的实际故障：①原有 DEV 调控台及其交互按钮消失；②右上角只剩「场景编辑」；③点击「场景编辑」没有反应；④找不到「冻结双阵营」；⑤玩家与 AI 都不能正常行动。
+- 根因 A（DEV 调控台「消失」，与被修代码无关的功能其实都在）：上一轮把入口写成绝对定位的 `.dev-launcher { position: absolute; top: 10px; right: 10px; z-index: 6 }`，与 `.debug-panel`（`top: 10px; right: 10px; z-index: 4`）的 `DEV ▾` 展开开关**完全重叠**。实测：`DEV ▾` 宽 62px（x 690–752），新按钮宽 68px（x 684–752），`document.elementFromPoint(DEV ▾ 中心)` 返回 `scene-editor-launch` → 原 DEV 面板唯一的展开开关被不透明按钮盖住且点不到，面板本体（连同其中的「冻结双阵营」按钮）因此表现为「消失」。展开面板后实测原有 5 个控件（临时控制 Human / 临时控制 DeepSeek 娘 / 导出本局 AI 日志 / 冻结双阵营 / AI 安全路径可视化）与 11 个分类全在，没有任何原有 DOM 被删除或改写。
+- 根因 B/C（③ 点击无响应 + ⑤ 双方不能行动，同一个根因）：`ThreeGame.tick()` 的 READY 分支被误喂 `gameplayDelta`，而 `gameplayDelta` 在 `phase !== 'PLAYING'` 时恒返回 0 → `match.advanceReady(0)` 永不推进 → 对局**永远停在 READY**：`updatePlaying` 从不执行（玩家与两套 AI 全部静止），而 `openSceneEditor` 因 `NOT_PLAYING` 一直被拒绝，拒绝原因只写进未打开的编辑器面板（`SceneEditor.message`）→ 按钮看起来彻底无响应。实测证据：选择阵营后 2.4 秒内 DEV 面板「对局状态 / 时间」恒为「准备：3 秒 / 00:00」，间隔 1.4 秒的两帧截图逐字节相同。
+- 修复内容：
+  1. `DevFreezeSystem.readyDelta(deltaMs)`：把「READY 是阶段计时器、不属于玩法模拟、不得被冻结门控」固化为显式接口，`tick()` 的 READY 分支改用 `readyDelta(deltaMs)`，PLAYING 分支仍用 `gameplayDelta`。
+  2. `DebugDetailsPanel` 新增 `readonly topRow`（`.debug-top-row`）并把 `DEV ▾` 放进该行；`SceneEditorPanel` 把「场景编辑」按钮 `prepend` 进同一行（flex 项，不再是绝对定位覆盖层），删除 `.dev-launcher` CSS 规则 → 两个按钮在任何视口宽度下都不可能再重叠。
+  3. 拒绝必须可见：新增 `.scene-editor-notice`（同一行内提示，8 秒后自动隐藏、打开编辑器时清除）与 `SceneEditorPanel.showNotice()`；`SceneEditor.requestOpen()` 失败时调用新增的纯函数 `sceneEditorRefusalNotice(phase, rejection)`，PLAYING 之外显示「场景编辑需要先进入对局（当前 READY）」，不再静默。
+  4. DEV 工具栏把「冻结双阵营」按钮与状态文字包进 `.details-freeze-row`（同一行，避免工具栏再长两行）；工具栏状态里的拒绝原因补上「最近拒绝：」前缀（符合本项目调试标签纪律）。
+  5. 短窗口可用性：`.scene-editor-detail { flex: 1 1 auto; min-height: 0 }`、`.scene-editor-list { flex: 0 1 auto; min-height: 72px }` → 窗口很矮时对象/属性区内部滚动，而不是被 `overflow: hidden` 裁掉、连输入框都够不到。
+  6. `SceneEditor.ts` / `SceneEditorView.ts` / `SceneEditorPanel.ts` 的 import 补 `.ts` 扩展名（与 `src/systems/*` 既有写法及 `allowImportingTsExtensions` 一致，同时让这些模块能被 Node 测试导入）。
+  7. 顺带修正 `src/style.css` 中上一轮写入的两行二次编码中文注释（改为 ASCII 注释，`style.css` 现无非 ASCII 行）。
+- 新增测试：`tests/dev-freeze.test.mjs` +2——`readyDelta` 在手动冻结下仍返回真实帧时间；**READY→PLAYING 回归**（用真实 `GameStateSystem` + `DevFreezeSystem` 正向跑到 `PLAYING`，并用同一循环改喂 `gameplayDelta` 作反例，断言仍卡在 `READY`，即本轮事故的复现式反证）。`tests/scene-editor.test.mjs` +1——拒绝必须产出含当前 phase 的可见原因文字。
+- 真实浏览器验证（本机 Chrome 153 `--headless=new` + CDP `Runtime.evaluate` / `Input.dispatchMouseEvent` / `elementFromPoint` / `Page.captureScreenshot`；**不是 Tabbit Browser**：其 stable launcher 仍返回 `exit 69` 且运行时未运行，按该工具链约定未自行启动）：①`elementFromPoint(DEV ▾ 中心) = debug-toggle`、`场景编辑` 在 x 616–684 / `DEV ▾` 在 x 690–752（不再重叠），面板可展开、11 个分类与 5 个原有控件齐全；②READY 期间点「场景编辑」→ 提示「场景编辑需要先进入对局（当前 READY）」，面板保持关闭、双阵营仍 `RUNNING`；③倒计时正常走完（准备 3 → 2 → 1 秒 → 对局中），对局时间 00:00 → 00:02、两帧截图不同（AI 正常行动）；④DEV「冻结双阵营」→ `FROZEN｜MANUAL_DEV_FREEZE`、对局时间停住、冻结期间两帧截图逐字节相同；⑤手动冻结下打开编辑器 → `FROZEN｜MANUAL_DEV_FREEZE + SCENE_EDITOR`（原因叠加）、列表 28 行（家具 20 + 藏身锚点 8）；⑥真实鼠标点选对象 → `当前选中：living_sofa`，改 `height 0.65 → 0.75` → 草稿差异行正确、输入区 6 个控件可交互；⑦点「应用编辑」→ `已应用编辑：1`、差异复位为「与已应用地图一致」、事件 `SCENE_OBJECT_EDIT_APPLY`，**真实重建（dispose → buildApartment → 新 CollisionWorld + NavigationSystem → rebindNavigation → syncAllDoors）无任何控制台报错**；⑧编辑期间点「恢复双阵营」→ 被拒绝并显示 `SCENE_EDITOR_ACTIVE`，仍 `FROZEN`；⑨关闭编辑器 → `body` 类移除、编辑器面板 `hidden`、只剩入口按钮可见、画布上 `elementFromPoint` 命中 `CANVAS`（无透明遮挡层）、手动冻结仍生效；⑩手动恢复 → 时间重新走动；⑪Esc → 暂停菜单 → 重新开始 → `RUNNING｜无`、回到「准备：3 秒」并能再次进入 `对局中`（重开不残留冻结）；⑫1440×900 桌面视口下对象列表 / 数值输入 / 朝向下拉 / 应用按钮 / 搜索框 / 锚点开关 / 状态块全部可命中；⑬全程控制台错误 0。
+- 修改文件：`src/systems/DevFreezeSystem.ts`、`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/SceneEditor.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditorView.ts`、`src/style.css`、`tests/dev-freeze.test.mjs`、`tests/scene-editor.test.mjs`、`docs/DEV_SCENE_EDITOR_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。新增 / 删除文件：无。依赖变化：无。**未改 `GAME_CONFIG`、未改任何玩法规则、未接入藏身玩法、未开始 S7C-1B。**
+- 测试结果：`npm test` **370 / 370 PASS**（基线 367 + 新增 3，fail 0 / skipped 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build` 退出码 0（Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）。`HEAD` 仍 `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`，`origin/main...HEAD = 0 0`，未 commit / push / tag。
+- 已知问题 / 未验证：①Tabbit Browser 层未验证（其运行时未运行、launcher exit 69），上述浏览器结论来自本机 Chrome headless；②窗口高度很矮（实测 762×484，面板可用高 428）时编辑器对象列表与属性区会互相挤压，属性区只剩约 58px 并需要内部滚动才能点到输入框——桌面常规高度（1440×900）完全正常，属后续可优化的布局密度问题；③`vite` 开发服务器在本轮多次因 `edit` 工具的原子上写入触发 `EBUSY` 文件监听崩溃（`node:internal/fs/watchers`），已在每次改文件前主动停服、改完重启，未产生仓库内残留文件；④家具朝向仍只支持 90° 整数倍、无撤销 / 重做、已应用编辑只在内存（刷新回到 `apartmentMap.ts`）——均为上一轮记录的既有设计边界。
+- 下一步建议：请用户在浏览器中重新验收（先确认右上角 `DEV ▾` 可展开、`场景编辑` 在其左侧、DEV 面板内可见「冻结双阵营」；再确认进入对局后双方能正常行动）；修复后仍需按 `docs/DEV_SCENE_EDITOR_DESIGN.md` §9 复核冻结 / 恢复 / 编辑 / 导出等条目；验收通过后再单独批准 S7C-1B 并先确认其参数。
+- Git commit 信息：未提交；未 push；未创建 Tag。不将 S7C 整体标记完成，`AGENTS.md` 阶段状态未改（其规则要求 Gate 通过且提交推送成功后才更新）。
+- Git commit 信息：未提交；未 push；未创建 Tag。不将 S7C 整体标记完成，`AGENTS.md` 阶段状态未改（其规则要求 Gate 通过且提交推送成功后才更新）。
+- （本条为上一轮追加时产生的重复行，按「不修改 `AGENT_LOG.md` 历史内容」规则保留未删。）
+
+## 2026-09-26 00:22 +08:00｜S7C-1A 与 DEV 场景热编辑器 V1 人工验收通过（收尾与检查点审计轮）
+
+- 任务名称：S7C-1A（藏身点白模与地图配置）与 DEV 场景热编辑器 V1 + 双阵营调试冻结的验收收尾、成果完整性核对与 Git 检查点文件审计。当前阶段：两项均由用户确认**浏览器人工验收 PASS**，并在同一轮内获准建立 Git 检查点（见文末 Git 条目）；S7C-1B 未授权、未开始。本轮**只改文档，不改任何生产代码、测试或 `GAME_CONFIG`**，不开发任何新功能。
+- 用户确认的五项浏览器人工验收（原文记录）：
+  1. DEV ▾ 和场景编辑入口均可正常点击：PASS
+  2. READY 倒计时、玩家与 AI 行动：PASS
+  3. 手动冻结、恢复及编辑器自动冻结：PASS
+  4. 八个藏身点的列表选择和遮挡点聚焦：PASS
+  5. 两个纸箱通行、家具编辑后的碰撞同步：PASS
+- 本轮实际完成内容（仅文档）：
+  1. `AGENTS.md`：S7B-3B 补记稳定检查点 `6a92c5d`；新增「已完成人工验收、尚未建立 Git 检查点（不计入阶段 Gate）」小节，登记 S7C-1A 与 DEV 场景热编辑器 V1 两项人工验收 PASS；「当前下一阶段」更正为 S7C-1A 已验收、S7C-1B 未授权且开工前须逐条确认设计文档第 6 节第 3–14 行参数；自动化基线 333 → **370**；地图状态由「5 个 HideSpot 仍为占位」更正为 8 条 HideSpot 数据 + 2 个纸箱、正式藏身玩法未实现；Build Environment 补记 `npm run dev` 固定 `http://127.0.0.1:5173/`。
+  2. `docs/DEEPSEEK_HANDOFF.md`：Git 边界更新为当前 HEAD `6a92c5d`（3B 已并入）且 S7C-1A / DEV 编辑器轮未提交；启动命令由 `--port 5174` 更正为裸 `npm run dev`（`vite.config.ts` 固定 5173 + `strictPort`）；阶段表补 S7C-1A 与 DEV 编辑器 V1 两行人工验收 PASS 并更正 S7B-3B 行（已并入检查点）；§6 由「下一项：S7B-3B」更正为「已完成，保留原始约束记录」；§8 开发预览命令同步；§9 自动化基线 333 → 370、chunk 大小更新、补两项验收态；新增 §10 记录 DEV 场景热编辑器 V1 与双阵营调试冻结（含冻结两原因、`gameplayDelta` / `readyDelta` 双时间缝、编辑器校验与边界）。
+  3. `docs/DEV_SCENE_EDITOR_DESIGN.md`：状态行由「等待浏览器人工验收」改为「用户浏览器人工验收 PASS（2026-09-26），尚未建立 Git 检查点」；§9 步骤 1 的启动命令改为 `npm run dev` + `http://127.0.0.1:5173/`。
+  4. `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`：§3.4 标题与浏览器验收行由「等待浏览器人工验收」改为 PASS，并记录用户五项结果中的第 4、5 项。
+- 未提交差异审计（`git status --porcelain` + `git diff --stat`，最终态）：已跟踪文件 **13 个被修改**——其中 3 个是本轮收尾新增的文档改动（`AGENTS.md`、`docs/DEEPSEEK_HANDOFF.md`，以及 `docs/S7B3B_DOOR_LOCK_DESIGN.md` 的状态行更正为「已并入检查点 `6a92c5d`」），其余 10 个为此前各轮累计（`docs/AGENT_LOG.md`、`docs/MAP_SPEC.md`、`src/style.css`、`src/systems/DeepSeekAIController.ts`、`src/systems/HumanAIController.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/ThreeGame.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`tests/debug-details-panel.test.mjs`）；新文件 **11 个**（`src/systems/DevFreezeSystem.ts`、`src/three/map/MapEditModel.ts`、`src/three/SceneEditorView.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditor.ts`、`tests/hide-spot.test.mjs`、`tests/dev-freeze.test.mjs`、`tests/scene-editor.test.mjs`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/DEV_SCENE_EDITOR_DESIGN.md`、`vite.config.ts`）。合计 **24 个文件**（13 改 + 11 新），即本轮建议的 Git 检查点文件清单。
+- 完整性核对（逐项通过）：①S7B-3B 锁门链路未被触碰——`DeepSeekAIController.ts` / `HumanAIController.ts` 的全部差异**只有**新增 `rebindNavigation()` 与其 `navigation` 字段由 `readonly` 改为可变；②8 个藏身点 ID / 坐标与 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 完全一致（`hide_main_bed (-14.40,-6.15)`、`hide_second_bed (-14.40,8.90)`、`hide_main_wardrobe (-16.65,-6.60)`、`hide_closet (-3.57,-8.80)`、`hide_study_bookshelf (-0.80,11.05)`、`hide_storage_shelf (16.80,-8.75)`、`hide_living_carton (7.00,3.60)`、`hide_storage_carton (16.60,-4.80)`）；③2 个纸箱 `living_carton (7.9,3.9)` / `storage_carton (15.7,-4.8)` 与 0.9×0.9×0.75 尺寸在 `FURNITURE` 中在位；④`DevFreezeSystem` 的 `MANUAL_DEV_FREEZE` + `SCENE_EDITOR` 双原因叠加与 `gameplayDelta` / `readyDelta` 双时间缝均在；⑤根目录 `vite.config.ts`（`host 127.0.0.1` / `port 5173` / `strictPort: true`）存在且已实测生效（占用 5173 时裸跑 `npm run dev` 直接 `Error: Port 5173 is already in use`、退出码 1，5174 / 5175 无监听）；⑥`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` **未出现在差异清单中**，全库无 `console.log` / `debugger` / `TODO` 新增残留；⑦仓库内无临时脚本、无 `dist/`、无日志文件残留。
+- 排除项确认：`.trae/`（1 个文件）与 `.dsh-meow/`（4 个文件，含 `memory.db`）保持未跟踪、不被暂存；`dist/` 仍在 `.gitignore` 内；无临时 AI JSON 日志或个人配置。
+- 测试结果：`npm test` **370 / 370 PASS**（fail 0 / skipped 0 / cancelled 0，退出码 0）；`npm run build`（含 `tsc --noEmit` + `vite build`）退出码 0（`cmd /c` 复核 `$LASTEXITCODE`；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）。
+- 工作区核对（**提交前快照**）：`HEAD = 6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`，`origin/main...HEAD = 0 0`，`git status --porcelain` 共 26 条（13 ` M` + 13 `??`，其中 2 条 `??` 为 `.trae/`、`.dsh-meow/`），与「24 个文件 + 2 个用户资料目录」一致。
+- 已知问题：①`AGENT_LOG.md` 上一轮追加留下一条完全重复的「Git commit 信息」行，按既有规则本轮未删（本轮只在其后补一行说明）；②S7B-3B 修复后仍缺一份完整实机 AI JSON；③窗口高度很矮（实测 762×484）时场景编辑器属性区布局偏紧；④Tabbit Browser 仍不可用（stable launcher `exit 69`），浏览器验证改用本机 Chrome headless + CDP，替用户打开页面用系统 Chrome（以到 5173 的 ESTABLISHED 连接为证据）。
+- 下一步建议：用户已确认 24 个文件清单与建议提交说明后，随即执行 commit / push（不使用 `--force`、不创建 Tag）；之后 S7C-1B 需用户单独授权，并在开工前逐条确认设计文档第 6 节第 3–14 行参数。
+- Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：计划提交标题 `feat: complete s7c-1a hide spots and dev scene editor v1`，检查点含 24 个文件且不创建 Tag；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。不将 S7C 整体标记完成；`AGENTS.md` 的更新按用户本轮明确指示执行，并以「不计入阶段 Gate」措辞记录。

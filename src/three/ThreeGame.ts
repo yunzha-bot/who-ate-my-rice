@@ -31,7 +31,9 @@ import { resolveDirectControlSwitch, resolveRoundShortcut } from './RoundShortcu
 import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './CaptureZone';
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
-import { buildApartment } from './map/MapBuilder';
+import { buildApartment, type ApartmentBuild } from './map/MapBuilder';
+import { SceneEditor, type CommittedMap } from './SceneEditor';
+import { DevFreezeSystem } from '../systems/DevFreezeSystem';
 import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, MAP_WIDTH, MAP_DEPTH, ROOMS, SPAWNS, WALLS,
   roomAt, selectRiceCandidates } from './map/apartmentMap';
 
@@ -77,6 +79,12 @@ export class ThreeGame {
   private doorStatusMessage = '';
   private mineFailureRemainingMs = 0;
   private collision: CollisionWorld;
+  private apartment: ApartmentBuild;
+  private readonly devFreeze = new DevFreezeSystem();
+  private sceneEditor: SceneEditor;
+  private readonly editorFocus = new THREE.Vector3();
+  private editorOpenLast = false;
+  private devZoom = 1;
   private humanAI: HumanAIController;
   private humanAiWasActive = false;
   private deepseekAI: DeepSeekAIController;
@@ -112,8 +120,8 @@ export class ThreeGame {
     light.shadow.camera.top = MAP_DEPTH / 2;
     this.scene.add(light);
 
-    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
-      buildApartment(this.scene));
+    this.apartment = buildApartment(this.scene);
+    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles);
     const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
     this.humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES);
     this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
@@ -142,12 +150,28 @@ export class ThreeGame {
       developerMode: import.meta.env.DEV,
       onTemporaryControl: faction => this.setTemporaryInputTarget(faction),
       onExportLog: () => this.exportAILog(),
+      onToggleFreeze: () => this.toggleDevFreeze(),
       onSafetyPaths: enabled => {
         this.safetyPaths.enabled = enabled;
         this.updatePerceptionHud();
       },
       onExpanded: () => this.updatePerceptionHud(),
     });
+    this.sceneEditor = new SceneEditor({
+      container,
+      topRow: this.debugPanel.topRow,
+      camera: this.camera,
+      dom: this.renderer.domElement,
+      freeze: this.devFreeze,
+      developerMode: import.meta.env.DEV,
+      factionSwitchEnabled: C.development.factionSwitchEnabled,
+      getPhase: () => this.match.phase,
+      onRebuild: map => this.rebuildApartment(map),
+      onFocus: point => this.editorFocus.set(point.x, 0, point.z),
+      onZoom: direction => this.zoomEditorCamera(direction),
+      onPan: (deltaX, deltaY) => this.panEditorCamera(deltaX, deltaY),
+    });
+    this.sceneEditor.setBuild(this.apartment);
     if (this.debugPossessionEnabled) {
       this.renderer.domElement.addEventListener('click', this.onActorClick);
     }
@@ -246,7 +270,8 @@ export class ThreeGame {
 
   private setTemporaryInputTarget(faction: Faction): void {
     if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
-        this.minesweeper.isOpen || !this.control.setTemporaryInputTarget(faction)) return;
+        this.minesweeper.isOpen || this.sceneEditor.isOpen ||
+        !this.control.setTemporaryInputTarget(faction)) return;
     this.input.clear();
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
@@ -254,7 +279,7 @@ export class ThreeGame {
 
   private onActorClick = (event: MouseEvent): void => {
     if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
-        this.minesweeper.isOpen || event.button !== 0) return;
+        this.minesweeper.isOpen || this.sceneEditor.isOpen || event.button !== 0) return;
     const rect = this.renderer.domElement.getBoundingClientRect();
     const pointer = new THREE.Vector2(
       (event.clientX - rect.left) / rect.width * 2 - 1,
@@ -305,7 +330,8 @@ export class ThreeGame {
 
   private resize = (): void => {
     const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
-    const viewHeight = this.match.phase === 'FACTION_SELECT' ? MAP_DEPTH + 5 : C.three.viewHeight;
+    const viewHeight = this.match.phase === 'FACTION_SELECT'
+      ? MAP_DEPTH + 5 : C.three.viewHeight * this.devZoom;
     const viewWidth = viewHeight * width / height;
     this.camera.left = -viewWidth / 2;
     this.camera.right = viewWidth / 2;
@@ -319,15 +345,20 @@ export class ThreeGame {
 
   private tick = (): void => {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, C.match.maxFrameDeltaMs);
+    // DEV 双阵营冻结：the single timing seam. While frozen the gameplay delta is
+    // zero, so no system advances and no timer or cooldown can expire during the
+    // frozen real time; the clock keeps reading so a resume never jumps.
+    const gameplayMs = this.devFreeze.gameplayDelta(this.match.phase, deltaMs);
+    const frozen = this.devFreeze.isFrozen;
     this.input.setTabCaptureEnabled(
       C.development.factionSwitchEnabled && C.development.directHotkeysEnabled &&
-      this.match.phase === 'PLAYING');
+      this.match.phase === 'PLAYING' && !frozen);
     const pausePressed = this.input.consumePress('Escape');
     const restartPressed = this.input.consumePress('KeyR');
     const menuPressed = this.input.consumePress('KeyM');
     const controlSwitchPressed = this.input.consumePress('Tab');
     const shortcut = resolveRoundShortcut(this.match.phase,
-      C.development.directHotkeysEnabled && !this.minesweeper.isOpen,
+      C.development.directHotkeysEnabled && !this.minesweeper.isOpen && !frozen,
       restartPressed, menuPressed);
     if (shortcut === 'RESTART') {
       this.restart();
@@ -340,24 +371,106 @@ export class ThreeGame {
         if (this.minesweeper.isOpen) this.closeMinesweeper();
         else this.togglePause();
       }
-      if (this.match.phase === 'READY') this.match.advanceReady(deltaMs);
-      else if (this.match.phase === 'PLAYING') {
-        if (!this.minesweeper.isOpen && C.development.factionSwitchEnabled &&
+      if (this.match.phase === 'READY') {
+        // The pre-round countdown must keep advancing (see readyDelta): it is a
+        // phase timer, not the gameplay delta the DEV freeze is allowed to gate.
+        const readyMs = this.devFreeze.readyDelta(deltaMs);
+        if (readyMs > 0) this.match.advanceReady(readyMs);
+      } else if (this.match.phase === 'PLAYING') {
+        if (!frozen && !this.minesweeper.isOpen && C.development.factionSwitchEnabled &&
             resolveDirectControlSwitch(this.match.phase,
               C.development.directHotkeysEnabled, controlSwitchPressed)) {
           this.control.toggleControlled();
         }
-        this.updatePlaying(deltaMs);
+        if (gameplayMs > 0) {
+          this.updatePlaying(gameplayMs);
+        } else if (frozen) {
+          // DEV 冻结不是重置：drop buffered keys so no pre-freeze input replays
+          // after the resume, while the DEV panel and editor stay interactive.
+          this.input.clear();
+        }
       }
     }
-    if (this.control.selectedFaction !== null) {
-      this.followCamera();
+    const editorOpen = this.sceneEditor.isOpen;
+    if (editorOpen && !this.editorOpenLast) {
+      const actor = this.control.selected(this.player, this.human);
+      this.editorFocus.set(actor?.position.x ?? 0, 0, actor?.position.z ?? 0);
+    } else if (!editorOpen && this.editorOpenLast) {
+      // Leaving the editor restores the ordinary camera framing (the DEV zoom
+      // belongs to the editor session only).
+      this.devZoom = 1;
+      this.resize();
     }
+    this.editorOpenLast = editorOpen;
+    if (this.control.selectedFaction !== null) {
+      if (editorOpen) this.followEditorCamera();
+      else this.followCamera();
+    }
+    if (editorOpen) this.sceneEditor.onFrame();
+    // The toolbar shows the live freeze state plus the most recent rejected
+    // freeze action (for example resuming while the scene editor is open).
+    this.debugPanel.setFreezeState(frozen, this.devFreeze.lastRejection === '无'
+      ? this.devFreeze.reasonLabel
+      : `${this.devFreeze.reasonLabel}｜最近拒绝：${this.devFreeze.lastRejection}`);
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
   };
+
+  private followEditorCamera(): void {
+    positionCameraOnTarget(this.camera, this.editorFocus, this.cameraOffset);
+  }
+
+  private zoomEditorCamera(direction: number): void {
+    if (!this.sceneEditor.isOpen) return;
+    const factor = direction > 0 ? 1.15 : 1 / 1.15;
+    this.devZoom = Math.min(2.5, Math.max(0.45, this.devZoom * factor));
+    this.resize();
+  }
+
+  private panEditorCamera(deltaX: number, deltaY: number): void {
+    if (!this.sceneEditor.isOpen) return;
+    const worldPerPixel = (this.camera.right - this.camera.left) / Math.max(1, innerWidth);
+    const forward = new THREE.Vector3();
+    this.camera.getWorldDirection(forward);
+    forward.y = 0;
+    if (forward.lengthSq() === 0) return;
+    forward.normalize();
+    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+    this.editorFocus.addScaledVector(right, deltaX * worldPerPixel)
+      .addScaledVector(forward, -deltaY * worldPerPixel);
+  }
+
+  // DEV 冻结按钮：manual freeze is an explicit DEV choice; while the scene editor
+  // is open the resume attempt is rejected with a visible reason instead of
+  // letting both factions start moving during an edit.
+  private toggleDevFreeze(): void {
+    if (this.devFreeze.isFrozenBy('MANUAL_DEV_FREEZE')) {
+      if (this.devFreeze.manualResume(this.match.phase)) this.input.clear();
+      return;
+    }
+    const seconds = Math.floor(this.match.elapsedMs / 1000);
+    const summary = `对局中 ${String(Math.floor(seconds / 60)).padStart(2, '0')}:` +
+      `${String(seconds % 60).padStart(2, '0')}｜米 ${this.rice.completedCount}/${ACTIVE_RICE_COUNT}｜` +
+      `抓捕 ${(this.match.captureProgressMs / 1000).toFixed(2)}`;
+    if (this.devFreeze.manualFreeze(this.match.phase, summary)) this.input.clear();
+  }
+
+  // Safe rebuild: the edited map replaces the static collision world and the
+  // navigation grid, every AI drops its cached path, and the door dynamic
+  // obstacles are re-registered on the new world.
+  private rebuildApartment(map: CommittedMap): ApartmentBuild {
+    this.apartment.dispose();
+    this.apartment = buildApartment(this.scene, {
+      furniture: map.furniture, hideSpots: map.hideSpots });
+    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles);
+    const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
+    this.humanAI.rebindNavigation(navigation);
+    this.deepseekAI.rebindNavigation(navigation);
+    this.syncAllDoors();
+    return this.apartment;
+  }
 
   private updatePlaying(deltaMs: number): void {
     this.sound.advance(deltaMs);
@@ -879,6 +992,10 @@ export class ThreeGame {
   }
 
   private resetRound(): void {
+    if (this.sceneEditor.isOpen) this.sceneEditor.close();
+    this.devFreeze.reset();
+    this.editorOpenLast = false;
+    this.devZoom = 1;
     this.sprint.reset();
     this.control.resetControlled();
     this.resetRice();
@@ -1223,6 +1340,13 @@ export class ThreeGame {
         ] : [],
       },
       {
+        id: 'dev-freeze', title: 'DEV Freeze / 场景编辑',
+        properties: this.debugPossessionEnabled
+          ? this.sceneEditor.statusEntries().map(entry =>
+            make(`dev-${entry.label}`, entry.label, entry.value, entry.tone ?? 'normal'))
+          : [],
+      },
+      {
         id: 'other', title: 'Other', properties: [
           make('match-phase', '对局状态 / 时间', `${phaseName} / ${time}`),
           make('player-faction', '玩家阵营', factionName),
@@ -1277,6 +1401,7 @@ export class ThreeGame {
     cancelAnimationFrame(this.frame);
     this.renderer.domElement.removeEventListener('click', this.onActorClick);
     window.removeEventListener('resize', this.resize);
+    this.sceneEditor.dispose();
     this.input.dispose();
     this.captureZone.dispose();
     this.soundVisual.dispose();

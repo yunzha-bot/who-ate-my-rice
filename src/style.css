@@ -99,3 +99,67 @@ canvas { display: block; }
   color: #243040; background: #b6c3ce; border: 2px solid #e8eef2; }
 .mine-cell.revealed { background: #e8e4d9; border-color: #8e9da8; cursor: default; }
 .mine-help { margin-top: 12px; font-size: 13px; text-align: center; }
+/* DEV two-faction freeze button and freeze state */
+.details-freeze[hidden], .details-freeze-state[hidden] { display: none; }
+.details-freeze[aria-pressed="true"] { border-color: #e5c56f; color: #f0dda0; }
+.details-freeze-row { display: flex; align-items: center; gap: 6px; }
+.details-freeze-state { padding: 0 4px; color: #87c999;
+  font: 700 10px/1.4 system-ui, sans-serif; letter-spacing: .05em; }
+.details-freeze-state[data-tone="warning"] { color: #e5c56f; }
+/* DEV scene editor launcher and refusal notice */
+.debug-top-row { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.scene-editor-launch { border: 1px solid #51565d; border-radius: 3px; padding: 5px 9px;
+  color: #e5e7eb; background: #25282de8; cursor: pointer; pointer-events: auto;
+  font: 12px/1.4 system-ui, sans-serif; }
+.scene-editor-launch:hover, .scene-editor-launch[aria-pressed="true"] { background: #3b4650; }
+.scene-editor-launch[hidden] { display: none; }
+.scene-editor-notice { max-width: 260px; color: #f0dda0; text-align: right;
+  font: 12px/1.4 system-ui, sans-serif; }
+.scene-editor-notice[hidden] { display: none; }
+.scene-editor-panel { position: absolute; z-index: 5; top: 46px; right: 10px;
+  display: flex; flex-direction: column; width: min(340px, calc(100vw - 20px));
+  max-height: calc(100vh - 56px); overflow: hidden; color: #d6d9de;
+  border: 1px solid #4b5057; border-radius: 4px; background: #202327f2;
+  box-shadow: 0 5px 18px #0006; font: 12px/1.4 system-ui, sans-serif; }
+.scene-editor-panel[hidden] { display: none; }
+.scene-editor-panel header { display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-bottom: 1px solid #41464d; background: #292d32; }
+.scene-editor-freeze { margin-left: auto; color: #e5c56f; font-size: 10px; font-weight: 700; }
+.scene-editor-close { width: 24px; height: 24px; font-size: 18px; line-height: 18px;
+  cursor: pointer; }
+.scene-editor-toolbar { display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+  padding: 8px; border-bottom: 1px solid #3f444a; }
+.scene-editor-anchors { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.scene-editor-button { border: 1px solid #4d535b; border-radius: 3px; padding: 4px 7px;
+  color: #d3d6da; background: #30343a; cursor: pointer; font: inherit; }
+.scene-editor-button:hover { background: #3a4048; }
+.scene-editor-search { margin: 8px; border: 1px solid #4d535b; border-radius: 3px;
+  padding: 6px 8px; color: #e4e6e9; background: #191c20; font: inherit; }
+.scene-editor-list { flex: 0 1 auto; min-height: 72px; max-height: 34vh; overflow: auto;
+  border-bottom: 1px solid #3f444a; }
+.scene-editor-section-title { padding: 5px 10px; color: #aeb4bc; background: #262a2f;
+  font-weight: 600; }
+.scene-editor-row { display: flex; justify-content: space-between; gap: 8px; width: 100%;
+  border: 0; border-top: 1px solid #2b2f34; padding: 5px 10px; color: #dadddf;
+  background: #23272c; text-align: left; cursor: pointer; font: inherit; }
+.scene-editor-row:hover { background: #2f343b; }
+.scene-editor-row[aria-pressed="true"] { background: #3b4650; color: #fff; }
+.scene-editor-row small { color: #9aa1a9; overflow-wrap: anywhere; }
+.scene-editor-detail { flex: 1 1 auto; min-height: 0; overflow: auto;
+  padding: 8px; }
+.scene-editor-identity .scene-editor-readonly { display: grid;
+  grid-template-columns: 40% 60%; padding: 2px 0; }
+.scene-editor-readonly span:first-child { color: #aeb4bc; }
+.scene-editor-form { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
+.scene-editor-field { display: flex; flex-direction: column; gap: 2px; }
+.scene-editor-field input, .scene-editor-field select { border: 1px solid #4d535b;
+  border-radius: 3px; padding: 3px 5px; color: #e4e6e9; background: #191c20; font: inherit; }
+.scene-editor-actions { display: flex; gap: 5px; margin-top: 8px; }
+.scene-editor-diff, .scene-editor-rejection { margin-top: 6px; color: #aeb4bc;
+  overflow-wrap: anywhere; }
+.scene-editor-diff[data-tone="warning"] { color: #e5c56f; }
+.scene-editor-rejection[data-tone="danger"] { color: #ed9292; }
+.scene-editor-status { border-top: 1px solid #3f444a; padding: 8px 10px;
+  color: #b6bcc4; white-space: pre-line; }
+.scene-editor-hint { margin: 0; color: #aeb4bc; }
+body.scene-editor-open .debug-panel { right: 366px; }

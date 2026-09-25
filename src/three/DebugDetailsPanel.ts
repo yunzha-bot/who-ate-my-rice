@@ -77,6 +77,7 @@ interface DebugDetailsPanelOptions {
   onSafetyPaths?: (enabled: boolean) => void;
   onTemporaryControl: (faction: 'HUMAN' | 'DEEPSEEK') => void;
   onExportLog: () => void;
+  onToggleFreeze?: () => void;
   onExpanded: () => void;
   developerMode: boolean;
 }
@@ -107,11 +108,17 @@ export const DEBUG_CATEGORY_DEFINITIONS = [
   { id: 'safe-wait', title: 'SAFE_WAIT' },
   { id: 'curiosity-passage', title: 'Curiosity / Passage' },
   { id: 'animation', title: 'Animation' },
+  { id: 'dev-freeze', title: 'DEV Freeze / 场景编辑' },
   { id: 'other', title: 'Other' },
 ] as const;
 
 export class DebugDetailsPanel {
   readonly root: HTMLElement;
+  // Row that holds the DEV toggle (and the DEV-only scene editor launcher).
+  // Anything DEV adds next to the toggle belongs here as a flex item: an
+  // absolutely positioned overlay in the same corner would cover the toggle and
+  // make the whole DEV console unreachable.
+  readonly topRow: HTMLElement;
   private readonly body: HTMLElement;
   private readonly toggle: HTMLButtonElement;
   private readonly context: HTMLElement;
@@ -120,6 +127,8 @@ export class DebugDetailsPanel {
   private readonly controls: HTMLElement;
   private readonly controlButtons = new Map<'HUMAN' | 'DEEPSEEK', HTMLButtonElement>();
   private readonly exportButton: HTMLButtonElement;
+  private readonly freezeButton: HTMLButtonElement;
+  private readonly freezeState: HTMLElement;
   private readonly categories = new Map<string, CategoryView>();
   private readonly rows = new Map<string, RowView>();
   private readonly expanded = new Map<string, boolean>();
@@ -133,6 +142,8 @@ export class DebugDetailsPanel {
     this.root.className = 'debug-panel';
     this.root.setAttribute('aria-label', 'DEV 调试面板');
 
+    this.topRow = document.createElement('div');
+    this.topRow.className = 'debug-top-row';
     this.toggle = document.createElement('button');
     this.toggle.type = 'button';
     this.toggle.className = 'debug-toggle';
@@ -146,7 +157,8 @@ export class DebugDetailsPanel {
         options.onExpanded();
       }
     });
-    this.root.append(this.toggle);
+    this.topRow.append(this.toggle);
+    this.root.append(this.topRow);
 
     this.body = document.createElement('div');
     this.body.className = 'debug-content';
@@ -194,6 +206,23 @@ export class DebugDetailsPanel {
     this.exportButton.hidden = !options.developerMode;
     this.exportButton.addEventListener('click', options.onExportLog);
     toolbar.append(this.controls, this.search, this.exportButton);
+    // DEV 双阵营冻结：manual freeze is a debugging instrument, so it lives in
+    // the DEV toolbar and reports its own state next to the button.
+    this.freezeButton = document.createElement('button');
+    this.freezeButton.type = 'button';
+    this.freezeButton.className = 'details-tool-button details-freeze';
+    this.freezeButton.textContent = '冻结双阵营';
+    this.freezeButton.hidden = !options.developerMode || !options.onToggleFreeze;
+    this.freezeButton.addEventListener('click', () => options.onToggleFreeze?.());
+    this.freezeState = document.createElement('span');
+    this.freezeState.className = 'details-freeze-state';
+    this.freezeState.textContent = 'RUNNING';
+    this.freezeState.hidden = !options.developerMode || !options.onToggleFreeze;
+    const freezeRow = document.createElement('div');
+    freezeRow.className = 'details-freeze-row';
+    freezeRow.append(this.freezeButton, this.freezeState);
+    freezeRow.hidden = !options.developerMode || !options.onToggleFreeze;
+    toolbar.append(freezeRow);
     if (options.developerMode && options.onSafetyPaths) {
       const toggle = document.createElement('button');
       toggle.type = 'button';
@@ -255,6 +284,15 @@ export class DebugDetailsPanel {
       if (button.getAttribute('aria-pressed') !== pressed)
         button.setAttribute('aria-pressed', pressed);
     }
+  }
+
+  setFreezeState(frozen: boolean, detail: string): void {
+    const label = frozen ? '恢复双阵营' : '冻结双阵营';
+    if (this.freezeButton.textContent !== label) this.freezeButton.textContent = label;
+    this.freezeButton.setAttribute('aria-pressed', String(frozen));
+    const state = `${frozen ? 'FROZEN' : 'RUNNING'}${detail ? `｜${detail}` : ''}`;
+    if (this.freezeState.textContent !== state) this.freezeState.textContent = state;
+    this.freezeState.dataset.tone = frozen ? 'warning' : 'success';
   }
 
   update(context: string, categories: readonly DebugCategory[]): void {
