@@ -27,9 +27,9 @@
 
 ## 2. Git 与资料边界
 
-本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**当前稳定检查点 / HEAD = `3191bec843606ae4bab01d6932cff0ac87955101`（`feat: complete s7c-1a hide spots and dev scene editor v1`，24 个文件，+3976/−71，已推送，`main` 与 `origin/main` 双向同步、`git rev-list --left-right --count origin/main...HEAD` = `0 0`；上一检查点为 `6a92c5d`（S7B-3B），再上为 `ca18f61`）**。S7C-1A（8 藏身点数据 + 2 个纸箱）与 DEV 场景热编辑器 V1 + 双阵营调试冻结均已并入该检查点，阶段 Gate = PASS；`.git/` 下无 `MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 残留。
+本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**当前 HEAD 以 `main` 的最新提交为准（`git log -1` / `git ls-remote origin refs/heads/main`），本节刻意不写死自身 SHA**；`main` 与 `origin/main` 双向同步、`git rev-list --left-right --count origin/main...HEAD` = `0 0`。最近一次**含阶段内容**的检查点为 `3191bec843606ae4bab01d6932cff0ac87955101`（`feat: complete s7c-1a hide spots and dev scene editor v1`，24 个文件，+3976/−71）——**S7C-1A（8 藏身点数据 + 2 个纸箱）与 DEV 场景热编辑器 V1 + 双阵营调试冻结的阶段 Gate 由该提交承载**；其上有纯文档检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`，5 个文档文件，+152/−23）。再上为 `6a92c5d`（S7B-3B）、`ca18f61`。`.git/` 下无 `MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 残留。
 
-本文件更新于 2026-09-26 的纯文档同步轮；**该轮的实际提交状态以 `git status` 与 `git log` 为准**，不要据本句推断「已提交」或「未提交」。另有始终未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，**必须保留，不得提交、不得读取、不得暂存**。
+本文件更新于 2026-09-26 的纯文档同步轮；该轮已作为检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`，5 个文档文件）提交并推送 `origin/main`。如需确认最新状态，仍以 `git log` / `git status` 为准。另有始终未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，**必须保留，不得提交、不得读取、不得暂存**。
 
 `dist/` 是可再生成的构建产物，`node_modules/` 是安装目录；二者不提交。不要把导出的临时 AI JSON 日志、密钥、个人配置或本机专属配置加入仓库。不要手工改写 `.git/` 历史。并行的 UE 工程不属于此 Web 仓库任务，不得由本次交接触碰。
 

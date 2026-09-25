@@ -84,7 +84,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 - S7C-1A 藏身点白模与地图配置 —— **阶段 Gate = PASS**（2026-09-26）。8 条 `HideSpot` 地图数据（6 件现有家具 + 2 个新纸箱）+ 2 个纸箱白模 `living_carton (7.9, 3.9)`、`storage_carton (15.7, -4.8)`（0.9×0.9×0.75）已落地；自动化测试 370/370 PASS；用户五项浏览器人工验收 PASS；已随检查点 `3191bec` 提交并推送 `origin/main`。**未接入任何藏身玩法**（无 `HideSystem`、无藏身按键、无 `VisionSystem` / Human `CHECK_HIDE` 改动）。**S7C 整体仍未完成。**
 - DEV 场景热编辑器 V1 + 双阵营调试冻结（独立 DEV 工具轮，不计入 S7C）—— **阶段 Gate = PASS**（2026-09-26）。`DevFreezeSystem`（`MANUAL_DEV_FREEZE` + `SCENE_EDITOR` 双冻结原因）、`MapEditModel`、`SceneEditorView / SceneEditorPanel / SceneEditor` 已落地；自动化测试 370/370 PASS；用户五项浏览器人工验收 PASS（入口可点、READY 倒计时与双方行动、手动冻结·恢复与编辑器自动冻结、8 个藏身点列表选择与遮挡点聚焦、2 个纸箱通行与家具编辑后碰撞同步）；已随检查点 `3191bec` 提交并推送 `origin/main`。入口仅在开发环境显示。
 
-当前稳定检查点：`3191bec843606ae4bab01d6932cff0ac87955101`（`feat: complete s7c-1a hide spots and dev scene editor v1`，24 个文件，已推送，`HEAD == origin/main`）。**单个子阶段完成不等于整个阶段完成**：S7B 整体与 S7C 整体均仍未完成。
+当前稳定检查点：以 `git log -1`（本仓库 `main` 的最新提交）为准，本节刻意不写死自身 SHA（避免文档提交一落库就自我过期）。最近一次**含阶段内容**的检查点为 `3191bec843606ae4bab01d6932cff0ac87955101`（`feat: complete s7c-1a hide spots and dev scene editor v1`，24 个文件）——**S7C-1A 与 DEV 场景热编辑器 V1 的阶段 Gate 由该提交承载**；其上有纯文档检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`，5 个文档文件）。**单个子阶段完成不等于整个阶段完成**：S7B 整体与 S7C 整体均仍未完成。
 
 当前下一阶段：S7B 整体完成状态不变（S7B-1 ～ 3B-4 均已通过人工验收）；S7C-1A 已完成并通过 Gate；**S7C-1B（玩家基础藏身交互）尚未授权、未开始**，开工前必须先满足「长期开发路线与下一阶段开发前置条件」全节，尤其是前置条件 5（逐项批准 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 项参数）。Human AI 移动倍率 0.92 与自动解锁耗时 8,750 毫秒暂按用户决定接受；自动解锁速度留到 S16 平衡阶段继续调整。Web 主版本继续按阶段 Gate 推进，不因 UE5.3 预留而跳过或停止 Web 开发。
 
@@ -105,7 +105,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 
 ### 长期开发路线
 
-- **当前已完成**：S7C-1A（藏身点白模与地图配置）+ DEV 场景编辑器 V1（含双阵营调试冻结）；稳定检查点 `3191bec843606ae4bab01d6932cff0ac87955101`。
+- **当前已完成**：S7C-1A（藏身点白模与地图配置）+ DEV 场景编辑器 V1（含双阵营调试冻结）；两者的阶段 Gate 落点为 `3191bec843606ae4bab01d6932cff0ac87955101`，其上有纯文档检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（当前稳定检查点见上文「当前项目状态」节）。
 - **候选独立任务（待批准，不是正在开发）**：DEV-A → DEV-B。
   - DEV-A：圆形／扇形藏身交互区域配置、可视化与编辑。
   - DEV-B：已有抓捕、视觉、听觉等参数的运行时热更新和实际范围可视化。
@@ -116,7 +116,7 @@ ChatGPT 通常负责拆解开发阶段、编写 Codex 执行指令、限定任�
 ### 前置条件 1：Git 基线与工作区保护
 
 - 每轮开始先检查：当前分支；`HEAD` 与 `origin/main`；`git status`；未提交文件及其归属；是否存在正在进行的合并或变基（`.git/MERGE_HEAD`、`REBASE_HEAD`、`CHERRY_PICK_HEAD`、`rebase-merge`、`rebase-apply`）。
-- 当前稳定检查点为 `3191bec`。**不得为了开始新任务而重置、覆盖或清理用户文件**（禁止 `reset --hard`、`clean -fd`、`checkout .`、`restore .`、force push、删除或重写历史）。
+- 当前稳定检查点见上文「当前项目状态」节（本节不复制具体 SHA，避免两处维护同一份真相）：该轮记录当前检查点，并注明 S7C-1A 与 DEV 场景编辑器 V1 的阶段 Gate 落点是其之前的 `3191bec`。**不得为了开始新任务而重置、覆盖或清理用户文件**（禁止 `reset --hard`、`clean -fd`、`checkout .`、`restore .`、force push、删除或重写历史）。
 - 永久排除（不得提交）：`.trae/`、`.dsh-meow/`、临时日志、`dist/`、本机个人配置。
 - 未经用户明确批准，不得 commit、push、tag 或强制推送；先报告、后执行。
 
