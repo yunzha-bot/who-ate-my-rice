@@ -2,7 +2,7 @@
 
 > **状态（2026-09-26）**：DEV-A **第一轮**（区域数据 + 纯几何 + 合法位置检查基础接口）、**第二轮**（编辑器编辑区域半径/半角、家具移动或旋转时锚点跟随、区域校验、JSON **V2** 导出、DEV 可视化）、**DEV-A-FIX-1**（拖动流畅度）、**DEV-A-FIX-2**（家具任意角度旋转、JSON **V3**）**均已完成、已通过用户浏览器人工验收并随各自提交建立检查点**（实际 SHA 一律以 `git log -1` 查询）。归档时自动化基线：`npm test` **420/420**、`npm run build` 退出码 0、`git diff --check` 退出码 0。**DEV-A 已批准范围至此全部完成**；仍未完成的 DEV-A 相关项：JSON 导入器刻意未开发、进入/退出锚点是否拆分仍未决定。
 > **第一轮当时的硬边界（用户原话范围，历史）**：暂不接入场景编辑器 UI；暂不实现家具移动后锚点自动同步；暂不升级 JSON 导出；不得实现 `HideSystem`、按键藏身、Human `CHECK_HIDE` 或随机化；不得修改正式 `GAME_CONFIG`；不得覆盖已经验收的编辑器功能。
-> **仍未实现（不属 DEV-A 批准范围）**：`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、JSON 导入器、进入/退出锚点拆分；**DEV-B 未授权**（授权状态见 `docs/DEEPSEEK_HANDOFF.md`）。
+> **仍未实现（不属 DEV-A 批准范围）**：`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、JSON 导入器、进入/退出锚点拆分。**DEV-B 是与 DEV-A 并列的独立 DEV 工具线**，已完成批准范围、通过用户浏览器人工验收并随提交 `feat: complete dev-b runtime ai debugging tools` 归档；其后续扩展未授权。实现与验收细节见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`，阶段历史见 `docs/AGENT_LOG.md`。
 
 ---
 
@@ -188,7 +188,7 @@ export interface HideSpot extends MapPoint {
 
 **人工验收与归档（2026-09-26）**：用户浏览器人工验收 **5/5 PASS**——①任意角度输入及 15° 吸附；②旋转后的真实碰撞与 AI 导航；③关联锚点与藏身区域同步、非法旋转拒绝；④取消、应用与 JSON V3 导出；⑤原有流畅拖动等功能回归。本轮随提交 `feat: complete dev-a arbitrary furniture rotation` 建立检查点（实际 SHA 以 `git log -1` 查询）。
 
-**仍需注意**：`HideSpot.x/z` 仍是唯一 anchor（未拆分进入/退出点）；**JSON 导入器刻意未开发**（不属 DEV-A 批准范围）；`HideSystem`、按键藏身、Human `CHECK_HIDE`、出生点随机化、DEV-B 均未实现、未授权；`GAME_CONFIG` 未改。
+**仍需注意**：`HideSpot.x/z` 仍是唯一 anchor（未拆分进入/退出点）；**JSON 导入器刻意未开发**（不属 DEV-A 批准范围）；`HideSystem`、按键藏身、Human `CHECK_HIDE`、出生点随机化均未实现、未授权；**DEV-B 已完成批准范围并归档**，后续扩展仍须单独授权；`GAME_CONFIG` 未改。
 
 ---
 

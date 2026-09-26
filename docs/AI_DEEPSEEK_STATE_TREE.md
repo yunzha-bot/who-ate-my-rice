@@ -55,7 +55,7 @@ stateDiagram-v2
     CURIOUS_APPROACH --> EVADE: Human 移动或失视或危险声音或抓捕进度或安全距离破坏或路径失效
     CURIOUS_OBSERVE --> EVADE: Human 移动或失视或危险声音或抓捕进度或安全距离破坏
     MOVE_TO_RICE --> EVADE: 好奇绕行许可期间路线失效或危险条件出现
-    NORMAL --> CURIOUS_PASSAGE: 目视 Human 静止满 5 秒且挡在米路上并通过 80% 单次抽签且有圈外路径
+    NORMAL --> CURIOUS_PASSAGE: 目视 Human 静止满 5 秒且挡在米路上，安全通行判断为 100% 且存在圈外路径
     EVADE --> CURIOUS_PASSAGE: 相同安全通行条件在威胁评估前成立
     RECOVER --> CURIOUS_PASSAGE: 相同安全通行条件在威胁评估前成立
     CURIOUS_PASSAGE --> EAT: 到达目标米交互范围且通行许可仍有效
@@ -65,7 +65,7 @@ stateDiagram-v2
     EAT --> EVADE: 通行许可有效但出现取消条件
 ```
 
-如果 80% 抽签失败，标记该静止事件已抽过，不在同一事件逐帧重抽；仍按正常威胁/找米流程。抽中但无安全路线时记录 NO_SAFE_ROUTE，也不穿过抓捕圈。通行分支一旦抽过，同时抑制同一事件的 10% 好奇抽签。若普通好奇抽签失败、无安全观察点或中断，分别按代码保留当前流程或进入 EVADE，并在结束/中断后进入 12 秒好奇冷却。普通好奇观察后启用 curiosityBypassActive，允许继续已检查的米路线；如果失视但没有危险声音，撤销后续视线折扣而不强制重置当前米路线。安全通行没有独立“永久 Human 安全”状态，Human 移动、失视或有效危险应取消许可。
+安全通行判断当前为 100%，同一静止事件只执行一次；这只保证评估路线，不保证路线存在。没有安全路线时记录拒绝原因，不穿过抓捕圈。通行判断同时抑制同一事件的普通好奇抽签。普通好奇概率仍为 10%；抽签失败、无安全观察点或中断，分别按代码保留当前流程或进入 EVADE，并在结束/中断后进入配置的好奇冷却。普通好奇观察后启用 curiosityBypassActive，允许继续已检查的米路线；如果失视但没有危险声音，撤销后续视线折扣而不强制重置当前米路线。安全通行没有独立“永久 Human 安全”状态，Human 移动、失视或有效危险应取消许可。
 
 ## 每个状态的条件
 
@@ -79,9 +79,9 @@ stateDiagram-v2
 | RECOVER | EVADE 满足脱险条件 | 1,200 ms 内**沿安全米路线移动**，不是必须站立；危险米/路径暂避 | 再次 HIGH → EVADE；到安全米或计时结束 → MOVE_TO_RICE / RESELECT；安全通行可能抢占 |
 | CURIOUS_APPROACH | 目视远距 CAUTION 的静止 Human、单次 10% 通过且往返路径安全 | 走向至少 3 u 外的观察点 | 到点 → CURIOUS_OBSERVE；危险/路径失效 → EVADE |
 | CURIOUS_OBSERVE | 到安全观察点 | 原地观察 1,800 ms；可触发表现层好奇动作插槽，但无正式素材 | 有安全米路线 → MOVE_TO_RICE + 临时绕行许可；否则/危险 → EVADE |
-| CURIOUS_PASSAGE | 静止 Human 挡住预计米路线，单次 80% 抽中，存在 1.35 u 圈外动态路径 | 在当前 Human 可见位置外规划安全路径；必要时换别的米；普通门仍可开 | 到米 → EAT（许可仍在）；目标完成/失效 → SEEK_RICE；危险/失视/路径不安全 → EVADE |
+| CURIOUS_PASSAGE | 静止事件满足条件且挡住预计米路线，执行 100% 安全通行判断，并存在圈外动态路径 | 以实际抓捕半径加配置安全余量规划；必要时换米目标；普通门仍可开 | 到米 → EAT（许可仍在）；目标完成/失效 → SEEK_RICE；危险/失视/路径不安全 → EVADE |
 
-优先级不是简单固定列表：外部控制门控/比赛阶段先决定是否调用 AI；本帧先推进既有计时/卡路/门签名，再检查可见 Human 的静止事件及 80% 通行，之后取消不安全许可、评估威胁；HIGH 抢占普通找米与好奇，接着处理有效通行、EVADE/RECOVER、好奇、最后普通找米。STUNNED 在生存动作中禁动，最终 SprintSystem.movementDirection 也执行禁动。暂停由 ThreeGame 停止 PLAYING 更新，冻结 AI 计时。开发临时接管与正式控制 DeepSeek 时 AI 不调用，交还后重建路径；重开 reset。
+优先级不是简单固定列表：外部控制门控/比赛阶段先决定是否调用 AI；本帧先推进既有计时/卡路/门签名，再检查 Human 静止事件及 100% 安全通行判断，之后取消不安全许可、评估威胁；HIGH 抢占普通找米与普通好奇，获准且仍安全的通行继续执行。STUNNED 在生存动作中禁动，最终 SprintSystem.movementDirection 也执行禁动。暂停由 ThreeGame 停止 PLAYING 更新，冻结 AI 计时。开发临时接管与正式控制 DeepSeek 时 AI 不调用，交还后重建路径；重开 reset。
 
 ## 主动关门与主动锁门（S7B-3A / S7B-3B）
 
@@ -142,8 +142,8 @@ stateDiagram-v2
 
 - 安全通行尝试在 assessThreat 前运行，且未排除 EVADE/RECOVER；静止且可见、挡路时可能先从逃跑/恢复转到通行。实际优先级取决于当前输入与取消条件，不能简单声称“紧急逃跑永远先于好奇”。
 - 通行期间 state 可变成 EAT，但 passageActive 仍为 true；仅按 state 制作 HUD 或排查可能误判许可仍在。类似地，普通好奇完成后 MOVE_TO_RICE 可伴随 curiosityBypassActive。
-- 可见 Human 的小位移 ≤ 0.05 u 会继续累计“静止”；边界处抖动可能使一次静止事件与视线丢失重置交替。80% 抽签先于 10%，挡路时会抑制好奇观察抽签。
+- Human 静止时长由 HumanStillness 按实际位移容差独立维护，不依赖 DeepSeek 可见性；失去视线时不读取 Human 实时坐标，重新看见后再读取系统记录的静止事件。普通好奇为 10%，安全通行判断为 100%，同一事件不重复抽签。阈值附近的行为仍应通过定向回归验证。
 - EVADE 到达房间中心且 HIGH 时会暂时零方向等待重评估；真正无路、开门等待、STUNNED、RECOVER 无安全米路线、RESELECT 重试间隔也会零方向。它们需要与拐角卡路区分。
 - 非 HIGH 的可听声音仍为 CAUTION；RECOVER 的安全米路线检查和 Last Seen/安静计时可能延迟恢复，安全条件在边界波动时可能再转 EVADE。
 - 门状态签名变化、路径点停滞、目标米失效会清路径或重新选目标；房间评分的近分随机与目标保持、回访惩罚同时存在，仍可能出现局部循环。以上为代码静态风险而非已复现故障。
-- resumeAfterManualControl 现会显式撤销 passageActive，再清路径并结束普通好奇；临时接管后归还控制的定向测试已覆盖该状态清理。浏览器手感仍待人工验收。
+- resumeAfterManualControl 会显式撤销 passageActive，再清路径并结束普通好奇；临时接管后的许可清理已有定向回归覆盖，专项浏览器验收已通过。后续改动仍应回归接管与重开清理。

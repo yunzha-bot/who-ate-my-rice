@@ -1,13 +1,13 @@
 # 双方 AI 状态总览与交互风险（当前源码）
 
-详细条件见 [Human 状态树](AI_HUMAN_STATE_TREE.md) 与 [DeepSeek 状态树](AI_DEEPSEEK_STATE_TREE.md)。分析基于当前磁盘源码，而非旧方案：src/systems/HumanAIController.ts、DeepSeekAIController.ts、PerceptionSystem.ts、NavigationSystem.ts、RiceField.ts、SprintSystem.ts、DoorSystem.ts、HumanDoorSkill.ts、GameStateSystem.ts、src/three/ThreeGame.ts、src/config/gameConfig.ts。当前工作区已有其他未提交修改，本轮只新增这三份文档，未运行完整游戏测试。
+详细条件见 [Human 状态树](AI_HUMAN_STATE_TREE.md) 与 [DeepSeek 状态树](AI_DEEPSEEK_STATE_TREE.md)。本文件源自一次静态源码审计；后续好奇与安全通行专项已有用户验收，当前状态以 `docs/DEEPSEEK_HANDOFF.md` 和 `docs/AGENT_LOG.md` 为准。本文件不是当前测试报告。
 
 ## 已实现与预留
 
 | 角色 | AI 状态（源码中的扁平联合类型） | 状态以外的并行系统/标记 |
 |---|---|---|
 | Human | PATROL、INVESTIGATE、SEARCH、CHASE、CAPTURE 已实现；CHECK_HIDE **仅类型预留，没有入口** | HumanAILockDecision：NONE/DETOUR/UNLOCK/FORCE_BREAK；抓捕进度和胜负在 GameStateSystem |
-| DeepSeek | SEEK_RICE、MOVE_TO_RICE、EAT、RESELECT、EVADE、RECOVER 已接入；CURIOUS_APPROACH、CURIOUS_OBSERVE、CURIOUS_PASSAGE 在当前未提交源码中**已编码但待自动/人工验收** | passageActive、curiosityBypassActive 为许可标记；ThreatSource/Level、SprintState、RiceInteractionState 为独立状态 |
+| DeepSeek | SEEK_RICE、MOVE_TO_RICE、EAT、RESELECT、EVADE、RECOVER、CURIOUS_APPROACH、CURIOUS_OBSERVE、CURIOUS_PASSAGE 均已实现；静止 Human 好奇/安全通行专项已通过用户验收 | passageActive、curiosityBypassActive 为许可标记；ThreatSource/Level、SprintState、RiceInteractionState 为独立状态 |
 
 两个控制器都没有代码层面的父/子层级；文档中的“找米/逃跑/对抗”等是用途分组。当前源码没有正式 CHECK_HIDE 藏身检查、DeepSeek 主动锁门 AI、团队策略或复杂行为树；不应画成已完成状态。
 
@@ -16,7 +16,7 @@
 | 层级 | Human | DeepSeek |
 |---|---|---|
 | 0：执行门控 | 仅 PLAYING 且正式玩家选 DeepSeek，未临时接管 Human | 仅 PLAYING 且正式玩家选 Human，未临时接管 DeepSeek |
-| 1：最即时信息 | 当前真实目视目标决定 CHASE/CAPTURE | 本帧先尝试“静止 Human 挡米路”安全通行（当前待验收代码）；随后对 Human 移动、失视、危险声、真实抓捕进度、安全距离、眩晕检查许可取消 |
+| 1：最即时信息 | 当前真实目视目标决定 CHASE/CAPTURE | 先检查静止 Human 安全通行许可；真实移动、失视、追捕型危险声、抓捕进度、安全距离失守或眩晕可取消许可 |
 | 2：危险/记忆 | 失视后的新 Last Seen 调查，随后新可听声音 | Vision、有效 Sound、短期 Last Seen 形成 HIGH/CAUTION/NONE；HIGH 抢占普通吃米和好奇，进入 EVADE |
 | 3：当前任务 | SEARCH / INVESTIGATE / PATROL；门锁策略随路径执行 | 有效通行优先执行；否则 EVADE/RECOVER、好奇观察、常规找米依次处理 |
 | 4：动作执行 | 门开关、AI 解锁/强破和最终 Circle Collision | 普通开门、SprintSystem、唯一 RiceField.update、最终 Circle Collision |
@@ -54,13 +54,13 @@ stateDiagram-v2
 
 | 风险 | 源码原因 | 可能观察到的现象；不是本轮复测结论 |
 |---|---|---|
-| DeepSeek 安全通行抢占逃跑 | tryStartPassage 在 assessThreat 前调用，且没有排除 EVADE / RECOVER | 静止可见 Human 挡路时先改为 CURIOUS_PASSAGE，之后才做当前威胁折扣；需人工核对危险边缘行为 |
+| DeepSeek 安全通行与威胁优先级 | `tryStartPassage` 在普通威胁评估前检查；许可仍受实际危险取消条件约束 | 该顺序支持静止 Human 附近的安全通行；回归须确认紧急危险仍会取消 |
 | 单状态名不足以解释许可 | passageActive 可伴随 EAT；curiosityBypassActive 可伴随 MOVE_TO_RICE | 仅看 HUD state 可能误判为何普通可见 Human 没触发逃跑；应连同许可、威胁等级查看 |
 | Human 视线边缘反复切换 | 目视优先于 Last Seen 与声音；丢失视线即调查 | 门开关、墙边或角色微移动时 CHASE/CAPTURE ↔ INVESTIGATE，路径和解锁进度也可能重置 |
 | DeepSeek 逃跑/恢复来回 | HIGH 会进入 EVADE；RECOVER 仍在每帧威胁评估之后运行 | 声音阈值或视线反复越界可使 EVADE ↔ RECOVER 或 EAT → EVADE 频繁发生 |
 | 多种合法零移动分支 | CAPTURE 停步、调查/搜索停留；DeepSeek 无路线、房间中心短暂保持、RESELECT 等待、STUNNED、RECOVER 无安全米路线 | “原地站住”并非都属于同一个寻路故障，应结合 noMovementReason、recoveryBlockReason、门与路径状态查 |
 | 房间目标与路径相互覆盖 | 门签名改变清路径；卡路重算；逃跑房间评分、保持时间、近分随机和短期访问惩罚并存 | 房间或门口反复换路、临时不动；当前 S7B-2 已接受的偶发原地停留仍列后续优化 |
-| 静止 Human 事件边界 | 只在真实可见帧累计；移动超过 0.05 世界单位、失视重置一次性抽签，80% 挡路抽签先于 10% 普通好奇 | 视线抖动可能重复产生“新静止事件”；未满足通行条件时 10% 好奇也可能继续评估 |
-| 临时接管后的许可清理 | DeepSeek 的 resumeAfterManualControl 现显式结束 passageActive，再清理路径 | 定向自动测试已覆盖通行中的接管与重开；浏览器体验仍待人工验收 |
+| 静止 Human 事件边界 | `HumanStillness` 独立记录静止事件；DeepSeek 仅在有效视野中读取，不因遮挡清零。普通好奇概率为 10%，安全通行判断概率为 100%，同一静止事件各自只判断一次 | 100% 只保证执行安全路线判断，不保证存在安全路线；参数以源码及数值表为准 |
+| 临时接管后的许可清理 | `resumeAfterManualControl` 显式结束 passageActive 并清路径；定向测试和专项验收已完成 | 后续若改接管流程，回归检查许可清理和重新寻路 |
 
-这些是静态源码分析和待观察风险，不是新缺陷结论。本轮没有修改玩法、数值、AGENTS.md 或 AGENT_LOG，也没有执行 npm test / npm run build；好奇及 80% 安全通行当前未提交分支的验收状态不能从此前 S7B-1/2 PASS 推断。
+以上为静态源码审计中值得持续回归的交互点，不等同于当前已复现缺陷。好奇与安全通行专项的后续实现及验收状态，以最新交接文档和历史日志为准；此处不记录本轮测试结果。

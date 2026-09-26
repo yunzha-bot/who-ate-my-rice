@@ -77,7 +77,7 @@
 - 删除文件：无。
 - 依赖变化：无。
 - 测试结果：`npm test` 重新运行，3 项通过；`npm run build` 重新运行，通过（包含 TypeScript 检查）。浏览器人工测试由用户完成并确认通过。
-- Gate 验收结果：S2 最终状态：PASS；全部 Gate 通过。
+- Gate 验收结果：S2 最终状态：通过；全部 Gate 通过。
 - 已知问题：无已证实的 S2 功能 BUG；构建仍有 Phaser 产物超过 Vite 500 kB 的非阻断警告。
 - 下一步建议：仅完成本阶段提交、推送与 `v0.0.2` 里程碑；S3 等待单独指令。
 - Git commit 信息：计划 `feat: add persistent rice progress`；提交与推送结果以本次最终汇报为准。
@@ -94,7 +94,7 @@
 - 依赖变化：无。
 - 测试结果：S2 基线 `npm test` 与 `npm run build` 均通过；S3 修改后 `npm test` 8 项通过、`npm run build` 通过（含 TypeScript 检查），`git diff --check` 通过。浏览器画面确认人类方块、READY→PLAYING、计时、Esc 暂停冻结和恢复；浏览器控制工具不能可靠持续按键，尚未完成双方各赢一局与 R 重开的实际操作验收。构建有既有的包体积非阻断警告。
 - S2 回归测试结果：原有 3 项 RiceSystem 测试全部通过；新增联动测试验证约 10 秒中断后续吃及 60 秒完成。真实浏览器中的 S2 持久进度本次尚未重新人工验证。
-- S3 Gate 验收结果：待人工验收，未判定 PASS；核心“双方各赢一局、结算后重开再打一局”尚待确认。因此未提交、未推送、未创建 `v0.0.3`。
+- S3 Gate 验收结果：待人工验收，尚未判定是否通过；核心“双方各赢一局、结算后重开再打一局”尚待确认。因此未提交、未推送、未创建 `v0.0.3`。
 - 已知问题：无已证实的 S3 功能 BUG；人工 Gate 待确认。`AGENTS.md` 的“当前下一开发阶段”仍写 S2，属于历史状态描述，本次按要求不修改。
 - 下一步建议：人工完成短暂接触、持续抓捕、吃满 60 秒、结束后冻结、R 重开与连续两局；全部通过后再提交、推送并创建阶段 Tag。不要进入 S4。
 - Git commit 信息：本次未提交。
@@ -111,7 +111,7 @@
 - 依赖变化：无。
 - 测试结果：`npm test` 9 项通过；新增测试确认正式 60 秒值保留、开发 5 秒完成且中断进度保留并触发 DeepSeek 娘胜利；原有 RiceSystem 测试及 S3 抓捕、暂停、胜负、重置、两局测试均通过。`npm run build` 通过（含 TypeScript 检查）；浏览器已确认显示 `0.0 / 5.0 秒`。本次 5 秒调整后的浏览器持续按 E 实测未由代理完成，原因是浏览器工具不能可靠长按；5 秒完成由自动化逻辑测试确认。构建仍有既有的包体积非阻断警告。
 - S2 回归测试结果：3 项 RiceSystem 测试全部通过，0.4 秒准备、中断续吃及完成封顶逻辑未改。
-- S3 Gate 验收结果：PASS；用户已人工验收原 60 秒 S3 闭环全部通过，本次仅通过配置调整开发测试时长，自动化回归通过。
+- S3 Gate 验收结果：通过；用户已人工验收原 60 秒 S3 闭环全部通过，本次仅通过配置调整开发测试时长，自动化回归通过。
 - 已知问题：无已证实的功能 BUG。发布前必须将 `RICE_TIMING_MODE` 改为 `production`，恢复正式 60 秒，并重新测试。`AGENTS.md` 当前阶段描述仍停留在 S2，本次按要求不修改。
 - 下一步建议：完成 S3 commit、push 与 `v0.0.3` Tag 后停止；S4 等待单独指令。
 - Git commit 信息：计划 `feat: add minimal complete match flow`；提交与推送结果以最终汇报为准。
@@ -162,7 +162,7 @@
 - 修改文件：`index.html`、`package.json`、`package-lock.json`、`src/config/gameConfig.ts`、`src/main.ts`、`src/systems/GameStateSystem.ts`、`src/systems/RiceSystem.ts`、`docs/AGENT_LOG.md`（仅追加本条）。
 - 删除文件：`src/scenes/GameScene.ts`（已闲置的 Phaser 场景）。
 - 依赖变化：新增 `three@0.186.0` 与 `@types/three@0.186.0`；移除 `phaser`，未引入物理引擎。
-- 测试结果：`npm test` 30 项全部通过，含原有 Rice/GameState/Sprint 回归及 3D 碰撞、屏幕方向、阵营切换、相机目标、FACTION_SELECT、R/M 重开与状态清理测试。`npm run build` 通过，包含 TypeScript 检查；移除 Phaser 后重新运行两项检查仍通过。用户人工确认 3D 场景、相机与屏幕方向、双阵营控制、碰撞、进食、冲刺风险、抓捕、暂停、双向胜负、R/M 重开及连续第二局全部正常；S4.5 人工验收 PASS。
+- 测试结果：`npm test` 30 项全部通过，含原有 Rice/GameState/Sprint 回归及 3D 碰撞、屏幕方向、阵营切换、相机目标、FACTION_SELECT、R/M 重开与状态清理测试。`npm run build` 通过，包含 TypeScript 检查；移除 Phaser 后重新运行两项检查仍通过。用户人工确认 3D 场景、相机与屏幕方向、双阵营控制、碰撞、进食、冲刺风险、抓捕、暂停、双向胜负、R/M 重开及连续第二局全部正常；S4.5 人工验收 通过。
 - 已知问题：Vite 仍提示主构建产物约 535 kB，超过 500 kB 提示线；不阻断运行。正式发布前仍需恢复 60 秒大米设计时长并复测。
 - 下一步建议：完成本次 commit、push 和 `v0.0.5-tech3d` Tag 后，可由用户另行决定进入 S5 完整 3D 灰盒地图；`AGENTS.md` 留待用户单独任务更新。
 - Git commit 信息：本条追加时尚未提交；计划 `refactor: migrate gameplay prototype to threejs`，实际提交和推送结果以最终汇报为准。
@@ -223,7 +223,7 @@
 - 任务名称：S6A —— 正式大米循环正式收尾。
 - 当前开发阶段：S6A Gate = PASS；本次不进入 S6B。
 - 本次目标：记录正式大米循环、大米视觉、人类抓捕区域与开发调试控制的实现及人工验收结果，完成测试、提交和推送收尾。
-- Gate：PASS；用户已完成浏览器人工验收并确认通过。
+- Gate：通过；用户已完成浏览器人工验收并确认通过。
 - Rice：保留 14 个稳定 `RiceCandidate`，每局无重复随机激活 5 个 `Active Rice`；每份米拥有独立 `RiceState` 与持久进度；0.4 秒准备阶段不计入正式进度；中断后保留进度；完成值封顶；前 4 份不会提前胜利，完成 5 / 5 后触发 DeepSeek 娘胜利。当前开发测试时长为每份 5 秒，正式设计时长仍为每份 60 秒，发布前必须切回正式值并复测。
 - Visual：每袋米只读取自身 `RiceState`，随进度连续降低高度与顶部鼓起程度；底部固定贴地，交互锚点不随形变漂移；完成后保留可见的扁平空袋；Restart 后全部恢复饱满状态。
 - Global Progress：`globalRiceProgressRatio` 基于 5 份米总进度计算；既有 30% Sprint 风险阈值保持不变。
@@ -242,7 +242,7 @@
 ## 2026-09-22 00:38 +08:00｜S6B 门系统正式完成
 
 - 任务名称：S6B —— 门系统正式收尾。
-- 当前开发阶段：S6B Gate = PASS，人工验收 = PASS；本次不进入 S6C。
+- 当前开发阶段：S6B Gate = PASS，人工验收 = 通过；本次不进入 S6C。
 - 本次目标：完成 Door System、锁门玩法、门碰撞与抓捕阻挡、暂停输入安全和角色圆形碰撞的阶段收尾，并记录构建环境事件。
 - Door System：将 18 个 `DoorNode` 正式升级为 Door System，支持 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能正常开关未锁门；Door Leaf 围绕 Door Hinge 转动；OPEN Door 可通行，CLOSED / LOCKED Door 产生动态碰撞并阻断 Capture 判定。
 - 门比例调整：门改为更短的住宅单扇门，门洞同步收窄，左右墙体同步收口；门与墙体高度均增加，门墙比例调整为更接近住宅灰盒尺度。
@@ -250,14 +250,14 @@
 - Pause / Input：Esc 统一进入 Pause Menu，提供 Continue、Restart、Return to Faction Select 和开发调试用 Switch Controlled Faction。`selectedFaction` 与 `controlledFaction` 保持分离；裸 R / M / Tab 由 `development.directHotkeysEnabled = false` 默认关闭，避免正常对局误触。
 - Player Collision：原角色逻辑碰撞为 Box / AABB footprint，在 W+A、W+D、A+S、S+D 斜向移动经过墙角、门框和家具边角时，会因轻微角点接触出现卡脚或粘住。最终改为角色 XZ Circle Footprint，环境 Wall / Furniture / Door 保持 AABB，组合使用 Circle-vs-AABB、Axis-Separated Collision Resolution 与 Wall Sliding；Sprint 同样使用 Circle Collider。用户人工确认卡脚问题明显改善并通过验收。
 - 回归结果：Door 开关与锁定、门碰撞、门阻断抓捕、锁数量限制、门口角色防夹、Sprint 防穿门、暂停菜单、阵营切换、Rice、Capture、Sprint、重开与地图连通均通过自动测试和人工验收。
-- Build Environment Incident：S6B 正式收尾时，`npm test` 93 / 93 PASS，`git diff --check` PASS；第一次 `npm run build` 因 `EPERM: operation not permitted` 失败，涉及路径 `D:\桌面\dev\who-ate-my-rice\dist`。确认 `dist/` 是 Vite 纯构建产物、未被 Git 跟踪且已由 `.gitignore` 忽略；删除后仍曾无法重新创建。排查期间未修改游戏源码或 Windows ACL，未使用管理员提权、`takeown`、`icacls` 或 `taskkill /F`。
-- 构建环境处理：发现明确指向本项目的 Vite dev server：`node.exe`，PID 24900，端口 5173；以非强制方式正常停止。随后项目根目录临时目录创建 PASS、删除 PASS，确认当前执行环境具备项目根目录写入权限；再次执行 `npm run build` PASS。
+- Build Environment Incident：S6B 正式收尾时，`npm test` 93 / 93 通过，`git diff --check` 通过；第一次 `npm run build` 因 `EPERM: operation not permitted` 失败，涉及路径 `D:\桌面\dev\who-ate-my-rice\dist`。确认 `dist/` 是 Vite 纯构建产物、未被 Git 跟踪且已由 `.gitignore` 忽略；删除后仍曾无法重新创建。排查期间未修改游戏源码或 Windows ACL，未使用管理员提权、`takeown`、`icacls` 或 `taskkill /F`。
+- 构建环境处理：发现明确指向本项目的 Vite 开发服务器：`node.exe`，PID 24900，端口 5173；以非强制方式正常停止。随后项目根目录临时目录创建成功、删除成功，确认当前执行环境具备项目根目录写入权限；再次执行 `npm run build` 通过。
 - 构建事件结论：无法 100% 证明本次 EPERM 一定由 Vite dev server 文件占用直接导致，但停止当前项目 Vite 开发服务器后，项目根目录写入测试与 Vite production build 均恢复正常。后续正式 build / 阶段收尾前，应优先确认当前项目 dev / preview server 已正常停止。
 - 新增文件：`src/systems/DoorSystem.ts`、`src/three/DoorView.ts`、`src/three/RoundShortcuts.ts`、`tests/door-system.test.mjs`。
 - 修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`package.json`、`src/config/gameConfig.ts`、`src/style.css`、`src/systems/GameStateSystem.ts`、`src/three/CollisionWorld.ts`、`src/three/ThreeGame.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`tests/apartment-map.test.mjs`、`tests/camera-controls.test.mjs`、`tests/collision-world.test.mjs`。
 - 删除文件：无。
 - 依赖变化：无新增或删除依赖；仅扩展现有测试脚本。
-- 测试结果：最终 `npm test` 93 项全部通过；`npm run build` 通过并包含 TypeScript 检查；`git diff --check` 通过。用户人工确认 S6B Gate 与体验 Gate 均为 PASS。
+- 测试结果：最终 `npm test` 93 项全部通过；`npm run build` 通过并包含 TypeScript 检查；`git diff --check` 通过。用户人工确认 S6B Gate 与体验 Gate 均已通过。
 - 已知问题 / Build Notes：Vite production build 的主 JS chunk 约 570.87 kB，仍高于 500 kB 提示线；这是已知非阻断构建提示，本阶段不调整 `chunkSizeWarningLimit`，留待后续浏览器兼容 / 性能优化阶段处理。当前开发大米仍为 5 秒，正式设计值为 60 秒，发布前必须恢复并复测。
 - 下一步建议：完成本次 commit 和 push 后，可以等待用户单独授权进入 S6C —— Human 反制 / PulseLock；本次不开始 S6C，也不创建新 Tag，当前 milestone 仍为 `v0.1.0-alpha`。
 - Git commit 信息：计划 `feat: add door locking gameplay`；实际提交与推送结果以最终汇报为准。
@@ -265,7 +265,7 @@
 ## 2026-09-22 01:28 +08:00｜S6C Human 反制 / PulseLock 正式完成
 
 - 任务名称：S6C —— Human 反制 / PulseLock 正式收尾。
-- 当前开发阶段：S6C Gate = PASS，人工验收 = PASS；本次不进入 S6D。
+- 当前开发阶段：S6C Gate = PASS，人工验收 = 通过；本次不进入 S6D。
 - 本次目标：在 S6B Door System 上完成 Human 破解锁芯的最小闭环，并在自动测试与人工验收通过后完成阶段文档、提交和推送收尾。
 - PulseLock：Human 可在 ACTIVE Lock Core 的实际世界坐标交互范围内按住 E 破解 LOCKED Door，DeepSeek 不可破解。破解需连续累计 3 秒，期间 Human 移动被锁定，但 Camera、世界更新和 Capture Zone 继续正常工作。
 - Progress Retention：松开 E、离开范围或切走 Human 控制会立即中断破解；各门独立保存破解进度，并从中断时起保留 5 秒。保留期内重新按住 E 可从原进度继续，超时后仅对应门的进度归零。Pause、READY、FACTION_SELECT 与 FINISHED 不推进破解或保留倒计时。
@@ -286,16 +286,16 @@
 
 ## 2026-09-22 12:20 +08:00｜S6C Minesweeper Lock Counterplay 正式收尾
 
-- 任务名称：S6C —— Human 反制 / Minesweeper Lock Counterplay。当前阶段 S6C Gate = PASS，用户人工验收 = PASS；下一阶段为 S6D —— 双向信息系统，尚未开始。
+- 任务名称：S6C —— Human 反制 / Minesweeper Lock Counterplay。当前阶段 S6C Gate = PASS，用户人工验收 = 通过；下一阶段为 S6D —— 双向信息系统，尚未开始。
 - 本次目标：以最终扫雷反制规则取代前述 Hold E PulseLock 原型，完成验收后的文档、自动验证和 Git 收尾；历史日志保留，旧原型规则不再适用于当前版本。
 - 实际完成内容：Human 对 LOCKED Door 按 E 打开 4×4、3 雷扫雷；长按或连点 E 不再推进解锁。× / Esc 退出后，同一 Lock Core 的盘面本局保留；扫雷期间世界继续运行，Human 不能移动，Capture Zone 仍可工作。扫雷成功使 Core `ACTIVE → DISABLED`、Door `LOCKED → CLOSED` 并释放 Lock Slot；Human 需再次 E 开门。踩雷失败时门仍 LOCKED，对局不结束。
 - Human Space：普通 CLOSED Door 立即 OPEN，不触发或受强破 CD 限制；LOCKED Door 则立即强破 Core 并 OPEN，进入 30 秒 Force Break CD。CD 内锁门不能再强破，但仍可 E 扫雷，普通门仍可 Space 免费打开；扫雷成功不触发强破 CD。DISABLED Core 本局不能再次 Lock。门交互范围扩大至 1.3 世界单位，并选最近的可达门，不可隔墙操作。
-- 回归与验收：DeepSeek Space Sprint、Capture、Door Collision、Circle Collider、Esc Pause Menu 均无阻断回归；用户确认 S6C 人工 Gate PASS。正式大米仍设计为 60 秒，当前开发测试值仍为 5 秒，发布前需恢复并复测。
+- 回归与验收：DeepSeek Space Sprint、Capture、Door Collision、Circle Collider、Esc Pause Menu 均无阻断回归；用户确认 S6C 人工 Gate 通过。正式大米仍设计为 60 秒，当前开发测试值仍为 5 秒，发布前需恢复并复测。
 - 新增文件：`src/systems/HumanDoorSkill.ts`、`src/systems/MinesweeperLockSystem.ts`、`tests/human-door-skill.test.mjs`、`tests/minesweeper-lock.test.mjs`。
 - 修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`package.json`、`src/config/gameConfig.ts`、`src/style.css`、`src/systems/DoorSystem.ts`、`src/three/CollisionWorld.ts`、`src/three/ThreeGame.ts`。
 - 删除文件：已由最终扫雷实现替代的 `src/systems/PulseLockSystem.ts`、`tests/pulse-lock.test.mjs`。
 - 依赖变化：无新增依赖；测试脚本改为运行扫雷和 Human 门技能测试。
-- 测试结果：`npm run build` PASS（含 TypeScript 检查）；`npm test` 115 / 115 PASS；`git diff --check` PASS。首次构建因清理 `dist/assets/.gitkeep` 遇到 EPERM；确认 `dist/` 是被 Git 忽略且未跟踪的纯构建产物，无明确属于本项目的 Vite/npm 进程，安全清理后让 Vite 重建，构建通过。未修改 ACL、源码或 Vite 配置来绕过该问题。
+- 测试结果：`npm run build` 通过（含 TypeScript 检查）；`npm test` 115 / 115 通过；`git diff --check` 通过。首次构建因清理 `dist/assets/.gitkeep` 遇到 EPERM；确认 `dist/` 是被 Git 忽略且未跟踪的纯构建产物，无明确属于本项目的 Vite/npm 进程，安全清理后让 Vite 重建，构建通过。未修改 ACL、源码或 Vite 配置来绕过该问题。
 - 已知问题：主 JS bundle 约 581.22 kB 的 Vite >500 kB 提示仍为非阻断警告；无法确定此前 EPERM 的唯一成因。仓库不存在 `docs/SHARED_GAMEPLAY_SPEC.md`，按要求未新建。
 - 下一步建议：完成本次 commit / push 后等待用户另行授权 S6D，不创建 Tag、不提前开始下一阶段。
 - Git commit 信息：计划 `feat: complete human lock counterplay`；实际提交及推送结果以最终汇报为准。
@@ -306,23 +306,23 @@
 - 本次目标：核对已实现规则、统一数值配置和六项浏览器人工验收结果，通过自动验证后完成文档与 Git 里程碑收尾。
 - 实际完成内容：S6D 已接入双向 SoundEvent、距离衰减与墙/门遮挡、相机相对声音方向和远蓝/中黄/近红场景声波；Vision 区分 VISIBLE、BLOCKED 与 OUT_OF_RANGE，Last Seen 与当前可见状态独立。鼠标点角色仅改变开发临时 WASD 输入目标；Esc 开发菜单切换正式主控，并同步镜头与信息观察者，不重开对局。
 - 米痕最终规则：DeepSeek 实际进食进度增长后开启或刷新 5 秒脚印生成窗口；窗口内移动按步距生成脚印，静止不生成。每个脚印从生成起独立保留 15 秒，末段平滑淡出；窗口结束不删除既有脚印。Human 正式观察者可见，暂停冻结计时，Restart / 新局清空。
-- 人工验收：用户于本次任务明确确认 S6D 六项浏览器人工验收全部 PASS：声音可视化、声音遮挡、鼠标临时控制、Esc 正式主控切换、米痕脚印、Vision / Last Seen。S6D Gate = PASS；S6A、S6B、S6C 的人工 PASS 已在前述日志记录。
+- 人工验收：用户于本次任务明确确认 S6D 六项浏览器人工验收全部通过：声音可视化、声音遮挡、鼠标临时控制、Esc 正式主控切换、米痕脚印、Vision / Last Seen。S6D Gate = PASS；S6A、S6B、S6C 的人工验收结果已在前述日志记录。
 - 数值配置：现有可调玩法值集中在 `src/config/gameConfig.ts`，运行系统经 `GAME_CONFIG` 读取；`docs/GAME_BALANCE_CONFIG.md` 记录实际值、单位与影响。正式每份米 60 秒，开发测试仍为 5 秒，发布前须恢复并复测。目前未实现对局倒计时，不将其记作已完成。
 - 新增文件：`docs/GAME_BALANCE_CONFIG.md`、`tests/balance-config.test.mjs`（相对上次 WIP 检查点）。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md` 及当前 S6D／数值配置相关源码与测试；删除文件：无；依赖变化：无。
-- 测试结果：本次 `npm test` 141/141 PASS，`npm run build` PASS（含 TypeScript 检查），`git diff --check` PASS。构建前未发现明确属于本项目的 Vite/npm 进程；未修改 ACL、Vite 配置或游戏平衡。
+- 测试结果：本次 `npm test` 141/141 项通过，`npm run build` 通过（含 TypeScript 检查），`git diff --check` 通过。构建前未发现明确属于本项目的 Vite/npm 进程；未修改 ACL、Vite 配置或游戏平衡。
 - 已知非阻断问题：Vite 主 JS chunk 约 599.97 kB，超过 500 kB 提示线；开发米仍为 5 秒，正式发布前需切回 60 秒。没有对局倒计时功能。未发现本次封版自动检查阻断问题。
 - Git：已有 S6D WIP 安全检查点 `3a29926`（`wip: preserve s6d information systems`）；本次正式封版 commit、main 推送及 `v0.2.0-alpha` Tag 结果以实际执行和最终汇报为准，不预填尚未产生的 hash。
 
 ## 2026-09-23 15:14 +08:00｜S7A WIP 安全检查点
 
 - 任务名称：保存 S7A Human AI 与角色动作接口工作进度。
-- 当前开发阶段：S7A 开发中；角色动作接口专项人工验收 PASS，整个 S7A 尚未正式验收或标记完成。
+- 当前开发阶段：S7A 开发中；角色动作接口专项人工验收 通过，整个 S7A 尚未正式验收或标记完成。
 - 本次目标：通过自动验证后，将当前 S7A 相关代码、配置、测试及文档保存为 WIP 检查点。
-- 实际完成内容：保留 Human AI 巡逻、调查、追逐、导航和门处理实现；保留独立角色动作接口、DEV 双角色动作状态与切换原因显示，以及动作参数说明。用户确认角色动作接口专项人工验收 PASS；该结果不代表整个 S7A Gate 通过。
+- 实际完成内容：保留 Human AI 巡逻、调查、追逐、导航和门处理实现；保留独立角色动作接口、DEV 双角色动作状态与切换原因显示，以及动作参数说明。用户确认角色动作接口专项人工验收 通过；该结果不代表整个 S7A Gate 通过。
 - 新增文件：`src/systems/CharacterAction.ts`、`src/systems/HumanAIController.ts`、`src/systems/NavigationSystem.ts`、`src/three/CharacterActionView.ts`、`tests/character-action.test.mjs`、`tests/human-ai.test.mjs`、`tests/navigation.test.mjs`。
 - 修改文件：`AGENTS.md`、`docs/GAME_BALANCE_CONFIG.md`、`src/config/gameConfig.ts`、`src/style.css`、`src/three/CollisionWorld.ts`、`src/three/ThreeGame.ts`；本条为追加日志。
 - 删除文件：无。依赖变化：无。密钥、`dist/`、`node_modules/` 和 `.env` 未加入版本控制。
-- 测试结果：`npm test` 153/153 PASS；`npm run build` PASS；`git diff --check` PASS。构建有已知 Vite 612.95 kB（超过 500 kB）非阻断提示。
+- 测试结果：`npm test` 153/153 项通过；`npm run build` 通过；`git diff --check` 通过。构建有已知 Vite 612.95 kB（超过 500 kB）非阻断提示。
 - 已知问题：整个 S7A 尚未完成正式人工验收；Human AI 完整体验仍待验收。
 - 下一步建议：等待 S7A 后续人工验收与阶段 Gate；本检查点不代表阶段封版。
 - Git commit 信息：`wip: preserve s7a human ai and action interface`；hash 与推送结果以本次执行汇报为准。
@@ -330,15 +330,15 @@
 ## 2026-09-23 15:33 +08:00｜S6～S7A 文档状态同步
 
 - 任务名称：同步 S6 与 S7A 项目进度、动作接口长期规则和参数索引。
-- 当前阶段：S7A Human AI 进行中。角色动作接口专项人工验收 PASS；整个 S7A 尚未正式验收或完成。
+- 当前阶段：S7A Human AI 进行中。角色动作接口专项人工验收 通过；整个 S7A 尚未正式验收或完成。
 - 本次目标：核对正式 Tag、最近 WIP 检查点、Human AI 实际实现与统一数值文档，并同步项目长期状态。
 - S6 状态：S6A～S6D 及 S6 已完成。仓库 Tag 查询确认 `v0.2.0-alpha` 存在；本次只读远程 Tag 查询返回对象 `fff6f8a29223bce3c5b780a9a39738fa54ca1ca2`。未发现 `docs/SHARED_GAMEPLAY_SPEC.md`，未新建该文件。
 - S7A 实现进度：Human AI 已有 `PATROL / INVESTIGATE / CHASE / CAPTURE` 状态；读取现有声音、Vision / Last Seen，使用房间级声音调查和 XZ A* 导航，普通 CLOSED Door 可沿路径开启，锁门不可通行；抓捕由既有 Capture / Match 规则结算。已接入暂停/准备阶段停更、开发控制接管和重开重置。Human AI 完整浏览器行为尚待人工验收，S7A 不记为完成。
-- 动作接口：用户确认专项人工验收 PASS。玩家与 AI 共用 `IDLE / WALK / RUN / EAT / STARTLED / FALL / STUN / INTERACT / CAPTURE` 接口；DEV HUD 可观察双方动作与切换原因。正式角色及动作资源尚未导入；GLB / AnimationMixer 仅有预留接口，尚无正式动画片段。
+- 动作接口：用户确认专项人工验收 通过。玩家与 AI 共用 `IDLE / WALK / RUN / EAT / STARTLED / FALL / STUN / INTERACT / CAPTURE` 接口；DEV HUD 可观察双方动作与切换原因。正式角色及动作资源尚未导入；GLB / AnimationMixer 仅有预留接口，尚无正式动画片段。
 - 配置核对：`docs/GAME_BALANCE_CONFIG.md` 中 Human AI 参数及 `C.characterAnimation.fallPoseMs = 220 ms`、`transitionMs = 120 ms`、`stunColor = 0xff7777` 与 `src/config/gameConfig.ts` 一致；未发现需要改数值表的差异。
-- WIP 检查点：`2205b32de17385edb684fa24928d5d976b6dd42f`（`wip: preserve s7a human ai and action interface`），此前执行结果为 push 成功；提交时自动测试 153/153 PASS、build PASS、`git diff --check` PASS。本次远程 Tag 查询成功，但远程 `main` 实时查询因无法连接 GitHub 失败；本地 `main` 与 `origin/main` 跟踪指针均指向该提交。
+- WIP 检查点：`2205b32de17385edb684fa24928d5d976b6dd42f`（`wip: preserve s7a human ai and action interface`），此前执行结果为 push 成功；提交时自动测试 153/153 项通过、build 通过、`git diff --check` 通过。本次远程 Tag 查询成功，但远程 `main` 实时查询因无法连接 GitHub 失败；本地 `main` 与 `origin/main` 跟踪指针均指向该提交。
 - 本次文档修改：更新 `AGENTS.md` 的阶段状态和角色动作长期规则；本条追加于日志末尾。未修改游戏代码、参数或共享规范。
-- 测试：本次仅文档维护，未重跑游戏自动测试；`git diff --check` PASS。
+- 测试：本次仅文档维护，未重跑游戏自动测试；`git diff --check` 通过。
 - 下一步：进行 Human AI 基础行为人工验收；之后再按 Gate 结果决定 S7A 状态。
 - Git：不 commit、不 push、不创建 Tag。
 
@@ -347,10 +347,10 @@
 - 任务名称：S7A-1 Human AI 基础行为收尾。
 - 当前阶段：S7A-0 角色动作接口专项与 S7A-1 Human AI 基础行为均通过；整个 S7A 尚未完成，CURRENT = S7A-2 Human AI 高级决策。
 - 本次目标：记录用户确认的 S7A-1 浏览器人工验收并保存实际自动验证结果。
-- 人工 Gate：用户确认巡逻、循声调查、视觉追逐、追丢后搜索、普通门与拐角寻路正常；玩家控制 Human 时 AI 不抢控制，S7A-1 = PASS。此前 S7A-0 动作接口专项人工 PASS 见前序记录。
+- 人工 Gate：用户确认巡逻、循声调查、视觉追逐、追丢后搜索、普通门与拐角寻路正常；玩家控制 Human 时 AI 不抢控制，S7A-1 = 通过。此前 S7A-0 动作接口专项人工验收通过，详见前序记录。
 - 实际完成内容：巡逻覆盖所有主要房间；最后目击调查优先于声音调查；网格路径增加沿边圆形碰撞采样，防止窄墙角斜穿；路径节点长时间没有接近进度时避开该节点重新寻路。普通关门使用既有开门接口，锁门绕行；DEV HUD 显示路径节点、状态切换原因及路径事件。
 - 配置：新增 `C.humanAI.stuckProgressEpsilon = 0.05` 世界单位，并已同步 `docs/GAME_BALANCE_CONFIG.md`；未调整既有玩法平衡值。
-- 测试结果：`npm test` 159/159 PASS；`npm run build` PASS（含 TypeScript 检查）；`git diff --check` PASS。构建前已正常停止本项目 Vite 预览。Vite 615.80 kB 主包超过 500 kB 的提示为已知非阻断警告。
+- 测试结果：`npm test` 159/159 项通过；`npm run build` 通过（含 TypeScript 检查）；`git diff --check` 通过。构建前已正常停止本项目 Vite 预览。Vite 615.80 kB 主包超过 500 kB 的提示为已知非阻断警告。
 - 新增文件：无。修改文件：Human AI、寻路、ThreeGame DEV HUD、Human AI / Navigation 测试、`src/config/gameConfig.ts`、`docs/GAME_BALANCE_CONFIG.md`、`AGENTS.md` 与本日志。删除文件：无。依赖变化：无。
 - 已有检查点：本工作基于 `2205b32`（`wip: preserve s7a human ai and action interface`）；本次阶段提交 hash 与 push 结果以 Git 实际执行为准。
 - 下一步：进入 S7A-2 Human AI 高级决策的计划与开发；本次不开始 S7A-2。
@@ -358,7 +358,7 @@
 ## 2026-09-23 17:40 +08:00｜S7A-2 开发调试面板专项验收
 
 - 任务名称：记录可收纳调试面板专项人工验收。
-- 当前阶段：S7A Human AI 进行中；本次仅调试面板专项 PASS，整个 S7A 尚未完成。
+- 当前阶段：S7A Human AI 进行中；本次仅调试面板专项 通过，整个 S7A 尚未完成。
 - 本次目标：记录用户确认的调试面板验收，并核对 Human AI 平衡参数的复验状态。
 - 实际完成内容：用户确认原左上、左下、右上调试窗口已整合为默认收起、可展开/收纳的统一面板；原有实时调试信息与游戏操作均保留。验收状态同步记录于 `AGENTS.md`，此处保留本次专项的具体结果。
 - 平衡参数核对：`GAME_CONFIG.humanAI.movementSpeedMultiplier = 0.92`（AI 专用倍率，约比 Human 基础速度低 8%）；`aiUnlockDurationMs = 8,750 ms`（原 5,000 ms 的 1.75 倍）。用户尚未确认这两项调整的最终手感复验，故仍为待验收，未将整个 S7A 标记完成。
@@ -373,43 +373,43 @@
 - 任务名称：归档 S7B-3A 条件式逃脱关门、同步长期规则并创建 DeepSeek Harness 交接快照。分支 `main`；开始时 HEAD / `origin/main` 均为 `9da38c0256f3e65cded4e19d6aa315f3c264a781`，工作区已有 S7B-3A 修改及用户未跟踪 `.trae/` 资料。
 - 阶段状态：S7B-3A 已通过用户确认的 5/5 浏览器人工验收；S7B 整体仍未完成；下一项唯一主要任务为 S7B-3B 主动锁门与逃脱策略。本记录不将 S7B 标为完成。
 - S7B-3A 规则：仅 EVADE 时考虑刚实际通过、仍在近距离的 OPEN Door。须当前目视确认 Human 位于另一侧、两角色不占用门叶、Human 距离至少 1.5 世界单位、门在 1,800 毫秒通过窗口内，并验证 DeepSeek 关门后仍能沿不经过该门的路径逃离，同时 Human 的当前可达追击路线会使用该门。条件不成立即继续原逃跑；成功通过 `DoorSystem.toggle` 改变真实门状态并同步碰撞、视线与声音。每门 5,000 毫秒重试冷却避免开关振荡。没有新增 AI 锁门行为。
-- 用户确认的人工结果：正常追逐时安全穿门关门并继续逃跑、Human 已同侧、Human 距离过近、关门会封堵唯一退路、Human 重新开门后 AI 不原地振荡，以上 5 项均 PASS。该结果为用户提供的人工验收，不是本次重新执行的浏览器验收。
+- 用户确认的人工结果：正常追逐时安全穿门关门并继续逃跑、Human 已同侧、Human 距离过近、关门会封堵唯一退路、Human 重新开门后 AI 不原地振荡，以上 5 项均 通过。该结果为用户提供的人工验收，不是本次重新执行的浏览器验收。
 - 调试与日志：DEV Details 新增 `Door Escape / 关门逃脱`，显示候选门/距离、是否通过、Human 另一侧是否可确认、关门后路线、收益依据、最近结果、跳过原因与冷却。AI JSON 日志记录 `DOOR_ESCAPE_EVALUATE`、`DOOR_ESCAPE_CLOSE`、`DOOR_ESCAPE_SKIP`、`DOOR_ESCAPE_FAILED`；相同决策不逐帧重复记录。
 - 配置：`GAME_CONFIG.deepseekAI.doorEscapeMinHumanDistance = 1.5` 世界单位，`doorEscapeCrossingWindowMs = 1,800` 毫秒，`doorEscapeCooldownMs = 5,000` 毫秒；均已同步 `docs/GAME_BALANCE_CONFIG.md`。保留用户其他手动配置数值。
-- 本次自动验证：`npm test` 270/270 PASS；`npm run build` PASS（含 `tsc --noEmit`）；`git diff --check` PASS。Vite 主 JS bundle 约 704.03 kB，>500 kB 为已知非阻断提示。浏览器地址返回 HTTP 200；本次未重做完整手动交互验收。
+- 本次自动验证：`npm test` 270/270 项通过；`npm run build` 通过（含 `tsc --noEmit`）；`git diff --check` 通过。Vite 主 JS bundle 约 704.03 kB，>500 kB 为已知非阻断提示。浏览器地址返回 HTTP 200；本次未重做完整手动交互验收。
 - 文件：新增 `docs/DEEPSEEK_HANDOFF.md`、`tests/deepseek-door-escape.test.mjs`；更新 `AGENTS.md`、本日志、`docs/GAME_BALANCE_CONFIG.md`、DeepSeek 控制器、ThreeGame、AILogCollector、DEV Details 类别与既有面板测试。无依赖变更；未纳入 `.trae/`、`dist/`、`node_modules/` 或临时日志。
 - 既有待办：S7B-2 偶发原地停留作为后续 AI 优化；正式 GLB 待机资源与视觉验收留待 S10；Human AI 自动解锁时间留待 S16 平衡评估。S7B-3B 尚未开始。
 - Git：本日志与交接快照纳入本轮 WIP 检查点；实际提交和推送结果由最终 Git 操作报告确认。不创建 Tag。
 
 ## 2026-09-24｜S7B 静止 Human 好奇安全通行定向修复验收
 
-- 任务名称：修复静止 Human 遮挡重见、末份米堆安全进食路线及 SAFE_WAIT 复查问题。当前阶段仍为 S7B；本轮专项人工验收 PASS，不代表 S7B 整体完成。
+- 任务名称：修复静止 Human 遮挡重见、末份米堆安全进食路线及 SAFE_WAIT 复查问题。当前阶段仍为 S7B；本轮专项人工验收 通过，不代表 S7B 整体完成。
 - 实际修复：按声音事件类别区分追捕危险与普通门操作声；独立静止事件在遮挡期间继续计时，重新目视时不把旧事件 ID 误作当帧 Human 移动；普通可见警戒不会无条件覆盖已获准的静止安全试探，真实移动、逼近、冲刺及抓捕危险仍可中断。
 - 米堆路线：分别验证默认 A* 路线、抓捕圈外进食点和安全绕行路径。安全试探可选择合法进食范围内、位于抓捕半径与余量之外的实际位置；默认路线受威胁时可使用现有导航绕行。通道确实被抓捕避让区封死时拒绝通过，不穿墙、不穿锁门。
 - SAFE_WAIT：保留同一米堆/入口失败计数和单次抽签；按现有间隔重查路线。存在安全观察路径时只走到观察位置并等待新的有效视野，不使用墙后 Human 实时位置授权通行；路线仍危险时继续等待。修正未激活安全通行却报告 `ACTIVE_SAFE_PASSAGE` 的状态诊断。
 - 定向回归：覆盖静止超过 5 秒后重见、事件 ID 变化、无效通行状态、危险默认路线与安全绕行、不可通过的窄通道等待、路线恢复后复查、SAFE_WAIT 安全观察，以及真实公寓 kitchen 的 rice_06 碰撞移动路径。地图模拟轨迹为 `CURIOUS_APPROACH → CURIOUS_OBSERVE → CURIOUS_PASSAGE → EAT`；实际进食位置与 Human 保持在 0.9 世界单位安全边界外。不可通行窄通道连续模拟 30 秒未冲门，安全路线恢复后沿用原静止事件，不重新抽签。
-- 人工验收：用户确认本轮 S7B 专项修复 PASS。人工验收状态不自动将整个 S7B 标记为完成。
+- 人工验收：用户确认本轮 S7B 专项修复 通过。人工验收状态不自动将整个 S7B 标记为完成。
 - 配置与调试：保留用户手动调整的 `GAME_CONFIG` 数值；配置说明与本轮变量一致。保留 UE Details 风格 DEV 面板、AI 安全路径可视化开关和 AI JSON 日志导出。日志诊断包含通行实际激活状态及安全路径数据。
-- 测试结果：`npm test` 265/265 PASS；`npm run build` PASS（含 TypeScript 检查）；`git diff --check` PASS。Vite 主 bundle 超过 500 kB 的提示仍为非阻断项。
+- 测试结果：`npm test` 265/265 项通过；`npm run build` 通过（含 TypeScript 检查）；`git diff --check` 通过。Vite 主 bundle 超过 500 kB 的提示仍为非阻断项。
 - 新增文件：`src/three/AISafetyPathView.ts`、`tests/deepseek-safety-regression.test.mjs`。修改文件包括 S7B 控制器、日志采集、DEV 面板及 `ThreeGame`、相关既有 S7B 测试、`GAME_CONFIG` 与配置说明、AI 状态树文档和本文件。依赖变化：无。未纳入日志导出的用户资料 `.trae/`，无 dist、node_modules 或导出的 AI 日志 JSON 纳入版本控制。
 - 下一步：按既定 Gate 继续 S7B；本次不创建 Tag，不开始新的阶段。
 - Git commit 信息：等待本次 WIP 提交结果。
 
 ## 2026-09-24 10:55 +08:00｜S7B-2 最终人工验收补记
 
-- 用户最终确认：S7B-2 逃跑与脱险恢复人工验收 PASS，包含跨房间逃跑、移动警戒恢复与静止对峙处理；IDLE_01～IDLE_05 多待机动作接口专项五项人工验收 PASS。此结果更新前面“等待验收”的当时状态，不改写旧记录。S7B-2 = PASS，NEXT = S7B-3 DeepSeek 主动关门与锁门决策；整个 S7B 尚未完成。
+- 用户最终确认：S7B-2 逃跑与脱险恢复人工验收 通过，包含跨房间逃跑、移动警戒恢复与静止对峙处理；IDLE_01～IDLE_05 多待机动作接口专项五项人工验收 通过。此结果更新前面“等待验收”的当时状态，不改写旧记录。S7B-2 = 通过，NEXT = S7B-3 DeepSeek 主动关门与锁门决策；整个 S7B 尚未完成。
 - 剩余待办：偶发原地停留作为后续 AI 优化；正式 GLB 待机片段接入及视觉验收延至 S10；Human AI 自动解锁速度留待 S16 平衡复评。
-- 本次检查：`npm test` 204/204 PASS；`npm run build` PASS（含 TypeScript 检查，Vite 654.54 kB bundle 提示非阻断）；`git diff --check` PASS。`GAME_CONFIG` 与 `docs/GAME_BALANCE_CONFIG.md` 的新增待机参数一致。
+- 本次检查：`npm test` 204/204 项通过；`npm run build` 通过（含 TypeScript 检查，Vite 654.54 kB bundle 提示非阻断）；`git diff --check` 通过。`GAME_CONFIG` 与 `docs/GAME_BALANCE_CONFIG.md` 的新增待机参数一致。
 - Git：本次保存为 `wip: preserve s7b2 escape ai and idle slots`；基础检查点为 `7061b33ae111bd2ea68e324895cf81f1715be63a`。提交 hash 和 push 结果待 Git 操作后报告；不创建 Tag，不开始 S7B-3。
 
 ## 2026-09-24 10:54 +08:00｜S7B-2 最终验收与 WIP 安全检查点
 
-- 任务名称：记录 S7B-2 最终人工验收并保存逃跑 AI / 特殊待机接口 WIP。当前阶段：S7B-2 = PASS；NEXT = S7B-3 DeepSeek 主动关门与锁门决策；整个 S7B 尚未完成。
-- 人工 Gate：用户确认 S7B-2 逃跑与脱险恢复验收 PASS，涵盖跨房间逃跑、移动警戒恢复及静止对峙路线处理；确认 IDLE_01～IDLE_05 多待机动作接口专项五项人工验收 PASS。偶发原地停留是后续 AI 优化项，不阻塞 S7B-2。
+- 任务名称：记录 S7B-2 最终人工验收并保存逃跑 AI / 特殊待机接口 WIP。当前阶段：S7B-2 = 通过；NEXT = S7B-3 DeepSeek 主动关门与锁门决策；整个 S7B 尚未完成。
+- 人工 Gate：用户确认 S7B-2 逃跑与脱险恢复验收 通过，涵盖跨房间逃跑、移动警戒恢复及静止对峙路线处理；确认 IDLE_01～IDLE_05 多待机动作接口专项五项人工验收 通过。偶发原地停留是后续 AI 优化项，不阻塞 S7B-2。
 - 本轮核实的待机表现接口：沿用玩家与 AI 共用的 `CharacterActionView` / `AnimationMixer`；连续普通 IDLE 5 秒后从实际已接入的配置片段中抽选，完成后回到普通 IDLE，更高优先级动作打断，暂停冻结计时、重开清零。当前没有正式 GLB 待机动画资源，动画视觉验收延后至 S10；缺资源时白模保持普通 IDLE。
 - 配置：`GAME_CONFIG.characterAnimation.specialIdleTriggerMs = 5,000 ms`、`specialIdleRepeatIntervalMs = 15,000 ms`、`specialIdleSlots = IDLE_01..IDLE_05` 已与 `docs/GAME_BALANCE_CONFIG.md` 对齐。未调整玩法平衡值。
 - 保留待办：偶发原地停留的后续 AI 优化；S10 正式 GLB 待机动画接入与视觉验收；Human AI 自动解锁速度按既有决定留待 S16 平衡复评。
-- 验证：`npm test` 204/204 PASS；`npm run build` PASS（含 TypeScript 检查），Vite 主 bundle 654.54 kB 的 >500 kB 提示为非阻断；`git diff --check` PASS。构建使用项目目录授权执行，未改 ACL 或绕过构建错误。
+- 验证：`npm test` 204/204 项通过；`npm run build` 通过（含 TypeScript 检查），Vite 主 bundle 654.54 kB 的 >500 kB 提示为非阻断；`git diff --check` 通过。构建使用项目目录授权执行，未改 ACL 或绕过构建错误。
 - 新增文件：`tests/deepseek-evade.test.mjs`（S7B-2 回归测试）。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`docs/GAME_BALANCE_CONFIG.md`、`src/config/gameConfig.ts`、`src/systems/DeepSeekAIController.ts`、`src/three/CharacterActionView.ts`、`src/three/ThreeGame.ts`、`tests/character-action.test.mjs`。删除文件：无。依赖变化：无。
 - Git 检查点：基于已存在且 `main` / `origin/main` 同步的 S7B-1 检查点 `7061b33ae111bd2ea68e324895cf81f1715be63a`；本次计划创建 `wip: preserve s7b2 escape ai and idle slots`。本日志随该 WIP 提交保存；实际提交 hash 与推送结果以 Git 回报为准。不创建 Tag，不开始 S7B-3。
 
@@ -417,23 +417,23 @@
 
 - 任务名称：修复构建环境阻断并完成 S7A 阶段收尾。当前开发阶段：S7A Gate = PASS；下一阶段 S7B DeepSeek AI，本次不开始。
 - 本次目标：确认 S7A 人工验收、构建与数值文档一致性，再提交现有 S7A 工作。
-- 人工验收：用户最终确认 S7A-0 角色动作接口、S7A-1 基础 Human AI、S7A-2 高级决策及可收纳调试面板均 PASS。先前“平衡待最终手感复验”记录保留为当时状态；现接受 AI 移动倍率 0.92 与单次自动解锁 8,750 毫秒。解锁速度留到 S16 平衡阶段继续调整，不阻断本次 Gate。
+- 人工验收：用户最终确认 S7A-0 角色动作接口、S7A-1 基础 Human AI、S7A-2 高级决策及可收纳调试面板均 通过。先前“平衡待最终手感复验”记录保留为当时状态；现接受 AI 移动倍率 0.92 与单次自动解锁 8,750 毫秒。解锁速度留到 S16 平衡阶段继续调整，不阻断本次 Gate。
 - 实际完成内容：保留已有 Human AI 巡逻、循声调查、视觉追逐、有限搜索、锁门绕行/模拟破解/强破、暂停及开发控制接管、调试 HUD 与动作接口；本次未修改玩法或平衡值。`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 的 AI 参数已核对一致。
 - 构建问题：`public/assets/.gitkeep` 是被 Git 跟踪的零字节占位文件，Vite 会把它复制到 `dist/assets/.gitkeep`；没有源码或运行依赖，现已移除。先前该路径 EPERM 的已验证原因是当前 Codex 受限执行对仓库路径没有写入权限：原始 `npm run build` 在具备该目录写入权限的执行环境下成功。未发现只读属性，也未确认有项目进程占用；不据此认定一般 Windows 文件锁已被完全排除。保留原始 TypeScript + Vite 构建命令，未改 Vite 输出目录、npm 脚本或系统 ACL。
-- 验证：移除占位文件后连续 3 次 `npm run build` PASS（均执行 TypeScript 检查与生产构建）；`npm test` 165/165 PASS；开发服务 `127.0.0.1:5174` 在构建后仍返回 HTTP 200；`dist/assets/.gitkeep` 未再生成。故意设置不存在的 Node 预加载模块时，`npm run build` 返回退出码 1，确认失败不会被伪报成功。`git diff --check` 以本次最终检查结果为准。
+- 验证：移除占位文件后连续 3 次 `npm run build` 通过（均执行 TypeScript 检查与生产构建）；`npm test` 165/165 项通过；开发服务 `127.0.0.1:5174` 在构建后仍返回 HTTP 200；`dist/assets/.gitkeep` 未再生成。故意设置不存在的 Node 预加载模块时，`npm run build` 返回退出码 1，确认失败不会被伪报成功。`git diff --check` 以本次最终检查结果为准。
 - 新增文件：无。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`，并纳入此前未提交的 S7A 配置文档、Human AI、寻路、调试面板及测试修改。删除文件：无用途的 `public/assets/.gitkeep`。依赖变化：无。
 - 已知非阻断问题：Vite 主 JS chunk 约 624.28 kB，高于 500 kB 提示线；当前 Codex 若再次以无仓库写入权限的受限执行构建，仍可能在其他 `dist` 文件遇到 EPERM，需按项目写入边界处理；一般 Windows 文件占用风险未被证明为零。S16 待办：复评 Human AI 自动解锁速度。
 - Git commit 信息：计划 `feat: complete s7a human ai`，实际 hash 与推送结果以本次 Git 执行和最终汇报为准；本阶段不创建 Tag。
 
 ## 2026-09-23 18:41 +08:00｜S7B-1 DeepSeek AI 人工验收与 WIP 检查点
 
-- 任务名称：记录 S7B-1 自主找米与进食验收并建立 Git WIP 安全检查点。当前阶段：S7B-1 PASS；整个 S7B 未完成，CURRENT = S7B-2 威胁感知与逃跑。
+- 任务名称：记录 S7B-1 自主找米与进食验收并建立 Git WIP 安全检查点。当前阶段：S7B-1 通过；整个 S7B 未完成，CURRENT = S7B-2 威胁感知与逃跑。
 - 本次目标：保存用户确认的六项浏览器验收及本次验证通过的 S7B-1 实现。
-- 人工 Gate：用户确认自主找米、连续吃完五份米、普通门开启与锁门绕行、目标及路径显示、暂停与重开、临时接管与玩家控制均 PASS。
+- 人工 Gate：用户确认自主找米、连续吃完五份米、普通门开启与锁门绕行、目标及路径显示、暂停与重开、临时接管与玩家控制均 通过。
 - 实际实现：独立 DeepSeek AI 状态机按路径行走时间 + 剩余进食时间 + 既有准备时间选取预计完成总时间最短的未完成米堆；复用共享 NavigationSystem、Circle Collision、DoorSystem 和唯一 RiceField 进食更新，使用原有准备、中断保留、声音/米痕/动作和 5/5 胜利规则。普通 CLOSED Door 可开，LOCKED Door 不穿越；不可达及卡路会重试或换目标。只在 Human 正式主控时运行，暂停、DeepSeek 正式主控及开发临时接管时不抢输入；重开重置 AI。
 - 配置：新增 GAME_CONFIG.deepseekAI 五项卡路/重试参数（路径容差 0.25 世界单位、卡路重算 800 ms、最小进度 0.05 世界单位、同目标最多 2 次、重试 1,500 ms），已同步 docs/GAME_BALANCE_CONFIG.md；未调整既有玩法数值。
 - 新增文件：src/systems/DeepSeekAIController.ts、tests/deepseek-ai.test.mjs。修改文件：src/three/ThreeGame.ts、src/config/gameConfig.ts、docs/GAME_BALANCE_CONFIG.md、AGENTS.md；本条为末尾追加。删除文件：无。依赖变化：无。
-- 测试结果：本次 npm test 172/172 PASS；npm run build PASS（含 tsc --noEmit）；git diff --check PASS。构建有已知 Vite 主包超过 500 kB 的非阻断提示。
+- 测试结果：本次 npm test 172/172 项通过；npm run build 通过（含 tsc --noEmit）；git diff --check 通过。构建有已知 Vite 主包超过 500 kB 的非阻断提示。
 - 已知问题：S7B-1 是本阶段通过，不代表整个 S7B 完成；本次不创建 Tag。新 WIP 提交 hash 与 push 结果以 Git 实际执行及最终汇报为准。
 - 下一步建议：进入 S7B-2 威胁感知与逃跑前，由用户另行安排；本次不开始下一轮。
 - Git commit 信息：wip: preserve s7b1 rice seeking ai（本次执行）。
@@ -441,12 +441,12 @@
 ## 2026-09-24 10:36 +08:00｜S7B-2 验收记录与特殊待机插槽
 
 - 任务名称：记录 S7B-2 人工验收，并为玩家与 AI 共用动作表现层增加 DeepSeek 特殊待机插槽。
-- 当前阶段：用户确认 S7B-2 = PASS；NEXT = S7B-3 主动锁门。整个 S7B 尚未完成。偶发原地停留为后续 AI 优化项。本轮特殊待机插槽功能等待人工验收，不表示 S7B-3 已开始。
+- 当前阶段：用户确认 S7B-2 = 通过；NEXT = S7B-3 主动锁门。整个 S7B 尚未完成。偶发原地停留为后续 AI 优化项。本轮特殊待机插槽功能等待人工验收，不表示 S7B-3 已开始。
 - 实际完成内容：在既有 `CharacterActionView` / `AnimationMixer` 接口增加 `IDLE_01`～`IDLE_05` 插槽；只从配置名单中已实际接入的片段抽选。连续普通 IDLE 达到 5 秒后可播放，后续播放间隔至少 15 秒；多片段时避免连续重复同一插槽。片段结束恢复普通 IDLE，移动、进食及其他非 IDLE 玩法动作立即中断。动作计时在暂停时随游戏更新冻结，重开清零，不参与 AI 决策、移动或玩法判定。
 - 资源状态：正式 GLB / 特殊待机动画目前尚未导入。无可用片段时维持普通白模 IDLE，且不在每帧重试查找缺失资源；此时等待人工验收的是白模回退、DEV 计时及优先级行为，特殊动画视觉需待资源接入后验收。
 - 配置：新增 `characterAnimation.specialIdleTriggerMs = 5,000` 毫秒、`specialIdleRepeatIntervalMs = 15,000` 毫秒及 `specialIdleSlots`；已同步 `docs/GAME_BALANCE_CONFIG.md`。均为表现参数，不改变玩法数值。
 - 新增文件：无。修改文件：`AGENTS.md`、`docs/AGENT_LOG.md`、`src/config/gameConfig.ts`、`src/three/CharacterActionView.ts`、`src/three/ThreeGame.ts`、`docs/GAME_BALANCE_CONFIG.md`、`tests/character-action.test.mjs`。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` 200/200 PASS；`npm run build` PASS（含 TypeScript 检查）；`git diff --check` PASS。构建仍有 Vite 主 bundle 大于 500 kB 的非阻断提示。
+- 测试结果：`npm test` 200/200 项通过；`npm run build` 通过（含 TypeScript 检查）；`git diff --check` 通过。构建仍有 Vite 主 bundle 大于 500 kB 的非阻断提示。
 - 已知问题：无正式特殊待机片段可供当前版本播放。S7B-2 偶发原地停留不再阻断 Gate，保留为后续 AI 优化事项。
 - 下一步建议：人工检查 DEV 面板静止计时、无资源白模回退、动作打断、暂停冻结与重开清零；之后由用户安排 S7B-3。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -464,7 +464,7 @@
   - **未实现**：`evaluateEscapeLock`、`doorLockPendingId` 的设置/消费、EVADE 锁门优先级、SAFE_WAIT/好奇状态锁门、任何硬编码捷径。
 - 源码分析结论（HIGH 威胁冲突，写入设计文档第 2.1 节）：`assessThreat` 中「目视 Human 且距离 ≤ `visionEvadeDistance`(5)」与「可听 Human 声 ≥ `soundEvadeStrength`(0.09)」都判定为 HIGH，而锁门合法窗口 1.5–5 u **完全落在 HIGH 区间**。因此 `threat.level === 'HIGH'` **不能**作为取消待锁门的依据，否则锁门永不触发。已把设计文档中「真实危险 = 威胁 HIGH」改为具体信号：`captureProgressMs > 0`、`sprintState === 'STUNNED'`、或目视距离以 ≥ 0.35 u/s 缩短且 ≤ 2.2 u；3B-1 须沿用 `evaluateEscapeDoor` 那种按条件而非按威胁等级判断的纪律。
 - 新增文件：`tests/deepseek-door-lock.test.mjs`。修改文件：`src/systems/DeepSeekAIController.ts`、`src/systems/DoorSystem.ts`、`src/three/ThreeGame.ts`、`src/systems/AILogCollector.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（最小同步）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。`GAME_CONFIG` 未新增或修改任何数值。
-- 测试结果：`npm test` 280/280 PASS（原 270 + 新增 10）；`npm run build` PASS（`tsc --noEmit` + Vite 构建，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle 约 705 kB，>500 kB 提示仍为非阻断。
+- 测试结果：`npm test` 280/280 项通过（原 270 + 新增 10）；`npm run build` 通过（`tsc --noEmit` + Vite 构建，真实退出码 0）；`git diff --check` 通过。Vite 主 bundle 约 705 kB，>500 kB 提示仍为非阻断。
 - 已知问题：`threat.level === 'HIGH'` 与锁门窗口重叠的冲突已记录，需在 3B-1 落实修正；锁门通道尚未经浏览器人工验收（本步骤按定义不产生可见行为）。
 - 下一步建议：进入 3B-1 实现 `doorLockPendingId` 连续动作与 `evaluateEscapeLock` 决策，并采用上述真实危险信号；之后 3B-2 防振荡、3B-3 定向回归、3B-4 DEV/日志归档。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -481,7 +481,7 @@
   - 冷却规则：`onDoorEscapeResult` 的关门冷却结算保持不变；`evaluateEscapeLock` 不查冷却（同一次连续动作例外），锁门失败/取消不重写冷却；Human 重开门后同门冷却仍生效。
   - 未实现：3B-2 额外防振荡、DEV Door Lock 分类、任何 GAME_CONFIG 新增/调整。`threat.level === 'HIGH'` 未作为取消条件（遵守 3B-0b 源码分析结论）。
 - 新增文件：`tests/deepseek-door-lock-decision.test.mjs`。修改文件：`src/systems/DeepSeekAIController.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（最小同步：状态与实现要点）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。`GAME_CONFIG` 无任何改动。
-- 测试结果：`npm test` 291/291 PASS（原 280 + 新增 11）；`npm run build` PASS（`tsc --noEmit` + Vite，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 测试结果：`npm test` 291/291 项通过（原 280 + 新增 11）；`npm run build` 通过（`tsc --noEmit` + Vite，真实退出码 0）；`git diff --check` 通过。Vite 主 bundle >500 kB 提示仍为非阻断。
 - 已知问题：锁门决策尚需浏览器人工验收；防振荡专项（3B-2）与 DEV 面板（3B-4）未做。
 - 下一步建议：浏览器人工验收「正常追逐穿门→关门→锁门、贴脸/同侧/逼近不锁、锁位满/封退路/封米堆放弃、Human 重开不振荡、SAFE_WAIT/好奇/安全通行不受影响」；通过后再进入 3B-2。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -489,7 +489,7 @@
 ## 2026-09-24 22:37 +08:00｜S7B-3B-1 人工验收问题排查（锁门从未触发）
 
 - 任务名称：排查「长期追逐始终未观察到主动锁门」。当前阶段：S7B-3B-1 人工验收问题排查；未开始 3B-2；S7B 整体未完成。
-- 用户人工验收输入：7 项 PASS（过近/同侧、逼近、锁位满/锁芯失效、自身路线安全、Human 重开门、原有 AI 回归）；第 1 项「正常关门后锁门」**未观察到成功案例**，不等于实现失败。
+- 用户人工验收输入：7 项 通过（过近/同侧、逼近、锁位满/锁芯失效、自身路线安全、Human 重开门、原有 AI 回归）；第 1 项「正常关门后锁门」**未观察到成功案例**，不等于实现失败。
 - 实机日志分析（`who-ate-my-rice-ai-log-2026-09-24T14-31-10.json`，364.7 s / 1666 事件 / 未截断）：`DOOR_ESCAPE_CLOSE=8`、`DOOR_LOCK_SKIP=4`、`DOOR_LOCK_EVALUATE=0`、`DOOR_LOCK_APPLY=0`、`DOOR_LOCK_FAILED=0`。
 - 根因（源码 + 日志双证）：**关门遮挡视线，使锁门的「Human 当前可见」前提永不成立**。
   - 8 次成功关门的下一帧全部出现 `THREAT_SOURCE_CHANGE :: LAST_SEEN|SOUND` 与 `PASSAGE_GATE :: NO_VISIBLE_HUMAN`。
@@ -501,7 +501,7 @@
   - `DebugDetailsPanel` + `ThreeGame`：新增 `Door Lock / 主动锁门` DEV 分类（最近成功关闭的门、doorLockPendingId、pending 建立时间与剩余窗口、最近评估结果、最近拒绝原因、最近执行结果、关门成功/pending/锁门命令/锁门成功四项计数）。
   - **未修改**：1.5 安全距离、1800 ms 窗口、逃生路线与米堆可达性检查、`DoorSystem` 锁门逻辑、任何 `GAME_CONFIG` 数值。**未做规则层面的修复**，等用户批准。
 - 新增文件：`tests/deepseek-door-lock-integration.test.mjs`（7 项，按真实每帧顺序：过门 → updateSafety → 执行关门 → onDoorEscapeResult → 下一帧重建输入 → evaluateEscapeLock → lockDoorFromCommand → DoorSystem.lock → onDoorLockResult）。修改文件：`src/systems/DeepSeekAIController.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/ThreeGame.ts`、`tests/debug-details-panel.test.mjs`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（新增第 2.2 节）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` 298/298 PASS（原 291 + 新增 7）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 测试结果：`npm test` 298/298 项通过（原 291 + 新增 7）；`npm run build` 通过（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` 通过。Vite 主 bundle >500 kB 提示仍为非阻断。
 - 已知问题：锁门在正常追逐下仍不会触发——需用户批准规则冲突的最小改动后才能修复；第 1 项人工验收继续挂起。
 - 下一步建议：批准候选最小改动（用关门时已确认的「Human 在门另一侧」证据，在门保持 `CLOSED` 期间替代新的目视确认），或指定其他方案；之后重新做第 1 项浏览器验收。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -519,7 +519,7 @@
 - DEV：`Door Lock / 主动锁门` 分类新增「关门前侧向证据 / 最近一次是否使用」（失视复用时标为 warning），计数扩为五项；`clearPendingLock()` 拆为 `clearPendingLockState()`（静默）与 `cancelPendingLock(reason)`（记 `DOOR_LOCK_CANCEL`）。
 - 新增/调整测试：`tests/deepseek-door-lock-decision.test.mjs` 增至 16 项（失视复用证据并上报、最新目视覆盖证据、证据不得跨门/跨动作/过期复用、被消费后不可复用、多次连续动作关键事件不被去重合并）；`tests/deepseek-door-lock-integration.test.mjs` 增至 10 项（原「下一帧跳过」改为「关门侧向证据把失视锁门走通」，并新增无目视证据不建立 pending、重新目视同侧/过近取消、取消后证据不可跨帧复用）。
 - 修改文件：`src/systems/DeepSeekAIController.ts`、`src/three/ThreeGame.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（新增 §2.3 已实施修复）、`docs/AGENT_LOG.md`；测试文件 `tests/deepseek-door-lock-decision.test.mjs`、`tests/deepseek-door-lock-integration.test.mjs`。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` 306/306 PASS（上一轮 298 + 8）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 测试结果：`npm test` 306/306 项通过（上一轮 298 + 8）；`npm run build` 通过（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` 通过。Vite 主 bundle >500 kB 提示仍为非阻断。
 - 已知问题：修复后的真实锁门行为尚待浏览器人工验收；第 1 项验收此前未通过，本轮**不预判通过**。
 - 下一步建议：浏览器验收第 1 项，重点观察 DEV `Door Lock` 分类中「最近一次是否使用 = 使用中（关门后失视）」与五项计数 1 / 1 / 0 / 1 / 1，以及 Human 重新开门后不重复锁门。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -538,7 +538,7 @@
 - 可观察性：DEV 新增 `Sprint / 冲刺` 分类（状态+就绪度、冷却剩余、本次剩余、风险模式、最近开始原因）；`Door Escape` 分类新增「最近经过的门 / 距过门时间」与「冲刺中关门次数 / 冲刺中锁门次数」；`Door Lock` 保持 PENDING / CANCEL / EVALUATE / APPLY / FAILED 谱系。控制器新增 `doorEscapeLastCrossedId` / `doorEscapeLastCrossedAgeMs` / `doorEscapeDuringSprintCount` / `doorLockDuringSprintCount`（reset 全部清零）。未新增逐帧日志。
 - 新增/调整测试：`tests/sprint.test.mjs` 新增 5 项冷却测试；`tests/deepseek-door-lock-decision.test.mjs` 把「冲刺取消锁门」改为「冲刺不再取消合法锁门」（保留 STUNNED / 门重开 / 窗口超时取消）；`tests/deepseek-door-lock-integration.test.mjs` 把「冲刺后取消」改为「冲刺中仍完成关门→锁门」；`tests/debug-details-panel.test.mjs` 同步新增 `sprint` 分类。
 - 修改文件：`src/config/gameConfig.ts`、`src/systems/SprintSystem.ts`、`src/systems/DeepSeekAIController.ts`、`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` 312/312 PASS（上一轮 306 + 6 项：冲刺冷却 5 + 锁门冲刺行为 1）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 测试结果：`npm test` 312/312 项通过（上一轮 306 + 6 项：冲刺冷却 5 + 锁门冲刺行为 1）；`npm run build` 通过（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` 通过。Vite 主 bundle >500 kB 提示仍为非阻断。
 - 已知问题：**手上没有修复后的实机日志**——现有唯一日志产生于侧向证据修复之前，无法据此判断修复后锁门是否成功。需导出一份**修复后**的对局 AI JSON 再判定。
 - 下一步建议：按汇报第 8 节做浏览器验收；确认后再进入 3B-2。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -561,7 +561,7 @@
   - 重复尝试守卫：`doorLockAttemptedId` 记录已发起尝试的 pending，残留则拒绝第二次并计入 `doorLockRepeatBlockedCount`（正常流程不可达，属显式不变量）。
 - 可观察性（未重做 DEV 面板）：`door-escape` 分类新增「自我重开门被抑制次数」；`door-lock` 计数行扩为 6 项（末位「重复尝试被拒」）。四种情形可区分：合法再次锁门（PENDING→EVALUATE→APPLY）、重复尝试（计数）、冷却阻止重关门（`DOOR_ESCAPE_SKIP:DOOR_COOLDOWN`）、Human 重开门取消（`DOOR_LOCK_SKIP:DOOR_REOPENED`）。
 - 新增文件：`tests/deepseek-door-lock-oscillation.test.mjs`（13 项）。修改文件：`src/systems/DeepSeekAIController.ts`、`src/three/ThreeGame.ts`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`（新增 §2.5）、`docs/AGENT_LOG.md`。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` 325/325 PASS（上一轮 312 + 13）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。Vite 主 bundle >500 kB 提示仍为非阻断。
+- 测试结果：`npm test` 325/325 项通过（上一轮 312 + 13）；`npm run build` 通过（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` 通过。Vite 主 bundle >500 kB 提示仍为非阻断。
 - 已知问题：本次修复尚未经浏览器人工验收；手上仍无「修复后」的最新实机日志（唯一日志产生于侧向证据修复之前）。
 - 下一步建议：浏览器验收（见汇报 F 节）；确认后再进入 3B-3。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -580,7 +580,7 @@
   7. 600 帧真实重规划中逃生目标不在相邻帧跳变（防房间间反复折返）。
 - 发现的问题：**游戏代码无缺陷**。本轮 3 次测试失败全部来自新测试自身：(a) 最初绕过 `ai.update()` 直接调用内部 `updateSafety()`，导致 `threatEstimate` 未被赋值 → `selectEscapeGoal` 提前返回 → 关门评估从未执行（表现为「一次关门都没有」，属测试 harness 缺陷）；(b) 一度把「不同连续动作发出相同 `DOOR_LOCK_PENDING` 签名」误判为重复事件，实际这是每条动作必须留痕的正确行为。定位手段：写临时探针打印 `threatEstimate` / `lastEscapeDecisionReason` / `doorEscapeSkipReason`，确认 `skip=NONE` 即评估未执行；探针文件在系统临时目录，已删除。
 - 实际修复：仅修改新测试文件（改用真实入口 `ai.update()`；删除自相矛盾的重复事件断言；补齐被误删的测试开头）。**未改动任何 `src/` 生产代码，未改动任何 `GAME_CONFIG` 数值。**
-- 测试结果：`npm test` 332/332 PASS（上一轮 325 + 7）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。
+- 测试结果：`npm test` 332/332 项通过（上一轮 325 + 7）；`npm run build` 通过（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` 通过。
 - 长局口径：本轮为**确定性模拟长局**（约 40 个门遭遇循环 / 600 帧重规划），**不是实机长局验收**，不能替代浏览器实测。
 - 已知问题：仍缺一份「修复后」的实机 AI JSON；3B-2 / 3B-3 的浏览器验收由用户完成。
 - 下一步建议：确认后可进入 3B-4（DEV / 日志 / 文档收尾）。
@@ -589,7 +589,7 @@
 ## 2026-09-25 00:18 +08:00｜S7B-3B-4 DEV / AI 日志 / 文档收尾
 
 - 任务名称：S7B-3B 收尾（DEV 面板、AI JSON 日志、文档同步）。当前阶段：**S7B-3B 代码与人工验收全部完成**；**未建立 Git 检查点**；未开始 S7C；S7B 整体未完成。
-- 前提：用户确认 3B-2 浏览器人工验收 5/5 PASS、3B-3 定向回归 332/332（本轮收尾后 333/333）。
+- 前提：用户确认 3B-2 浏览器人工验收 5/5 项通过、3B-3 定向回归 332/332（本轮收尾后 333/333）。
 - DEV 面板审计（三个分类，只修正确实不准的显示，未重构面板）：
   - `Door Escape / 关门逃脱`：字段与源码一致；评估类字段（候选门、距离、已通过门、Human 在另一侧、关闭后路线、评估依据）只在 EVADE 的关门评估帧更新，故统一加「最近评估」前缀，避免被读成实时值；`放弃关门原因` → `最近放弃关门原因`。
   - `Door Lock / 主动锁门`：字段与源码一致；`最近锁门评估结果` 绑定 `doorLockReason`，而该字段在成功/失败回执时会被执行结果覆盖，故改名为 `最近锁门决策原因（执行成功时显示结果）`。确认没有过期或永不触发的原因码被静态展示（原因码均为实时值）。
@@ -598,7 +598,7 @@
 - 实机日志口径：**本轮用户未提供新的实机 JSON**；工作区与附件目录中唯一日志仍是 `who-ate-my-rice-ai-log-2026-09-24T14-31-10.json`（产生于侧向证据修复之前），因此**未用它冒充新版本数据**；锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍需新日志复核。
 - 修改文件：`src/systems/AILogCollector.ts`（新增 `sprintReadiness` 快照字段 + `SPRINT_READINESS` diff 规则）、`src/systems/DeepSeekAIController.ts`（自关门抑制新增带门 ID 的 `DOOR_ESCAPE_SELF_CLOSED` 事件）、`src/three/ThreeGame.ts`（DEV 标签修正 + 传递 `sprintReadiness`）、`tests/ai-log-collector.test.mjs`（+1 项冷却生命周期日志测试）、`tests/deepseek-door-lock-oscillation.test.mjs`（补自关门事件断言）、`docs/AI_DEEPSEEK_STATE_TREE.md`、`docs/GAME_BALANCE_CONFIG.md`、`docs/DEEPSEEK_HANDOFF.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`、`docs/AGENT_LOG.md`。新增文件：无。删除文件：无。依赖变化：无。**未改动任何 `GAME_CONFIG` 数值**（`src/config/gameConfig.ts` 的改动仍来自 Sprint 冷却那一轮的 `cooldownMs`）。
 - 文档收尾要点：`docs/AI_DEEPSEEK_STATE_TREE.md` 此前**严重滞后**——仍写「好奇/安全通行待验收」，且其重复数值表中 `visionEvadeDistance` 7、`escapeGoalHoldMs` 2,500、`dangerRiceAvoidMs` 8,000、`curiositySafeDistance` 3、`stationaryPassageChance` 0.80、`stationaryPassageSafetyMargin` 0.65、抓捕圈余量「合计 1.35 u」均与源码不符。本轮删除该重复表改为指向 `docs/GAME_BALANCE_CONFIG.md`，并新增「主动关门与主动锁门」章节（关门→pending→锁门状态机、侧向证据与关门后失视处理、自关门防折返、冲刺与门、3 把锁同时上限且不限整局次数）。`AGENTS.md` 的阶段状态**未改**——该文件要求 Gate 通过且 commit + push 成功后才更新，本轮未提交。
-- 测试结果：`npm test` 333/333 PASS（3B-3 的 332 + 1）；`npm run build` PASS（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` PASS。
+- 测试结果：`npm test` 333/333 项通过（3B-3 的 332 + 1）；`npm run build` 通过（含 `tsc --noEmit`，真实退出码 0）；`git diff --check` 通过。
 - 已知问题：仍缺一份「修复后」的实机 AI JSON；Git 检查点待用户批准。
 - 下一步建议：由用户批准建立 Git 检查点（是否 commit / push 由用户决定）。
 - Git commit 信息：本阶段归档为 S7B-3B 稳定检查点 `feat: complete s7b-3b proactive door locking`；实际 commit hash 与 push 结果以本次 Git 执行和最终汇报为准。不创建 Tag。
@@ -607,7 +607,7 @@
 
 - 任务名称：S7C-0 阶段衔接审计与藏身系统设计。当前阶段：S7B 已全部通过人工验收（S7B-3B 稳定检查点 `6a92c5d`），**S7C 尚未开发**；本轮**只出设计与审计**，未写任何藏身玩法代码。
 - 授权边界（严格执行）：只允许新增本阶段设计文档、必要时追加本日志；**不改生产代码、不改 `GAME_CONFIG`、不 commit / push / tag、不删除或暂存 `.trae/` 与 `.dsh-meow/`、不提前声称 S7C 完成**。
-- 工程验证：`git status -sb` 仅 `?? .dsh-meow/`、`?? .trae/`；`git rev-parse HEAD` = `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`；`git log --oneline -5` 与 `ca18f61` 衔接正常；`.git/MERGE_HEAD`、`REBASE_HEAD`、`CHERRY_PICK_HEAD`、`rebase-merge`、`rebase-apply` 全部不存在。本次重跑 `npm test` 333/333 PASS（0 fail / 0 skipped，退出码 0）、`npx tsc --noEmit` 退出码 0。**未跑 `npm run build`**（无构建产物需求，且其会重写可重建的 `dist/`）。
+- 工程验证：`git status -sb` 仅 `?? .dsh-meow/`、`?? .trae/`；`git rev-parse HEAD` = `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`；`git log --oneline -5` 与 `ca18f61` 衔接正常；`.git/MERGE_HEAD`、`REBASE_HEAD`、`CHERRY_PICK_HEAD`、`rebase-merge`、`rebase-apply` 全部不存在。本次重跑 `npm test` 333/333 项通过（0 失败 / 0 已跳过，退出码 0）、`npx tsc --noEmit` 退出码 0。**未跑 `npm run build`**（无构建产物需求，且其会重写可重建的 `dist/`）。
 - S7B 衔接判定：S7B **没有**未闭合 Gate、**没有**阻断 Bug。逐项分类——①已验收完成：S1–S6、S7A、S7B-1、S7B-2（含好奇/安全通行专项）、S7B-3A、S7B-3B（3B-0b～3B-4）；②不影响进入 S7C 的后续优化：S7B-2 偶发原地停留（`AGENTS.md`、`DEEPSEEK_HANDOFF.md:129`、`AI_STATE_OVERVIEW.md:62` 三处均记为「不阻断、留作后续 AI 优化项」）、正式 GLB 待机资源（S10）、Human AI 自动解锁 8,750 ms（S16）、缺一份「修复后」实机 AI JSON（只影响 3B 实机复核口径）；③必须先解决的阻断问题：**未发现**。本轮**未**把 S7B 标记完成。
 - 藏身能力审计（全部以当前源码为准，不采信旧设计文档）：
   - 地图：`HIDE_SPOTS` 仅 5 个占位 `MapPoint`（`src/three/map/apartmentMap.ts:200-206`），坐标**恰好等于**对应 `FURNITURE` 家具碰撞矩形中心（`main_wardrobe` / `closet_wardrobe` / `storage_shelf` / `second_bed` / `study_bookshelf`）；仅 `DEBUG_MAP` 下画 `H0X` 调试精灵（`src/three/map/MapBuilder.ts:63-64`）。
@@ -623,7 +623,7 @@
 - 需用户拍板的 18 项已列成表（关键 3 项）：①**DeepSeek AI 主动藏身是否纳入 S7C**（不纳入则玩家选 Human 时藏身玩法不可见、S7C-2 的「玩家检查」没有对象；建议纳入并作为 S7C-2b）；②进入安全条件与距离参数（建议复用 `1.5` 与 `captureProgressMs === 0`，交互距离 1.0 或 1.3）；③表现方案 V1（视觉进柜、根节点不动）/ V2（最保守）/ V3（隐藏根节点，仅 HUD）。
 - 顺序结论：**没有发现必须打乱用户给定顺序 1→2→3 的证据**；建议保持，并在 S7C-3 的校验器里补「藏身锚点可达」一条。若纳入 AI 藏身，建议插为 S7C-2b。
 - 诊断方法留痕：藏身锚点可达性用一次性 Node 脚本（`--experimental-strip-types` + 真实 `CollisionWorld`/`NavigationSystem`）在 `%TEMP%` 计算，**脚本已删除**，仓库内不残留临时文件。
-- 测试结果：`npm test` 333/333 PASS；`npx tsc --noEmit` PASS；本轮无生产代码改动，故基线不变。`git diff --check` 以本次最终检查为准。
+- 测试结果：`npm test` 333/333 项通过；`npx tsc --noEmit` 通过；本轮无生产代码改动，故基线不变。`git diff --check` 以本次最终检查为准。
 - 已知问题：S7C-1 的锚点数据、18 项参数与表现方案均**待用户确认**；藏身玩法一旦引入，「Human 玩家检查」在玩家选 DeepSeek 时缺少对象（第 1 项待决）；`hide_second_bed` 的「床底」语义需用侧面锚点表现（无法真正钻床）。
 - 下一步建议：等用户批准 S7C-1 正式开发（并按第 6 节表拍板参数与表现方案）；**在用户批准前不写藏身玩法代码、不改 `GAME_CONFIG`**。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -643,7 +643,7 @@
 - 交互冲突审计（新增校验项）：所有采纳锚点距最近门段 ≥ 2.0 u、距最近米点 ≥ 1.2 u，不会与 `E` 开门/锁门、按住 `E` 进食抢占同一位置。`E` 键优先级建议：扫雷面板 > 门 > 藏身点 > 进食。
 - S7C-1 已按用户要求拆为 **S7C-1A 藏身点白模及地图配置**（`HideSpot` 扩展 + 表 3.1 数据 + 可选纸箱 + 锚点/不变量校验测试，**不接入玩法**）与 **S7C-1B 玩家基础藏身交互**（`HideSystem` + `E` 仲裁 + 移动/冲刺/进食/抓捕门控 + `VisionSystem` 隐藏入口 + `HideSpotView` + DEV `Hide` 分类）；S7C-2 / 2b / 3 本轮明确不做。
 - 新增文件：无（本轮只更新已有设计文档与日志）。修改文件：`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（新增 §1.10 家具清单、重写 §3 为 1A/1B 并加入表 3.1 藏身点清单/白模方案/逐点规格、补充 §6 第 19–21 条、更新 §7/§8/文件头）、`docs/AGENT_LOG.md`（本条）。删除文件：无。依赖变化：无。**未改任何生产代码、未改 `GAME_CONFIG`**。
-- 测试结果：`npm test` 333/333 PASS；`npx tsc --noEmit` 退出码 0（本轮无代码改动，基线不变）；`git diff --check` 以本次最终检查为准。
+- 测试结果：`npm test` 333/333 项通过；`npx tsc --noEmit` 退出码 0（本轮无代码改动，基线不变）；`git diff --check` 以本次最终检查为准。
 - 已知问题：6 个锚点坐标与纸箱数量**待用户确认**；「钻床底」需碰撞改动；玩家选 Human 时「检查藏身点」仍缺对象（取决于是否纳入 DeepSeek AI 藏身）。
 - 下一步建议：批准 S7C-1A 后先落地地图数据与校验（零玩法风险），再单独批准 S7C-1B。
 - Git commit 信息：未提交；未 push；未创建 Tag。
@@ -662,7 +662,7 @@
 - 关键实测与修正（用户指定坐标复核）：**用户指定的 `storage_carton (15.7, -2.6)` 未通过真实地图检查**——它距米点 `rice_08 (16.1, -3.3)` 中心 0.81、纸箱 AABB 到米点仅 0.250，而 `tests/apartment-map.test.mjs` 的 `free()` 以 `PLAYER_DIAMETER/2 = 0.2667` 判定，实测报 `rice blocked rice_08`。按「必须通过真实检查」的要求，保留用户指定的 x=15.7（仍贴储物间西墙）而把 z 北移到 **-4.8**：距 `rice_08` 中心 1.55、不压任何门/门前后点/米点，且储物间的可通行性与连通性经对比测试证明未被切断。修正过程与证据写入 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §3.2/§8.1 与 `docs/MAP_SPEC.md`。
 - 锚点余量实测（角色圆半径 0.23）：6 个家具锚点为 0.070–0.220，`hide_main_wardrobe (-16.65,-6.60)` 与 `hide_closet (-3.57,-8.80)` 只剩 **0.030 / 0.025**（来自已批准的表 3.1 原值，本轮未擅自改）。因 1B 的交互按「到锚点距离」判定，玩家不必站到点上，可用性不受影响；更宽松的替代坐标（`(-16.60,-6.40)` / `(-3.40,-8.80)`）与 `living_carton` 距东/南墙各 0.56、东/南两侧各剩约 0.10 宽圆心通道的观察已记入文档，供验收时决定。
 - 修改文件：`src/three/map/apartmentMap.ts`、`src/three/map/MapBuilder.ts`、`docs/MAP_SPEC.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。新增文件：`tests/hide-spot.test.mjs`。删除文件：无。依赖变化：无。**未改 `GAME_CONFIG`、未改门/锁/冲刺/米堆/抓捕/感知规则、未接入任何藏身玩法**。
-- 测试结果：`npm test` **342/342 PASS**（基线 333 + 新增 9，fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（`cmd /c` 复核；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0。临时复核脚本 `verify-hide.tmp.mjs` 在仓库根目录运行后**已删除，未入库**。
+- 测试结果：`npm test` **342/342 项通过**（基线 333 + 新增 9，失败 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（`cmd /c` 复核；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0。临时复核脚本 `verify-hide.tmp.mjs` 在仓库根目录运行后**已删除，未入库**。
 - 已知问题：S7C-1B 仍未授权；`hide_main_wardrobe`/`hide_closet` 锚点余量极小（0.025–0.030）、`living_carton` 两侧通道窄（约 0.10）——两者都不阻断，等浏览器验收决定是否微调；「钻床底」仍需床框+空洞碰撞的专项设计。
 - 下一步建议：请用户按浏览器验收步骤在 `DEBUG_MAP` 下跑图确认 8 个锚点与 2 个纸箱的位置手感；验收通过后再单独批准 S7C-1B（届时才写 `GAME_CONFIG.hide` 与 `HideSystem`）。
 - Git commit 信息：未提交；未 push；未创建 Tag。不将 S7C 整体标记完成，`AGENTS.md` 阶段状态未改（其规则要求 Gate 通过且提交推送成功后才更新）。
@@ -682,7 +682,7 @@
   3. `docs/AGENT_LOG.md`：本条。
 - 关键前提保留（未变）：四项决定只固定「不改坐标 / 不改名 / 接受 z 修正」，**不包含任何 1B 参数批准**；`hide_main_wardrobe` / `hide_closet` 锚点余量仍为 0.030 / 0.025，`living_carton` 两侧通道仍约 0.10 宽，均不阻断。
 - 修改文件：`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/MAP_SPEC.md`、`docs/AGENT_LOG.md`（本条）。新增文件：无。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` **342 / 342 PASS**（fail 0 / skipped 0，退出码 0）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）；**本轮未跑 `npm run build`**（纯文档轮，且 `vite build` 会重写被忽略的 `dist/`；源码未变，上一轮构建结果仍然有效）。文档措辞自检：「若要更宽松」「若要更干净」「等浏览器验收时决定」在规范性正文中 **0 命中**（命中只出现在本条记录与设计文档 §8.2 引用这三个字符串说明「做过该自检」时，不计入）。
+- 测试结果：`npm test` **342 / 342 通过**（失败 0 / 已跳过 0，退出码 0）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）；**本轮未跑 `npm run build`**（纯文档轮，且 `vite build` 会重写被忽略的 `dist/`；源码未变，上一轮构建结果仍然有效）。文档措辞自检：「若要更宽松」「若要更干净」「等浏览器验收时决定」在规范性正文中 **0 命中**（命中只出现在本条记录与设计文档 §8.2 引用这三个字符串说明「做过该自检」时，不计入）。
 - 工作区核对：`git status --short` 与 S7C-1A 落地轮结束时完全一致（4 个 ` M` + 4 个未跟踪条目），**本轮未新增任何源码 / 测试改动**；`HEAD = 6a92c5d`，`origin/main...HEAD = 0 0`。设计文档仍是未跟踪文件，是否入库由后续授权轮决定。
 - 已知问题：浏览器人工验收尚未执行（用户侧）；S7C-1B 未授权；「钻床底」仍需床框 + 空洞碰撞的专项设计单独批准。
 - 下一步建议：用户按上一轮报告的浏览器验收步骤在 `DEBUG_MAP` 下跑一遍（8 个锚点 + 2 个纸箱）；验收通过后再单独批准 S7C-1B，并先逐条确认第 6 节第 3–14 行的参数。
@@ -707,14 +707,14 @@
   7. 热编辑同步（`ThreeGame.rebuildApartment`）：`ApartmentBuild.dispose()` → 用**已应用数据**重建整棵公寓（`DEBUG_MAP` 藏身标记与锚点 gizmo 一并跟随）→ 新建 `CollisionWorld` + `NavigationSystem` → `humanAI.rebindNavigation()` / `deepseekAI.rebindNavigation()`（换网格、清缓存路径、`lastNavigationReason = 'MAP_REBUILT'`，不重置其他 AI 状态）→ `syncAllDoors()` 重新登记门的动态碰撞盒。
   8. 测试：新增 `tests/dev-freeze.test.mjs`（11 项：原因叠加、只 PLAYING 可切换、编辑期间拒绝恢复、重开清空、FINISHED 不复活、`gameplayDelta` 表格、**真实系统帧循环 harness** 证明冻结期间对局时间 / 抓捕进度 / 米进度 / 冲刺与冷却 / 破锁冷却 / 门状态 / 结算全部不变且恢复只前进一个 `dt`）与 `tests/scene-editor.test.mjs`（14 项：28 对象与只读字段、原始地图零拒绝、合法移动 / 缩放后真实碰撞与导航同步、90° 旋转 AABB 互换、字段级保护、拒绝回滚、门 / 米 / 出生点 / 连通性 / 锚点各自触发、重叠拒绝、恢复初始值、导出字段与只应用数据、原始模块数据未变、DEV 开关）。更新 `tests/debug-details-panel.test.mjs` 期望（新增 `dev-freeze` 分类）。
 - 新增文件：`src/systems/DevFreezeSystem.ts`、`src/three/map/MapEditModel.ts`、`src/three/SceneEditorView.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditor.ts`、`tests/dev-freeze.test.mjs`、`tests/scene-editor.test.mjs`、`docs/DEV_SCENE_EDITOR_DESIGN.md`。修改文件：`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`src/systems/HumanAIController.ts`、`src/systems/DeepSeekAIController.ts`、`src/style.css`、`tests/debug-details-panel.test.mjs`、`docs/MAP_SPEC.md`、`docs/AGENT_LOG.md`（本条）。删除文件：`verify-edit.tmp.mjs`（本轮临时校验脚本，用完即删、未入库）。依赖变化：无（未新增依赖）。**未改 `GAME_CONFIG`、未改 `docs/GAME_BALANCE_CONFIG.md`、未接入任何藏身玩法、未改门 / 锁 / 冲刺 / 米堆 / 抓捕 / 感知规则。**
-- 测试结果：`npm test` **367 / 367 PASS**（基线 342 + 新增 25，fail 0 / skipped 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 `tsc --noEmit` + vite build）退出码 0（`cmd /c` 复核 `$LASTEXITCODE`；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示；本轮修复了 `src/style.css` 的 EOF 空行）。
+- 测试结果：`npm test` **367 / 367 通过**（基线 342 + 新增 25，失败 0 / 已跳过 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 `tsc --noEmit` + vite build）退出码 0（`cmd /c` 复核 `$LASTEXITCODE`；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示；本轮修复了 `src/style.css` 的 EOF 空行）。
 - 开发服务器冒烟（非单元测试）：`npm run dev -- --host 127.0.0.1 --port 5174` 启动成功，`/`、`/src/main.ts`、`/src/systems/DevFreezeSystem.ts`、`/src/three/map/MapEditModel.ts`、`/src/three/SceneEditorView.ts`、`/src/three/SceneEditorPanel.ts`、`/src/three/SceneEditor.ts`、`/src/three/ThreeGame.ts`、`/src/three/DebugDetailsPanel.ts`、`/src/three/map/MapBuilder.ts`、`/src/style.css` 全部 HTTP 200 且无 esbuild 转换错误，说明新增模块在真实开发图里能解析。
 - 已知问题 / 未验证：**浏览器交互（面板 DOM、Raycaster 拾取、拖动预览、镜头聚焦、冻结按钮点击）本轮未由我实机验证**——尝试用 Tabbit Browser 自动冒烟时其 stable launcher 返回 `exit 69`（路由不可用 / 不可达），且当时 Tabbit Browser 进程未运行；按该工具链约定不自行启动或改写其运行时，因此这部分留给浏览器人工验收。家具朝向只支持 90° 整数倍（自由旋转需要 OBB 碰撞，属架构级改动）；拖动不做逐帧校验；无撤销 / 重做；已应用编辑只在内存，刷新即回到 `apartmentMap.ts`。
 - 下一步建议：按 `docs/DEV_SCENE_EDITOR_DESIGN.md` §9 做浏览器人工验收（冻结 / 恢复、编辑期间拒绝恢复、拖动与数值编辑、非法编辑拒绝、锚点显隐与聚焦、JSON 导出、关闭后恢复、重开清理）；验收通过后再单独批准 S7C-1B 并先确认其参数。
 
 ## 2026-09-25 23:39 +08:00｜DEV 编辑器轮 FAIL 阻断修复（DEV 调控台被盖住 / 场景编辑无响应 / 双方不能行动）
 
-- 任务名称：修复用户浏览器人工验收 FAIL 的三个阻断问题。当前阶段：S7C-1A 仍等待浏览器验收、S7C-1B 未授权；本轮**只修复阻断问题，不新增场景编辑功能、不改 `GAME_CONFIG`、不开始 S7C-1B / 2 / 3**。
+- 任务名称：修复用户浏览器人工验收 失败 的三个阻断问题。当前阶段：S7C-1A 仍等待浏览器验收、S7C-1B 未授权；本轮**只修复阻断问题，不新增场景编辑功能、不改 `GAME_CONFIG`、不开始 S7C-1B / 2 / 3**。
 - 用户报告的实际故障：①原有 DEV 调控台及其交互按钮消失；②右上角只剩「场景编辑」；③点击「场景编辑」没有反应；④找不到「冻结双阵营」；⑤玩家与 AI 都不能正常行动。
 - 根因 A（DEV 调控台「消失」，与被修代码无关的功能其实都在）：上一轮把入口写成绝对定位的 `.dev-launcher { position: absolute; top: 10px; right: 10px; z-index: 6 }`，与 `.debug-panel`（`top: 10px; right: 10px; z-index: 4`）的 `DEV ▾` 展开开关**完全重叠**。实测：`DEV ▾` 宽 62px（x 690–752），新按钮宽 68px（x 684–752），`document.elementFromPoint(DEV ▾ 中心)` 返回 `scene-editor-launch` → 原 DEV 面板唯一的展开开关被不透明按钮盖住且点不到，面板本体（连同其中的「冻结双阵营」按钮）因此表现为「消失」。展开面板后实测原有 5 个控件（临时控制 Human / 临时控制 DeepSeek 娘 / 导出本局 AI 日志 / 冻结双阵营 / AI 安全路径可视化）与 11 个分类全在，没有任何原有 DOM 被删除或改写。
 - 根因 B/C（③ 点击无响应 + ⑤ 双方不能行动，同一个根因）：`ThreeGame.tick()` 的 READY 分支被误喂 `gameplayDelta`，而 `gameplayDelta` 在 `phase !== 'PLAYING'` 时恒返回 0 → `match.advanceReady(0)` 永不推进 → 对局**永远停在 READY**：`updatePlaying` 从不执行（玩家与两套 AI 全部静止），而 `openSceneEditor` 因 `NOT_PLAYING` 一直被拒绝，拒绝原因只写进未打开的编辑器面板（`SceneEditor.message`）→ 按钮看起来彻底无响应。实测证据：选择阵营后 2.4 秒内 DEV 面板「对局状态 / 时间」恒为「准备：3 秒 / 00:00」，间隔 1.4 秒的两帧截图逐字节相同。
@@ -729,7 +729,7 @@
 - 新增测试：`tests/dev-freeze.test.mjs` +2——`readyDelta` 在手动冻结下仍返回真实帧时间；**READY→PLAYING 回归**（用真实 `GameStateSystem` + `DevFreezeSystem` 正向跑到 `PLAYING`，并用同一循环改喂 `gameplayDelta` 作反例，断言仍卡在 `READY`，即本轮事故的复现式反证）。`tests/scene-editor.test.mjs` +1——拒绝必须产出含当前 phase 的可见原因文字。
 - 真实浏览器验证（本机 Chrome 153 `--headless=new` + CDP `Runtime.evaluate` / `Input.dispatchMouseEvent` / `elementFromPoint` / `Page.captureScreenshot`；**不是 Tabbit Browser**：其 stable launcher 仍返回 `exit 69` 且运行时未运行，按该工具链约定未自行启动）：①`elementFromPoint(DEV ▾ 中心) = debug-toggle`、`场景编辑` 在 x 616–684 / `DEV ▾` 在 x 690–752（不再重叠），面板可展开、11 个分类与 5 个原有控件齐全；②READY 期间点「场景编辑」→ 提示「场景编辑需要先进入对局（当前 READY）」，面板保持关闭、双阵营仍 `RUNNING`；③倒计时正常走完（准备 3 → 2 → 1 秒 → 对局中），对局时间 00:00 → 00:02、两帧截图不同（AI 正常行动）；④DEV「冻结双阵营」→ `FROZEN｜MANUAL_DEV_FREEZE`、对局时间停住、冻结期间两帧截图逐字节相同；⑤手动冻结下打开编辑器 → `FROZEN｜MANUAL_DEV_FREEZE + SCENE_EDITOR`（原因叠加）、列表 28 行（家具 20 + 藏身锚点 8）；⑥真实鼠标点选对象 → `当前选中：living_sofa`，改 `height 0.65 → 0.75` → 草稿差异行正确、输入区 6 个控件可交互；⑦点「应用编辑」→ `已应用编辑：1`、差异复位为「与已应用地图一致」、事件 `SCENE_OBJECT_EDIT_APPLY`，**真实重建（dispose → buildApartment → 新 CollisionWorld + NavigationSystem → rebindNavigation → syncAllDoors）无任何控制台报错**；⑧编辑期间点「恢复双阵营」→ 被拒绝并显示 `SCENE_EDITOR_ACTIVE`，仍 `FROZEN`；⑨关闭编辑器 → `body` 类移除、编辑器面板 `hidden`、只剩入口按钮可见、画布上 `elementFromPoint` 命中 `CANVAS`（无透明遮挡层）、手动冻结仍生效；⑩手动恢复 → 时间重新走动；⑪Esc → 暂停菜单 → 重新开始 → `RUNNING｜无`、回到「准备：3 秒」并能再次进入 `对局中`（重开不残留冻结）；⑫1440×900 桌面视口下对象列表 / 数值输入 / 朝向下拉 / 应用按钮 / 搜索框 / 锚点开关 / 状态块全部可命中；⑬全程控制台错误 0。
 - 修改文件：`src/systems/DevFreezeSystem.ts`、`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/SceneEditor.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditorView.ts`、`src/style.css`、`tests/dev-freeze.test.mjs`、`tests/scene-editor.test.mjs`、`docs/DEV_SCENE_EDITOR_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。新增 / 删除文件：无。依赖变化：无。**未改 `GAME_CONFIG`、未改任何玩法规则、未接入藏身玩法、未开始 S7C-1B。**
-- 测试结果：`npm test` **370 / 370 PASS**（基线 367 + 新增 3，fail 0 / skipped 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build` 退出码 0（Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）。`HEAD` 仍 `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`，`origin/main...HEAD = 0 0`，未 commit / push / tag。
+- 测试结果：`npm test` **370 / 370 通过**（基线 367 + 新增 3，失败 0 / 已跳过 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build` 退出码 0（Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）。`HEAD` 仍 `6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`，`origin/main...HEAD = 0 0`，未 commit / push / tag。
 - 已知问题 / 未验证：①Tabbit Browser 层未验证（其运行时未运行、launcher exit 69），上述浏览器结论来自本机 Chrome headless；②窗口高度很矮（实测 762×484，面板可用高 428）时编辑器对象列表与属性区会互相挤压，属性区只剩约 58px 并需要内部滚动才能点到输入框——桌面常规高度（1440×900）完全正常，属后续可优化的布局密度问题；③`vite` 开发服务器在本轮多次因 `edit` 工具的原子上写入触发 `EBUSY` 文件监听崩溃（`node:internal/fs/watchers`），已在每次改文件前主动停服、改完重启，未产生仓库内残留文件；④家具朝向仍只支持 90° 整数倍、无撤销 / 重做、已应用编辑只在内存（刷新回到 `apartmentMap.ts`）——均为上一轮记录的既有设计边界。
 - 下一步建议：请用户在浏览器中重新验收（先确认右上角 `DEV ▾` 可展开、`场景编辑` 在其左侧、DEV 面板内可见「冻结双阵营」；再确认进入对局后双方能正常行动）；修复后仍需按 `docs/DEV_SCENE_EDITOR_DESIGN.md` §9 复核冻结 / 恢复 / 编辑 / 导出等条目；验收通过后再单独批准 S7C-1B 并先确认其参数。
 - Git commit 信息：未提交；未 push；未创建 Tag。不将 S7C 整体标记完成，`AGENTS.md` 阶段状态未改（其规则要求 Gate 通过且提交推送成功后才更新）。
@@ -738,22 +738,22 @@
 
 ## 2026-09-26 00:22 +08:00｜S7C-1A 与 DEV 场景热编辑器 V1 人工验收通过（收尾与检查点审计轮）
 
-- 任务名称：S7C-1A（藏身点白模与地图配置）与 DEV 场景热编辑器 V1 + 双阵营调试冻结的验收收尾、成果完整性核对与 Git 检查点文件审计。当前阶段：两项均由用户确认**浏览器人工验收 PASS**，并在同一轮内获准建立 Git 检查点（见文末 Git 条目）；S7C-1B 未授权、未开始。本轮**只改文档，不改任何生产代码、测试或 `GAME_CONFIG`**，不开发任何新功能。
+- 任务名称：S7C-1A（藏身点白模与地图配置）与 DEV 场景热编辑器 V1 + 双阵营调试冻结的验收收尾、成果完整性核对与 Git 检查点文件审计。当前阶段：两项均由用户确认**浏览器人工验收 通过**，并在同一轮内获准建立 Git 检查点（见文末 Git 条目）；S7C-1B 未授权、未开始。本轮**只改文档，不改任何生产代码、测试或 `GAME_CONFIG`**，不开发任何新功能。
 - 用户确认的五项浏览器人工验收（原文记录）：
-  1. DEV ▾ 和场景编辑入口均可正常点击：PASS
-  2. READY 倒计时、玩家与 AI 行动：PASS
-  3. 手动冻结、恢复及编辑器自动冻结：PASS
-  4. 八个藏身点的列表选择和遮挡点聚焦：PASS
-  5. 两个纸箱通行、家具编辑后的碰撞同步：PASS
+  1. DEV ▾ 和场景编辑入口均可正常点击：通过
+  2. READY 倒计时、玩家与 AI 行动：通过
+  3. 手动冻结、恢复及编辑器自动冻结：通过
+  4. 八个藏身点的列表选择和遮挡点聚焦：通过
+  5. 两个纸箱通行、家具编辑后的碰撞同步：通过
 - 本轮实际完成内容（仅文档）：
-  1. `AGENTS.md`：S7B-3B 补记稳定检查点 `6a92c5d`；新增「已完成人工验收、尚未建立 Git 检查点（不计入阶段 Gate）」小节，登记 S7C-1A 与 DEV 场景热编辑器 V1 两项人工验收 PASS；「当前下一阶段」更正为 S7C-1A 已验收、S7C-1B 未授权且开工前须逐条确认设计文档第 6 节第 3–14 行参数；自动化基线 333 → **370**；地图状态由「5 个 HideSpot 仍为占位」更正为 8 条 HideSpot 数据 + 2 个纸箱、正式藏身玩法未实现；Build Environment 补记 `npm run dev` 固定 `http://127.0.0.1:5173/`。
-  2. `docs/DEEPSEEK_HANDOFF.md`：Git 边界更新为当前 HEAD `6a92c5d`（3B 已并入）且 S7C-1A / DEV 编辑器轮未提交；启动命令由 `--port 5174` 更正为裸 `npm run dev`（`vite.config.ts` 固定 5173 + `strictPort`）；阶段表补 S7C-1A 与 DEV 编辑器 V1 两行人工验收 PASS 并更正 S7B-3B 行（已并入检查点）；§6 由「下一项：S7B-3B」更正为「已完成，保留原始约束记录」；§8 开发预览命令同步；§9 自动化基线 333 → 370、chunk 大小更新、补两项验收态；新增 §10 记录 DEV 场景热编辑器 V1 与双阵营调试冻结（含冻结两原因、`gameplayDelta` / `readyDelta` 双时间缝、编辑器校验与边界）。
-  3. `docs/DEV_SCENE_EDITOR_DESIGN.md`：状态行由「等待浏览器人工验收」改为「用户浏览器人工验收 PASS（2026-09-26），尚未建立 Git 检查点」；§9 步骤 1 的启动命令改为 `npm run dev` + `http://127.0.0.1:5173/`。
-  4. `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`：§3.4 标题与浏览器验收行由「等待浏览器人工验收」改为 PASS，并记录用户五项结果中的第 4、5 项。
+  1. `AGENTS.md`：S7B-3B 补记稳定检查点 `6a92c5d`；新增「已完成人工验收、尚未建立 Git 检查点（不计入阶段 Gate）」小节，登记 S7C-1A 与 DEV 场景热编辑器 V1 两项人工验收 通过；「当前下一阶段」更正为 S7C-1A 已验收、S7C-1B 未授权且开工前须逐条确认设计文档第 6 节第 3–14 行参数；自动化基线 333 → **370**；地图状态由「5 个 HideSpot 仍为占位」更正为 8 条 HideSpot 数据 + 2 个纸箱、正式藏身玩法未实现；Build Environment 补记 `npm run dev` 固定 `http://127.0.0.1:5173/`。
+  2. `docs/DEEPSEEK_HANDOFF.md`：Git 边界更新为当前 HEAD `6a92c5d`（3B 已并入）且 S7C-1A / DEV 编辑器轮未提交；启动命令由 `--port 5174` 更正为裸 `npm run dev`（`vite.config.ts` 固定 5173 + `strictPort`）；阶段表补 S7C-1A 与 DEV 编辑器 V1 两行人工验收 通过 并更正 S7B-3B 行（已并入检查点）；§6 由「下一项：S7B-3B」更正为「已完成，保留原始约束记录」；§8 开发预览命令同步；§9 自动化基线 333 → 370、chunk 大小更新、补两项验收态；新增 §10 记录 DEV 场景热编辑器 V1 与双阵营调试冻结（含冻结两原因、`gameplayDelta` / `readyDelta` 双时间缝、编辑器校验与边界）。
+  3. `docs/DEV_SCENE_EDITOR_DESIGN.md`：状态行由「等待浏览器人工验收」改为「用户浏览器人工验收 通过（2026-09-26），尚未建立 Git 检查点」；§9 步骤 1 的启动命令改为 `npm run dev` + `http://127.0.0.1:5173/`。
+  4. `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`：§3.4 标题与浏览器验收行由「等待浏览器人工验收」改为 通过，并记录用户五项结果中的第 4、5 项。
 - 未提交差异审计（`git status --porcelain` + `git diff --stat`，最终态）：已跟踪文件 **13 个被修改**——其中 3 个是本轮收尾新增的文档改动（`AGENTS.md`、`docs/DEEPSEEK_HANDOFF.md`，以及 `docs/S7B3B_DOOR_LOCK_DESIGN.md` 的状态行更正为「已并入检查点 `6a92c5d`」），其余 10 个为此前各轮累计（`docs/AGENT_LOG.md`、`docs/MAP_SPEC.md`、`src/style.css`、`src/systems/DeepSeekAIController.ts`、`src/systems/HumanAIController.ts`、`src/three/DebugDetailsPanel.ts`、`src/three/ThreeGame.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/apartmentMap.ts`、`tests/debug-details-panel.test.mjs`）；新文件 **11 个**（`src/systems/DevFreezeSystem.ts`、`src/three/map/MapEditModel.ts`、`src/three/SceneEditorView.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditor.ts`、`tests/hide-spot.test.mjs`、`tests/dev-freeze.test.mjs`、`tests/scene-editor.test.mjs`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/DEV_SCENE_EDITOR_DESIGN.md`、`vite.config.ts`）。合计 **24 个文件**（13 改 + 11 新），即本轮建议的 Git 检查点文件清单。
 - 完整性核对（逐项通过）：①S7B-3B 锁门链路未被触碰——`DeepSeekAIController.ts` / `HumanAIController.ts` 的全部差异**只有**新增 `rebindNavigation()` 与其 `navigation` 字段由 `readonly` 改为可变；②8 个藏身点 ID / 坐标与 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 完全一致（`hide_main_bed (-14.40,-6.15)`、`hide_second_bed (-14.40,8.90)`、`hide_main_wardrobe (-16.65,-6.60)`、`hide_closet (-3.57,-8.80)`、`hide_study_bookshelf (-0.80,11.05)`、`hide_storage_shelf (16.80,-8.75)`、`hide_living_carton (7.00,3.60)`、`hide_storage_carton (16.60,-4.80)`）；③2 个纸箱 `living_carton (7.9,3.9)` / `storage_carton (15.7,-4.8)` 与 0.9×0.9×0.75 尺寸在 `FURNITURE` 中在位；④`DevFreezeSystem` 的 `MANUAL_DEV_FREEZE` + `SCENE_EDITOR` 双原因叠加与 `gameplayDelta` / `readyDelta` 双时间缝均在；⑤根目录 `vite.config.ts`（`host 127.0.0.1` / `port 5173` / `strictPort: true`）存在且已实测生效（占用 5173 时裸跑 `npm run dev` 直接 `Error: Port 5173 is already in use`、退出码 1，5174 / 5175 无监听）；⑥`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` **未出现在差异清单中**，全库无 `console.log` / `debugger` / `TODO` 新增残留；⑦仓库内无临时脚本、无 `dist/`、无日志文件残留。
 - 排除项确认：`.trae/`（1 个文件）与 `.dsh-meow/`（4 个文件，含 `memory.db`）保持未跟踪、不被暂存；`dist/` 仍在 `.gitignore` 内；无临时 AI JSON 日志或个人配置。
-- 测试结果：`npm test` **370 / 370 PASS**（fail 0 / skipped 0 / cancelled 0，退出码 0）；`npm run build`（含 `tsc --noEmit` + `vite build`）退出码 0（`cmd /c` 复核 `$LASTEXITCODE`；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）。
+- 测试结果：`npm test` **370 / 370 通过**（失败 0 / 已跳过 0 / 已取消 0，退出码 0）；`npm run build`（含 `tsc --noEmit` + `vite build`）退出码 0（`cmd /c` 复核 `$LASTEXITCODE`；Vite >500 kB 仍为非阻断提示）；`git diff --check` 退出码 0（仅 LF→CRLF 提示）。
 - 工作区核对（**提交前快照**）：`HEAD = 6a92c5ddf9629389bedcd49930e9a29dfb6e50d5`，`origin/main...HEAD = 0 0`，`git status --porcelain` 共 26 条（13 ` M` + 13 `??`，其中 2 条 `??` 为 `.trae/`、`.dsh-meow/`），与「24 个文件 + 2 个用户资料目录」一致。
 - 已知问题：①`AGENT_LOG.md` 上一轮追加留下一条完全重复的「Git commit 信息」行，按既有规则本轮未删（本轮只在其后补一行说明）；②S7B-3B 修复后仍缺一份完整实机 AI JSON；③窗口高度很矮（实测 762×484）时场景编辑器属性区布局偏紧；④Tabbit Browser 仍不可用（stable launcher `exit 69`），浏览器验证改用本机 Chrome headless + CDP，替用户打开页面用系统 Chrome（以到 5173 的 ESTABLISHED 连接为证据）。
 - 下一步建议：用户已确认 24 个文件清单与建议提交说明后，随即执行 commit / push（不使用 `--force`、不创建 Tag）；之后 S7C-1B 需用户单独授权，并在开工前逐条确认设计文档第 6 节第 3–14 行参数。
@@ -766,11 +766,11 @@
 - 开始前核对（只读）：`main` 分支；`HEAD` = `origin/main` = `3191bec843606ae4bab01d6932cff0ac87955101`；`git rev-list --left-right --count origin/main...HEAD` = `0 0`；`git status --porcelain` 仅 ` M AGENTS.md` 与未跟踪 `.dsh-meow/`、`.trae/`；`.git/MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 全部不存在；`git tag` 仍为历史 7 个。
 - 实际完成内容：
   1. `AGENTS.md`（保留上一轮全部长期前置条件与阶段状态修正，逐条核对无误：S7C-1A 与 DEV 场景编辑器 V1 已通过 Gate；S7B 与 S7C 整体仍未完成；DEV-A / DEV-B 是待批准提案；S7C-1B / 2 / 2b / 3 均未授权）：在「前置条件 3：DEV-A 设计确认」末尾新增**未决设计约束**——DEV-A 的圆形／扇形藏身交互区域尚未批准，因此暂时保留现有单一 anchor（`HideSpot.x/z` 即唯一进入点 = 退出点），现有 8 条锚点数据继续有效、语义不变；是否把进入锚点与退出锚点拆成两个独立点留到未来单独决定，本阶段不拆分、不预留两套字段。在「前置条件 4：DEV-B 技术审计」末尾新增**未决设计约束**——必须把 `GAME_CONFIG` 原始值、本局 DEV 覆盖值、运行时实际生效值三层显式分开（DEV 面板任何时刻可分辨当前生效值来源）；不得把调试预设直接写回正式平衡配置（不改 `src/config/gameConfig.ts` 默认值与 `docs/GAME_BALANCE_CONFIG.md` 记录值），也不得让它成为下一局或刷新后的默认值。
-  2. `docs/DEEPSEEK_HANDOFF.md`：§2 Git 边界由 `6a92c5d`（S7C-1A / DEV 编辑器轮「产物未提交」）更正为**稳定检查点 `3191bec`（24 个文件、+3976/−71、已推送、`0 0`）**，并补合并变基残留检查、`.trae/` / `.dsh-meow/` 不得读取或暂存的措辞，以及**指向 `AGENTS.md`「长期开发路线与下一阶段开发前置条件」整节的引用（不复制整套规则）**与当前授权状态（S7C-1B / 2 / 2b / 3 未授权、DEV-A / DEV-B 待批准）；§4 阶段表把 S7C-1A、DEV 场景热编辑器 V1 两行的「尚未建立 Git 检查点」改为「人工验收 PASS、阶段 Gate = PASS、已并入 `3191bec`」，「下一项」行改为 S7C-1B 需单独授权 + 逐条批准第 6 节第 3–14 行 + DEV-A / DEV-B 未排入开发；§9 自动化基线补「截至 `3191bec`」并把「当前状态」改为两项已 Gate PASS 并已并入检查点，明确 S7B / S7C 整体均未完成；§10 标题补「阶段 Gate = PASS」并注明已并入 `3191bec`、详见设计文档；§11 标题补 Gate 状态，并新增「DEV-A 与现有锚点数据的关系（未决设计约束）」段落。
+  2. `docs/DEEPSEEK_HANDOFF.md`：§2 Git 边界由 `6a92c5d`（S7C-1A / DEV 编辑器轮「产物未提交」）更正为**稳定检查点 `3191bec`（24 个文件、+3976/−71、已推送、`0 0`）**，并补合并变基残留检查、`.trae/` / `.dsh-meow/` 不得读取或暂存的措辞，以及**指向 `AGENTS.md`「长期开发路线与下一阶段开发前置条件」整节的引用（不复制整套规则）**与当前授权状态（S7C-1B / 2 / 2b / 3 未授权、DEV-A / DEV-B 待批准）；§4 阶段表把 S7C-1A、DEV 场景热编辑器 V1 两行的「尚未建立 Git 检查点」改为「人工验收 通过、阶段 Gate = PASS、已并入 `3191bec`」，「下一项」行改为 S7C-1B 需单独授权 + 逐条批准第 6 节第 3–14 行 + DEV-A / DEV-B 未排入开发；§9 自动化基线补「截至 `3191bec`」并把「当前状态」改为两项已 Gate 通过 并已并入检查点，明确 S7B / S7C 整体均未完成；§10 标题补「阶段 Gate = PASS」并注明已并入 `3191bec`、详见设计文档；§11 标题补 Gate 状态，并新增「DEV-A 与现有锚点数据的关系（未决设计约束）」段落。
   3. `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`：§3.4 标题与验收行由「尚未建立 Git 检查点」更正为「**阶段 Gate = PASS，已并入稳定检查点 `3191bec` 并推送 `origin/main`**」；§3.5 前置补记 DEV-A 圆形／扇形区域未批准、暂时保留单一 anchor、进入／退出锚点是否拆分留待未来决定（指向 `AGENTS.md` 前置条件 3）；§6 状态说明由「2026-09-25 决策定案轮」更新为「2026-09-26 文档同步轮」，明确第 3–14 行仍待逐项批准（S7C-1B 未授权）、第 6 行「按到 anchor 的距离判定」与现有单一 anchor 继续有效、不因 DEV-A 提案改变；新增 §8.3「文档同步轮（2026-09-26）」记录本轮 Git 核对、`git diff --check` 结果、未跑测试与构建的原因，以及五条本轮结论（含 DEV-B 的三层数值约束）。
-  4. `docs/DEV_SCENE_EDITOR_DESIGN.md`：顶部状态行由「用户浏览器人工验收 PASS、尚未建立 Git 检查点、未 commit / push / tag」更正为「**人工验收 PASS + 阶段 Gate = PASS，已并入 `3191bec`（24 个文件、+3976/−71）并推送 `origin/main`，未创建 Tag**」；§9 验收步骤前新增说明——该节步骤已于 2026-09-26 由用户全部验收 PASS，此后作为**回归复核清单**（后续触及 DEV 面板 / 冻结 / 编辑器 / 地图热重建的改动应重走关键条目 0、3、4、9、10）。
+  4. `docs/DEV_SCENE_EDITOR_DESIGN.md`：顶部状态行由「用户浏览器人工验收 通过、尚未建立 Git 检查点、未 commit / push / tag」更正为「**人工验收 通过 + 阶段 Gate = PASS，已并入 `3191bec`（24 个文件、+3976/−71）并推送 `origin/main`，未创建 Tag**」；§9 验收步骤前新增说明——该节步骤已于 2026-09-26 由用户全部验收 通过，此后作为**回归复核清单**（后续触及 DEV 面板 / 冻结 / 编辑器 / 地图热重建的改动应重走关键条目 0、3、4、9、10）。
 - 新增文件：无。修改文件：`AGENTS.md`、`docs/DEEPSEEK_HANDOFF.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/DEV_SCENE_EDITOR_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。删除文件：无。依赖变化：无。**未改任何生产代码 / 测试 / `vite.config.ts` / `GAME_CONFIG` / `docs/GAME_BALANCE_CONFIG.md`；未接入藏身玩法；未开始 S7C-1B、DEV-A 或 DEV-B。**
-- 测试结果：`git diff --check` 退出码 0。**`npm test` 与 `npm run build` 本轮未跑**：纯文档轮、源码零改动，按 `AGENTS.md`「纯文档或纯 Git 任务按适用性检查并说明未运行游戏测试的原因」执行；上一轮源码基线仍是 `npm test` 370/370 PASS、`npm run build`（含 `tsc --noEmit`）退出码 0。核对方式为「只改文档」+ 逐文件差异确认（`git status --porcelain` 与 `git diff --stat` 中不出现任何 `src/`、`tests/`、`vite.config.ts`）。
+- 测试结果：`git diff --check` 退出码 0。**`npm test` 与 `npm run build` 本轮未跑**：纯文档轮、源码零改动，按 `AGENTS.md`「纯文档或纯 Git 任务按适用性检查并说明未运行游戏测试的原因」执行；上一轮源码基线仍是 `npm test` 370/370 项通过、`npm run build`（含 `tsc --noEmit`）退出码 0。核对方式为「只改文档」+ 逐文件差异确认（`git status --porcelain` 与 `git diff --stat` 中不出现任何 `src/`、`tests/`、`vite.config.ts`）。
 - 已知问题：①本轮未做浏览器验证（无游戏代码改动，无需浏览器验收）；②S7B-3B 修复后仍缺一份完整实机 AI JSON；③窗口高度很矮（实测 762×484）时场景编辑器属性区布局偏紧；④`AGENT_LOG.md` 更早一轮留下的一条完全重复的「Git commit 信息」行，按「不修改历史内容」规则继续保留；⑤`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §1 的源码行号仍是 S7C-0 审计时快照，本轮未回改（历史记录）。
 - 下一步建议：请用户确认本轮文件清单与关键差异后，再建立文档检查点（commit / push 需用户明确授权）；之后若要推进，先由用户逐条批准设计文档第 6 节第 3–14 项参数（S7C-1B），或另行批准 DEV-A / DEV-B 提案。
 - Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：本轮**未 commit、未 push、未创建 Tag**。计划提交标题（供用户确认后使用）：`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。不将 S7C 整体标记完成。
@@ -835,19 +835,19 @@
   6. **文档**：新增 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`（已批准参数表、三层接口、与既有校验的度量关系、验证结果、第二轮要接的接口与未实现清单）；`docs/DEEPSEEK_HANDOFF.md` 同步授权状态、阶段进度「下一项」行、自动化基线（383/383）、§10 编辑器类型补全说明、§12 DEV-A 状态与 8 问回答映射。
 - 保留的安全边界：**DEV-A 只有第一轮获得过授权**；DEV-A 第二轮（编辑器编辑半径/角度/朝向、校验与导出、DEV 可视化）与 DEV-B、S7C-1B、S7C-2 / 2b / 3 仍未授权；未实现 `HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化；未改 `GAME_CONFIG` 与任何已验收数值；未改已验收的编辑器行为、`MapEditModel` 可编辑字段与拒绝码、`MapBuilder` DEBUG 标记；8 条锚点数据与「单一 anchor（进入点 = 退出点）」语义不变。
 - 新增文件：`src/three/map/HideInteractionRegion.ts`、`tests/hide-interaction-region.test.mjs`、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。修改文件：`src/three/map/apartmentMap.ts`、`src/three/SceneEditor.ts`、`docs/DEEPSEEK_HANDOFF.md`、`docs/AGENT_LOG.md`（本条）。删除文件：无。依赖变化：无。
-- 测试结果：`npm test` **383/383 PASS**（基线 370 + 本轮新增 13，fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。未启动开发服务器（本轮是数据与纯逻辑层，浏览器人工验收步骤由用户在其环境中执行）。
+- 测试结果：`npm test` **383/383 项通过**（基线 370 + 本轮新增 13，失败 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。未启动开发服务器（本轮是数据与纯逻辑层，浏览器人工验收步骤由用户在其环境中执行）。
 - 已知问题：`hide_main_wardrobe` 的扇形区域半径 1.6 会在几何上伸进主卧西墙（区域是创作数据、不是碰撞体），其越界格点被 `NOT_STANDABLE` 正确拒绝；`hide_living_carton` 的圆形区域几何上越过客厅/餐厅墙，但越界点到不了角色圆半径，因此不产生任何新的合法位置。两者都不影响 8 个锚点本身仍是合法位置（已逐个断言）。
 - 下一步建议：请用户人工审核本轮数据与接口（第一轮没有 UI，验收以数据、接口与测试为准）；确认后再决定是否建立检查点，以及是否批准第二轮（场景编辑器接入半径/角度/朝向编辑、校验导出与 DEV 可视化）。
 - Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：本轮**未 commit、未 push、未创建 Tag**；计划提交标题待用户确认后确定；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。
 
 ## 2026-09-26 +08:00｜DEV-A 第一轮：Git 归档（用户浏览器人工回归 PASS）
 
-- 任务名称：DEV-A 第一轮 Git 归档（用户授权本轮归档）。**用户已确认本轮浏览器人工回归 5/5 PASS**；归档前的自动化报告为 `npm test` 383/383 PASS、`npm run build` PASS、`git diff --check` PASS。
+- 任务名称：DEV-A 第一轮 Git 归档（用户授权本轮归档）。**用户已确认本轮浏览器人工回归 5/5 项通过**；归档前的自动化报告为 `npm test` 383/383 项通过、`npm run build` 通过、`git diff --check` 通过。
 - 本轮只归档已完成的 DEV-A 第一轮：8 个 `HideSpot` 的 `interactionRegion` 地图数据；圆形、扇形几何判定；碰撞、家具表面遮挡和导航合法性检查；离散采样辅助接口；`SceneEditor` 必要的新增字段透传；本轮测试及对应开发文档。
 - 归档前核查（`main` / `HEAD` / `origin/main` / `git status` / 合并变基残留 / `git fetch origin`）：分支 `main`；核查时 `HEAD == origin/main` = `cc86af14ea0d6e062ff30d8a0b1ead113ca7ea6f`（`docs: separate permanent rules and streamline agent instructions`）；`.git/{MERGE_HEAD,REBASE_HEAD,CHERRY_PICK_HEAD,rebase-merge,rebase-apply}` 全部不存在；`git fetch origin` 成功且 `git rev-list --left-right --count origin/main...HEAD` = `0 0`（远端无新增提交）；实际差异与授权清单完全一致，无额外文件、无未解释差异、无远端变化。
 - 归档文件（5 个修改 + 3 个新增）：`src/three/map/HideInteractionRegion.ts`（新增）、`src/three/map/apartmentMap.ts`、`src/three/SceneEditor.ts`、`tests/hide-interaction-region.test.mjs`（新增）、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`（新增）、`docs/DEEPSEEK_HANDOFF.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。
-- 人工验收与范围：**用户确认浏览器人工回归 5/5 PASS（2026-09-26）**；DEV-A 第一轮状态由「已实现、待人工审核」更新为「**已完成、阶段 Gate = PASS**」，并随本轮提交建立检查点。**只有 DEV-A 第一轮标记完成**；DEV-A 整体、DEV-A 第二轮、DEV-B、S7C-1B 均**未完成、未授权**。`AGENTS.md` 长期规则没有变化，本轮未修改。
-- 最终检查：`npm test` **383/383 PASS**（fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与上述清单一致（仅这 8 个文件）。
+- 人工验收与范围：**用户确认浏览器人工回归 5/5 项通过（2026-09-26）**；DEV-A 第一轮状态由「已实现、待人工审核」更新为「**已完成、阶段 Gate = PASS**」，并随本轮提交建立检查点。**只有 DEV-A 第一轮标记完成**；DEV-A 整体、DEV-A 第二轮、DEV-B、S7C-1B 均**未完成、未授权**。`AGENTS.md` 长期规则没有变化，本轮未修改。
+- 最终检查：`npm test` **383/383 项通过**（失败 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与上述清单一致（仅这 8 个文件）。
 - 已知问题（沿用第一轮记录，均不阻断）：`hide_main_wardrobe` 的扇形区域在几何上伸进主卧西墙、`hide_living_carton` 的圆形区域几何上越过客厅/餐厅墙，越界格点都被 `NOT_STANDABLE` / `SURFACE_BLOCKED` 正确拒绝，8 个锚点本身仍是合法位置。
 - 下一步建议：**不得自动进入 DEV-A 第二轮**；DEV-A 第二轮（场景编辑器编辑半径/角度/朝向、校验与导出、DEV 可视化）与 DEV-B、S7C-1B 仍需用户分别授权。
 - Git 归档信息（按本项目惯例写成提交前后都成立的措辞）：提交标题 `feat: complete dev-a hide region geometry foundation`，**不创建 Tag**；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准（不写死自身 SHA）。
@@ -855,14 +855,14 @@
 ## 2026-09-26 +08:00｜DEV-A 第二轮与 DEV-A-FIX-1：Git 归档（人工验收 PASS）
 
 - 任务名称：DEV-A 第二轮（藏身交互区域的编辑器编辑、校验、JSON V2 导出与 DEV 可视化）+ DEV-A-FIX-1（场景编辑器拖动流畅度）合并归档（用户授权）。`AGENTS.md` 长期规则无变化，本轮未修改。
-- 人工验收（用户确认）：**DEV-A 第二轮的区域编辑、区域预览、校验、JSON V2 导出及旧功能回归全部通过**；**DEV-A-FIX-1 流畅拖动专项 5/5 浏览器人工验收全部 PASS**。归档前自动化报告：`npm test` 395/395 PASS（第二轮基线 389 + FIX-1 新增 6）、`npm run build` PASS、`git diff --check` PASS。
+- 人工验收（用户确认）：**DEV-A 第二轮的区域编辑、区域预览、校验、JSON V2 导出及旧功能回归全部通过**；**DEV-A-FIX-1 流畅拖动专项 5/5 浏览器人工验收全部通过**。归档前自动化报告：`npm test` 395/395 项通过（第二轮基线 389 + FIX-1 新增 6）、`npm run build` 通过、`git diff --check` 通过。
 - 归档前核查：分支 `main`；核查时 `HEAD == origin/main == d4462e9cdeb383963eb4f333613664c35f9d8203`；`git fetch origin` 成功、`git rev-list --left-right --count origin/main...HEAD` = `0 0`（远端无新增提交）；`.git/{MERGE_HEAD,REBASE_HEAD,CHERRY_PICK_HEAD,rebase-merge,rebase-apply}` 全部不存在；逐个复核 7 个未提交文件的实际差异，确认**只含 DEV-A 第二轮与 FIX-1 的成果**，无额外文件、无未解释差异、无调试残留（差异中无 `console.log` / `debugger` / `TODO` / 临时路径）。
 - 归档文件（7 个修改，+867/−50）：`src/style.css`、`src/three/SceneEditor.ts`、`src/three/SceneEditorPanel.ts`、`src/three/SceneEditorView.ts`、`src/three/map/HideInteractionRegion.ts`、`src/three/map/MapEditModel.ts`、`tests/scene-editor.test.mjs`；另有本轮实际更新的文档 `docs/AGENT_LOG.md`（本条）、`docs/DEEPSEEK_HANDOFF.md`、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。
 - DEV-A 第二轮实际内容：`HideSpotDraft` 携带 `interactionRegion`；编辑器可编辑区域半径与扇形半角（`REGION_AUTHORING_LIMITS`：半径 0.5–3、步长 0.05；半角 10–150°、步长 1°；拒绝码 `INVALID_REGION_RADIUS` / `INVALID_REGION_ANGLE` / `RADIUS_OUT_OF_AUTHORING_RANGE` / `HALF_ANGLE_OUT_OF_AUTHORING_RANGE`）；家具移动或旋转时关联锚点跟随（`rotateAnchorAroundFurniture`）；`MapEditSession.regionPreview(targetId, includeSamples, step)` 与 `hideSpotForTarget`；`validateEditedMap` 增加区域类拒绝码（`ANCHOR_OUTSIDE_REGION` / `ANCHOR_REGION_ILLEGAL` / `NO_LEGAL_REGION_SAMPLE`）；JSON 导出升为 **`MAP_EXPORT_VERSION = 2`**（`interactionRegion` 带 `units`）；DEV 面板增加「交互区域预览」开关、区域半径/半角输入、按 `code` 着色的离散采样点与图例（精确轮廓与离散采样在 UI 上分开呈现）；`checkHideRegionPosition` / `sampleHideRegion` 增加 `isReachable` 快速路径（复用连通性洪水填充结果，避免每个采样点各跑一次 A\*）。
 - DEV-A-FIX-1 根因与修复：`SceneEditor.onFrame()` 每帧读取 `session.draftStatus`，而该 getter 会跑整张地图的完整校验（新建 `CollisionWorld` + `NavigationSystem` + 3 格连通性洪水填充 + 区域采样），拖动时草稿每帧变化使缓存必然失效 → 每帧一次完整校验（**实测 236–435 ms/次**，卡顿主因）；次因是 `SceneEditorView.setRegionPreview()` 每次调用都销毁并重建轮廓线与采样实例。修复：`MapEditSession` 增加**延迟校验窗口**（`beginDeferredValidation` / `endDeferredValidation` / `validationDeferred`；窗口内 `draftStatus` 返回 `DRAGGING` 且为 O(1)），编辑器在 `pointerdown`（view 新增 `onDragStart` 钩子）开窗、`pointerup` / `commitDrag` 关窗并**在释放时校验一次**；预览对象改为长期存活（轮廓线原地改写 position 缓冲 + 重算包围球，采样实例按 `code` 复用、拖动期间仅隐藏）；`statusEntries()` 改为只读一次状态；`close` / `discardDraft` / `applyEdits` / `dispose` / `resetAll` 兜底关窗。**未通过隐藏 UI 掩盖卡顿**（轮廓仍随每次 pointermove 跟随，采样点在释放时立即重绘）、**未让非法位置绕过正式校验**（`apply()` 仍全量复验、`commitDrag()` 仍释放时校验并回滚）、**未改变编辑器数据语义**。
 - DEV-A-FIX-1 实测数据（Node，模型/视图层毫秒，**不是浏览器 FPS**）：120 次 pointermove 触发的完整校验 **119 次 → 1 次**；每次拖动移动的编辑器开销中位 **0.011 ms**（max 0.24 ms）；释放时区域重采样约 **19 ms**（每次释放 1 次）；轮廓更新 A/B（真实 `three` API + 真实 `SceneEditorView` 实例，400 次/组）**0.0177 ms → 0.0111 ms**（中位）。
 - 新增测试：`tests/scene-editor.test.mjs` 追加 6 项拖动回归——拖动期间逐帧读取不触发完整校验（`validationRuns` 零增长）、释放时恰好校验一次且随后命中缓存、非法拖动释放时仍被拒绝并可回滚、拖动中家具/关联锚点/区域中心同步且拖动期无离散采样、`resetAll()` 关窗且不触发校验、延迟拖动后 V2 导出仍只含已应用数据；第二轮的区域编辑/校验/JSON V2 测试同步保留。
-- 最终检查：`npm test` **395/395 PASS**（fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与本轮确认清单一致。
+- 最终检查：`npm test` **395/395 项通过**（失败 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与本轮确认清单一致。
 - 保留的边界：**DEV-A 整体仍未完成**；**DEV-A-FIX-2 仍为待实施任务**（范围以用户后续说明为准）；不实现自由旋转；不开发 DEV-B；`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化仍未实现；`GAME_CONFIG` 与已验收数值未改；既有 V1 编辑器功能、双阵营冻结与 READY 独立计时无回归。
 - 下一步建议：请用户说明 DEV-A-FIX-2 的范围后再开工；DEV-B 与 S7C-1B / 2 / 2b / 3 仍需单独授权（S7C-1B 开工前须逐项批准其设计文档第 6 节第 3–14 行参数）。
 - Git 归档信息（按本项目惯例写成提交前后都成立的措辞）：提交标题 `feat: complete dev-a region editor and smooth dragging`，**不创建 Tag**、不使用 force push；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准（不写死自身 SHA）。
@@ -870,13 +870,13 @@
 ## 2026-09-26 +08:00｜DEV-A-FIX-2：Git 归档（家具任意角度旋转 + JSON V3，人工验收 PASS）
 
 - 任务名称：DEV-A-FIX-2（家具 0°–359.9° 任意角度旋转、可关闭的 15° 吸附默认关闭、JSON 导出升级 V3）归档（用户授权本轮归档）。`AGENTS.md` 长期规则无变化，本轮未修改。
-- 人工验收（用户确认，**5/5 PASS**）：①任意角度输入及 15° 吸附；②旋转后的真实碰撞与 AI 导航；③关联锚点与藏身区域同步、非法旋转拒绝；④取消、应用与 JSON V3 导出；⑤原有流畅拖动等功能回归。
+- 人工验收（用户确认，**5/5 项通过**）：①任意角度输入及 15° 吸附；②旋转后的真实碰撞与 AI 导航；③关联锚点与藏身区域同步、非法旋转拒绝；④取消、应用与 JSON V3 导出；⑤原有流畅拖动等功能回归。
 - 归档前核查：分支 `main`；核查时 `HEAD == origin/main == ed3fd015ee199275e483ef8635e18e232ad70429`（DEV-A 第二轮 + DEV-A-FIX-1 的 Gate）；`git fetch origin` 成功且 `git rev-list --left-right --count origin/main...HEAD` = `0 0`（远端无新增提交）；`.git/{MERGE_HEAD,REBASE_HEAD,CHERRY_PICK_HEAD,rebase-merge,rebase-apply}` 全部不存在；逐个复核 13 个修改文件的实际差异与 3 个新增文件，确认只含 FIX-2 成果（`src/config/gameConfig.ts`、`docs/GAME_BALANCE_CONFIG.md` 无差异），无额外文件、无未解释差异、无调试残留。
 - 归档文件（13 个修改 + 3 个新增）：`src/three/CollisionWorld.ts`、`src/three/SceneEditor.ts`、`src/three/SceneEditorPanel.ts`、`src/three/ThreeGame.ts`、`src/three/map/HideInteractionRegion.ts`、`src/three/map/MapBuilder.ts`、`src/three/map/MapEditModel.ts`、`src/three/map/apartmentMap.ts`、`tests/collision-world.test.mjs`、`tests/hide-interaction-region.test.mjs`、`tests/scene-editor.test.mjs`、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`、`docs/DEEPSEEK_HANDOFF.md`；新增 `src/three/map/RotatedRect.ts`、`tests/rotated-rect.test.mjs`、`tests/rotated-furniture.test.mjs`；另有本轮文档 `docs/AGENT_LOG.md`（本条）。
 - 实现要点：①新增 `src/three/map/RotatedRect.ts` 作为**唯一旋转几何来源**（局部/世界换算、四角点、包围 AABB、圆/线段×旋转矩形、SAT 真实重叠、点到矩形距离、Chebyshev 膨胀、表面瞄准点、绕点旋转、角度助手），旋转约定 = `THREE.Object3D.rotation.y`，四分之一转取精确值；②`Rect` 增加可选 `rotation`（弧度，缺省 0），`CollisionWorld` 增加第二种碰撞体 `OrientedObstacle` 承载真实旋转足迹（包围 AABB 仅作粗筛），`canOccupyStaticXZ` / `isLineBlockedXZ` / 分轴滑动与角落切线全部支持，**轴对齐路径数学逐字未改**；③`MapBuilder` 按角度旋转网格并用真实角点 `LineSegments` 画调试轮廓（替换会画成包围盒的 `BoxHelper`），`ThreeGame` 初始构建与热重建都把 `orientedObstacles` 交给 `CollisionWorld`，`NavigationSystem` 仍只复用 `canOccupyStaticXZ`；④`MapEditModel` 家具字段 `rotationQuarter` → **`rotationDeg`**（任意角度，输入即归一化到 [0,360)，`ROTATION_STEP_DEGREES = 1`，拒绝码 `NOT_QUARTER_TURN` → `INVALID_ROTATION`），新增 `ROTATION_SNAP_DEGREES = 15` 与 `MapEditSession.setRotationSnap()`（默认关闭、只影响输入值、不进 JSON），房间边界改为四角点均在房间内、家具重叠改为真实 SAT、门洞改为与膨胀门叶真实重叠、锚点距离改用点到旋转矩形距离，`rectColliders()` 自动分流 Box3 / `OrientedObstacle`；⑤`HideInteractionRegion` 的表面瞄准与遮挡改用旋转几何，编辑器工具栏新增「旋转吸附 15°」复选项。
 - JSON V3 决策：`MAP_EXPORT_VERSION = 3`；每件家具导出 `position`（足迹中心）、`size`（创作尺寸）、`rotationDeg` / `rotationRad`（真实角度）、`collisionShape: 'ROTATED_RECT'`，并把轴对齐边界改名为 `boundingAabb` 且附 `boundingAabbRole: 'broad-phase-approximation'`——**V2 的 `collisionAabb` 字段被移除**（该改动已在实现轮向用户报备，本轮归档按用户授权范围执行）；只导出已应用数据，**未开发 JSON 导入器**；藏身点导出保持 V2 语义。
 - 新增测试：`tests/rotated-rect.test.mjs`（8 项纯几何：轴对齐归约、90° 等于旧的宽深交换、`rotation.y` 约定、圆/线段/重叠与轴对齐原实现一致、表面瞄准点、角度助手、绕点旋转）；`tests/rotated-furniture.test.mjs`（12 项：真实重叠、房间边界、门洞、LOS/抓捕资格、导航绕行、藏身区域与遮挡、编辑器事务与吸附、`validationRuns` 单次校验、V3 导出）；`tests/collision-world.test.mjs` 追加 5 项旋转碰撞；`tests/scene-editor.test.mjs`、`tests/hide-interaction-region.test.mjs` 迁移到新字段与新导出格式。
-- 最终检查：`npm test` **420/420 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 体积警告）；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与本轮确认清单一致。
+- 最终检查：`npm test` **420/420 项通过**（失败 0 / 已取消 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 体积警告）；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与本轮确认清单一致。
 - 范围声明：**DEV-A 已批准范围（第一轮、第二轮、DEV-A-FIX-1、DEV-A-FIX-2）至此全部实现并通过用户人工验收**；仍未完成的 DEV-A 相关项：**JSON 导入器刻意未开发**（不属本轮批准范围），**进入/退出锚点是否拆分为两个独立点仍未决定**（沿用单一 anchor）。`HideSystem`、按键藏身、Human `CHECK_HIDE`、出生点随机化等属 S7C-1B 及后续阶段，**仍未实现、未授权**；DEV-B 未授权；`GAME_CONFIG` 与所有已验收数值未改。
 - 下一步建议：**不得自动进入下一阶段**；DEV-B 与 S7C-1B / 2 / 2b / 3 仍需用户分别授权（S7C-1B 开工前须逐项批准其设计文档第 6 节第 3–14 行参数）。
 - Git 归档信息（按本项目惯例写成提交前后都成立的措辞）：提交标题 `feat: complete dev-a arbitrary furniture rotation`，**不创建 Tag**、不使用 force push；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准（不写死自身 SHA）。
@@ -891,7 +891,7 @@
 - 生命周期：覆盖项只存在当前页面内存（不写 `gameConfig.ts` / `GAME_BALANCE_CONFIG.md` / 地图 JSON / `localStorage`）；打开面板时记录「打开时快照」，提供「恢复打开 DEV-B 时的参数」与「恢复正式默认值」；关闭/收起面板保留临时参数（关闭 ≠ 恢复默认）；新局或重开清除覆盖；`dispose()` 释放 DOM、定时器与绘制对象。
 - 已知限制（面板如实标注）：`PerceptionGeometry` 只用墙体与门做遮挡，**家具不参与视觉遮挡**（即使 DEV-A 已实现旋转家具碰撞也不画家具遮挡）；现有视觉无视锥角，只画圆；Human AI/DeepSeek AI 的 `stuckMs` 等内部计时未暴露，标注「暂不可观测」；`CHECK_HIDE` 仍是预留状态；观察刷新约 8 Hz 且不触发额外寻路或决策。
 - 新增测试 33 项（420 → **453**）：`tests/runtime-debug-overrides.test.mjs`（11：白名单与元数据、有效值、非法输入拒绝、clear/clearAll、snapshot/restore 与越界钳制、订阅退订、**全程不写 `GAME_CONFIG`**、typed getter、排除项）、`tests/dev-b-runtime-effect.test.mjs`（11：抓捕圈与判定同半径、**半径变化立即清空抓捕进度**、无关参数不动进度、视觉距离影响真实检测、墙/门系数影响真实声音分析、范围/衰减/可听阈值、**强度与寿命只影响新事件**、有效移动速度、DeepSeek 安全半径、新局清覆盖、只读基准快照不变）、`tests/dev-b-visualization.test.mjs`（11：绘制对象复用、圆环跟随有效半径、单开关只影响本层、路径节点数与视线状态、声音标记与过期隐藏、`dispose` 不留对象、观察字段完整与「暂不可观测」标注、缺失数据不虚构、**观察不修改输入状态**、四种控制组合、面板文案与已知限制）。
-- 最终检查：`npm test` **453/453 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 体积警告，本次 JS 约 822 kB / gzip 约 218 kB）；`git diff --check` 退出码 0。
+- 最终检查：`npm test` **453/453 项通过**（失败 0 / 已取消 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 体积警告，本次 JS 约 822 kB / gzip 约 218 kB）；`git diff --check` 退出码 0。
 - 真实浏览器冒烟（本机 Chrome `--headless=new` + CDP，复用已在运行的 5173 dev server；脚本写在 `%TEMP%`、用完删除，不进仓库）：控制台 **0 错误**；「DEV-B 调试」入口与 `DEV ▾` 均 `elementFromPoint` 命中自身（无遮挡）；面板打开后渲染 **38** 个参数行与 5 个观察分区；非法输入（`abc`）触发红色提示并回滚到 0.70；设为 1.5 后显示「已覆盖：1.50（正式基准 0.7）」与「当前覆盖 1 项」；关闭面板再打开仍保留覆盖；「恢复正式默认值」清空为 0 项并回到 0.70；冻结后连续三帧截图**逐字节相同**（环境噪声 0 字节），开启全部 DEV-B 可视化后同一帧差异达 183,552 字节 → 可视化确实写入场景且不残留。
 - 保留的边界：**不改 `GAME_CONFIG` 正式平衡值**；不修改正式游戏机制、不新增 AI 状态；不开发藏身玩法 / `CHECK_HIDE` / 出生点随机化 / DEV-A JSON 导入器；不新增自动冻结状态；DEV-A、READY 独立计时、双阵营冻结、JSON V3 与既有 AI 行为均无回归（453 项测试全绿）。
 - 下一步建议：等待用户一次完整的浏览器人工验收（清单见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §10）；验收通过并经**单独授权**后再建立 Git 检查点。
@@ -902,7 +902,7 @@
 - 根因（按真实源码定位，未凭截图重写面板）：`src/three/DevBPanel.ts` 的 `renderParams()` 把分组容器建在一个**每次调用都新建的局部 `Map`** 里，并在该分支内执行 `this.paramsHost.append(host)`；而 `DevBDebug.onFrame()` 在面板打开时约每 120 ms 调一次 `renderPanel()`，于是**每次刷新都新增 4 个只含标题、不含参数的空分组容器**（参数行因缓存在 `this.rows` 中并未重复）。次要成因逐项排除：`DevBDebug` 只在 `ThreeGame` 构造函数中创建一次、`onFrame()` 每帧只调用一次、面板 DOM 与监听器都在构造函数中创建一次、`DevBRuntimeBinding.start()` 先 `stop()` 不会重复订阅；观察分区与条目本身已按 `data-section` / `data-entry` 正确复用。
 - 修复（`src/three/DevBPanel.ts`）：新增 `groupHosts` 字段缓存分组容器（`ensureGroup(label)` 只创建一次并在刷新时复用）；渲染末尾清理已不在参数表中的分组容器；只有**顺序确实不一致时**才按参数表顺序重排（顺序一致时不做任何 DOM 移动，避免把正在输入的控件重新插入导致失焦）；`ensureRow()` 复用的行通过新增的 `ParamRow.root` 跟随其分组容器；`dispose()` 清理 `rows` / `groupHosts` / `visualInputs` 缓存。另把 `src/three/DevBDebug.ts` 的三个值导入补成显式 `.ts` 后缀（与 `RuntimeDebugOverrides.ts` 的写法一致），使 Node `--experimental-strip-types` 能直接导入该编排器做 DOM 回归测试；对 Vite 与 `tsc` 无影响（`allowImportingTsExtensions: true`）。
 - 新增测试 8 项（453 → **461**）：`tests/dev-b-panel-dom.test.mjs` 用只实现面板实际使用接口的**最小 DOM 替身**驱动真实的 `DevBDebug` / `DevBPanel`（项目无 jsdom；该替身不是通用 DOM，真实节点数另用浏览器复核）——400 次刷新后分组标题恰好 4 个且顺序为 抓捕/视觉/听觉/移动、各组参数行 1/1/33/3、38 项参数不重复；600 次刷新后 DOM 节点数与监听器数**零增长**；连续 40 次开合后入口与面板仍各 1 个、节点与监听器零增长、参数输入框只注册 1 个 `change` 监听；刷新复用同一行对象且只更新状态文案与色调；观察分区/条目对象复用而值更新；非法输入有可见红色反馈、回滚到当前有效值且不新增节点；聚焦中的输入不被刷新覆盖；`dispose()` 移除节点与绘制对象。**变异验证**：临时把修复点改回「每次新建容器」后该测试 4 项失败（分组标题数量随刷新增长、节点与监听器计数不再恒定），确认测试确实能抓住该缺陷，随后已复原并复跑全绿。
-- 最终检查：`npm test` **461/461 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 警告，本次 JS 约 822.80 kB / gzip 约 217.96 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 无差异。
+- 最终检查：`npm test` **461/461 项通过**（失败 0 / 已取消 0 / 已跳过 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 警告，本次 JS 约 822.80 kB / gzip 约 217.96 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 无差异。
 - 真实浏览器复核（本机 Chrome `--headless=new` + CDP，复用已在运行的 5173 dev server；脚本写在 `%TEMP%`、用完删除，不进仓库）：DEV 面板在 `FACTION_SELECT` 阶段整体隐藏，故先进入对局，再用**真实鼠标事件**点击入口并确认 `elementFromPoint` 命中自身；面板打开后分组标题 **4** 个（抓捕/视觉/听觉/移动）、参数行 38 项（1/1/33/3）、观察分区 5 个、面板 DOM **418** 节点；持续实时刷新 9 秒（约 75 次）后仍为 4 / 38 / 5 / **418**；连续 10 次「关闭 → 打开」每次都以状态确认 `closed: true` / `reopened: true`，计数仍为 **418**；5 个可视化开关全部 `elementFromPoint` 命中自身，真实点击第一个开关只改变它自己（`true → false`，再点恢复 `true`）；观察分区 summary 真实点击可展开/收起；面板打开时 `DEV ▾` 仍命中自身（前置条件 9「新增按钮不得覆盖原 DEV 入口」无回归）；视口 420×560 与 900×480 下均满足：面板完整位于视口内、`dev-b-body` 可滚动、能滚到底且最后一条限制可命中、入口命中自身、分组 4 / 参数 38；非法 `abc` → 红色提示并回滚 `0.7`，设 `1.5` → 「已覆盖：1.50 世界单位（正式基准 0.7）」＋「当前覆盖 1 项（仅在内存中）」；控制台 **0 错误**（仅既知 `/favicon.ico` 404）。**浏览器侧只报告 DOM 计数、命中测试与滚动结果，未编造 FPS 或耗时。**
 - 保留的边界：只修此次 UI 异常、未开发新功能；不改 `GAME_CONFIG`；不改正式游戏机制、不新增 AI 状态；38 项参数、仅内存覆盖层、两种恢复与场景可视化全部保留；DEV-A、双阵营冻结、READY 独立计时、JSON V3、抓捕与两套 AI 行为均无回归。
 - 下一步建议：请用户按 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §10 复测（本轮新增第 12 项即本次修复的验收点）；复测通过并经**单独授权**后再建立 Git 检查点。
@@ -916,7 +916,7 @@
 - 无数据状态通俗化（`DevBObserver.ts` 只改显示字符串，仍是纯只读函数）：`不适用` / `当前无目标` / `暂不可观测` / `无` 全部改写为具体中文——`当前没有追逐目标`、`当前没有目标房间`、`当前没有要搜索的房间`、`当前没有目标门`、`当前没有选中的米堆`、`当前没有在吃的米堆`、`当前不需要逃跑`、`当前没有听到任何声音`、`当前没有声音可以分析`、`还没有看到过对方`、`当前没有路线`、`当前不需要冷却`、`当前没有正在进行的冲刺`、`面板暂时看不到（控制器内部计时 stuckMs，未对外暴露）`、`还没有选择阵营`、`当前没有键盘控制目标`。字段标签三处改为中文优先：`Last Seen` → `最后一次看到（Last Seen）`、`CHECK_HIDE` → `藏身检查（CHECK_HIDE）`、`SAFE_WAIT 原因 / 剩余` → `安全等待原因 / 剩余（SAFE_WAIT）`。
 - 面板改动（`DevBPanel.ts` / `style.css`）：参数行新增两行短说明（`它是什么：…`、`调大：…；调小：…`），原来的生效行改为 `何时生效：改完立刻生效…` 或 `何时生效：只影响改动之后新产生的声音事件 —— 已经在场的事件保留生成时的范围/强度/寿命`（27 项声音参数用琥珀色 + `data-timing="new-events"` 特别标明）；每个分组标题旁加 `｜短说明`；每个观察分区标题下加 `｜短说明`；**60 条状态行的解释放在悬浮说明里**（`title` 含「字段 xxx」+ 中文解释，标签加虚线与 `cursor: help`），避免 60 行又把面板撑长；面板顶部加一行使用说明；新增 `紧凑模式（隐藏说明）` 开关，只切换根节点 `data-compact`、由 CSS 收起说明，**不新增不删除节点**；`⚠` 符号改为中文破折号，避免字体缺字。
 - 新增/更新测试 11 项（461 → **472**）：新增 `tests/dev-b-help-text.test.mjs`（8 项）——38 项参数逐一有非空、简短、带 `GAME_CONFIG` 配置键的中文说明；「何时生效」随 `immediate` 走且 27 项声音参数必须标「只影响新事件」；悬浮说明同时含中文与真实配置键；分组/分区说明覆盖全部标题；**两种数据状态**（AI 运行/未运行）下 60 个状态字段都有说明且带内部字段名；没有数据时不得只显示裸哨兵值（`不适用 / 当前无目标 / 暂不可观测 / NONE`）；状态码映射与源码联合类型**逐值一致**且未收录代码保留原样；9 类声音都有中文名。`tests/dev-b-panel-dom.test.mjs` 追加 3 项——每行都有「它是什么/调大调小/何时生效」与 27 项新事件标记；5 个分区说明与 58 个字段的悬浮说明齐全；**紧凑模式反复切换 20 次零增删**（节点数与监听器数与切换前完全相同）。同步更新 `tests/dev-b-visualization.test.mjs` 中随文案变化的断言（新标签、通俗化措辞、新增「中文（原代码）」断言）。
-- 最终检查：`npm test` **472/472 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 tsc）退出码 0（仅既有 >500 kB chunk 警告，本次 JS 约 838.33 kB / gzip 约 223.32 kB、CSS 13.28 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 零差异。
+- 最终检查：`npm test` **472/472 项通过**（失败 0 / 已取消 0 / 已跳过 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 tsc）退出码 0（仅既有 >500 kB chunk 警告，本次 JS 约 838.33 kB / gzip 约 223.32 kB、CSS 13.28 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 零差异。
 - 真实浏览器复核（本机 Chrome `--headless=new` + CDP，脚本写 `%TEMP%`、用完删除；**为避开原子替换与 Vite watcher 冲突，先停掉本项目 dev server 再改文件，验证前重启同一个服务器**，端口仍是 5173）：控制台 **0 错误**；面板结构仍是 **4 分组 / 38 参数 / 5 分区 / 5 个可视化开关**，说明模式 **507** 个 DOM 节点；38 个「它是什么」、38 个「调大…调小…」、27 项 `new-events` + 11 项 `immediate` 全部就位；58 个状态字段全部有 `title` 与 `data-hint`；参数悬浮说明 38/38 含「配置键 GAME_CONFIG」；真实点击「紧凑模式」后 `data-compact=true`、`getComputedStyle` 确认说明为 `display:none`、文档高 6 978 → 4 904 px、**节点数仍为 507**；随后 16 次切换 + 9 秒刷新，节点数保持 507 不变；窄窗口 420×560：面板宽 400 完全在视口内、无横向溢出、可滚到底且最后一条限制可命中、`DEV ▾` 与入口均命中自身、38 项参数齐全；**截图逐张目视核对**（说明模式顶部 / 参数区 / 紧凑模式 / 窄窗口），中文换行完整、无重叠、无豆腐块。浏览器侧只报 DOM 计数、`getComputedStyle` 与命中测试结果，**未编造 FPS 或耗时**。
 - 保留的边界：不改 `GAME_CONFIG` 正式平衡值、不改玩法规则、不新增 AI 状态、不改任何已有控件与可视化开关行为；观察仍是只读纯函数（不触发额外寻路）；DEV-A、双阵营冻结、READY 独立计时、JSON V3、抓捕与两套 AI 行为无回归；`.trae/` 与 `.dsh-meow/` 未读取、未暂存、未修改。
 - 下一步建议：请用户按 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §10 一并复测（第 12 项结构回归 + 第 13 项易用性回归）；统一验收通过并经**单独授权**后再建立 Git 检查点。

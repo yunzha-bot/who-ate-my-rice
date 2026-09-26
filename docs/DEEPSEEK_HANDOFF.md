@@ -110,13 +110,9 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 
 用户提供的人工验收 5/5：正常追逐穿门关门后继续逃跑；Human 同侧跳过；Human 过近跳过；关门会封唯一退路时放弃；Human 重新开门后不原地振荡。它是本次交接采用的已确认历史结果，不是本次代理重新执行的浏览器交互结果。
 
-## 6. S7B-3B 主动锁门与逃脱策略（**已完成**，保留开工前的原始约束记录）
+## 6. S7B-3B 主动锁门与逃脱策略（已完成）
 
-> 本节是 3B 开工前写下的范围约束与风险清单。该任务已于 2026-09-24 完成、经用户浏览器人工验收 PASS，并并入检查点 `6a92c5d`；**当前下一项是 S7C-1B（玩家基础藏身交互），需用户单独授权**，且开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 行参数。
-
-实现前先明确是否锁门确实能延迟 Human、DeepSeek 是否安全离开门口、锁门是否会封住自身后续路线，以及全局 Active Lock Slot 是否可用。应复用 `DoorSystem.lock(id, 'DEEPSEEK')`、Core 状态、最大锁数和现有门碰撞/导航/感知同步；锁门仍只能作用于允许的 CLOSED Door，LOCKED Door 必须继续阻断角色、抓捕和 LOS。状态变化后重算路径，不能让 AI 计划或通过已经锁住的门。
-
-需特别避免与 S7B-3A 关门冷却、Human 同时开/关门、共享锁位、S6C 锁芯失效和 SAFE_WAIT 复查相互覆盖。不得先假定距离、收益阈值、冷却或锁门优先级的具体数值；如需新增可调值，先按统一数值规则增入 `GAME_CONFIG` 并写入配置表。禁止引入锁门陷阱、AI 透视、复杂团队策略或 S7C 藏身内容，除非后续任务另有明确授权。
+用户验收与归档记录见 §4 和 `docs/AGENT_LOG.md`。锁门、侧向证据、冲刺协调、防振荡及测试细节见 `docs/S7B3B_DOOR_LOCK_DESIGN.md`；后续修改须保留 §7 的回归边界。
 
 ## 7. 必须避免的回归
 
@@ -142,34 +138,18 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - S7B-2 偶发原地停留保留为后续 AI 优化项，不阻断其已通过 Gate。
 - 正式 GLB 角色及 IDLE 特殊待机片段未导入；无动画片段时白模保持普通 IDLE，动画视觉验收后续处理。
 - Human AI 自动解锁耗时 8,750 ms 按用户决定留作 S16 平衡复评。
-- 构建的主 JavaScript chunk：DEV-A-FIX-2 归档轮实测约 787 kB，**DEV-B（含 UI 修复轮与易用性轮）后约 838.33 kB（gzip ≈ 223.32 kB）、CSS 约 13.28 kB（gzip ≈ 3.06 kB）**，Vite >500 kB 警告非阻断。
-- **S7B-3B 的实机验证口径**：3B-1 主动锁门与 3B-2 防振荡已由用户浏览器人工验收 PASS；但**修复后仍缺一份完整实机 AI JSON**（手上日志产生于侧向证据修复之前），锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍应以新日志复核。
-- 自动化基线（DEV-B 易用性优化轮后，本轮实跑）：`npm test` **472/472 PASS**（DEV-A 第一轮 370→383；第二轮 383→389；FIX-1 389→395；FIX-2 395→420；DEV-B 实施轮 420→453 ＝ 覆盖层 11 + 真实生效 11 + 观察/可视化 11；DEV-B UI 修复轮 453→461 ＝ `tests/dev-b-panel-dom.test.mjs` 8 项 DOM 复用/零增长回归；DEV-B 易用性轮 461→472 ＝ `tests/dev-b-help-text.test.mjs` 8 项文案覆盖与准确性 + `tests/dev-b-panel-dom.test.mjs` 3 项说明渲染与紧凑模式零增删）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。
-- 文档同步（历史）：`docs/AI_DEEPSEEK_STATE_TREE.md`（删除与源码漂移的重复数值表、补「主动关门与主动锁门」状态机章节）、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`。
+- **S7B-3B 的实机日志缺口**：用户验收已通过，但缺少侧向证据修复后的完整 AI JSON；锁门频率等仍应由新日志复核。
+- 最近一次已记录的 DEV-B 验证：`npm test` 472/472、`npx tsc --noEmit`、`npm run build`、`git diff --check` 均通过。此为历史基线，不代表本轮重跑。
+- 各阶段的测试增量、构建体积和文档变更历史见 `docs/AGENT_LOG.md`。
 - 当前状态：S7B 整体仍未完成；S7C 整体仍未完成。S7C-1B 未授权，Human `CHECK_HIDE` 仍为预留接口。DEV-A 已完成批准范围；DEV-B 已通过 6/6 浏览器人工验收并随本轮归档。各阶段细节与旧测试结果见 `docs/AGENT_LOG.md`。
 
-## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（人工验收 PASS、阶段 Gate = PASS，2026-09-26）
+## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（已验收并归档）
 
-独立 DEV 工具任务，**不接入任何藏身玩法**；入口只在开发环境显示（`sceneEditorEnabled(import.meta.env.DEV, factionSwitchEnabled)`），生产构建不出现。已并入稳定检查点 `3191bec` 并推送 `origin/main`（设计细节与回归复核清单见 `docs/DEV_SCENE_EDITOR_DESIGN.md`）。
+独立 DEV 工具，不接入藏身玩法；验收与检查点见 docs/DEV_SCENE_EDITOR_DESIGN.md 和 docs/AGENT_LOG.md。长期保护点：READY 计时与 PLAYING 冻结时间分离；手动冻结与场景编辑冻结可叠加；编辑仅在应用时重建碰撞、导航和门状态；拒绝操作须有可见反馈，DEV 入口不得被覆盖。
 
-- **两个时间缝必须分清**：`DevFreezeSystem.gameplayDelta(phase, dt)`（冻结期间或 `phase !== 'PLAYING'` 返回 0，门控 `updatePlaying`）与 `DevFreezeSystem.readyDelta(deltaMs)`（READY 阶段计时器，**永不被冻结门控**，喂 `advanceReady`）。误把 `gameplayDelta` 喂给 READY 会导致对局永远停在 READY（双方不动、编辑器又因 `NOT_PLAYING` 被拒）。`tick()` 只在 `gameplayMs > 0` 时调用 `updatePlaying`，冻结帧只 `input.clear()`，`clock.getDelta()` 仍每帧读取 → 恢复不跳时间。
-- **冻结原因两个可叠加**：`MANUAL_DEV_FREEZE`（DEV「冻结双阵营」按钮）+ `SCENE_EDITOR`（打开编辑器自动冻结），全部解除才回到 `RUNNING`；关闭编辑器只移除 `SCENE_EDITOR`，手动冻结仍在。切换只在 `PLAYING` 允许；编辑期间点「恢复双阵营」被拒绝并给出 `SCENE_EDITOR_ACTIVE`。
-- **文件**：`src/systems/DevFreezeSystem.ts`（纯逻辑）、`src/three/map/MapEditModel.ts`（原始 / 草稿 / 已应用三层数据 + 校验 + JSON 导出）、`src/three/SceneEditorView.ts`（Raycaster / 锚点 gizmo / 拖动预览）、`src/three/SceneEditorPanel.ts`（DOM）、`src/three/SceneEditor.ts`（编排）。
-- **入口位置纪律**：`DEV ▾` 与「场景编辑」同处 `DebugDetailsPanel.topRow`（`.debug-top-row`）作为 flex 项——**禁止**再用绝对定位覆盖层（曾盖住 `DEV ▾`，使整个 DEV 面板不可达）。打开编辑器时 DEV 面板会整体左移让位，因此**任何缓存的控件坐标在开合前后都会失效**。
-- **拒绝必须可见**：纯函数 `sceneEditorRefusalNotice(phase, rejection)` + `.scene-editor-notice`（8 秒自动隐藏）。被拒绝的操作必须有可见反馈；且「面板还在」不等于「点得到」，需用 `elementFromPoint` 证明未被遮挡。
-- **热重建路径**：`ThreeGame.rebuildApartment()` = `ApartmentBuild.dispose()` → 用**已应用数据** `buildApartment` → 新 `CollisionWorld` + `NavigationSystem` → 两套 AI `rebindNavigation()` → `syncAllDoors()`。
-- **刻意的边界（2026-09-26 更新）**：家具朝向**已由 DEV-A-FIX-2 扩展为 0°–359.9° 任意角度**（统一旋转几何 `src/three/map/RotatedRect.ts` + `CollisionWorld` 的 `OrientedObstacle`，导航仍复用真实碰撞——旧的「只支持 90° 整数倍、自由旋转需另做 OBB」限制作废）；无撤销 / 重做；已应用编辑只在内存，刷新即回到 `apartmentMap.ts`；`EDIT_LIMITS`、`REGION_AUTHORING_LIMITS`、`ROTATION_STEP_DEGREES`、`ROTATION_SNAP_DEGREES` 等创作/校验常量**刻意不放进 `GAME_CONFIG`**（灰盒创作约束，不是玩法数值）。
-- **DEV-A 第一轮带来的类型补全（编辑器行为不变）**：`HideSpot` 新增 `interactionRegion` 后，`draftSpotsToAnchors()` 改为通过稳定 ID 把该字段**原样透传**（区域数据不进可编辑草稿、不进导出 JSON、不进面板字段），否则场景重建路径拿不到完整 `HideSpot`。编辑器行为、拒绝码与可编辑字段均未改动，既有地图/编辑器测试与新增断言全部通过。
-- **DEV-A 第二轮 + DEV-A-FIX-1（已验收，2026-09-26）**：编辑器可编辑藏身点的区域半径与扇形半角（`REGION_AUTHORING_LIMITS`：半径 0.5–3、半角 10–150°），家具移动或旋转时关联锚点跟随（`rotateAnchorAroundFurniture`），JSON 导出升为 **V2**，DEV 面板提供「交互区域预览」开关与按 `code` 着色的离散采样点图例。拖动流畅度由**延迟校验窗口**保证：`MapEditSession.beginDeferredValidation()` / `endDeferredValidation()` 打开期间 `draftStatus` 直接返回 `DRAGGING`（不再每帧跑全量地图校验），释放时校验一次，轮廓线与采样实例长期复用、拖动期间仅隐藏采样点。**不要把它改回逐帧校验**（120 次移动实测完整校验 119→1 次；单次完整校验 236–435 ms）。
-- 已知非阻断项：窗口高度很矮（实测 762×484）时编辑器对象列表与属性区互相挤压，需要内部滚动。
+## 11. S7C-1A 藏身点地图数据（已验收并归档）
 
-## 11. S7C-1A 藏身点地图数据（人工验收 PASS、阶段 Gate = PASS，2026-09-26）
-
-`HIDE_SPOTS` 共 8 条；`HideSpot` = `MapPoint`（`x/z` 即唯一锚点 = 进入点 = 退出点）+ `kind`（`WARDROBE / BED / SHELF / CARTON`）+ `furnitureId` + `facing`（弧度）+ `label`，家具中心由 `furnitureId` 反查，**不存第二份坐标**。锚点：`hide_main_bed (-14.40,-6.15)`、`hide_second_bed (-14.40,8.90)`、`hide_main_wardrobe (-16.65,-6.60)`、`hide_closet (-3.57,-8.80)`（ID 未改名）、`hide_study_bookshelf (-0.80,11.05)`、`hide_storage_shelf (16.80,-8.75)`、`hide_living_carton (7.00,3.60)`、`hide_storage_carton (16.60,-4.80)`；前 6 条为用户批准的表 3.1 原值，一个坐标都没改。2 个新纸箱 `living_carton (7.9, 3.9)`、`storage_carton (15.7, -4.8)`（0.9×0.9×0.75）只加 `FURNITURE` 数据，复用 `MapBuilder.addObstacle` 建盒 + 静态碰撞 + `DEBUG_MAP` 轮廓。
-
-**藏身玩法仍未实现**：没有 `HideSystem`、没有进入 / 退出藏身键、没有 `VisionSystem` 改动、没有 Human `CHECK_HIDE`、没有地图随机化；`DEBUG_MAP` 标记由纯函数 `hideSpotDebugMarkers(enabled)` 产出，关闭时返回空数组（有测试断言）。S7C-1B 的参数（进入 400 ms、与 Human ≥ 1.5、交互距离 1.0 或 1.3、表现 V1/V2/V3、`HIDE_*` 事件）**仍属建议值，不构成授权**，开工前须逐条批准设计文档第 6 节第 3–14 项。床底不做实心碰撞改动（真钻床底需「床框 + 空洞」专项设计单独批准）。
-
-**DEV-A 与现有锚点数据的关系（2026-09-26 DEV-A 第一轮后更新）**：圆形／扇形藏身交互区域已在 DEV-A 第一轮按用户指定参数落地为**地图创作数据**（`HideSpot.interactionRegion`，见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`），**未接入任何玩法**；**现有单一 anchor 保持不变**——`HideSpot.x/z` 就是唯一的进入点与退出点，上列 8 条锚点数据继续有效、一个都没改。**是否把进入锚点与退出锚点拆成两个独立点，留到未来单独决定**（完整专属开工要求见下方「待批准提案与专属开工要求」节）。
+地图含 8 个 HideSpot 和 2 个纸箱，每个藏身点仍只有一个 HideSpot.x/z 锚点，家具通过稳定 ID 关联。DEV-A 区域属于地图创作数据，不接入玩法。正式 HideSystem、按键藏身、Human CHECK_HIDE 与地图随机化均未实现；S7C-1B 及后续阶段尚未授权。地图和阶段方案见 docs/MAP_SPEC.md、docs/S7C_HIDE_RANDOMIZATION_DESIGN.md；区域与编辑器细节见 docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md。
 
 ## 12. 待批准提案与专属开工要求（S7C-1B / 2 / 2b / 3 尚未授权；DEV-A、DEV-B 已完成各自批准范围）
 
@@ -221,18 +201,8 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - 角色移动保留 Camera-Relative Movement、玩家相机跟随、XZ Circle Footprint、分轴碰撞与 Wall Sliding。
 - 单份大米正式设计时长 60 秒；当前开发测试值 5 秒（发布前必须切回 60 秒并重新验收）。
 
-## 15. 当前核心玩法规则摘要（交接用）
+## 15. 当前核心玩法规则索引
 
-> 承接原 `AGENTS.md` 的同名章节。详细数值与实现以 `src/config/gameConfig.ts`、`docs/GAME_BALANCE_CONFIG.md` 及各阶段设计文档为准。
+交接时遵守的核心边界：AI 只使用系统授予的感知信息，不读取被遮挡对手的实时位置；AI、玩家与动画表现共用既有系统，不绕过碰撞、进食、抓捕或胜负判定。正式玩法数值以 src/config/gameConfig.ts 为唯一来源，参数索引见 docs/GAME_BALANCE_CONFIG.md。
 
-- 可选择 DeepSeek 娘或人类阵营。WASD / 方向键采用 Camera-Relative Movement，所控角色保持在屏幕中央附近；IJKL 暂作另一角色的开发调试控制。
-- DeepSeek 娘冲刺不是能量条：有效移动时点击一次技能键，进入固定时长冲刺；开始后不能停下规避风险。全局大米进度低于 30% 时结束安全，达到或超过 30% 时结束必摔，并眩晕约 1 秒。冲刺技能有 30 秒冷却（`GAME_CONFIG.sprint.cooldownMs`）：一旦真正开始冲刺即进入冷却，冲刺进行中不刷新、提前结束也不缩短，冷却期间不能再次冲刺；暂停冻结、重开清零。
-- 人类抓捕需要 DeepSeek 娘在 Capture Zone 内连续约 0.35 秒，墙体、家具以及 CLOSED / LOCKED Door 会阻断有效抓捕。
-- Door 状态为 `OPEN / CLOSED / LOCKED`。Human 与 DeepSeek 都能开关普通未锁门；DeepSeek 只能锁住 CLOSED Door，不能直接锁 OPEN Door。最多**同时**存在 3 个 Active Lock（不限制整局总次数）；Lock Core 在逻辑和表现上独立于 Door Leaf。
-- Human 在可达的 LOCKED Door 旁按 E 打开 4×4 / 3 雷扫雷盘；长按或连点 E 不推进解锁。× / Esc 可退出，同一 Lock Core 的盘面在本局保留；面板开启时世界继续运行，Human 不能移动，Capture Zone 仍有效。扫雷成功使 Core `ACTIVE → DISABLED`、Door `LOCKED → CLOSED` 并释放 Active Lock Slot；Human 需再次 E 开门。失败时门保持 LOCKED、对局继续；扫雷不消耗强破冷却。
-- Human 按 Space 可免费快速打开普通 CLOSED Door，即使强破正在冷却也有效；对 LOCKED Door 则立即强破 Core 并 OPEN，触发 30 秒冷却。冷却中不能再强破锁门，但仍可 E 扫雷。DISABLED Core 本局不可重新上锁；Restart 或新 Match 恢复 Core、扫雷盘与技能。门交互采用较宽容的最近有效门判定，不可隔墙操作。
-- 角色碰撞与移动的实现约束（Circle Footprint、分轴碰撞、Wall Sliding、不得轻易恢复 Player Box Footprint）见 `AGENTS.md`「通用代码架构约束」。
-- 双向信息系统按声音事件的距离和墙/门遮挡计算可听强度，场景中以声源方向显示远蓝、中黄、近红的声波；Vision 区分当前可见、被墙或关门阻挡、超出范围，Last Seen 独立短暂保留。DeepSeek 实际进食增长后开启或刷新 5 秒米痕生成窗口，窗口内移动按步距留下脚印；每个脚印独立保留 15 秒后淡出。暂停冻结相关计时，新局清空米痕。
-- Human AI 仅在 DeepSeek 为正式玩家阵营时运行，复用声音、Vision / Last Seen、共享导航、DoorSystem、Capture 和 GameState；DeepSeek AI 仅在 Human 为正式玩家阵营时运行，复用 RiceField 唯一进食更新、共享导航、感知、冲刺和碰撞。AI 不读取被遮挡对手实时坐标；胜负仍由既有米堆及抓捕规则裁决。
-- DeepSeek 的主动关门与主动锁门只在 EVADE 中评估，门动作是一次性交互、**不打断冲刺**，因此不会逃避 30% 摔倒惩罚。关门：该门为 OPEN、刚实际穿过（≤ 1800 ms 窗口）、同门 5000 ms 冷却已过、目视确认 Human 在另一侧且距离 ≥ 1.5、未占门叶、关门后仍有不经该门的逃生路线、且追者当前路线确实经过该门。关门会让门叶挡住视线，故在确认关门那一帧记录**侧向证据**；下一帧若重新看见 Human 一律以最新目视为准，若失视则只复用同门、同一次连续动作的证据并重新核验当前条件——该证据不得当作 Human 实时位置，也不作为距离仍然安全的证明。锁门：同一连续动作至多尝试一次，且要求逃生路线与至少一处未完成米堆仍可达、锁位与锁芯可用。逃生规划会排除「本门冷却内由自己关上的门」以防立刻重开，若排除后无任何可达房间则一次性回退允许使用该门，避免原地卡死。实现细节见 `docs/S7B3B_DOOR_LOCK_DESIGN.md`。
-- 静止 Human 的好奇试探与 SAFE_WAIT 复查使用独立静止事件、可信感知和抓捕圈外路线。普通目视警戒不得无条件覆盖已获准且仍安全的试探；真实移动、逼近、冲刺或抓捕危险可以中断。SAFE_WAIT 不得循环冲门；不可见 Human 的位置不得用作实时路径或安全许可依据。
+Human/DeepSeek 控制、门锁、声音与视野、米痕、好奇安全通行等详细规则见 AGENTS.md 和对应状态树/阶段设计文档；本交接文件只维护当前状态、授权、已知待办和回归边界。
