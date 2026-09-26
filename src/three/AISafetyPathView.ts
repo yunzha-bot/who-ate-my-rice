@@ -9,7 +9,13 @@ export class AISafetyPathView {
   readonly group = new THREE.Group();
   enabled = false;
   private signature = '';
-  constructor(scene: THREE.Scene) { scene.add(this.group); }
+  // DEV-B: the safety view must draw the capture circle the game really uses.
+  private readonly captureRadius: () => number;
+  constructor(scene: THREE.Scene, captureRadius: () => number =
+    () => C.match.captureRadius) {
+    this.captureRadius = captureRadius;
+    scene.add(this.group);
+  }
   update(data: DeepSeekAIController['safetyDebug'], actualHuman: Point): void {
     this.group.visible = this.enabled;
     if (!this.enabled) return;
@@ -20,8 +26,9 @@ export class AISafetyPathView {
       const line = child as THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
       line.geometry.dispose(); line.material.dispose(); this.group.remove(line);
     }
-    this.ring(actualHuman, C.match.captureRadius, 0xff4545);
-    this.ring(actualHuman, C.match.captureRadius + C.deepseekAI.stationaryPassageSafetyMargin, 0xffc745);
+    const captureRadius = this.captureRadius();
+    this.ring(actualHuman, captureRadius, 0xff4545);
+    this.ring(actualHuman, captureRadius + C.deepseekAI.stationaryPassageSafetyMargin, 0xffc745);
     if (data.human) this.ring(data.human, 0.12, 0xffffff);
     if (data.rice) this.ring(data.rice, 0.18, 0xff8bf3);
     if (data.eat) this.ring(data.eat, 0.22, 0x45ff9a);
@@ -46,7 +53,7 @@ export class AISafetyPathView {
   private route(path: readonly Point[], human: Point | null, color: number): void {
     for (let i = 1; i < path.length; i++) {
       const unsafe = human && distanceToXZSegment(human, path[i-1], path[i]) <
-        C.match.captureRadius + C.deepseekAI.stationaryPassageSafetyMargin;
+        this.captureRadius() + C.deepseekAI.stationaryPassageSafetyMargin;
       this.line([path[i-1], path[i]], unsafe ? 0xff4545 : color);
     }
   }

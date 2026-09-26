@@ -6,6 +6,7 @@ import { distanceToXZSegment, type NavigationSystem, type NavStep } from './Navi
 import type { GamePhase } from './GameStateSystem.ts';
 import type { DoorNode, Point, Room } from '../three/map/apartmentMap.ts';
 import type { Faction } from '../three/LocalControl.ts';
+import type { RuntimeTuning } from './RuntimeDebugOverrides.ts';
 
 export type DeepSeekAIState = 'SEEK_RICE' | 'MOVE_TO_RICE' | 'EAT' | 'RESELECT' |
   'EVADE' | 'RECOVER' | 'SAFE_WAIT' |
@@ -92,8 +93,6 @@ interface ThreatAssessment {
 }
 
 const distance = (a: Point, b: Point): number => Math.hypot(a.x - b.x, a.z - b.z);
-const moveSpeed = (): number =>
-  GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit;
 
 export function shouldRunDeepSeekAI(phase: GamePhase, selectedFaction: Faction | null,
   temporaryInputTarget: Faction | null, debugDirection: { x: number; y: number },
@@ -222,6 +221,7 @@ export class DeepSeekAIController {
   private doorLockEvidence: { doorId: string; deepseekSide: number } | null = null;
   private doorLockAttemptedId: string | null = null;
   private doorLockEvents: { type: string; reason: string }[] = [];
+  private tuning: RuntimeTuning | null = null;
 
   constructor(navigation: NavigationSystem, doors: readonly DoorNode[],
     rooms: readonly Room[] = [], random: () => number = Math.random) {
@@ -232,6 +232,24 @@ export class DeepSeekAIController {
       Number.isFinite(room.minX) && Number.isFinite(room.maxX) &&
       Number.isFinite(room.minZ) && Number.isFinite(room.maxZ));
     this.random = random;
+  }
+
+  // DEV-B runtime override layer (memory only). Pass null to fall back to the
+  // read-only GAME_CONFIG values again.
+  setRuntimeTuning(tuning: RuntimeTuning | null): void { this.tuning = tuning; }
+
+  // Effective values: the DEV-B override when present, otherwise GAME_CONFIG.
+  private moveSpeed(): number {
+    return (this.tuning?.playerSpeedPx ?? GAME_CONFIG.player.speed) /
+      GAME_CONFIG.three.pixelsPerUnit;
+  }
+
+  private get effectiveCaptureRadius(): number {
+    return this.tuning?.captureRadius ?? GAME_CONFIG.match.captureRadius;
+  }
+
+  private get effectiveVisionRange(): number {
+    return this.tuning?.visionRange ?? GAME_CONFIG.perception.visionRange;
   }
 
   getRecentEscapeRooms(): readonly string[] {
@@ -387,6 +405,10 @@ export class DeepSeekAIController {
     this.finishCuriosity('MANUAL_CONTROL_RELEASED');
     this.curiosityStillMs = 0;
   }
+
+  // DEV-B observation: the cached route only. Reading it never triggers a new
+  // search and never changes the current target.
+  currentPath(): readonly Point[] { return this.path; }
 
   getPathProgress(): DeepSeekAIPathProgress | null {
     const waypoint = this.path[this.pathIndex];
@@ -614,7 +636,7 @@ export class DeepSeekAIController {
   }
 
   get passageAvoidRadius(): number {
-    return GAME_CONFIG.match.captureRadius +
+    return this.effectiveCaptureRadius +
       GAME_CONFIG.deepseekAI.stationaryPassageSafetyMargin;
   }
 
@@ -719,7 +741,7 @@ export class DeepSeekAIController {
     if (!input.visibleHuman && knownHuman && input.geometry) {
       const plan = this.planSafeEatingRoute(input, rice, knownHuman);
       const index = plan?.path.findIndex(point =>
-        input.geometry!.visible(point, knownHuman, GAME_CONFIG.perception.visionRange)) ?? -1;
+        input.geometry!.visible(point, knownHuman, this.effectiveVisionRange)) ?? -1;
       if (plan && index >= 0 && distance(input.deepseek, plan.path[index]) >
           GAME_CONFIG.deepseekAI.waypointTolerance) {
         this.safeWaitObservation = { ...plan.path[index] };
@@ -1822,7 +1844,7 @@ export class DeepSeekAIController {
           }
         }
         const cover = input.geometry?.inspectVision(this.threatEstimate!, goal,
-          GAME_CONFIG.perception.visionRange).status === 'BLOCKED';
+          this.effectiveVisionRange).status === 'BLOCKED';
         const exits = [...this.doorNodes.values()].filter(door =>
           (door.connectedRoomA === room.id || door.connectedRoomB === room.id) &&
           input.doors.find(state => state.id === door.id)?.state !== 'LOCKED').length;
@@ -1963,7 +1985,7 @@ export class DeepSeekAIController {
     const length = Math.hypot(dx, dz);
     // A trial must not cut a safe grid corner or overshoot its waypoint into
     // the avoided circle. This does not change ordinary navigation/player speed.
-    const stride = passageHuman ? Math.max(length, moveSpeed() * input.deltaMs / 1000) : length;
+    const stride = passageHuman ? Math.max(length, this.moveSpeed() * input.deltaMs / 1000) : length;
     return length > 0 ? this.command(dx / stride, dz / stride) : this.command();
   }
 
@@ -2008,7 +2030,7 @@ export class DeepSeekAIController {
     for (let index = 1; index < path.length; index++)
       length += distance(path[index - 1], path[index]);
     length += distance(path[path.length - 1], rice);
-    return length / moveSpeed() * 1000 +
+    return length / this.moveSpeed() * 1000 +
       Math.max(0, rice.maxProgressMs - rice.progressMs) + GAME_CONFIG.rice.prepareMs;
   }
 

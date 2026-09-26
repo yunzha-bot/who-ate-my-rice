@@ -5,6 +5,7 @@ import { NavigationSystem, type NavStep } from './NavigationSystem.ts';
 import type { DoorNode, Point, Room } from '../three/map/apartmentMap.ts';
 import type { Faction } from '../three/LocalControl.ts';
 import type { GamePhase } from './GameStateSystem.ts';
+import type { RuntimeTuning } from './RuntimeDebugOverrides.ts';
 
 export type HumanAIState = 'PATROL' | 'INVESTIGATE' | 'CHASE' | 'CAPTURE' |
   'SEARCH' | 'CHECK_HIDE'; // CHECK_HIDE stays reserved until S7C.
@@ -34,8 +35,9 @@ export interface HumanAIPathProgress {
 
 const distance = (a: Point, b: Point): number => Math.hypot(a.x - b.x, a.z - b.z);
 
-export function humanAiMovementSpeed(baseHumanSpeed: number): number {
-  return baseHumanSpeed * GAME_CONFIG.humanAI.movementSpeedMultiplier;
+export function humanAiMovementSpeed(baseHumanSpeed: number,
+  multiplier: number = GAME_CONFIG.humanAI.movementSpeedMultiplier): number {
+  return baseHumanSpeed * multiplier;
 }
 
 export function shouldRunHumanAI(phase: GamePhase, selectedFaction: Faction | null,
@@ -85,6 +87,7 @@ export class HumanAIController {
   private navigation: NavigationSystem;
   private readonly rooms: readonly Room[];
   private readonly random: () => number;
+  private tuning: RuntimeTuning | null = null;
 
   constructor(navigation: NavigationSystem, rooms: readonly Room[],
     doors: readonly DoorNode[], random: () => number = Math.random) {
@@ -94,6 +97,10 @@ export class HumanAIController {
     this.patrolRooms = rooms.filter(room => room.major);
     this.random = random;
   }
+
+  // DEV-B runtime override layer (memory only). Pass null to fall back to the
+  // read-only GAME_CONFIG values again.
+  setRuntimeTuning(tuning: RuntimeTuning | null): void { this.tuning = tuning; }
 
   reset(): void {
     this.state = 'PATROL';
@@ -158,6 +165,10 @@ export class HumanAIController {
     this.unlockingDoorId = null;
     this.unlockProgressMs = 0;
   }
+
+  // DEV-B observation: the cached route only. Reading it never triggers a new
+  // search and never changes the current target.
+  currentPath(): readonly Point[] { return this.path; }
 
   getPathProgress(): HumanAIPathProgress | null {
     const waypoint = this.path[this.pathIndex];
@@ -358,9 +369,10 @@ export class HumanAIController {
     const lockedIds = [...new Set(throughLock?.map(step => step.doorId)
       .filter((id): id is string => !!id &&
         input.doors.some(door => door.id === id && door.state === 'LOCKED')) ?? [])];
-    const baseHumanSpeed = GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit *
-      GAME_CONFIG.human.speedMultiplier;
-    const speed = humanAiMovementSpeed(baseHumanSpeed);
+    const baseHumanSpeed = (this.tuning?.playerSpeedPx ?? GAME_CONFIG.player.speed) /
+      GAME_CONFIG.three.pixelsPerUnit *
+      (this.tuning?.humanSpeedMultiplier ?? GAME_CONFIG.human.speedMultiplier);
+    const speed = humanAiMovementSpeed(baseHumanSpeed, this.tuning?.humanAIMovementMultiplier);
     const travelMs = (path: NavStep[] | null): number => {
       if (!path) return Infinity;
       let length = distance(input.human, path[0]);

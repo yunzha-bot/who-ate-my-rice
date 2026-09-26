@@ -24,6 +24,25 @@ export interface HeardSound {
   remainingMs: number;
 }
 
+// DEV-B runtime tuning seams. Each interface is optional everywhere: without a
+// tuning source the systems read GAME_CONFIG exactly as before.
+export interface SoundTuning {
+  range(type: SoundType): number;
+  strength(type: SoundType): number;
+  lifetimeMs(type: SoundType): number;
+  readonly distanceFalloffPower: number;
+  readonly minimumAudibleStrength: number;
+}
+export interface OcclusionTuning {
+  readonly wallSoundFactor: number;
+  readonly openDoorSoundFactor: number;
+  readonly closedDoorSoundFactor: number;
+  readonly lockedDoorSoundFactor: number;
+}
+export interface VisionTuning {
+  readonly visionRange: number;
+}
+
 // 2D segment/AABB test; a zero-length or grazing ray is still deterministic.
 export function crossesRect(a: Point, b: Point, rect: Pick<Rect, 'x' | 'z' | 'width' | 'depth'>): boolean {
   let enter = 0;
@@ -45,12 +64,14 @@ export class PerceptionGeometry {
   private readonly walls: readonly Rect[];
   private readonly doorNodes: readonly DoorNode[];
   private readonly doorStates: () => readonly DoorState[];
+  private readonly tuning: OcclusionTuning | null;
 
   constructor(walls: readonly Rect[], doorNodes: readonly DoorNode[],
-    doorStates: () => readonly DoorState[]) {
+    doorStates: () => readonly DoorState[], tuning: OcclusionTuning | null = null) {
     this.walls = walls;
     this.doorNodes = doorNodes;
     this.doorStates = doorStates;
+    this.tuning = tuning;
   }
 
   crossings(a: Point, b: Point): { walls: number; open: number; closed: number; locked: number } {
@@ -99,10 +120,13 @@ export class PerceptionGeometry {
   soundFactor(a: Point, b: Point): number {
     const hits = this.crossings(a, b);
     const cfg = GAME_CONFIG.perception;
-    return cfg.wallSoundFactor ** hits.walls *
-      cfg.openDoorSoundFactor ** hits.open *
-      cfg.closedDoorSoundFactor ** hits.closed *
-      cfg.lockedDoorSoundFactor ** hits.locked;
+    const tuning = this.tuning;
+    const wall = tuning?.wallSoundFactor ?? cfg.wallSoundFactor;
+    const open = tuning?.openDoorSoundFactor ?? cfg.openDoorSoundFactor;
+    const closed = tuning?.closedDoorSoundFactor ?? cfg.closedDoorSoundFactor;
+    const locked = tuning?.lockedDoorSoundFactor ?? cfg.lockedDoorSoundFactor;
+    return wall ** hits.walls * open ** hits.open *
+      closed ** hits.closed * locked ** hits.locked;
   }
 }
 
@@ -125,11 +149,16 @@ export function screenSoundDirection(camera: Camera, listener: Point, source: Po
 export class SoundEventSystem {
   readonly events: SoundEvent[] = [];
   nowMs = 0;
+  private readonly tuning: SoundTuning | null;
+
+  constructor(tuning: SoundTuning | null = null) { this.tuning = tuning; }
 
   emit(type: SoundType, position: Point, sourceFaction: Faction): SoundEvent {
     const config = GAME_CONFIG.perception.sounds[type];
     const event = { type, position: { x: position.x, z: position.z }, sourceFaction,
-      strength: config.strength, timestamp: this.nowMs, lifetimeMs: config.lifetimeMs };
+      strength: this.tuning?.strength(type) ?? config.strength,
+      timestamp: this.nowMs,
+      lifetimeMs: this.tuning?.lifetimeMs(type) ?? config.lifetimeMs };
     this.events.push(event);
     return event;
   }
@@ -145,8 +174,9 @@ export class SoundEventSystem {
   heardBy(listener: Point, faction: Faction, camera: Camera,
     geometry: PerceptionGeometry, filter?: (event: SoundEvent) => boolean): HeardSound | null {
     const candidate = this.analyzeBy(listener, faction, camera, geometry, filter);
-    return candidate && candidate.audibleStrength >= GAME_CONFIG.perception.minimumAudibleStrength
-      ? candidate : null;
+    const minimum = this.tuning?.minimumAudibleStrength ??
+      GAME_CONFIG.perception.minimumAudibleStrength;
+    return candidate && candidate.audibleStrength >= minimum ? candidate : null;
   }
 
   analyzeBy(listener: Point, faction: Faction, camera: Camera,
@@ -154,11 +184,12 @@ export class SoundEventSystem {
     let strongest: HeardSound | null = null;
     for (const event of this.events) {
       if (event.sourceFaction === faction || (filter && !filter(event))) continue;
-      const range = GAME_CONFIG.perception.sounds[event.type].range;
+      const range = this.tuning?.range(event.type) ??
+        GAME_CONFIG.perception.sounds[event.type].range;
       const distance = Math.hypot(listener.x - event.position.x, listener.z - event.position.z);
       if (distance >= range) continue;
       const distanceFactor = (1 - distance / range) **
-        GAME_CONFIG.perception.distanceFalloffPower;
+        (this.tuning?.distanceFalloffPower ?? GAME_CONFIG.perception.distanceFalloffPower);
       const hits = geometry.crossings(listener, event.position);
       const occlusionMultiplier = geometry.soundFactor(listener, event.position);
       const audibleStrength = event.strength * distanceFactor * occlusionMultiplier;
@@ -261,14 +292,18 @@ export interface VisionInspection { status: VisionStatus; blocker: string | null
 export interface VisionState extends VisionInspection { visible: boolean; lastSeen: LastSeen | null }
 export class VisionSystem {
   nowMs = 0;
+  private readonly tuning: VisionTuning | null;
   private readonly states: Record<Faction, VisionState> = {
     HUMAN: { visible: false, status: 'OUT_OF_RANGE', blocker: null, lastSeen: null },
     DEEPSEEK: { visible: false, status: 'OUT_OF_RANGE', blocker: null, lastSeen: null },
   };
 
+  constructor(tuning: VisionTuning | null = null) { this.tuning = tuning; }
+
   update(deltaMs: number, human: Point, deepseek: Point, geometry: PerceptionGeometry): void {
     this.nowMs += Math.max(0, deltaMs);
-    const inspection = geometry.inspectVision(human, deepseek, GAME_CONFIG.perception.visionRange);
+    const range = this.tuning?.visionRange ?? GAME_CONFIG.perception.visionRange;
+    const inspection = geometry.inspectVision(human, deepseek, range);
     const visible = inspection.status === 'VISIBLE';
     this.states.HUMAN.visible = visible;
     this.states.DEEPSEEK.visible = visible;

@@ -9,7 +9,7 @@
 - 主工程：Web / Three.js 3D 灰盒 Alpha，面向桌面 Chrome / Edge。
 - 技术：Vite、TypeScript、Three.js、原生 HTML / CSS；Phaser 不属于运行时技术栈。
 - 启动：`npm install`（仅新环境需要），`npm run dev`——根目录 `vite.config.ts` 固定 `host 127.0.0.1` / `port 5173` / `strictPort: true`，端口被占用时直接报错退出而不是静默换端口；网址固定 `http://127.0.0.1:5173/`（用 IP，不要用 `localhost`）。
-- 检查：`npm test`、`npm run build`、`git diff --check`。`build` 执行 `tsc --noEmit && vite build`。当前 >500 kB 的 Vite chunk 警告是已知非阻断事项。
+- 检查：`npm test`、`npm run build`、`git diff --check`；`npm run build` 执行 `tsc --noEmit && vite build`。本轮实测主 JS 为 838.33 kB（gzip 223.33 kB）；大于 500 kB 的 Vite 提示非阻断。
 - 正式设计的大米时长为 60 秒；当前开发配置从 `GAME_CONFIG` 的开发/正式模式选择，当前开发测试值为 5 秒。发布前须切回正式值并重新验收。
 
 根目录的主要结构：
@@ -27,7 +27,7 @@
 
 ## 2. Git 与资料边界
 
-本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**当前 HEAD 以 `main` 的最新提交为准（`git log -1` / `git ls-remote origin refs/heads/main`），本节刻意不写死自身 SHA**；`main` 与 `origin/main` 双向同步、`git rev-list --left-right --count origin/main...HEAD` = `0 0`。最近一次**含阶段内容**的检查点为本轮 **DEV-A-FIX-2**（家具任意角度旋转 + JSON V3）提交（`feat: complete dev-a arbitrary furniture rotation`，11 个修改的代码/测试文件 + 3 个新增文件（`src/three/map/RotatedRect.ts`、两个旋转测试）+ 3 个文档）——**该轮的阶段 Gate 由该提交承载，实际 SHA 以 `git log -1` 查询**；其下依次为 `ed3fd015ee199275e483ef8635e18e232ad70429`（DEV-A 第二轮 + DEV-A-FIX-1，`feat: complete dev-a region editor and smooth dragging`）、`d4462e9cdeb383963eb4f333613664c35f9d8203`（DEV-A 第一轮，8 个文件）、`3191bec843606ae4bab01d6932cff0ac87955101`（S7C-1A 与 DEV 场景热编辑器 V1，24 个文件，+3976/−71）、`6a92c5d`（S7B-3B）、`ca18f61`；其间另有纯文档检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`、`a889d3c`、`21e5d18`、`0ed2838` 与 `cc86af14ea0d6e062ff30d8a0b1ead113ca7ea6f`（文档职责重构）。`.git/` 下无 `MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 残留。
+本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，远端为 `origin`。HEAD、远端同步状态及最近提交均以 `git status`、`git log -1`、`git rev-list --left-right --count origin/main...HEAD` 查询，不在此写当前 SHA。DEV-B 已完成批准范围并通过 6 项浏览器人工验收；本轮归档提交标题为 `feat: complete dev-b runtime ai debugging tools`。阶段历史与旧检查点见 `docs/AGENT_LOG.md`。`.trae/` 与 `.dsh-meow/` 是用户资料，必须保留，不得读取、暂存或提交。
 
 本文件更新于 2026-09-26 的纯文档同步轮；该轮已作为检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`，5 个文档文件）提交并推送 `origin/main`。如需确认最新状态，仍以 `git log` / `git status` 为准。另有始终未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，**必须保留，不得提交、不得读取、不得暂存**。
 
@@ -35,7 +35,7 @@
 
 **全项目通用开发规则与执行规范**（`AGENTS.md` 的长期规则章节，含 Git 基线与工作区保护、开发阶段授权、测试与人工验收、开发环境、已验收功能保护、Git 归档与提交报告、文档维护，以及「阶段专属开工要求不保存在 `AGENTS.md`；开始任一阶段前须先读该阶段设计文档并逐项确认其中的待批准项」这一规定）已整节收录在 `AGENTS.md`，**本文件不重复复制整套规则**，只在此引用；两者冲突时以 `AGENTS.md` 为准。
 
-当前授权状态：S7C-1B 尚未授权，S7C-2 / S7C-2b / S7C-3 同样未授权；**DEV-A 第一轮、DEV-A 第二轮 + DEV-A-FIX-1、以及 DEV-A-FIX-2（家具任意角度旋转 + JSON V3）均已完成并通过用户浏览器人工验收、阶段 Gate = PASS**（各自随对应提交建立检查点，实际 SHA 以 `git log -1` 查询）——**DEV-A 已批准范围至此全部完成**；**DEV-A 相关的未完成项只有两个明确边界：JSON 导入器刻意未开发、进入/退出锚点是否拆分仍未决定**。**DEV-B 未授权**。任何 WIP 都不代表阶段发布、S7B 整体完成、S7C 整体完成或 S7C-1B 已授权。
+当前授权状态：DEV-B 已完成批准范围、人工验收通过并归档；其任何后续扩展仍需单独授权。S7C-1B、S7C-2、S7C-2b、S7C-3 尚未授权；S7B 与 S7C 整体均未完成。DEV-A 的未实施范围仅包括刻意未做的 JSON 导入器与尚未决定的进入/退出锚点拆分。
 
 ## 3. 实际运行架构
 
@@ -49,6 +49,7 @@
 8. `src/systems/RiceField.ts` 与 `RiceSystem.ts` 持有大米进度、准备和进食规则；两个阵营的 AI 都不能私建第二套进食计时或直接判胜。`GameStateSystem.ts` 按既有 5/5 米完成及 Human 连续有效抓捕规则裁决胜负；`SprintSystem.ts` 持有冲刺、摔倒和眩晕规则。
 9. `src/config/gameConfig.ts` 导出 `GAME_CONFIG`；所有可调玩法参数由此定义，改动时同步 `docs/GAME_BALANCE_CONFIG.md`。地图坐标和状态枚举仍属于相应地图/系统。
 10. `src/three/DebugDetailsPanel.ts` 和 `ThreeGame.ts` 展示可收纳 UE Details 风格 DEV 面板。`src/systems/AILogCollector.ts` 以状态快照差异和显式事件记录 AI JSON；面板提供当前局导出。
+11. **DEV-B 实时 AI 调试工具**（开发环境专用，接入 DEV 面板，不替换场景编辑器）：`src/systems/RuntimeDebugOverrides.ts`（仅内存的参数覆盖层，38 项白名单）、`src/systems/DevBRuntimeBinding.ts`（半径变化清空抓捕进度、新局清覆盖、有效速度）、`src/systems/DevBObserver.ts`（只读状态整理）、`src/three/DevBView.ts`（抓捕圈 / 视觉距离圆 / 真实视线 / AI 路径 / 声音事件）、`src/three/DevBPanel.ts` + `src/three/DevBDebug.ts`（面板与编排）。感知与两套 AI 通过可选 `SoundTuning` / `OcclusionTuning` / `VisionTuning` / `setRuntimeTuning()` 读取有效值；正式 `GAME_CONFIG` 始终只读。
 
 ## 4. 阶段进度
 
@@ -68,7 +69,8 @@
 | DEV-A 第一轮 | 藏身交互区域的数据与几何基础：8 条 `HideSpot.interactionRegion`（床与纸箱圆形 2.0 / 1.2，衣柜与柜架扇形 1.6·55°）、圆形／扇形精确几何、合法位置检查（真实 `CollisionWorld` + 真实 `NavigationSystem` + 瞄准家具可接近表面）、离散采样预览接口、`SceneEditor` 字段透传、13 项新测试、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。**用户浏览器人工回归 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，随检查点 `d4462e9` 建立（实际 SHA 以 `git log -1` 查询）。 |
 | DEV-A 第二轮 + DEV-A-FIX-1 | 区域编辑器：可编辑区域半径／扇形半角（`REGION_AUTHORING_LIMITS` 半径 0.5–3、半角 10–150°）、家具移动或旋转时锚点跟随、区域类校验拒绝码、JSON 导出升为 **V2**、DEV 面板「交互区域预览」开关 + 按 `code` 着色的离散采样点与图例（精确轮廓与离散采样分开呈现）；以及**流畅拖动**（延迟校验窗口 `beginDeferredValidation` + 释放时校验一次、预览对象长期复用）。**用户浏览器人工验收：第二轮区域编辑／预览／校验／JSON V2 及旧功能回归全部通过；FIX-1 流畅拖动 5/5 PASS；阶段 Gate = PASS**，随本轮提交建立检查点。**阶段 Gate = PASS**，随本轮提交建立检查点。 |
 | DEV-A-FIX-2 | 家具任意角度旋转与 JSON **V3** 导出：`Rect.rotation` + `RotatedRect.ts` 统一旋转几何（约定同 `THREE.Object3D.rotation.y`）、`CollisionWorld` 的 `OrientedObstacle` 真实旋转碰撞（包围 AABB 仅粗筛、轴对齐路径数学逐字未改）、`rotationQuarter`→`rotationDeg`（0°–359.9°）与可关闭的 15° 吸附（默认关闭、不进 JSON）、房间边界改为四角点均在房间内、家具重叠改为真实 SAT、门洞改为与膨胀门叶真实重叠、关联锚点与 `facing` 同步旋转、编辑器/导航/遮挡全部改用真实旋转轮廓。**用户浏览器人工验收 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，随本轮提交建立检查点。**DEV-A 已批准范围至此全部完成**；未完成的 DEV-A 相关项只有 JSON 导入器（刻意未开发）与进入/退出锚点拆分（未决定）。 |
-| 下一项 | S7C-1B（玩家基础藏身交互）**尚未授权、未开始**，开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 行参数（该设计文档 §3.5 即其开工前置条件）。DEV-B 与 S7C-2 / 2b / 3 未授权。 |
+| DEV-B（实时 AI 调试工具） | 已完成批准范围并经用户浏览器人工验收 6/6 通过。最终验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。38 项临时参数仅在内存中生效，正式 `GAME_CONFIG` 不变；完整功能、限制与测试清单见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`，历史见 `docs/AGENT_LOG.md`。|
+| 下一项 | S7C-1B（玩家基础藏身交互）尚未授权、未开始；开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 的待批准参数。S7C-2 / 2b / 3 同样未授权；DEV-B 后续扩展需单独授权。|
 | S7C 后续 | S7C-1B / 2 / 2b / 3 尚未授权；Human `CHECK_HIDE` 仍只是保留接口。 |
 
 历史细节与测试结果以 `docs/AGENT_LOG.md` 为准；不要把单项 PASS 扩大解释为 S7B Gate PASS。
@@ -140,11 +142,11 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - S7B-2 偶发原地停留保留为后续 AI 优化项，不阻断其已通过 Gate。
 - 正式 GLB 角色及 IDLE 特殊待机片段未导入；无动画片段时白模保持普通 IDLE，动画视觉验收后续处理。
 - Human AI 自动解锁耗时 8,750 ms 按用户决定留作 S16 平衡复评。
-- 构建的主 JavaScript chunk 约 787 kB（gzip ≈ 207 kB，DEV-A-FIX-2 归档轮实测），Vite >500 kB 警告非阻断。
+- 构建的主 JavaScript chunk：DEV-A-FIX-2 归档轮实测约 787 kB，**DEV-B（含 UI 修复轮与易用性轮）后约 838.33 kB（gzip ≈ 223.32 kB）、CSS 约 13.28 kB（gzip ≈ 3.06 kB）**，Vite >500 kB 警告非阻断。
 - **S7B-3B 的实机验证口径**：3B-1 主动锁门与 3B-2 防振荡已由用户浏览器人工验收 PASS；但**修复后仍缺一份完整实机 AI JSON**（手上日志产生于侧向证据修复之前），锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍应以新日志复核。
-- 自动化基线（DEV-A-FIX-2 归档后，归档轮实跑）：`npm test` **420/420 PASS**（DEV-A 第一轮 370→383；第二轮 383→389；FIX-1 389→395；FIX-2 395→420 ＝ 新增 8 项旋转几何 + 5 项旋转碰撞 + 12 项集成）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。
+- 自动化基线（DEV-B 易用性优化轮后，本轮实跑）：`npm test` **472/472 PASS**（DEV-A 第一轮 370→383；第二轮 383→389；FIX-1 389→395；FIX-2 395→420；DEV-B 实施轮 420→453 ＝ 覆盖层 11 + 真实生效 11 + 观察/可视化 11；DEV-B UI 修复轮 453→461 ＝ `tests/dev-b-panel-dom.test.mjs` 8 项 DOM 复用/零增长回归；DEV-B 易用性轮 461→472 ＝ `tests/dev-b-help-text.test.mjs` 8 项文案覆盖与准确性 + `tests/dev-b-panel-dom.test.mjs` 3 项说明渲染与紧凑模式零增删）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。
 - 文档同步（历史）：`docs/AI_DEEPSEEK_STATE_TREE.md`（删除与源码漂移的重复数值表、补「主动关门与主动锁门」状态机章节）、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`。
-- 当前状态：S7B-3B 已并入检查点 `6a92c5d`；**S7C-1A 与 DEV 场景热编辑器 V1 均已通过用户浏览器人工验收、阶段 Gate = PASS，并已并入含阶段内容的检查点 `3191bec`（24 个文件，已推送 `origin/main`）**。其后仅有纯文档检查点（最新提交始终以 `git log -1` 查询，逐轮归档记录见 `docs/AGENT_LOG.md`）。**DEV-A 第一轮、DEV-A 第二轮 + DEV-A-FIX-1、以及 DEV-A-FIX-2（家具任意角度旋转 + JSON V3）均已通过用户浏览器人工验收、阶段 Gate = PASS**（设计与接口见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`；`npm test` 420/420、`npm run build` 退出码 0、`git diff --check` 退出码 0）——**DEV-A 已批准范围至此全部完成**，仍挂账的只有 JSON 导入器（刻意未开发）与进入/退出锚点拆分（未决定）。S7C-1B 未授权，Human `CHECK_HIDE` 仍只是保留接口；DEV-B 未授权；**S7B 整体与 S7C 整体均仍未完成**。
+- 当前状态：S7B 整体仍未完成；S7C 整体仍未完成。S7C-1B 未授权，Human `CHECK_HIDE` 仍为预留接口。DEV-A 已完成批准范围；DEV-B 已通过 6/6 浏览器人工验收并随本轮归档。各阶段细节与旧测试结果见 `docs/AGENT_LOG.md`。
 
 ## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（人工验收 PASS、阶段 Gate = PASS，2026-09-26）
 
@@ -169,50 +171,25 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 
 **DEV-A 与现有锚点数据的关系（2026-09-26 DEV-A 第一轮后更新）**：圆形／扇形藏身交互区域已在 DEV-A 第一轮按用户指定参数落地为**地图创作数据**（`HideSpot.interactionRegion`，见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`），**未接入任何玩法**；**现有单一 anchor 保持不变**——`HideSpot.x/z` 就是唯一的进入点与退出点，上列 8 条锚点数据继续有效、一个都没改。**是否把进入锚点与退出锚点拆成两个独立点，留到未来单独决定**（完整专属开工要求见下方「待批准提案与专属开工要求」节）。
 
-## 12. 待批准提案与专属开工要求（DEV-A / DEV-B，尚未授权）
+## 12. 待批准提案与专属开工要求（S7C-1B / 2 / 2b / 3 尚未授权；DEV-A、DEV-B 已完成各自批准范围）
 
-> 本节承接原 `AGENTS.md`「长期开发路线与全阶段开发前置条件」中属于**具体阶段**的内容（原前置条件 3、4）。**本节的存在不代表批准任何玩法**：S7C-1B、S7C-2、S7C-2b、S7C-3 仍未授权；**DEV-A 的四个已批准轮次（第一轮、第二轮、FIX-1、FIX-2）已全部完成（Gate = PASS）**；DEV-B 未授权。
+> 本节列出尚待批准的阶段开工要求；文档存在不代表获得授权。DEV-A 与 DEV-B 已完成各自批准范围，任何后续扩展仍需单独授权。
 >
 > DEV-A 与 DEV-B 的**先后顺序属于当前规划，不是不可改变的强制技术依赖**。
 >
-> **待单独批准（尚未授权）**：S7C-1B → S7C-2 → S7C-2b → S7C-3；DEV-B。**DEV-A 的四个已批准轮次已全部完成并建立检查点**（其后续扩展——JSON 导入器、进入/退出锚点拆分——均未获授权）。
+> **待单独批准（尚未授权）**：S7C-1B → S7C-2 → S7C-2b → S7C-3，以及 DEV-A / DEV-B 的任何后续扩展。
 
-### DEV-A：圆形／扇形藏身交互区域配置、可视化与编辑（**第一轮、第二轮、FIX-1、FIX-2 全部完成，Gate = PASS**）
+### DEV-A：藏身交互区域与编辑器（已完成批准范围）
 
-> **状态（2026-09-26）**：DEV-A **第一轮「藏身交互区域的数据与几何基础」已完成**——`HideSpot.interactionRegion`（8 条已批准参数）、新增 `src/three/map/HideInteractionRegion.ts`（精确几何 / 合法位置检查 / 离散采样预览 / 纯数据校验）、新增 `tests/hide-interaction-region.test.mjs`（13 项）。**用户浏览器人工回归 5/5 PASS、阶段 Gate = PASS**，随提交 `feat: complete dev-a hide region geometry foundation`（`d4462e9`）建立检查点。
->
-> **DEV-A 第二轮 + DEV-A-FIX-1 亦已完成（2026-09-26）**：第二轮＝编辑器编辑区域半径／扇形半角（`REGION_AUTHORING_LIMITS` 半径 0.5–3、半角 10–150°）、家具移动或旋转时关联锚点跟随、区域类校验拒绝码、JSON 导出升为 **V2**、DEV 精确区域轮廓 + 按 `code` 着色的离散采样点可视化；FIX-1＝**流畅拖动**（`MapEditSession` 延迟校验窗口 + 释放时校验一次 + 轮廓/采样对象长期复用；实测 120 次移动触发的完整校验 119→1 次、单次完整校验 236–435 ms、每次移动开销中位 0.011 ms）。**用户浏览器人工验收：第二轮区域编辑／预览／校验／JSON V2 与旧功能回归全部通过；FIX-1 流畅拖动 5/5 PASS；阶段 Gate = PASS**，随提交 `feat: complete dev-a region editor and smooth dragging` 建立检查点（实际 SHA 以 `git log -1` 查询）。
->
-> **DEV-A-FIX-2 亦已完成（2026-09-26）**：家具任意角度旋转（0°–359.9°、围绕自身足迹中心、可关闭的 15° 吸附默认关闭）、`RotatedRect.ts` 统一旋转几何、`CollisionWorld` 的 `OrientedObstacle` 真实旋转碰撞、房间边界/家具重叠/门洞改用真实旋转轮廓、关联锚点与 `facing` 同步旋转、JSON 导出升为 **V3**（`position`/`size`/`rotationDeg`/`rotationRad`/`collisionShape`/`boundingAabb`/`boundingAabbRole`，移除 V2 的 `collisionAabb`）。**用户浏览器人工验收 5/5 PASS、阶段 Gate = PASS**，随提交 `feat: complete dev-a arbitrary furniture rotation` 建立检查点（实际 SHA 以 `git log -1` 查询）。**DEV-A 已批准范围至此全部完成**。
->
-> **仍未完成（不属 DEV-A 批准范围）**：**JSON 导入器刻意未开发**；**进入/退出锚点是否拆分仍未决定**（继续保留单一 anchor）；`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化仍未实现；`GAME_CONFIG` 与已验收数值未改。
->
-> **第一轮当时明确不含**（历史范围）：场景编辑器 UI、家具移动后的锚点自动同步、JSON 导出升级、`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、任何 `GAME_CONFIG` 改动；现有单一 anchor（`HideSpot.x/z` 进入点 = 退出点）语义不变——其中编辑器 UI、锚点同步与 JSON 导出升级**已在第二轮实现并验收**（见上）；**DEV-B 仍未授权**。
+- 已完成：交互区域数据与几何、编辑器区域调整和校验、流畅家具拖动、任意角度旋转碰撞及 JSON V3；未接入正式藏身玩法。
+- 未完成/未授权：JSON 导入器刻意未开发；是否拆分进入/退出锚点尚未决定；`HideSystem`、按键藏身、Human `CHECK_HIDE` 与地图随机化属于 S7C 后续工作。
+- 实现、参数与验收历史见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md` 和 `docs/AGENT_LOG.md`。
 
-正式开发前必须逐项明确：
+### DEV-B：运行时 AI 调试工具（已完成并通过用户人工验收）
 
-1. 哪些家具使用圆形交互范围；
-2. 哪些家具使用朝向入口的扇形范围；
-3. 圆形及扇形的实际几何判定；
-4. 家具旋转后区域如何跟随；
-5. 实体碰撞、合法站立区域与交互范围的关系；
-6. 进入和退出锚点的独立作用；
-7. 场景编辑器如何调整半径、角度及朝向；
-8. 改动如何校验和导出。
-
-> **第一轮已回答第 1–6 问**（第 6 问结论：本轮继续保留单一 anchor，不拆分进入/退出点）；**第 7–8 问属第二轮**。逐条结论见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md` §1。
-
-该阶段**只实现交互区域的数据、几何校验、编辑及 DEV 可视化**；没有额外授权，**不得提前实现 `HideSystem`、实际按键藏身或 Human `CHECK_HIDE`**。
-
-**未决设计约束（2026-09-26 记录，同日 DEV-A 第一轮后更新）**：DEV-A 的**圆形／扇形交互区域已在第一轮按用户指定参数落地**（`HideSpot.interactionRegion`：纯数据 + 精确几何 + 合法位置检查接口，**未接入任何玩法**、没有任何系统用它做判定，目前只被 `HideInteractionRegion.ts` 与测试读取）；**现有单一 anchor 仍然不变**——`HideSpot.x/z` 就是唯一的进入点与退出点，8 条锚点数据一个都没改、语义不变。**是否把「进入锚点」与「退出锚点」拆成两个独立点，留到未来单独决定**，本阶段不做拆分、不预留两套字段。
-
-### DEV-B：已有抓捕、视觉、听觉等参数的运行时热更新与实际范围可视化（待批准的独立提案）
-
-- 先审计实际 `GAME_CONFIG` 及现有抓捕、视觉、听觉系统；**只能为真实存在且可安全热更新的参数建立调试控件**。
-- 必须明确：原始配置；本局临时覆盖值；参数实际生效入口；重置默认值；导出调试预设；冻结期间的更新行为（与 `MANUAL_DEV_FREEZE` / `SCENE_EDITOR` 的交互）；可视化与实际判定是否一致。
-- **不得凭空把复杂听觉传播简化成一个看起来有效但不参与真实判定的半径**；声音的距离、遮挡与方向仍由 `PerceptionSystem` 计算。
-- **不得直接修改正式 `GAME_CONFIG` 平衡值**：运行时只做本局临时覆盖，且必须能一键恢复默认。
-- **未决设计约束（2026-09-26 记录，只作约束、不开始实现）**：DEV-B 必须把 **`GAME_CONFIG` 原始值**、**本局 DEV 覆盖值**、**运行时实际生效值**三层显式分开——DEV 面板要能同时看出「原始值是什么」「本局覆盖成什么」「此刻实际生效的是哪一层」，任何时刻都能分辨当前生效值的来源。**不得把调试预设直接写回正式平衡配置**（不改 `src/config/gameConfig.ts` 的默认值、不改 `docs/GAME_BALANCE_CONFIG.md` 的记录值），也不得让调试预设成为下一局或刷新后的默认值；本局结束 / 重开 / 刷新后必须回到原始配置。
+- 功能：只读状态观察、38 项白名单临时参数、场景可视化、中文说明与紧凑面板；临时值只存于内存，不写正式 `GAME_CONFIG` 或地图 JSON V3，重开清除，并支持两种恢复。
+- 人工验收：6/6 通过。归档验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。
+- 参数、生效时机、已知限制、测试和人工验收细节见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`；历史步骤见 `docs/AGENT_LOG.md`。正式视觉/听觉仍不使用家具遮挡，视觉规则没有视锥角。
 
 **其他阶段的专属开工要求位置**：S7C-1B / S7C-2 / S7C-2b / S7C-3 → `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§3.5 前置、§4 S7C-2、§5 S7C-3、§6 第 3–14 项与第 15–18 项待批准参数）；DEV 场景热编辑器（已完成 V1，后续扩展）→ `docs/DEV_SCENE_EDITOR_DESIGN.md`。
 

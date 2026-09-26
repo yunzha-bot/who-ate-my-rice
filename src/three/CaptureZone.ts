@@ -29,8 +29,10 @@ export class CaptureZoneView {
   private readonly warningColor = new THREE.Color(CAPTURE_ZONE_COLORS.warning);
   private readonly captureColor = new THREE.Color(CAPTURE_ZONE_COLORS.capture);
   private readonly workingColor = new THREE.Color();
+  private radius: number;
 
   constructor(parent: THREE.Object3D, radius: number, actorHeight: number) {
+    this.radius = radius;
     const thickness = Math.min(0.09, radius * 0.16);
     const geometry = new THREE.RingGeometry(Math.max(0.01, radius - thickness), radius, 64);
     const material = new THREE.MeshBasicMaterial({
@@ -46,6 +48,20 @@ export class CaptureZoneView {
     this.mesh.renderOrder = 2;
     this.mesh.raycast = () => {};
     parent.add(this.mesh);
+  }
+
+  /**
+   * DEV-B: the capture ring is the same circle the capture check uses, so a
+   * runtime radius change must move the existing ring instead of leaving the old
+   * one behind. The mesh keeps its material and only its footprint changes.
+   */
+  setRadius(radius: number): void {
+    if (Math.abs(radius - this.radius) < 1e-9) return;
+    this.radius = Math.max(0.01, radius);
+    const thickness = Math.min(0.09, this.radius * 0.16);
+    this.mesh.geometry.dispose();
+    this.mesh.geometry = new THREE.RingGeometry(
+      Math.max(0.01, this.radius - thickness), this.radius, 64);
   }
 
   setProgress(progressMs: number, holdMs: number, eligible: boolean): number {

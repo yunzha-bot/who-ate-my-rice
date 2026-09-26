@@ -9,6 +9,12 @@ import { HumanDoorSkill } from '../systems/HumanDoorSkill';
 import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
+import { RuntimeDebugOverrides, type RuntimeParamChange }
+  from '../systems/RuntimeDebugOverrides';
+import { DevBRuntimeBinding, effectiveSpeeds } from '../systems/DevBRuntimeBinding';
+import type { DevBObservationInput } from '../systems/DevBObserver';
+import { DevBDebug } from './DevBDebug';
+import type { DevBViewFrame } from './DevBView';
 import { HumanAIController, humanAiMovementSpeed, shouldRunHumanAI }
   from '../systems/HumanAIController';
 import { DeepSeekAIController, isHumanPursuitSound, shouldRunDeepSeekAI,
@@ -41,8 +47,9 @@ const U = C.three.pixelsPerUnit;
 const distance = (a: THREE.Vector3, b: THREE.Vector3) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export class ThreeGame {
+  private readonly runtime = new RuntimeDebugOverrides();
   private scene = new THREE.Scene();
-  private safetyPaths = new AISafetyPathView(this.scene);
+  private safetyPaths = new AISafetyPathView(this.scene, () => this.runtime.captureRadius);
   private camera = new THREE.OrthographicCamera();
   private renderer = new THREE.WebGLRenderer({ antialias: true });
   private clock = new THREE.Clock();
@@ -67,12 +74,12 @@ export class ThreeGame {
   private minesweeper = new MinesweeperLockSystem(
     this.doorSystem, C.pulseLock.rows, C.pulseLock.cols, C.pulseLock.mines);
   private doorViews = new Map<string, DoorView>();
-  private sound = new SoundEventSystem();
+  private sound = new SoundEventSystem(this.runtime);
   private soundVisual: SoundVisualView;
   private traces = new RiceTraceSystem();
-  private vision = new VisionSystem();
+  private vision = new VisionSystem(this.runtime);
   private perceptionGeometry = new PerceptionGeometry(WALLS, DOOR_NODES,
-    () => this.doorSystem.doors);
+    () => this.doorSystem.doors, this.runtime);
   private traceViews = new Map<string, THREE.Group>();
   private lastStepMs: Record<Faction, number> = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
   private lastRiceSoundMs = -Infinity;
@@ -92,6 +99,8 @@ export class ThreeGame {
   private deepseekAiWasActive = false;
   private aiLogCollector = new AILogCollector();
   private debugPanel: DebugDetailsPanel;
+  private devBDebug: DevBDebug;
+  private devBBinding: DevBRuntimeBinding;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
   private pauseActions: HTMLElement;
@@ -126,6 +135,9 @@ export class ThreeGame {
     const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
     this.humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES);
     this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
+    // DEV-B: both AI controllers read the same effective values the panel edits.
+    this.humanAI.setRuntimeTuning(this.runtime);
+    this.deepseekAI.setRuntimeTuning(this.runtime);
     this.humanStillness = new HumanStillness(SPAWNS.human);
     DOOR_NODES.forEach((door, index) => {
       const view = new DoorView(door, index, DEBUG_MAP);
@@ -140,7 +152,13 @@ export class ThreeGame {
       SPAWNS.human.x, actorHeight / 2, SPAWNS.human.z);
     this.playerAction = new CharacterActionView(this.player, 'DEEPSEEK');
     this.humanAction = new CharacterActionView(this.human, 'HUMAN');
-    this.captureZone = new CaptureZoneView(this.human, C.match.captureRadius, actorHeight);
+    this.captureZone = new CaptureZoneView(this.human, this.runtime.captureRadius, actorHeight);
+    // A radius change must invalidate progress accumulated under the old radius.
+    this.devBBinding = new DevBRuntimeBinding(this.runtime, {
+      gameState: this.match,
+      onCaptureRadius: radius => this.captureZone.setRadius(radius),
+    });
+    this.devBBinding.start();
     this.resetRice();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
@@ -173,6 +191,15 @@ export class ThreeGame {
       onPan: (deltaX, deltaY) => this.panEditorCamera(deltaX, deltaY),
     });
     this.sceneEditor.setBuild(this.apartment);
+    this.devBDebug = new DevBDebug({
+      container,
+      topRow: this.debugPanel.topRow,
+      scene: this.scene,
+      runtime: this.runtime,
+      developerMode: this.debugPossessionEnabled,
+      collectObservation: () => this.collectDevBObservation(),
+      collectFrame: () => this.collectDevBFrame(),
+    });
     if (this.debugPossessionEnabled) {
       this.renderer.domElement.addEventListener('click', this.onActorClick);
     }
@@ -408,6 +435,9 @@ export class ThreeGame {
       else this.followCamera();
     }
     if (editorOpen) this.sceneEditor.onFrame();
+    // DEV-B refresh uses the real frame delta so the debug view keeps working
+    // while the gameplay freeze is active; it never advances gameplay itself.
+    this.devBDebug.onFrame(deltaMs);
     // The toolbar shows the live freeze state plus the most recent rejected
     // freeze action (for example resuming while the scene editor is open).
     this.debugPanel.setFreezeState(frozen, this.devFreeze.lastRejection === '无'
@@ -647,7 +677,7 @@ export class ThreeGame {
       this.sound.emit('FALL', this.player.position, 'DEEPSEEK');
     }
     const movement = this.sprint.movementDirection(activeDeepseekDirection);
-    const speed = C.player.speed / U *
+    const speed = effectiveSpeeds(this.runtime).player / U *
       (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
     const oldDeepseek = this.player.position.clone();
     this.move(this.player, movement.x * speed * deltaMs / 1000, movement.y * speed * deltaMs / 1000);
@@ -667,7 +697,7 @@ export class ThreeGame {
       if (!this.humanAiWasActive) this.humanAI.resumeAfterManualControl();
       const sight = this.vision.get('HUMAN');
       const captureEligible = isCaptureEligibleXZ(
-        this.human.position, this.player.position, C.match.captureRadius,
+        this.human.position, this.player.position, this.runtime.captureRadius,
         this.collision.isLineBlockedXZ(this.human.position, this.player.position));
       const command = this.humanAI.update({
         deltaMs, human: this.human.position,
@@ -699,9 +729,10 @@ export class ThreeGame {
       aiHumanDirection = { x: command.direction.x, y: command.direction.z };
     }
     this.humanAiWasActive = aiCanAct;
-    const baseHumanSpeed = C.player.speed / U * C.human.speedMultiplier;
+    const baseHumanSpeed = effectiveSpeeds(this.runtime).human / U;
     const humanSpeed = aiHumanDirection
-      ? humanAiMovementSpeed(baseHumanSpeed) : baseHumanSpeed;
+      ? humanAiMovementSpeed(baseHumanSpeed, this.runtime.humanAIMovementMultiplier)
+      : baseHumanSpeed;
     const activeHumanDirection = doorInteraction.humanMovementLocked
       ? { x: 0, y: 0 } : aiHumanDirection ?? humanDirection;
     const oldHuman = this.human.position.clone();
@@ -740,11 +771,11 @@ export class ThreeGame {
     this.vision.update(0, this.human.position, this.player.position,
       this.perceptionGeometry);
     const insideCaptureRadius = isInsideCaptureZoneXZ(
-      this.human.position, this.player.position, C.match.captureRadius);
+      this.human.position, this.player.position, this.runtime.captureRadius);
     this.captureZoneBlocked = insideCaptureRadius &&
       this.collision.isLineBlockedXZ(this.human.position, this.player.position);
     this.captureZoneActive = isCaptureEligibleXZ(
-      this.human.position, this.player.position, C.match.captureRadius, this.captureZoneBlocked);
+      this.human.position, this.player.position, this.runtime.captureRadius, this.captureZoneBlocked);
     this.match.advancePlaying(deltaMs, this.captureZoneActive, this.rice.completed);
     this.captureZone.setProgress(
       this.match.captureProgressMs, C.match.captureMs, this.captureZoneActive);
@@ -996,6 +1027,8 @@ export class ThreeGame {
   private resetRound(): void {
     if (this.sceneEditor.isOpen) this.sceneEditor.close();
     this.devFreeze.reset();
+    // A new round/restart clears every temporary DEV-B override.
+    this.devBBinding.resetForNewRound();
     this.editorOpenLast = false;
     this.devZoom = 1;
     this.sprint.reset();
@@ -1399,8 +1432,158 @@ export class ThreeGame {
     this.debugPanel.update(`当前控制对象：${controlledName}`, categories);
   }
 
+  private devBListener(): THREE.Vector3 {
+    return this.control.informationObserver === 'HUMAN' ? this.human.position : this.player.position;
+  }
+
+  private devBHearing(): DevBObservationInput['hearing'] {
+    const observer = this.control.informationObserver;
+    if (!observer) return null;
+    const listener = this.devBListener();
+    const heard = this.sound.heardBy(listener, observer, this.camera, this.perceptionGeometry);
+    const probe = heard ?? this.sound.analyzeBy(listener, observer, this.camera,
+      this.perceptionGeometry);
+    if (!probe) return null;
+    return {
+      heard: !!heard, type: probe.event.type, audibleStrength: probe.audibleStrength,
+      distanceFactor: probe.distanceFactor, occlusionMultiplier: probe.occlusionMultiplier,
+      occlusion: probe.occlusion, direction: probe.direction, remainingMs: probe.remainingMs,
+    };
+  }
+
+  private collectDevBFrame(): DevBViewFrame {
+    const observer = this.control.informationObserver ?? 'HUMAN';
+    const sight = this.vision.get(observer);
+    const heard = this.sound.heardBy(this.devBListener(), observer, this.camera,
+      this.perceptionGeometry);
+    return {
+      captureRadius: this.runtime.captureRadius,
+      visionRange: this.runtime.visionRange,
+      human: this.human.position,
+      deepseek: this.player.position,
+      vision: { status: sight.status, visible: sight.visible },
+      humanTarget: this.humanAI.target,
+      deepseekTarget: this.deepseekAI.safetyDebug.rice ?? null,
+      humanPath: this.humanAiWasActive ? this.humanAI.currentPath() : [],
+      deepseekPath: this.deepseekAiWasActive ? this.deepseekAI.currentPath() : [],
+      sounds: this.sound.events.map(event => ({
+        type: event.type, x: event.position.x, z: event.position.z,
+        range: this.runtime.soundRange(event.type),
+        remainingMs: event.lifetimeMs - (this.sound.nowMs - event.timestamp),
+        heard: heard?.event === event,
+      })),
+    };
+  }
+
+  // Read-only observation: every value below already exists in a system; nothing
+  // here advances a timer, repaths an AI or invents a field.
+  private collectDevBObservation(): DevBObservationInput {
+    const observer = this.control.informationObserver ?? 'HUMAN';
+    const sight = this.vision.get(observer);
+    const lastSeen = sight.lastSeen;
+    const humanProgress = this.humanAI.getPathProgress();
+    const deepseekPath = this.deepseekAI.getPathProgress();
+    const speeds = effectiveSpeeds(this.runtime);
+    return {
+      phase: this.match.phase,
+      playerFaction: this.control.selectedFaction,
+      controlledFaction: this.control.controlledFaction,
+      temporaryTarget: this.control.temporaryInputTarget,
+      humanAiRunning: this.humanAiWasActive,
+      deepseekAiRunning: this.deepseekAiWasActive,
+      human: this.human.position,
+      deepseek: this.player.position,
+      vision: {
+        status: sight.status,
+        blocker: sight.blocker,
+        visible: sight.visible,
+        lastSeen: lastSeen ? {
+          position: lastSeen.position,
+          ageMs: this.vision.nowMs - lastSeen.timeMs,
+          remainingMs: C.perception.lastSeenMs - (this.vision.nowMs - lastSeen.timeMs),
+        } : null,
+      },
+      capture: {
+        radius: this.runtime.captureRadius,
+        distance: distance(this.human.position, this.player.position),
+        insideRadius: isInsideCaptureZoneXZ(this.human.position, this.player.position,
+          this.runtime.captureRadius),
+        blocked: this.captureZoneBlocked,
+        eligible: this.captureZoneActive,
+        progressMs: this.match.captureProgressMs,
+        holdMs: C.match.captureMs,
+      },
+      hearing: this.devBHearing(),
+      sounds: this.sound.events.map(event => ({
+        type: event.type, x: event.position.x, z: event.position.z,
+        range: this.runtime.soundRange(event.type),
+        remainingMs: event.lifetimeMs - (this.sound.nowMs - event.timestamp),
+        heard: false,
+      })),
+      paths: {
+        human: this.humanAI.currentPath(),
+        deepseek: this.deepseekAI.currentPath(),
+      },
+      humanAi: {
+        state: this.humanAI.state,
+        target: this.humanAI.target,
+        targetRoomId: this.humanAI.targetRoomId,
+        navigationReason: this.humanAI.lastNavigationReason,
+        transitionReason: this.humanAI.lastTransitionReason,
+        lockDecision: this.humanAI.lockDecision,
+        targetDoorId: this.humanAI.targetDoorId,
+        decisionReason: this.humanAI.decisionReason,
+        unlockProgressMs: this.humanAI.unlockProgressMs,
+        searchTargetRoomId: this.humanAI.searchTargetRoomId,
+        pathIndex: humanProgress?.index ?? null,
+        pathTotal: humanProgress?.total ?? null,
+        pathWaypoint: humanProgress?.waypoint ?? null,
+      },
+      deepseekAi: {
+        state: this.deepseekAI.state,
+        targetRiceId: this.deepseekAI.targetRiceId,
+        selectionReason: this.deepseekAI.lastSelectionReason,
+        navigationReason: this.deepseekAI.lastNavigationReason,
+        transitionReason: this.deepseekAI.lastTransitionReason,
+        threatSource: this.deepseekAI.threatSource,
+        threatLevel: this.deepseekAI.threatLevel,
+        escapeTarget: this.deepseekAI.escapeTarget,
+        escapeRoomId: this.deepseekAI.escapeRoomId,
+        noMovementReason: this.deepseekAI.noMovementReason,
+        sprintDecision: this.deepseekAI.sprintDecision,
+        recoveryBlockReason: this.deepseekAI.recoveryBlockReason,
+        safeWaitReason: this.deepseekAI.safeWaitReason,
+        safeWaitRemainingMs: this.deepseekAI.safeWaitRemainingMs,
+        curiosityRemainingMs: this.deepseekAI.curiosityObserveRemainingMs,
+        passageActive: this.deepseekAI.passageActive,
+        pathIndex: deepseekPath?.index ?? null,
+        pathTotal: deepseekPath?.total ?? null,
+        pathWaypoint: deepseekPath?.waypoint ?? null,
+      },
+      sprint: {
+        state: this.sprint.state,
+        sprintRemainingMs: this.sprint.sprintRemainingMs,
+        stunRemainingMs: this.sprint.stunRemainingMs,
+        cooldownRemainingMs: this.sprint.cooldownRemainingMs,
+        riskMode: this.sprint.riskMode ?? '无',
+      },
+      rice: {
+        completedCount: this.rice.completedCount,
+        total: ACTIVE_RICE_COUNT,
+        ratio: this.rice.progressRatio,
+        targetId: this.rice.activeId,
+      },
+      movement: {
+        playerSpeed: speeds.player,
+        humanSpeed: speeds.human,
+        humanAiSpeed: speeds.humanAi,
+      },
+    };
+  }
+
   dispose(): void {
     cancelAnimationFrame(this.frame);
+    this.devBDebug.dispose();
     this.renderer.domElement.removeEventListener('click', this.onActorClick);
     window.removeEventListener('resize', this.resize);
     this.sceneEditor.dispose();

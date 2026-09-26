@@ -880,3 +880,67 @@
 - 范围声明：**DEV-A 已批准范围（第一轮、第二轮、DEV-A-FIX-1、DEV-A-FIX-2）至此全部实现并通过用户人工验收**；仍未完成的 DEV-A 相关项：**JSON 导入器刻意未开发**（不属本轮批准范围），**进入/退出锚点是否拆分为两个独立点仍未决定**（沿用单一 anchor）。`HideSystem`、按键藏身、Human `CHECK_HIDE`、出生点随机化等属 S7C-1B 及后续阶段，**仍未实现、未授权**；DEV-B 未授权；`GAME_CONFIG` 与所有已验收数值未改。
 - 下一步建议：**不得自动进入下一阶段**；DEV-B 与 S7C-1B / 2 / 2b / 3 仍需用户分别授权（S7C-1B 开工前须逐项批准其设计文档第 6 节第 3–14 行参数）。
 - Git 归档信息（按本项目惯例写成提交前后都成立的措辞）：提交标题 `feat: complete dev-a arbitrary furniture rotation`，**不创建 Tag**、不使用 force push；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准（不写死自身 SHA）。
+
+## 2026-09-26 +08:00｜DEV-B 实时 AI 调试工具（一次性完整实施轮，待用户浏览器人工验收）
+
+- 任务名称：DEV-B（实时状态观察 / 真实运行时参数调节 / 场景可视化 / 仅内存覆盖层 / 两种恢复 / 自动化测试与验收说明）。本轮为**一次性完整实施**，不分阶段请示；**未 commit、未 push、未创建 Tag**，等待用户一次完整的浏览器人工验收。
+- 总体架构（用户批准）：三层职责严格分离——**A 只读运行状态采集**（`src/systems/DevBObserver.ts`，纯函数）、**B 运行时参数覆盖**（`src/systems/RuntimeDebugOverrides.ts` + `src/systems/DevBRuntimeBinding.ts`）、**C Three.js 调试可视化**（`src/three/DevBView.ts`）；界面控件、运行时系统与场景可视化共用同一份有效参数，杜绝「面板数字变了但游戏仍读旧参数」的假调节。
+- 新增文件：`src/systems/RuntimeDebugOverrides.ts`（38 项白名单 + 元数据 + 校验 + snapshot/restore/clearAll + 订阅 + typed getter）、`src/systems/DevBRuntimeBinding.ts`（抓捕半径变化 → 立即清空抓捕进度 + 同步抓捕圈；新局清覆盖；`effectiveSpeeds()`；只读基准快照）、`src/systems/DevBObserver.ts`（5 个只读观察分区）、`src/three/DevBView.ts`（持久化绘制对象，5 类可视化）、`src/three/DevBPanel.ts`（DOM 面板，入口为 `DebugDetailsPanel.topRow` 的 flex 项）、`src/three/DevBDebug.ts`（编排，约 120 ms 节流刷新）、`docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`（阶段设计文档）。
+- 修改文件：`src/systems/PerceptionSystem.ts`（新增可选 `SoundTuning` / `OcclusionTuning` / `VisionTuning` 缝：有效范围、衰减指数、四个削弱系数、最小可听强度、有效视距；`emit` 的强度/寿命只影响新事件）、`src/systems/HumanAIController.ts`（`setRuntimeTuning`、`humanAiMovementSpeed(base, multiplier)`、路程估算用有效速度、`currentPath()` 只读访问器）、`src/systems/DeepSeekAIController.ts`（`setRuntimeTuning`、`moveSpeed()` 方法化、`effectiveCaptureRadius`（`passageAvoidRadius`）、`effectiveVisionRange`、`currentPath()`）、`src/three/CaptureZone.ts`（`setRadius()` 就地质重建环几何）、`src/three/AISafetyPathView.ts`（按有效抓捕半径绘制）、`src/three/ThreeGame.ts`（创建覆盖层与 DEV-B、注入各系统、抓捕/移动读取有效值、`resetRound()` 清覆盖、`dispose()` 释放 DEV-B）、`src/style.css`（DEV-B 面板样式）。
+- 可调参数（38 项，正式基准只读、范围与生效时机见设计文档 §4）：抓捕圈半径 0.7；基础视觉距离 11；9 类声音各自的传播范围 / 强度 / 寿命；距离衰减指数 1；墙体 0.28、OPEN 1、CLOSED 0.45、LOCKED 0.35 削弱系数；最小可听强度 0.015；DeepSeek 基础速度 230、Human 速度倍率 1.08、Human AI 移速倍率 0.92。NaN / Infinity / 非数字 / 越界 / 未知 id 一律拒绝并给出中文提示，输入框回滚到当前有效值。**`captureMs`、READY 时间、冲刺时长/眩晕/冷却、碰撞半径、导航网格、地图几何与门锁规则、AI 状态机与藏身玩法明确排除**（面板列出原因）。
+- 生命周期：覆盖项只存在当前页面内存（不写 `gameConfig.ts` / `GAME_BALANCE_CONFIG.md` / 地图 JSON / `localStorage`）；打开面板时记录「打开时快照」，提供「恢复打开 DEV-B 时的参数」与「恢复正式默认值」；关闭/收起面板保留临时参数（关闭 ≠ 恢复默认）；新局或重开清除覆盖；`dispose()` 释放 DOM、定时器与绘制对象。
+- 已知限制（面板如实标注）：`PerceptionGeometry` 只用墙体与门做遮挡，**家具不参与视觉遮挡**（即使 DEV-A 已实现旋转家具碰撞也不画家具遮挡）；现有视觉无视锥角，只画圆；Human AI/DeepSeek AI 的 `stuckMs` 等内部计时未暴露，标注「暂不可观测」；`CHECK_HIDE` 仍是预留状态；观察刷新约 8 Hz 且不触发额外寻路或决策。
+- 新增测试 33 项（420 → **453**）：`tests/runtime-debug-overrides.test.mjs`（11：白名单与元数据、有效值、非法输入拒绝、clear/clearAll、snapshot/restore 与越界钳制、订阅退订、**全程不写 `GAME_CONFIG`**、typed getter、排除项）、`tests/dev-b-runtime-effect.test.mjs`（11：抓捕圈与判定同半径、**半径变化立即清空抓捕进度**、无关参数不动进度、视觉距离影响真实检测、墙/门系数影响真实声音分析、范围/衰减/可听阈值、**强度与寿命只影响新事件**、有效移动速度、DeepSeek 安全半径、新局清覆盖、只读基准快照不变）、`tests/dev-b-visualization.test.mjs`（11：绘制对象复用、圆环跟随有效半径、单开关只影响本层、路径节点数与视线状态、声音标记与过期隐藏、`dispose` 不留对象、观察字段完整与「暂不可观测」标注、缺失数据不虚构、**观察不修改输入状态**、四种控制组合、面板文案与已知限制）。
+- 最终检查：`npm test` **453/453 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 体积警告，本次 JS 约 822 kB / gzip 约 218 kB）；`git diff --check` 退出码 0。
+- 真实浏览器冒烟（本机 Chrome `--headless=new` + CDP，复用已在运行的 5173 dev server；脚本写在 `%TEMP%`、用完删除，不进仓库）：控制台 **0 错误**；「DEV-B 调试」入口与 `DEV ▾` 均 `elementFromPoint` 命中自身（无遮挡）；面板打开后渲染 **38** 个参数行与 5 个观察分区；非法输入（`abc`）触发红色提示并回滚到 0.70；设为 1.5 后显示「已覆盖：1.50（正式基准 0.7）」与「当前覆盖 1 项」；关闭面板再打开仍保留覆盖；「恢复正式默认值」清空为 0 项并回到 0.70；冻结后连续三帧截图**逐字节相同**（环境噪声 0 字节），开启全部 DEV-B 可视化后同一帧差异达 183,552 字节 → 可视化确实写入场景且不残留。
+- 保留的边界：**不改 `GAME_CONFIG` 正式平衡值**；不修改正式游戏机制、不新增 AI 状态；不开发藏身玩法 / `CHECK_HIDE` / 出生点随机化 / DEV-A JSON 导入器；不新增自动冻结状态；DEV-A、READY 独立计时、双阵营冻结、JSON V3 与既有 AI 行为均无回归（453 项测试全绿）。
+- 下一步建议：等待用户一次完整的浏览器人工验收（清单见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §10）；验收通过并经**单独授权**后再建立 Git 检查点。
+
+## 2026-09-26 +08:00｜DEV-B UI 修复轮：面板刷新重复追加分组标题（待用户复测）
+
+- 任务名称：修复 DEV-B 面板在实时刷新时反复排列「抓捕 / 视觉 / 听觉 / 移动」分组标题、占满面板的 UI 异常。仅修此一项，**未 commit、未 push、未创建 Tag**（DEV-B 仍未归档）；`GAME_CONFIG` 正式平衡值、正式游戏机制与已验收功能均未改动。
+- 根因（按真实源码定位，未凭截图重写面板）：`src/three/DevBPanel.ts` 的 `renderParams()` 把分组容器建在一个**每次调用都新建的局部 `Map`** 里，并在该分支内执行 `this.paramsHost.append(host)`；而 `DevBDebug.onFrame()` 在面板打开时约每 120 ms 调一次 `renderPanel()`，于是**每次刷新都新增 4 个只含标题、不含参数的空分组容器**（参数行因缓存在 `this.rows` 中并未重复）。次要成因逐项排除：`DevBDebug` 只在 `ThreeGame` 构造函数中创建一次、`onFrame()` 每帧只调用一次、面板 DOM 与监听器都在构造函数中创建一次、`DevBRuntimeBinding.start()` 先 `stop()` 不会重复订阅；观察分区与条目本身已按 `data-section` / `data-entry` 正确复用。
+- 修复（`src/three/DevBPanel.ts`）：新增 `groupHosts` 字段缓存分组容器（`ensureGroup(label)` 只创建一次并在刷新时复用）；渲染末尾清理已不在参数表中的分组容器；只有**顺序确实不一致时**才按参数表顺序重排（顺序一致时不做任何 DOM 移动，避免把正在输入的控件重新插入导致失焦）；`ensureRow()` 复用的行通过新增的 `ParamRow.root` 跟随其分组容器；`dispose()` 清理 `rows` / `groupHosts` / `visualInputs` 缓存。另把 `src/three/DevBDebug.ts` 的三个值导入补成显式 `.ts` 后缀（与 `RuntimeDebugOverrides.ts` 的写法一致），使 Node `--experimental-strip-types` 能直接导入该编排器做 DOM 回归测试；对 Vite 与 `tsc` 无影响（`allowImportingTsExtensions: true`）。
+- 新增测试 8 项（453 → **461**）：`tests/dev-b-panel-dom.test.mjs` 用只实现面板实际使用接口的**最小 DOM 替身**驱动真实的 `DevBDebug` / `DevBPanel`（项目无 jsdom；该替身不是通用 DOM，真实节点数另用浏览器复核）——400 次刷新后分组标题恰好 4 个且顺序为 抓捕/视觉/听觉/移动、各组参数行 1/1/33/3、38 项参数不重复；600 次刷新后 DOM 节点数与监听器数**零增长**；连续 40 次开合后入口与面板仍各 1 个、节点与监听器零增长、参数输入框只注册 1 个 `change` 监听；刷新复用同一行对象且只更新状态文案与色调；观察分区/条目对象复用而值更新；非法输入有可见红色反馈、回滚到当前有效值且不新增节点；聚焦中的输入不被刷新覆盖；`dispose()` 移除节点与绘制对象。**变异验证**：临时把修复点改回「每次新建容器」后该测试 4 项失败（分组标题数量随刷新增长、节点与监听器计数不再恒定），确认测试确实能抓住该缺陷，随后已复原并复跑全绿。
+- 最终检查：`npm test` **461/461 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0（仅既有 >500 kB chunk 警告，本次 JS 约 822.80 kB / gzip 约 217.96 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 无差异。
+- 真实浏览器复核（本机 Chrome `--headless=new` + CDP，复用已在运行的 5173 dev server；脚本写在 `%TEMP%`、用完删除，不进仓库）：DEV 面板在 `FACTION_SELECT` 阶段整体隐藏，故先进入对局，再用**真实鼠标事件**点击入口并确认 `elementFromPoint` 命中自身；面板打开后分组标题 **4** 个（抓捕/视觉/听觉/移动）、参数行 38 项（1/1/33/3）、观察分区 5 个、面板 DOM **418** 节点；持续实时刷新 9 秒（约 75 次）后仍为 4 / 38 / 5 / **418**；连续 10 次「关闭 → 打开」每次都以状态确认 `closed: true` / `reopened: true`，计数仍为 **418**；5 个可视化开关全部 `elementFromPoint` 命中自身，真实点击第一个开关只改变它自己（`true → false`，再点恢复 `true`）；观察分区 summary 真实点击可展开/收起；面板打开时 `DEV ▾` 仍命中自身（前置条件 9「新增按钮不得覆盖原 DEV 入口」无回归）；视口 420×560 与 900×480 下均满足：面板完整位于视口内、`dev-b-body` 可滚动、能滚到底且最后一条限制可命中、入口命中自身、分组 4 / 参数 38；非法 `abc` → 红色提示并回滚 `0.7`，设 `1.5` → 「已覆盖：1.50 世界单位（正式基准 0.7）」＋「当前覆盖 1 项（仅在内存中）」；控制台 **0 错误**（仅既知 `/favicon.ico` 404）。**浏览器侧只报告 DOM 计数、命中测试与滚动结果，未编造 FPS 或耗时。**
+- 保留的边界：只修此次 UI 异常、未开发新功能；不改 `GAME_CONFIG`；不改正式游戏机制、不新增 AI 状态；38 项参数、仅内存覆盖层、两种恢复与场景可视化全部保留；DEV-A、双阵营冻结、READY 独立计时、JSON V3、抓捕与两套 AI 行为均无回归。
+- 下一步建议：请用户按 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §10 复测（本轮新增第 12 项即本次修复的验收点）；复测通过并经**单独授权**后再建立 Git 检查点。
+
+## 2026-09-26 +08:00｜DEV-B 易用性优化轮：中文说明与紧凑模式（待用户统一验收）
+
+- 任务名称：按用户反馈「DEV-B 调试面板专业术语较多，普通使用者难以理解」做一次**小范围易用性优化**。只改显示层，不重构观察、调参、可视化与运行时覆盖层；**未 commit、未 push、未创建 Tag**（DEV-B 仍未归档）。
+- 先检查再动手：审计现有 UI 已有的中文——`RuntimeDebugOverrides` 的 38 项参数本来就有中文 `label` / `unit` / `effect` 与 `immediate`，面板已显示「正式基准 / 已覆盖」与「即时生效 / 新事件生效」；`ThreeGame.updateHud` 已有对局阶段的中文措辞（选择阵营 / 准备 / 对局中 / 已暂停 / 已结束）。因此**复用而非重复添加**：阶段中文直接沿用这套措辞，参数原有的 `effect` 文案作为悬浮说明里的细节保留，不推翻。
+- 新增 `src/systems/DevBHelpText.ts`（唯一的新文案来源，不参与任何判定）：38 项参数的「它是什么 / 调大 / 调小 / 配置键」（11 项手写 + 9 类声音 × 3 项模板生成）、4 个分组说明、5 个观察分区说明、**60 个状态字段说明**（含内部字段路径）、状态码中文映射表、`devBParamTimingText()`（何时生效由参数自己的 `immediate` 决定，不靠文案猜）、`devBGlossValue()` / `devBReasonText()` / `devBSoundTypeText()` / `devBYesNo()`。
+- 值的中文化范围（**宁可保留可对照的原代码，也不猜**）：已导出联合类型的枚举一律显示「中文（原代码）」——对局阶段、阵营、视线状态、冲刺状态与风险模式、Human AI 状态（PATROL/INVESTIGATE/CHASE/CAPTURE/SEARCH/CHECK_HIDE）、DeepSeek AI 状态（10 个）、锁门决策、威胁来源、威胁等级（NONE/CAUTION/HIGH）、9 类声音；**自由文本的原因类字段保留英文原代码**（没有导出联合类型，逐值翻译有猜错风险），只在悬浮说明里给中文解释，并在「已知限制」里写明这一取舍。
+- 无数据状态通俗化（`DevBObserver.ts` 只改显示字符串，仍是纯只读函数）：`不适用` / `当前无目标` / `暂不可观测` / `无` 全部改写为具体中文——`当前没有追逐目标`、`当前没有目标房间`、`当前没有要搜索的房间`、`当前没有目标门`、`当前没有选中的米堆`、`当前没有在吃的米堆`、`当前不需要逃跑`、`当前没有听到任何声音`、`当前没有声音可以分析`、`还没有看到过对方`、`当前没有路线`、`当前不需要冷却`、`当前没有正在进行的冲刺`、`面板暂时看不到（控制器内部计时 stuckMs，未对外暴露）`、`还没有选择阵营`、`当前没有键盘控制目标`。字段标签三处改为中文优先：`Last Seen` → `最后一次看到（Last Seen）`、`CHECK_HIDE` → `藏身检查（CHECK_HIDE）`、`SAFE_WAIT 原因 / 剩余` → `安全等待原因 / 剩余（SAFE_WAIT）`。
+- 面板改动（`DevBPanel.ts` / `style.css`）：参数行新增两行短说明（`它是什么：…`、`调大：…；调小：…`），原来的生效行改为 `何时生效：改完立刻生效…` 或 `何时生效：只影响改动之后新产生的声音事件 —— 已经在场的事件保留生成时的范围/强度/寿命`（27 项声音参数用琥珀色 + `data-timing="new-events"` 特别标明）；每个分组标题旁加 `｜短说明`；每个观察分区标题下加 `｜短说明`；**60 条状态行的解释放在悬浮说明里**（`title` 含「字段 xxx」+ 中文解释，标签加虚线与 `cursor: help`），避免 60 行又把面板撑长；面板顶部加一行使用说明；新增 `紧凑模式（隐藏说明）` 开关，只切换根节点 `data-compact`、由 CSS 收起说明，**不新增不删除节点**；`⚠` 符号改为中文破折号，避免字体缺字。
+- 新增/更新测试 11 项（461 → **472**）：新增 `tests/dev-b-help-text.test.mjs`（8 项）——38 项参数逐一有非空、简短、带 `GAME_CONFIG` 配置键的中文说明；「何时生效」随 `immediate` 走且 27 项声音参数必须标「只影响新事件」；悬浮说明同时含中文与真实配置键；分组/分区说明覆盖全部标题；**两种数据状态**（AI 运行/未运行）下 60 个状态字段都有说明且带内部字段名；没有数据时不得只显示裸哨兵值（`不适用 / 当前无目标 / 暂不可观测 / NONE`）；状态码映射与源码联合类型**逐值一致**且未收录代码保留原样；9 类声音都有中文名。`tests/dev-b-panel-dom.test.mjs` 追加 3 项——每行都有「它是什么/调大调小/何时生效」与 27 项新事件标记；5 个分区说明与 58 个字段的悬浮说明齐全；**紧凑模式反复切换 20 次零增删**（节点数与监听器数与切换前完全相同）。同步更新 `tests/dev-b-visualization.test.mjs` 中随文案变化的断言（新标签、通俗化措辞、新增「中文（原代码）」断言）。
+- 最终检查：`npm test` **472/472 PASS**（fail 0 / cancelled 0 / skipped 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 tsc）退出码 0（仅既有 >500 kB chunk 警告，本次 JS 约 838.33 kB / gzip 约 223.32 kB、CSS 13.28 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 与 `docs/GAME_BALANCE_CONFIG.md` 零差异。
+- 真实浏览器复核（本机 Chrome `--headless=new` + CDP，脚本写 `%TEMP%`、用完删除；**为避开原子替换与 Vite watcher 冲突，先停掉本项目 dev server 再改文件，验证前重启同一个服务器**，端口仍是 5173）：控制台 **0 错误**；面板结构仍是 **4 分组 / 38 参数 / 5 分区 / 5 个可视化开关**，说明模式 **507** 个 DOM 节点；38 个「它是什么」、38 个「调大…调小…」、27 项 `new-events` + 11 项 `immediate` 全部就位；58 个状态字段全部有 `title` 与 `data-hint`；参数悬浮说明 38/38 含「配置键 GAME_CONFIG」；真实点击「紧凑模式」后 `data-compact=true`、`getComputedStyle` 确认说明为 `display:none`、文档高 6 978 → 4 904 px、**节点数仍为 507**；随后 16 次切换 + 9 秒刷新，节点数保持 507 不变；窄窗口 420×560：面板宽 400 完全在视口内、无横向溢出、可滚到底且最后一条限制可命中、`DEV ▾` 与入口均命中自身、38 项参数齐全；**截图逐张目视核对**（说明模式顶部 / 参数区 / 紧凑模式 / 窄窗口），中文换行完整、无重叠、无豆腐块。浏览器侧只报 DOM 计数、`getComputedStyle` 与命中测试结果，**未编造 FPS 或耗时**。
+- 保留的边界：不改 `GAME_CONFIG` 正式平衡值、不改玩法规则、不新增 AI 状态、不改任何已有控件与可视化开关行为；观察仍是只读纯函数（不触发额外寻路）；DEV-A、双阵营冻结、READY 独立计时、JSON V3、抓捕与两套 AI 行为无回归；`.trae/` 与 `.dsh-meow/` 未读取、未暂存、未修改。
+- 下一步建议：请用户按 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §10 一并复测（第 12 项结构回归 + 第 13 项易用性回归）；统一验收通过并经**单独授权**后再建立 Git 检查点。
+
+## 2026-09-26｜DEV-B 最终人工验收与 Git 归档
+
+- **完成范围**：实时 AI 状态观察、38 项仅内存参数调试、场景可视化、中文说明与紧凑面板；不改正式 `GAME_CONFIG`，不写入地图 JSON V3。
+- **浏览器人工验收：6/6 通过。**
+
+| 验收项目 | 结果 |
+|---|---|
+| 界面不重复；中文说明与紧凑模式 | 通过 |
+| 实时状态与场景可视化；参数真实生效 | 通过 |
+| 参数恢复与生命周期；布局及旧功能 | 通过 |
+
+- **本轮实际验证**：
+
+| 检查 | 结果 |
+|---|---|
+| `npm test` | 472 项全部通过 |
+| `npx tsc --noEmit` | 通过 |
+| `npm run build` | 通过；JS 838.33 kB（gzip 223.33 kB），包含非阻断的 Vite chunk 体积提示 |
+| `git diff --check` | 通过 |
+
+- **文档整理**：交接文档更新为 DEV-B 当前验收与归档状态；DEV-B 设计文档保留参数、机制、测试和限制细节；长期规范只修正 DEV-A / DEV-B 设计文档定位，不写入动态进度。既有 DEV-B 各轮日志保留原样，本条作为最终状态补记。
+- **Git**：归档提交标题为 `feat: complete dev-b runtime ai debugging tools`；本条随该归档提交保存。提交 SHA 与远端同步状态按 Git 查询结果报告；不创建 Tag。
+- **未完成与授权**：DEV-B 后续扩展需另行授权；S7C-1B 及后续藏身玩法未因此获批。正式视觉/听觉仍不包含家具遮挡，视觉系统仍无视锥角。

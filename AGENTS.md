@@ -138,7 +138,7 @@
 - 各阶段专属要求的位置：
   - **S7C-1B / S7C-2 / S7C-2b / S7C-3** → `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§3.5 开工前置、§4 S7C-2、§5 S7C-3、§6 待逐项批准参数）。
   - **DEV 场景热编辑器 / 双阵营调试冻结**（V1 已完成；后续扩展）→ `docs/DEV_SCENE_EDITOR_DESIGN.md`。
-  - **DEV-A / DEV-B**（待批准的独立提案，暂无独立设计文档）→ `docs/DEEPSEEK_HANDOFF.md`「待批准提案与专属开工要求」。
+  - **DEV-A / DEV-B** 是彼此独立的 DEV 工具线；DEV-A 设计见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`，DEV-B 设计见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`。任何后续扩展仍须按前置条件 2 单独获得用户授权，当前状态见 `docs/DEEPSEEK_HANDOFF.md`。
   - 其他已通过 Gate 的阶段 → 其阶段设计文档 + 前置条件 9 的受保护清单。
 - 原前置条件 3–6 的迁移去向：3（DEV-A 设计确认）与 4（DEV-B 技术审计）→ `docs/DEEPSEEK_HANDOFF.md`「待批准提案与专属开工要求」；5（S7C-1B 参数批准）→ `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §3.5 / §6；6（地图数据与随机化）→ `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §5 / §6 第 15–18 项。
 
