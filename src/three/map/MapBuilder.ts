@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { orientedObstacleFromRect, type OrientedObstacle } from '../CollisionWorld.ts';
+import { rectCorners } from './RotatedRect.ts';
 import { DEBUG_MAP, FURNITURE, hideSpotDebugMarkers, HIDE_SPOTS, RICE_CANDIDATES,
   ROOMS, SPAWNS, WALLS, type HideSpot, type Rect } from './apartmentMap';
 
@@ -53,11 +55,35 @@ export interface ApartmentBuildOptions {
 
 export interface ApartmentBuild {
   root: THREE.Group;
+  // Exact axis-aligned colliders (walls and rotation-0 pieces).
   obstacles: THREE.Box3[];
+  // Exact colliders for pieces rotated by an arbitrary angle. Their bounding
+  // boxes are broad-phase data only and are deliberately not in `obstacles`.
+  orientedObstacles: OrientedObstacle[];
   furnitureMeshes: Map<string, THREE.Mesh>;
   anchorGizmos: Map<string, THREE.Group>;
   anchorGizmoRoot: THREE.Group;
   dispose(): void;
+}
+
+// True footprint outline: for a rotated piece an axis-aligned BoxHelper would
+// draw the wrong shape, so every piece is outlined from its real corners. With
+// rotation 0 this is the same box wireframe the helper used to draw.
+function addFurnitureOutline(parent: THREE.Object3D, rect: Rect): void {
+  const corners = rectCorners(rect);
+  const bottom = corners.map(point => new THREE.Vector3(point.x, 0.01, point.z));
+  const top = corners.map(point => new THREE.Vector3(point.x, rect.height, point.z));
+  const points: THREE.Vector3[] = [];
+  for (let index = 0; index < 4; index++) {
+    const next = (index + 1) % 4;
+    points.push(bottom[index], bottom[next]);
+    points.push(top[index], top[next]);
+    points.push(bottom[index], top[index]);
+  }
+  const outline = new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(points),
+    new THREE.LineBasicMaterial({ color: 0x729aa6 }));
+  parent.add(outline);
 }
 
 // Builds the whole apartment into one removable group so the DEV scene editor
@@ -72,6 +98,7 @@ export function buildApartment(parent: THREE.Object3D,
   root.name = 'apartment';
   parent.add(root);
   const obstacles: THREE.Box3[] = [];
+  const orientedObstacles: OrientedObstacle[] = [];
   const furnitureMeshes = new Map<string, THREE.Mesh>();
   const anchorGizmos = new Map<string, THREE.Group>();
   const anchorGizmoRoot = new THREE.Group();
@@ -88,17 +115,24 @@ export function buildApartment(parent: THREE.Object3D,
 
   const addObstacle = (rect: Rect): void => {
     const isFurniture = rect.kind === 'furniture';
+    const rotation = rect.rotation ?? 0;
     const color = isFurniture ? 0x746d67 : 0x59646d;
     const mesh = box(root, rect.width, rect.height, rect.depth, color,
       rect.x, rect.height / 2, rect.z);
-    obstacles.push(new THREE.Box3().setFromObject(mesh));
+    // The visual mesh follows the same angle as the collision footprint.
+    mesh.rotation.y = rotation;
+    mesh.updateMatrixWorld(true);
     mesh.userData.objectId = rect.id;
     mesh.userData.objectKind = isFurniture ? 'FURNITURE' : 'WALL';
-    if (isFurniture) furnitureMeshes.set(rect.id, mesh);
-    if (debug && isFurniture) {
-      const outline = new THREE.BoxHelper(mesh, 0x729aa6);
-      root.add(outline);
+    if (rotation === 0) {
+      obstacles.push(new THREE.Box3().setFromObject(mesh));
+    } else {
+      // A rotated piece is collided as its true oriented footprint; its
+      // axis-aligned bounds must never be registered as a solid box.
+      orientedObstacles.push(orientedObstacleFromRect(rect));
     }
+    if (isFurniture) furnitureMeshes.set(rect.id, mesh);
+    if (debug && isFurniture) addFurnitureOutline(root, rect);
   };
   [...WALLS, ...furniture].forEach(addObstacle);
 
@@ -153,7 +187,7 @@ export function buildApartment(parent: THREE.Object3D,
   }
 
   return {
-    root, obstacles, furnitureMeshes, anchorGizmos, anchorGizmoRoot,
+    root, obstacles, orientedObstacles, furnitureMeshes, anchorGizmos, anchorGizmoRoot,
     dispose(): void {
       root.traverse(object => {
         if (object instanceof THREE.Sprite) {

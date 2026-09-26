@@ -1,8 +1,12 @@
 import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../../config/gameConfig.ts';
-import { CollisionWorld } from '../CollisionWorld.ts';
+import { CollisionWorld, orientedObstacleFromRect,
+  type OrientedObstacle } from '../CollisionWorld.ts';
 import { NavigationSystem } from '../../systems/NavigationSystem.ts';
 import type { DoorState } from '../../systems/DoorSystem.ts';
+import { degreesToRadians, distanceToRect, normalizeDegrees, normalizeRadians,
+  pointInsideInflatedRect, radiansToDegrees, rectBoundingAabb, rectCorners,
+  rectsOverlap, rotatePointAround, snapDegrees } from './RotatedRect.ts';
 import { checkHideRegionPosition, hideRegionGeometry, hideRegionSetup, sampleHideRegion,
   validateHideRegionData, REGION_AUTHORING_LIMITS, DEFAULT_REGION_SAMPLE_STEP,
   type HideRegionGeometry, type HideRegionPositionCode, type HideRegionSamplePreview }
@@ -14,7 +18,11 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, PLAYER_DIAMETE
 } from './apartmentMap.ts';
 
 export const MAP_EXPORT_FORMAT = 'who-ate-my-rice/apartment-map';
-export const MAP_EXPORT_VERSION = 2;
+// V3: furniture carries a true arbitrary rotation angle. `position` stays the
+// footprint centre, `size` stays the authored local size and `rotationDeg` is
+// the real applied angle; the axis-aligned bounds are exported as explicit
+// broad-phase data (`boundingAabb` + its role) instead of as a collision shape.
+export const MAP_EXPORT_VERSION = 3;
 
 // DEV scene-editor validation limits. These are authoring constraints for the
 // grey-box map, not gameplay balance, so they deliberately stay out of
@@ -31,6 +39,11 @@ export const EDIT_LIMITS = {
   gridStep: 0.3, // connectivity sampling step, same grid the map tests use
 } as const;
 
+// Authoring aids for the rotation field (degrees). The snap is a DEV-only input
+// helper and defaults to off; it never changes what the JSON records.
+export const ROTATION_STEP_DEGREES = 1;
+export const ROTATION_SNAP_DEGREES = 15;
+
 export type EditKind = 'FURNITURE' | 'HIDE_SPOT';
 
 export interface FurnitureDraft {
@@ -39,7 +52,9 @@ export interface FurnitureDraft {
   roomId: string;
   x: number;
   z: number;
-  rotationQuarter: number; // 0/90/180/270 degrees; AABB-safe quarter turns only
+  // True rotation around the footprint centre, in degrees, normalized to
+  // [0, 360). Any angle is allowed; 0/90/180/270 keep their previous meaning.
+  rotationDeg: number;
   width: number;
   depth: number;
   height: number;
@@ -72,7 +87,7 @@ export type DraftStatus = 'UNCHANGED' | 'DRAGGING' | 'VALID' | 'INVALID';
 
 export type EditTarget = FurnitureDraft | HideSpotDraft;
 
-export const EDITABLE_FURNITURE_FIELDS = ['x', 'z', 'rotationQuarter', 'width', 'depth', 'height'] as const;
+export const EDITABLE_FURNITURE_FIELDS = ['x', 'z', 'rotationDeg', 'width', 'depth', 'height'] as const;
 export const EDITABLE_HIDE_SPOT_FIELDS = ['x', 'z', 'facing',
   'interactionRegion.radius', 'interactionRegion.halfAngleDeg'] as const;
 export const READ_ONLY_FIELDS = ['id', 'editKind', 'kind', 'roomId', 'furnitureId', 'label'] as const;
@@ -86,7 +101,7 @@ export type RejectionCode =
   | 'READ_ONLY_FIELD'
   | 'INVALID_VALUE'
   | 'SIZE_OUT_OF_RANGE'
-  | 'NOT_QUARTER_TURN'
+  | 'INVALID_ROTATION'
   | 'ROOM_BOUNDARY'
   | 'BLOCKS_DOOR'
   | 'COVERS_RICE'
@@ -129,9 +144,16 @@ export interface FurnitureExport {
   kind: 'furniture';
   roomId: string;
   position: { x: number; z: number };
+  // The true applied angle. `size` stays the authored local size, so a piece is
+  // fully described by position + size + rotation.
   rotationDeg: number;
+  rotationRad: number;
   size: { width: number; depth: number; height: number };
-  collisionAabb: { width: number; depth: number };
+  collisionShape: 'ROTATED_RECT';
+  // Axis-aligned bounds of the rotated footprint: broad-phase data only, it is
+  // never the collision shape.
+  boundingAabb: { width: number; depth: number };
+  boundingAabbRole: 'broad-phase-approximation';
 }
 
 export interface HideSpotExport {
@@ -180,54 +202,55 @@ export function authoredMapSource(): MapSource {
   };
 }
 
-export function rotationDegrees(quarter: number): number {
-  return ((quarter % 4) + 4) % 4 * 90;
-}
-
 function authoredDoorStates(doors: readonly DoorNode[]): DoorState[] {
   return doors.map(door => ({ id: door.id, nodeId: door.id, state: door.initialState,
     locked: false, lockCoreState: 'ACTIVE' }));
 }
 
-// Quarter turns are the only rotations the AABB collision model can represent,
-// so a rotated piece swaps its authored width/depth on the ground plane.
+// The draft stores the authored local size plus a true rotation angle, so the
+// returned rectangle is the rotated footprint itself (not a swapped AABB). At
+// 0/90/180/270 this is identical to the previous quarter-turn rectangle.
 export function furnitureRect(draft: FurnitureDraft): Rect {
-  const swapped = Math.round(draft.rotationQuarter) % 2 === 1;
   return { id: draft.id, kind: 'furniture', x: draft.x, z: draft.z,
-    width: swapped ? draft.depth : draft.width,
-    depth: swapped ? draft.width : draft.depth,
-    height: draft.height };
+    width: draft.width, depth: draft.depth, height: draft.height,
+    rotation: degreesToRadians(draft.rotationDeg) };
 }
 
+// Axis-aligned Box3 of a rectangle's footprint. Exact for rotation 0; for a
+// rotated piece this is only its bounding box, so it must never be registered as
+// a solid collider — use `rectColliders()` instead.
 export function rectBox(rect: Rect): Box3 {
+  const bounds = rectBoundingAabb(rect);
   return new Box3(
-    new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-    new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2));
+    new Vector3(bounds.x - bounds.width / 2, 0, bounds.z - bounds.depth / 2),
+    new Vector3(bounds.x + bounds.width / 2, rect.height, bounds.z + bounds.depth / 2));
 }
 
-function rectsOverlapXZ(a: Rect, b: Rect, epsilon = 0.001): boolean {
-  return Math.abs(a.x - b.x) * 2 < a.width + b.width - epsilon &&
-    Math.abs(a.z - b.z) * 2 < a.depth + b.depth - epsilon;
+// Splits map rectangles into exact colliders: axis-aligned pieces stay Box3
+// obstacles, rotated pieces become oriented obstacles. The rotated piece's
+// bounding box is only used inside CollisionWorld as a broad-phase pre-filter.
+export function rectColliders(rects: readonly Rect[]):
+{ boxes: Box3[]; oriented: OrientedObstacle[] } {
+  const boxes: Box3[] = [];
+  const oriented: OrientedObstacle[] = [];
+  for (const rect of rects) {
+    if ((rect.rotation ?? 0) === 0) boxes.push(rectBox(rect));
+    else oriented.push(orientedObstacleFromRect(rect));
+  }
+  return { boxes, oriented };
 }
 
-function pointInsideInflatedRect(x: number, z: number, radius: number, rect: Rect): boolean {
-  return Math.abs(x - rect.x) <= rect.width / 2 + radius &&
-    Math.abs(z - rect.z) <= rect.depth / 2 + radius;
-}
-
-function rectDistanceXZ(x: number, z: number, rect: Rect): number {
-  const dx = Math.max(0, Math.abs(x - rect.x) - rect.width / 2);
-  const dz = Math.max(0, Math.abs(z - rect.z) - rect.depth / 2);
-  return Math.hypot(dx, dz);
-}
-
-function segmentHitsRectXZ(rect: Rect, door: DoorNode, radius: number): boolean {
+// Axis-aligned leaf of a door, used to test whether a piece blocks the opening.
+function doorLeafRect(door: DoorNode): Rect {
   const alongX = Math.abs(Math.sin(door.rotation)) < 0.5;
-  const halfAlong = ((alongX ? door.width : GAME_CONFIG.door.leafThickness) / 2) + radius;
-  const halfAcross = ((alongX ? GAME_CONFIG.door.leafThickness : door.width) / 2) + radius;
-  const dx = Math.max(0, Math.abs(door.x - rect.x) - rect.width / 2);
-  const dz = Math.max(0, Math.abs(door.z - rect.z) - rect.depth / 2);
-  return dx < halfAlong && dz < halfAcross;
+  const thickness = GAME_CONFIG.door.leafThickness;
+  return { id: door.id, kind: 'wall', x: door.x, z: door.z,
+    width: alongX ? door.width : thickness,
+    depth: alongX ? thickness : door.width, height: 1 };
+}
+
+function inflatedRect(rect: Rect, radius: number): Rect {
+  return { ...rect, width: rect.width + radius * 2, depth: rect.depth + radius * 2 };
 }
 
 // Mirrors tests/apartment-map.test.mjs: a point is walkable only inside a room
@@ -313,8 +336,13 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
     const room = source.rooms.find(value => value.id === draft.roomId);
     if (!Number.isFinite(draft.x) || !Number.isFinite(draft.z) ||
         !Number.isFinite(draft.width) || !Number.isFinite(draft.depth) ||
-        !Number.isFinite(draft.height)) {
+        !Number.isFinite(draft.height) || !Number.isFinite(draft.rotationDeg)) {
       reject(draft.id, 'INVALID_VALUE', `${draft.id} 含有非法数值`);
+      continue;
+    }
+    if (draft.rotationDeg < 0 || draft.rotationDeg >= 360) {
+      reject(draft.id, 'INVALID_ROTATION',
+        `${draft.id} 的旋转角度必须在 [0, 360) 度之间，实际 ${draft.rotationDeg}`);
       continue;
     }
     if (draft.width < EDIT_LIMITS.minWidth || draft.width > EDIT_LIMITS.maxWidth ||
@@ -324,25 +352,25 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
         `${draft.id} 尺寸超出白模合法范围（宽/深 ${EDIT_LIMITS.minWidth}–${EDIT_LIMITS.maxWidth}，高 ${EDIT_LIMITS.minHeight}–${EDIT_LIMITS.maxHeight}）`);
       continue;
     }
-    if (Math.abs(draft.rotationQuarter - Math.round(draft.rotationQuarter)) > 1e-9 ||
-        Math.round(draft.rotationQuarter) % 1 !== 0) {
-      reject(draft.id, 'NOT_QUARTER_TURN', `${draft.id} 只支持 0/90/180/270 度朝向`);
-      continue;
-    }
     if (!room) {
       reject(draft.id, 'ROOM_BOUNDARY', `${draft.id} 的房间 ${draft.roomId} 不存在`);
       continue;
     }
     const margin = EDIT_LIMITS.roomMargin;
-    if (rect.x - rect.width / 2 < room.minX + margin || rect.x + rect.width / 2 > room.maxX - margin ||
-        rect.z - rect.depth / 2 < room.minZ + margin || rect.z + rect.depth / 2 > room.maxZ - margin) {
+    // Every corner of the (possibly rotated) footprint must stay inside the room.
+    const outsideRoom = rectCorners(rect).some(corner =>
+      corner.x < room.minX + margin || corner.x > room.maxX - margin ||
+      corner.z < room.minZ + margin || corner.z > room.maxZ - margin);
+    if (outsideRoom) {
       reject(draft.id, 'ROOM_BOUNDARY', `${draft.id} 越过 ${room.name}（${room.id}）房间边界`);
     }
   }
 
   for (let i = 0; i < rects.length; i++) {
     for (let j = i + 1; j < rects.length; j++) {
-      if (!rectsOverlapXZ(rects[i], rects[j])) continue;
+      // Real oriented-rectangle overlap: a rotated piece is not judged by its
+      // bounding box.
+      if (!rectsOverlap(rects[i], rects[j], 0.001)) continue;
       reject(rects[i].id, 'OVERLAPS_FURNITURE', `${rects[i].id} 与 ${rects[j].id} 的碰撞盒重叠`);
     }
   }
@@ -353,8 +381,11 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
     const approach = alongX
       ? [[door.x, door.z - stepAway], [door.x, door.z + stepAway]]
       : [[door.x - stepAway, door.z], [door.x + stepAway, door.z]];
+    const leaf = inflatedRect(doorLeafRect(door), radius);
     for (const rect of rects) {
-      if (segmentHitsRectXZ(rect, door, radius)) {
+      // Exact oriented overlap against the inflated door leaf, which is the
+      // rotation-aware form of the previous door-segment distance test.
+      if (rectsOverlap(rect, leaf, 0)) {
         reject(rect.id, 'BLOCKS_DOOR', `${rect.id} 阻塞 ${door.id} 门洞`);
         continue;
       }
@@ -409,8 +440,9 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
     }
   }
 
-  const boxes = [...source.walls, ...rects].map(rectBox);
-  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+  const colliders = rectColliders([...source.walls, ...rects]);
+  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, colliders.boxes,
+    colliders.oriented);
   const regionSpots: HideSpot[] = hideSpots.map(spot => ({ ...spot,
     interactionRegion: { ...spot.interactionRegion } }));
   const regionIssues = validateHideRegionData(regionSpots, rects);
@@ -446,7 +478,7 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
       continue;
     }
     const nearest = [...source.walls, ...rects]
-      .reduce((best, rect) => Math.min(best, rectDistanceXZ(spot.x, spot.z, rect)), Infinity);
+      .reduce((best, rect) => Math.min(best, distanceToRect({ x: spot.x, z: spot.z }, rect)), Infinity);
     if (nearest < EDIT_LIMITS.minAnchorGapToBoxes) {
       reject(spot.id, 'ANCHOR_INSIDE_OBSTACLE', `${spot.id} 距最近的墙 / 家具只剩 ${nearest.toFixed(3)}，太贴近`);
       continue;
@@ -456,7 +488,7 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
       reject(spot.id, 'ANCHOR_DETACHED', `${spot.id} 找不到所属家具 ${spot.furnitureId}`);
       continue;
     }
-    const gap = rectDistanceXZ(spot.x, spot.z, own);
+    const gap = distanceToRect({ x: spot.x, z: spot.z }, own);
     if (gap < EDIT_LIMITS.minAnchorFurnitureGap) {
       reject(spot.id, 'ANCHOR_INSIDE_OBSTACLE', `${spot.id} 落进所属家具 ${spot.furnitureId} 内部`);
     } else if (gap > EDIT_LIMITS.maxAnchorFurnitureGap) {
@@ -499,15 +531,18 @@ function cloneSpot(draft: HideSpotDraft): HideSpotDraft {
 function sourceFurnitureDraft(rect: Rect): FurnitureDraft {
   const room = roomOfRect(rect);
   return { editKind: 'FURNITURE', id: rect.id, roomId: room,
-    x: rect.x, z: rect.z, rotationQuarter: 0,
+    x: rect.x, z: rect.z, rotationDeg: normalizeDegrees(radiansToDegrees(rect.rotation ?? 0)),
     width: rect.width, depth: rect.depth, height: rect.height };
 }
 
+// The room a piece belongs to: every corner of its (possibly rotated) footprint
+// has to sit inside that room. Identical to the previous axis-aligned check when
+// the rotation is 0.
 function roomOfRect(rect: Rect): string {
-  const room = ROOMS.find(value => rect.x - rect.width / 2 >= value.minX - 0.001 &&
-    rect.x + rect.width / 2 <= value.maxX + 0.001 &&
-    rect.z - rect.depth / 2 >= value.minZ - 0.001 &&
-    rect.z + rect.depth / 2 <= value.maxZ + 0.001);
+  const corners = rectCorners(rect);
+  const room = ROOMS.find(value => corners.every(corner =>
+    corner.x >= value.minX - 0.001 && corner.x <= value.maxX + 0.001 &&
+    corner.z >= value.minZ - 0.001 && corner.z <= value.maxZ + 0.001));
   return room?.id ?? '';
 }
 
@@ -517,22 +552,18 @@ function sourceSpotDraft(spot: HideSpot): HideSpotDraft {
     facing: spot.facing, interactionRegion: { ...spot.interactionRegion } };
 }
 
-function wrapAngle(angle: number): number {
-  return Math.atan2(Math.sin(angle), Math.cos(angle));
-}
-
+// The anchor turns with its piece: rotate the offset from the old centre by the
+// applied angle delta, then re-anchor on the (possibly moved) new centre. The
+// facing angle follows by the same amount. Works for any angle; at multiples of
+// 90 degrees this is exactly the previous quarter-turn behaviour.
 function rotateAnchorAroundFurniture(spot: HideSpotDraft, oldFurniture: FurnitureDraft,
   newFurniture: FurnitureDraft): HideSpotDraft {
-  const turns = ((newFurniture.rotationQuarter - oldFurniture.rotationQuarter) % 4 + 4) % 4;
-  const theta = turns * Math.PI / 2;
-  const dx = spot.x - oldFurniture.x, dz = spot.z - oldFurniture.z;
-  // Match THREE.Object3D.rotation.y in the XZ ground plane.
-  const cos = Math.cos(theta), sin = Math.sin(theta);
-  const rotated = turns === 0 ? { x: dx, z: dz }
-    : { x: dx * cos + dz * sin, z: -dx * sin + dz * cos };
+  const delta = degreesToRadians(newFurniture.rotationDeg - oldFurniture.rotationDeg);
+  const rotated = rotatePointAround({ x: 0, z: 0 },
+    { x: spot.x - oldFurniture.x, z: spot.z - oldFurniture.z }, delta);
   return { ...spot, x: newFurniture.x + rotated.x,
     z: newFurniture.z + rotated.z,
-    facing: wrapAngle(spot.facing - theta) };
+    facing: normalizeRadians(spot.facing - delta) };
 }
 
 export class MapEditSession {
@@ -543,6 +574,7 @@ export class MapEditSession {
   private draftSpots: HideSpotDraft[];
   private appliedCount = 0;
   private revision = 0;
+  private rotationSnap = false;
   private validationCache: { revision: number; result: EditRejection[] } | null = null;
   private validationRunCount = 0;
   private validationWindowOpen = false;
@@ -558,6 +590,12 @@ export class MapEditSession {
   }
 
   get sourceMap(): MapSource { return this.source; }
+
+  // DEV input aid: optional 15 degree snapping for the rotation field. Off by
+  // default; it changes the entered value only and is never exported.
+  get rotationSnapEnabled(): boolean { return this.rotationSnap; }
+
+  setRotationSnap(enabled: boolean): void { this.rotationSnap = enabled; }
 
   get appliedEditCount(): number { return this.appliedCount; }
 
@@ -624,8 +662,9 @@ export class MapEditSession {
     if (!setup || dataIssues.some(issue => issue.code !== 'ANCHOR_OUTSIDE_REGION')) return null;
     const geometry = hideRegionGeometry(regionSpot, setup.furniture);
     if (!includeSamples) return { geometry, sampling: null, sampleStep: step };
+    const previewColliders = rectColliders([...this.source.walls, ...rects]);
     const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
-      [...this.source.walls, ...rects].map(rectBox));
+      previewColliders.boxes, previewColliders.oriented);
     const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, this.source.doors);
     const reach = reachableCells(this.source, rects);
     const world = { collision, navigation,
@@ -646,8 +685,13 @@ export class MapEditSession {
         return this.reject(id, 'READ_ONLY_FIELD', `${field} 不是家具可编辑字段`);
       }
       if (!Number.isFinite(value)) return this.reject(id, 'INVALID_VALUE', `${field} 必须是数字`);
-      if (field === 'rotationQuarter' && Math.abs(value - Math.round(value)) > 1e-9) {
-        return this.reject(id, 'NOT_QUARTER_TURN', '朝向只支持 0 / 1 / 2 / 3（0/90/180/270 度）');
+      if (field === 'rotationDeg') {
+        // Any angle is allowed. The optional 15 degree snap is a DEV input aid
+        // only (default off) and the stored value is always normalized to
+        // [0, 360), so what the JSON records is a real angle, not a raw entry.
+        value = this.rotationSnapEnabled
+          ? snapDegrees(value, ROTATION_SNAP_DEGREES)
+          : normalizeDegrees(value);
       }
       if (field === 'width' && (value < EDIT_LIMITS.minWidth || value > EDIT_LIMITS.maxWidth)) {
         return this.reject(id, 'SIZE_OUT_OF_RANGE', `宽度需在 ${EDIT_LIMITS.minWidth}–${EDIT_LIMITS.maxWidth} 之间`);
@@ -660,7 +704,7 @@ export class MapEditSession {
       }
       const old = cloneFurniture(furniture);
       (furniture as unknown as Record<string, number>)[field] = value;
-      if (field === 'x' || field === 'z' || field === 'rotationQuarter') {
+      if (field === 'x' || field === 'z' || field === 'rotationDeg') {
         for (let index = 0; index < this.draftSpots.length; index++) {
           if (this.draftSpots[index].furnitureId === id) {
             this.draftSpots[index] = rotateAnchorAroundFurniture(this.draftSpots[index], old, furniture);
@@ -846,12 +890,15 @@ export class MapEditSession {
       riceCandidates: this.source.riceCandidates.map(rice =>
         ({ id: rice.id, roomId: rice.roomId, x: rice.x, z: rice.z })),
       furniture: this.committedFurniture.map(draft => {
-        const rect = furnitureRect(draft);
+        const bounds = rectBoundingAabb(furnitureRect(draft));
         return { id: draft.id, kind: 'furniture' as const, roomId: draft.roomId,
           position: { x: draft.x, z: draft.z },
-          rotationDeg: rotationDegrees(draft.rotationQuarter),
+          rotationDeg: draft.rotationDeg,
+          rotationRad: degreesToRadians(draft.rotationDeg),
           size: { width: draft.width, depth: draft.depth, height: draft.height },
-          collisionAabb: { width: rect.width, depth: rect.depth } };
+          collisionShape: 'ROTATED_RECT' as const,
+          boundingAabb: { width: bounds.width, depth: bounds.depth },
+          boundingAabbRole: 'broad-phase-approximation' as const };
       }),
       hideSpots: this.committedSpots.map(draft => ({ id: draft.id, kind: draft.kind,
         roomId: draft.roomId, furnitureId: draft.furnitureId, label: draft.label,
@@ -881,7 +928,7 @@ export class MapEditSession {
 
 function sameFurniture(a: FurnitureDraft, b: FurnitureDraft): boolean {
   return a.x === b.x && a.z === b.z && a.width === b.width && a.depth === b.depth &&
-    a.height === b.height && a.rotationQuarter === b.rotationQuarter;
+    a.height === b.height && a.rotationDeg === b.rotationDeg;
 }
 
 function sameSpot(a: HideSpotDraft, b: HideSpotDraft): boolean {

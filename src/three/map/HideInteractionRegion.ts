@@ -1,8 +1,9 @@
 import { GAME_CONFIG } from '../../config/gameConfig.ts';
-import { crossesRect, PerceptionGeometry } from '../../systems/PerceptionSystem.ts';
+import { PerceptionGeometry } from '../../systems/PerceptionSystem.ts';
 import type { DoorState } from '../../systems/DoorSystem.ts';
 import type { NavigationSystem } from '../../systems/NavigationSystem.ts';
 import type { CollisionWorld } from '../CollisionWorld.ts';
+import { rectSurfacePoint, segmentIntersectsRect } from './RotatedRect.ts';
 import { DOOR_NODES, FURNITURE, HIDE_SPOTS, WALLS,
   type DoorNode, type HideInteractionRegion, type HideSpot, type Point, type Rect,
 } from './apartmentMap.ts';
@@ -97,24 +98,12 @@ export function hideRegionSetup(spot: HideSpot,
 }
 
 // The aim point of an interaction is the furniture's exposed surface, not its
-// centre. Aiming at the centre would let the furniture block every position on
-// its own near side; aiming at the surface keeps the piece reachable from all
-// around it while a route through a wall, another furniture piece or a closed
-// door is still rejected. Deterministic for a point on or inside the footprint.
+// centre: aiming at the centre would let the piece block every position on its
+// own near side. A rotated piece uses its true rotated boundary, so the visual
+// rotation and the occlusion/legality maths cannot disagree.
 export function furnitureApproachSurfacePoint(rect: Rect, from: Point): Point {
-  const halfWidth = rect.width / 2;
-  const halfDepth = rect.depth / 2;
-  if (halfWidth <= 0 || halfDepth <= 0) return { x: rect.x, z: rect.z };
-  const dx = from.x - rect.x;
-  const dz = from.z - rect.z;
-  if (Math.abs(dx) > halfWidth || Math.abs(dz) > halfDepth) {
-    return { x: Math.max(rect.x - halfWidth, Math.min(from.x, rect.x + halfWidth)),
-      z: Math.max(rect.z - halfDepth, Math.min(from.z, rect.z + halfDepth)) };
-  }
-  // Inside the footprint the nearest boundary is on the dominant axis.
-  return Math.abs(dx) / halfWidth >= Math.abs(dz) / halfDepth
-    ? { x: rect.x + (dx < 0 ? -halfWidth : halfWidth), z: from.z }
-    : { x: from.x, z: rect.z + (dz < 0 ? -halfDepth : halfDepth) };
+  if (rect.width <= 0 || rect.depth <= 0) return { x: rect.x, z: rect.z };
+  return rectSurfacePoint(rect, from);
 }
 
 // Runtime inputs the legality check reuses. `doorStates` defaults to `[]`, which
@@ -133,7 +122,10 @@ export interface HideRegionWorld {
 export function hideRegionSurfaceClear(setup: HideRegionSetup, point: Point,
   world: HideRegionWorld): boolean {
   const target = furnitureApproachSurfacePoint(setup.furniture, point);
-  if (setup.otherFurniture.some(rect => crossesRect(point, target, rect))) return false;
+  // Other pieces block with their true (possibly rotated) footprint.
+  if (setup.otherFurniture.some(rect => segmentIntersectsRect(point, target, rect))) {
+    return false;
+  }
   const perception = new PerceptionGeometry(world.walls ?? WALLS,
     world.doorNodes ?? DOOR_NODES, () => world.doorStates ?? []);
   return perception.inspectVision(point, target, Number.POSITIVE_INFINITY).status === 'VISIBLE';

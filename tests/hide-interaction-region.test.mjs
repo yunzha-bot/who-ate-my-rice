@@ -14,6 +14,7 @@ import {
 } from '../src/three/map/HideInteractionRegion.ts';
 import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, WALLS, roomAt }
   from '../src/three/map/apartmentMap.ts';
+import { rectBoundingAabb } from '../src/three/map/RotatedRect.ts';
 
 // DEV-A round 1 covers authored region data and pure geometry only. It has to
 // hold while no hide gameplay exists: no HideSystem, no hide key, no CHECK_HIDE.
@@ -148,12 +149,18 @@ test('furniture rotation keeps the region, a moved anchor turns the sector axis'
   const spot = spotsById.get('hide_main_wardrobe');
   const authored = furnitureById.get(spot.furnitureId);
   const before = hideRegionGeometry(spot, authored);
-  // A quarter turn only swaps the AABB extents; the centre cannot move.
+  // Rotation never moves the footprint centre, so the region centre and the
+  // anchor-derived sector axis are unchanged by any angle.
   const turned = furnitureRect({ editKind: 'FURNITURE', id: authored.id,
-    roomId: spot.roomId, x: authored.x, z: authored.z, rotationQuarter: 1,
+    roomId: spot.roomId, x: authored.x, z: authored.z, rotationDeg: 90,
     width: authored.width, depth: authored.depth, height: authored.height });
   assert.deepEqual([turned.x, turned.z], [authored.x, authored.z]);
-  assert.deepEqual([turned.width, turned.depth], [authored.depth, authored.width]);
+  // The local size is kept and the angle is carried separately. At 90 degrees
+  // the bounding box is exactly the old quarter-turn swap.
+  assert.deepEqual([turned.width, turned.depth], [authored.width, authored.depth]);
+  assert.ok(Math.abs(turned.rotation - Math.PI / 2) < 1e-12);
+  assert.deepEqual(rectBoundingAabb(turned), { x: authored.x, z: authored.z,
+    width: authored.depth, depth: authored.width });
   const after = hideRegionGeometry(spot, turned);
   assert.deepEqual(after.centre, before.centre);
   assert.equal(after.axisAngle, before.axisAngle);

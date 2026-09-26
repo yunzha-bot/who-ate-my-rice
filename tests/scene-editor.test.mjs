@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EDIT_LIMITS, MapEditSession, MAP_EXPORT_FORMAT, MAP_EXPORT_VERSION,
-  furnitureRect, rectBox, sceneEditorEnabled, validateEditedMap } from '../src/three/map/MapEditModel.ts';
+  furnitureRect, rectBox, rectColliders, sceneEditorEnabled, validateEditedMap }
+  from '../src/three/map/MapEditModel.ts';
+import { degreesToRadians, rectBoundingAabb } from '../src/three/map/RotatedRect.ts';
 import { sceneEditorRefusalNotice } from '../src/three/SceneEditor.ts';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
@@ -15,10 +17,13 @@ const radius = GAME_CONFIG.collision.playerRadius;
 const actorHeight = GAME_CONFIG.three.actorHeight;
 
 // Rebuilds the same static world ThreeGame rebuilds after an applied edit.
+// rectColliders keeps rotated pieces as true oriented colliders instead of
+// reducing them to their bounding box.
 function buildWorld(furnitureDrafts) {
   const rects = furnitureDrafts.map(furnitureRect);
-  const world = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
-    [...WALLS, ...rects].map(rect => rectBox(rect)));
+  const colliders = rectColliders([...WALLS, ...rects]);
+  const world = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, colliders.boxes,
+    colliders.oriented);
   return { world, rects, navigation: new NavigationSystem(world, MAP_WIDTH, MAP_DEPTH, DOOR_NODES) };
 }
 
@@ -91,18 +96,27 @@ test('a legal resize is applied and the freed space becomes walkable again', () 
   assert.equal(worldOf(session).world.canOccupyStaticXZ(1.0, -3, radius, actorHeight), true);
 });
 
-test('a rotated piece keeps an axis-aligned collision box and records its degree', () => {
+test('a rotated piece keeps its true footprint and records the real angle', () => {
   const session = new MapEditSession();
-  assert.equal(session.setField('living_coffee_table', 'rotationQuarter', 1), null);
+  assert.equal(session.setField('living_coffee_table', 'rotationDeg', 90), null);
   const draft = session.get('living_coffee_table');
   const rect = furnitureRect(draft);
-  assert.equal(rect.width, draft.depth);
-  assert.equal(rect.depth, draft.width);
+  // The draft keeps the authored local size; the angle is carried separately.
+  assert.equal(rect.width, draft.width);
+  assert.equal(rect.depth, draft.depth);
+  assert.ok(Math.abs(rect.rotation - Math.PI / 2) < 1e-12);
+  // At 90 degrees the true footprint is exactly the previously swapped box.
+  const bounds = rectBoundingAabb(rect);
+  assert.ok(Math.abs(bounds.width - draft.depth) < 1e-9);
+  assert.ok(Math.abs(bounds.depth - draft.width) < 1e-9);
   assert.equal(session.draftStatus, 'VALID');
   assert.equal(session.apply().ok, true);
   const exported = session.exportJson().furniture.find(item => item.id === 'living_coffee_table');
   assert.equal(exported.rotationDeg, 90);
-  assert.deepEqual(exported.collisionAabb, { width: 1.0, depth: 1.2 });
+  assert.ok(Math.abs(exported.rotationRad - Math.PI / 2) < 1e-12);
+  assert.equal(exported.collisionShape, 'ROTATED_RECT');
+  assert.deepEqual(exported.boundingAabb, { width: draft.depth, depth: draft.width });
+  assert.equal(exported.boundingAabbRole, 'broad-phase-approximation');
 });
 
 test('furniture transform moves the linked anchor in the same draft transaction', () => {
@@ -116,7 +130,7 @@ test('furniture transform moves the linked anchor in the same draft transaction'
   assert.ok(Math.abs(moved.z - oldAnchor.z + 0.1) < 1e-9);
   assert.equal(moved.facing, oldAnchor.facing);
   const beforeTurn = session.get('main_bed');
-  assert.equal(session.setField('main_bed', 'rotationQuarter', 1), null);
+  assert.equal(session.setField('main_bed', 'rotationDeg', 90), null);
   const afterFurniture = session.get('main_bed');
   const turned = session.get('hide_main_bed');
   const dx = moved.x - beforeTurn.x, dz = moved.z - beforeTurn.z;
@@ -200,7 +214,7 @@ test('map validation rejects an out-of-range region and an anchor outside its sh
 test('field-level guards reject illegal values without touching the draft', () => {
   const cases = [
     ['living_sofa', 'x', 8.5, 'ROOM_BOUNDARY', true],
-    ['living_sofa', 'rotationQuarter', 1.5, 'NOT_QUARTER_TURN', false],
+    ['living_sofa', 'rotationDeg', Number.NaN, 'INVALID_VALUE', false],
     ['living_sofa', 'width', 4.5, 'SIZE_OUT_OF_RANGE', false],
     ['living_sofa', 'height', 0.02, 'SIZE_OUT_OF_RANGE', false],
     ['living_sofa', 'x', Number.NaN, 'INVALID_VALUE', false],
@@ -353,8 +367,13 @@ test('export carries the documented fields, only applied data, and never mutates
   assert.equal(table.roomId, 'dining');
   assert.equal(table.kind, 'furniture');
   assert.equal(table.rotationDeg, 0);
+  assert.equal(table.rotationRad, 0);
   assert.deepEqual(table.size, { width: 1.8, depth: 1.4, height: 0.55 });
-  assert.deepEqual(table.collisionAabb, { width: 1.8, depth: 1.4 });
+  assert.equal(table.collisionShape, 'ROTATED_RECT');
+  // The axis-aligned bounds are exported as broad-phase data only.
+  assert.deepEqual(table.boundingAabb, { width: 1.8, depth: 1.4 });
+  assert.equal(table.boundingAabbRole, 'broad-phase-approximation');
+  assert.equal('collisionAabb' in table, false);
   const spot = session.exportJson().hideSpots.find(item => item.id === 'hide_main_bed');
   assert.equal(spot.kind, 'BED');
   assert.equal(spot.furnitureId, 'main_bed');
@@ -492,9 +511,9 @@ test('a hard reset ends the drag window without needing a validation', () => {
   assert.equal(session.validationRuns, before);
 });
 
-test('a deferred drag still exports applied data with the V2 document', () => {
+test('a deferred drag still exports applied data with the V3 document', () => {
   const session = new MapEditSession();
-  assert.equal(MAP_EXPORT_VERSION, 2);
+  assert.equal(MAP_EXPORT_VERSION, 3);
   simulateDrag(session, 'dining_table', [[13.1, 3.4], [13.2, 3.5]]);
   const pending = session.exportJson();
   assert.equal(pending.formatVersion, MAP_EXPORT_VERSION);

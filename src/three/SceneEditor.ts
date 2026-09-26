@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MapEditSession, furnitureRect, sceneEditorEnabled,
   type FurnitureDraft, type HideSpotDraft } from './map/MapEditModel.ts';
+import { degreesToRadians } from './map/RotatedRect.ts';
 import { SceneEditorView } from './SceneEditorView.ts';
 import { SceneEditorPanel } from './SceneEditorPanel.ts';
 import type { ApartmentBuild } from './map/MapBuilder';
@@ -107,6 +108,7 @@ export class SceneEditor {
         this.regionPreviewVisible = visible;
         this.refreshRegionPreview();
       },
+      onRotationSnapChange: enabled => this.session.setRotationSnap(enabled),
     });
   }
 
@@ -225,6 +227,7 @@ export class SceneEditor {
       lastRejection: this.lastRejection,
       appliedCount: this.session.appliedEditCount,
       anchorsVisible: this.view.anchorsAreVisible,
+      rotationSnap: this.session.rotationSnapEnabled,
       events: this.eventList(),
     });
   }
@@ -338,7 +341,7 @@ export class SceneEditor {
     const mesh = this.build.furnitureMeshes.get(id);
     if (!mesh) return;
     mesh.position.set(draft.x, draft.height / 2, draft.z);
-    mesh.rotation.y = draft.rotationQuarter * Math.PI / 2;
+    mesh.rotation.y = degreesToRadians(draft.rotationDeg);
     mesh.scale.set(draft.width / authored.width, draft.height / authored.height,
       draft.depth / authored.depth);
     for (const spot of this.session.hideSpotList()) {

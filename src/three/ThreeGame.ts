@@ -121,7 +121,8 @@ export class ThreeGame {
     this.scene.add(light);
 
     this.apartment = buildApartment(this.scene);
-    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles);
+    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
+      this.apartment.orientedObstacles);
     const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
     this.humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES);
     this.deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
@@ -464,7 +465,8 @@ export class ThreeGame {
     this.apartment.dispose();
     this.apartment = buildApartment(this.scene, {
       furniture: map.furniture, hideSpots: map.hideSpots });
-    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles);
+    this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
+      this.apartment.orientedObstacles);
     const navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
     this.humanAI.rebindNavigation(navigation);
     this.deepseekAI.rebindNavigation(navigation);

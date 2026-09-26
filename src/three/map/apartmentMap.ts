@@ -9,6 +9,11 @@ export interface Room extends Point {
 export interface Rect extends Point {
   id: string; width: number; depth: number; height: number;
   kind: 'wall' | 'furniture';
+  // DEV-A-FIX-2: rotation of the footprint around its centre, in radians with Y
+  // up (same sign as THREE.Object3D.rotation.y). Missing means 0, so walls and
+  // every authored furniture entry keep their exact axis-aligned meaning. See
+  // `RotatedRect.ts` for the shared geometry.
+  rotation?: number;
 }
 export interface DoorNode extends Point {
   id: string; rotation: number; width: number;

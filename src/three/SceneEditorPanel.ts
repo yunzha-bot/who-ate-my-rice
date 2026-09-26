@@ -1,5 +1,7 @@
-import { EDIT_LIMITS, type EditTarget, type MapEditSession } from './map/MapEditModel.ts';
+import { EDIT_LIMITS, ROTATION_STEP_DEGREES, type EditTarget, type MapEditSession }
+  from './map/MapEditModel.ts';
 import { DEFAULT_REGION_SAMPLE_STEP, REGION_AUTHORING_LIMITS } from './map/HideInteractionRegion.ts';
+import { ROTATION_SNAP_DEGREES } from './map/MapEditModel.ts';
 
 export interface SceneEditorPanelOptions {
   container: HTMLElement;
@@ -19,6 +21,7 @@ export interface SceneEditorPanelOptions {
   onExport: () => void;
   onAnchorsVisible: (visible: boolean) => void;
   onRegionPreviewVisible: (visible: boolean) => void;
+  onRotationSnapChange: (enabled: boolean) => void;
 }
 
 const NOTICE_VISIBLE_MS = 8_000;
@@ -32,12 +35,14 @@ export interface SceneEditorPanelState {
   lastRejection: string;
   appliedCount: number;
   anchorsVisible: boolean;
+  rotationSnap: boolean;
   events: readonly string[];
 }
 
 const FURNITURE_NUMERIC_FIELDS: readonly { field: string; label: string; step: number }[] = [
   { field: 'x', label: 'X 位置', step: 0.05 },
   { field: 'z', label: 'Z 位置', step: 0.05 },
+  { field: 'rotationDeg', label: '旋转角度（度）', step: ROTATION_STEP_DEGREES },
   { field: 'width', label: '宽度', step: 0.05 },
   { field: 'depth', label: '进深', step: 0.05 },
   { field: 'height', label: '高度', step: 0.05 },
@@ -65,6 +70,9 @@ function targetNumber(target: EditTarget, field: string): number | undefined {
 }
 
 function fieldBounds(field: string): { min?: number; max?: number } {
+  // The rotation contract is 0–359.9 degrees; the model normalizes anything
+  // else into [0, 360) so the input stays a friendly authoring aid.
+  if (field === 'rotationDeg') return { min: 0, max: 359.9 };
   if (field === 'interactionRegion.radius') return {
     min: REGION_AUTHORING_LIMITS.minRadius, max: REGION_AUTHORING_LIMITS.maxRadius };
   if (field === 'interactionRegion.halfAngleDeg') return {
@@ -80,12 +88,12 @@ export class SceneEditorPanel {
   private readonly search: HTMLInputElement;
   private readonly anchorsToggle: HTMLInputElement;
   private readonly regionPreviewToggle: HTMLInputElement;
+  private readonly rotationSnapToggle: HTMLInputElement;
   private readonly list: HTMLElement;
   private readonly detail: HTMLElement;
   private readonly status: HTMLElement;
   private readonly options: SceneEditorPanelOptions;
   private readonly inputs = new Map<string, HTMLInputElement>();
-  private readonly rotation: HTMLSelectElement;
   private listSignature = '';
   private detailKey = '';
   private query = '';
@@ -144,7 +152,17 @@ export class SceneEditorPanel {
     const regionPreviewLabel = document.createElement('label');
     regionPreviewLabel.className = 'scene-editor-anchors';
     regionPreviewLabel.append(this.regionPreviewToggle, document.createTextNode('交互区域预览'));
-    toolbar.append(anchorsLabel, regionPreviewLabel, this.button('应用编辑', () => options.onApply()),
+    this.rotationSnapToggle = document.createElement('input');
+    this.rotationSnapToggle.type = 'checkbox';
+    this.rotationSnapToggle.checked = false;
+    this.rotationSnapToggle.addEventListener('change', () =>
+      options.onRotationSnapChange(this.rotationSnapToggle.checked));
+    const rotationSnapLabel = document.createElement('label');
+    rotationSnapLabel.className = 'scene-editor-anchors';
+    rotationSnapLabel.append(this.rotationSnapToggle,
+      document.createTextNode(`旋转吸附 ${ROTATION_SNAP_DEGREES}°`));
+    toolbar.append(anchorsLabel, regionPreviewLabel, rotationSnapLabel,
+      this.button('应用编辑', () => options.onApply()),
       this.button('放弃草稿', () => options.onDiscard()),
       this.button('导出地图 JSON', () => options.onExport()));
     this.panel.append(toolbar);
@@ -163,18 +181,6 @@ export class SceneEditorPanel {
     this.detail = document.createElement('div');
     this.detail.className = 'scene-editor-detail';
     this.panel.append(this.detail);
-
-    this.rotation = document.createElement('select');
-    for (const [value, label] of [['0', '0°'], ['1', '90°'], ['2', '180°'], ['3', '270°']]) {
-      const option = document.createElement('option');
-      option.value = value;
-      option.textContent = label;
-      this.rotation.append(option);
-    }
-    this.rotation.addEventListener('change', () => {
-      if (this.selected) options.onFieldChange(this.selected, 'rotationQuarter',
-        Number(this.rotation.value));
-    });
 
     this.status = document.createElement('div');
     this.status.className = 'scene-editor-status';
@@ -330,8 +336,12 @@ export class SceneEditorPanel {
       }
     }
     if (target.editKind === 'FURNITURE') {
-      const quarter = String(Math.round(target.rotationQuarter));
-      if (this.rotation.value !== quarter) this.rotation.value = quarter;
+      const input = this.inputs.get('rotationDeg');
+      const rotation = targetNumber(target, 'rotationDeg');
+      if (input && rotation !== undefined && document.activeElement !== input &&
+          Number(input.value) !== rotation) {
+        input.value = String(rotation);
+      }
     }
     const diff = session.diff(target.id);
     const diffBox = this.detail.querySelector<HTMLElement>('.scene-editor-diff');
@@ -402,13 +412,6 @@ export class SceneEditorPanel {
       wrapper.append(input);
       form.append(wrapper);
     }
-    if (target.editKind === 'FURNITURE') {
-      const wrapper = document.createElement('label');
-      wrapper.className = 'scene-editor-field';
-      wrapper.append(document.createTextNode('朝向（只支持 90° 整数倍）'));
-      wrapper.append(this.rotation);
-      form.append(wrapper);
-    }
     fragment.append(form);
 
     const actions = document.createElement('div');
@@ -457,6 +460,7 @@ export class SceneEditorPanel {
     ];
     this.status.textContent = lines.join('\n');
     this.anchorsToggle.checked = state.anchorsVisible;
+    this.rotationSnapToggle.checked = state.rotationSnap;
   }
 
   private hint(text: string): HTMLElement {

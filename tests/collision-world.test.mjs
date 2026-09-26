@@ -5,6 +5,7 @@ import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { SprintSystem } from '../src/systems/SprintSystem.ts';
 import { cameraRelativeDirection } from '../src/three/CameraRelativeMovement.ts';
 import { CollisionWorld, circleIntersectsAabbXZ } from '../src/three/CollisionWorld.ts';
+import { circleIntersectsRect, degreesToRadians } from '../src/three/map/RotatedRect.ts';
 
 const box = (minX, maxX, minZ, maxZ) =>
   new Box3(new Vector3(minX, 0, minZ), new Vector3(maxX, 1, maxZ));
@@ -221,4 +222,66 @@ test('restart has no collision state to carry into a new round', () => {
   collision.move(point(-0.3, 0), 0.4, 0, radius, 0.7);
   const next = collision.move(point(-1, 2.5), 0.4, 0, radius, 0.7);
   close(next.x, -0.6);
+});
+
+// --- DEV-A-FIX-2: rotated furniture collides as its true footprint ------------
+// A rotated piece is registered as an oriented obstacle; the axis-aligned Box3
+// list is only ever a broad-phase pre-filter, never the collision shape.
+
+const oriented = (x, z, width, depth, rotationDeg, height = 1) =>
+  ({ x, z, width, depth, minY: 0, maxY: height, rotation: degreesToRadians(rotationDeg) });
+const rotatedWorld = (...pieces) => new CollisionWorld(5, 5, [], pieces);
+const epsilon = GAME_CONFIG.collision.contactEpsilon;
+
+test('a 90 degree piece blocks exactly like the swapped axis-aligned box', () => {
+  // A 2 x 1 piece turned 90 degrees spans x in [-0.5, 0.5] and z in [-1, 1].
+  const piece = oriented(0, 0, 2, 1, 90);
+  const turned = rotatedWorld(piece);
+  const straight = world(box(-0.5, 0.5, -1, 1));
+  for (const [x, z] of [[0.7, 0], [0.6, 0.5], [-0.7, -0.8], [0, 1.2], [0, -1.2], [0, 0]]) {
+    assert.equal(turned.canOccupyStaticXZ(x, z, radius, 0.7),
+      straight.canOccupyStaticXZ(x, z, radius, 0.7), `${x},${z}`);
+  }
+  assert.equal(turned.canOccupyStaticXZ(0.9, 0, radius, 0.7), true);
+  assert.equal(turned.canOccupyStaticXZ(0.4, 0, radius, 0.7), false);
+});
+
+test('the collision shape is the rotated rectangle, not its bounding box', () => {
+  const piece = oriented(0, 0, 2, 2, 45);
+  const collision = rotatedWorld(piece);
+  // Inside the bounding AABB corner but outside the true diamond.
+  assert.equal(collision.canOccupyStaticXZ(1.15, 1.15, radius, 0.7), true);
+  // On the true diagonal edge.
+  assert.equal(collision.canOccupyStaticXZ(0.6, 0.6, radius, 0.7), false);
+  // Same story for line of sight.
+  assert.equal(collision.isLineBlockedXZ(point(1.2, 1.2), point(1.35, 1.35)), false);
+  assert.equal(collision.isLineBlockedXZ(point(-1.3, 0), point(1.3, 0)), true);
+});
+
+test('a thin rotated piece cannot be crossed by a large step', () => {
+  const collision = rotatedWorld(oriented(0, 0, 3, 0.2, 30));
+  const next = collision.move(point(-3, 0), 6, 0, radius, 0.7);
+  assert.ok(next.x < 0, `tunnelled through the rotated piece to ${next.x}`);
+});
+
+test('an actor slides around a rotated corner without penetrating it', () => {
+  const piece = oriented(0, 0, 2, 2, 45);
+  const collision = rotatedWorld(piece);
+  let position = point(-1.8, -1.8);
+  for (let frame = 0; frame < 40; frame++) {
+    position = collision.move(position, 0.05, 0.05, radius, 0.7);
+    assert.equal(circleIntersectsRect(position.x, position.z, radius, piece, epsilon), false,
+      `penetrated the rotated piece at ${position.x}, ${position.z}`);
+  }
+  assert.ok(position.x > -1.5 || position.z > -1.5,
+    `held movement stalled at ${position.x}, ${position.z}`);
+});
+
+test('a rotated piece is still bypassed by the axis-separated sliding', () => {
+  // Same shape and start as the axis-aligned furniture test, turned 90 degrees,
+  // so the expected slide is identical.
+  const collision = rotatedWorld(oriented(0.5, 0, 2, 1, 90));
+  const next = collision.move(point(-0.3, 0), 0.4, 0.4, radius, 0.7);
+  close(next.x, -0.3);
+  close(next.z, 0.4);
 });

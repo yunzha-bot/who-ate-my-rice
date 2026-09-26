@@ -1,8 +1,8 @@
 # DEV-A 藏身交互区域设计（第一轮数据/几何基础 + 第二轮编辑器与拖动修复）
 
-> **状态（2026-09-26）**：DEV-A **第一轮**（区域数据 + 纯几何 + 合法位置检查基础接口）、**第二轮**（编辑器编辑区域半径/半角、家具移动或旋转时锚点跟随、区域校验、JSON **V2** 导出、DEV 可视化）、**DEV-A-FIX-1**（拖动流畅度）**均已完成并随各自提交建立检查点**：`npm test` **395/395**、`npm run build` 退出码 0、`git diff --check` 退出码 0。用户浏览器人工验收：第一轮 5/5 PASS；第二轮的区域编辑／预览／校验／JSON V2 与旧功能回归全部通过；FIX-1 流畅拖动 5/5 PASS。**DEV-A 整体仍未完成——DEV-A-FIX-2 为待实施任务（范围以用户后续说明为准）**。实际 SHA 一律以 `git log -1` 查询。
+> **状态（2026-09-26）**：DEV-A **第一轮**（区域数据 + 纯几何 + 合法位置检查基础接口）、**第二轮**（编辑器编辑区域半径/半角、家具移动或旋转时锚点跟随、区域校验、JSON **V2** 导出、DEV 可视化）、**DEV-A-FIX-1**（拖动流畅度）、**DEV-A-FIX-2**（家具任意角度旋转、JSON **V3**）**均已完成、已通过用户浏览器人工验收并随各自提交建立检查点**（实际 SHA 一律以 `git log -1` 查询）。归档时自动化基线：`npm test` **420/420**、`npm run build` 退出码 0、`git diff --check` 退出码 0。**DEV-A 已批准范围至此全部完成**；仍未完成的 DEV-A 相关项：JSON 导入器刻意未开发、进入/退出锚点是否拆分仍未决定。
 > **第一轮当时的硬边界（用户原话范围，历史）**：暂不接入场景编辑器 UI；暂不实现家具移动后锚点自动同步；暂不升级 JSON 导出；不得实现 `HideSystem`、按键藏身、Human `CHECK_HIDE` 或随机化；不得修改正式 `GAME_CONFIG`；不得覆盖已经验收的编辑器功能。
-> **仍未实现**：`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、任意角度自由旋转；**DEV-B 未授权**（授权状态见 `docs/DEEPSEEK_HANDOFF.md`）。
+> **仍未实现（不属 DEV-A 批准范围）**：`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、JSON 导入器、进入/退出锚点拆分；**DEV-B 未授权**（授权状态见 `docs/DEEPSEEK_HANDOFF.md`）。
 
 ---
 
@@ -13,7 +13,7 @@
 | 1 | 哪些家具使用圆形交互范围 | `main_bed` / `second_bed`（半径 2.0）、`living_carton` / `storage_carton`（半径 1.2）——即 BED 与 CARTON |
 | 2 | 哪些家具使用朝向入口的扇形范围 | `main_wardrobe` / `closet_wardrobe` / `study_bookshelf` / `storage_shelf`（半径 1.6、半角 55°）——即 WARDROBE 与 SHELF |
 | 3 | 圆形及扇形的实际几何判定 | §3：精确连续成员判定，边界含入，扇形角度差环绕到 `(-π, π]` |
-| 4 | 家具旋转后区域如何跟随 | 区域中心恒为**家具中心**（编辑器四分之一转只交换 AABB 宽深，中心不动）；扇形轴恒为**家具中心 → 现有锚点**的方向，不另存家具朝向 |
+| 4 | 家具旋转后区域如何跟随 | 区域中心恒为**家具中心**；扇形轴恒为**家具中心 → 现有锚点**的方向，不另存家具朝向。DEV-A-FIX-2 起家具可绕自身中心以任意角度旋转（中心不变），家具旋转时**关联锚点与 `facing` 同步旋转**（`rotateAnchorAroundFurniture`，任意角度），区域随家具中心与锚点自动跟随 |
 | 5 | 实体碰撞、合法站立区域与交互范围的关系 | §4：交互范围（几何）与合法位置（真实碰撞 + 真实导航 + 无遮挡）**分开两层**，几何内不等于合法 |
 | 6 | 进入和退出锚点的独立作用 | **本轮不变**：继续保留单一 anchor（`HideSpot.x/z` 即进入点 = 退出点）；是否拆分仍留待未来单独决定，本轮不拆分、不预留两套字段 |
 | 7 | 场景编辑器如何调整半径、角度及朝向 | **第二轮**，本轮未实现（接口见 §7） |
@@ -150,7 +150,7 @@ export interface HideSpot extends MapPoint {
 1. **场景编辑器编辑区域**：半径、半角、朝向（Q7）。编辑器需要为 `HideSpotDraft` 增加区域字段或单独的区域编辑面板，并决定半径/半角的合法范围与拒绝码（**不要**复用 `maxAnchorFurnitureGap`）。
 2. **校验与导出**（Q8）：`MapEditModel.validateEditedMap()` 接入 `validateHideRegionData()` + `checkHideRegionPosition()`（例如「区域内至少存在一个合法位置」「锚点仍是合法位置」）；`HideSpotExport` 增加 `interactionRegion`（含度/弧度单位）并决定 `MAP_EXPORT_VERSION` 是否升版。
 3. **DEV 可视化**：用 `hideRegionGeometry()` 画精确的圆环/扇形轮廓（连续几何），用 `sampleHideRegion()` 的 `samples` 画**离散**采样点并按 `code` 着色——两者必须在 UI 上明确区分，不能让采样点看起来像区域边界。
-4. **家具移动后锚点/区域同步**：**已在第二轮实现**——家具移动或四分之一转时关联锚点跟随（`rotateAnchorAroundFurniture`），不静默改写已批准锚点以外的数据。
+4. **家具移动后锚点/区域同步**：**已在第二轮实现、并在 FIX-2 扩展到任意角度**——家具移动或旋转时关联锚点与 `facing` 跟随（`rotateAnchorAroundFurniture`），不静默改写已批准锚点以外的数据。
 5. **进入 / 退出锚点是否拆分**：仍**未决定**，继续保持单一 anchor；任何拆分都属于未来单独批准的改动。
 6. 现有接口可直接复用（不需要改签名）：`hideRegionSetup` / `hideRegionGeometry` / `pointInHideRegion` / `furnitureApproachSurfacePoint` / `hideRegionSurfaceClear` / `checkHideRegionPosition` / `sampleHideRegion` / `validateHideRegionData`，常量 `REGION_NAV_SNAP_LIMIT`(0.45)、`DEFAULT_REGION_SAMPLE_STEP`(0.3)、`REGION_EPSILON`。
 
@@ -170,9 +170,25 @@ export interface HideSpot extends MapPoint {
 - **实测（Node，模型/视图层毫秒，不是浏览器 FPS）**：120 次 pointermove 触发的完整校验 **119 → 1 次**；每次拖动移动的编辑器开销中位 **0.011 ms**；释放时区域重采样约 **19 ms**（每次释放 1 次）；轮廓 A/B（真实 three API + 真实 `SceneEditorView`，400 次/组）**0.0177 → 0.0111 ms**（中位）。
 - **测试**：`tests/scene-editor.test.mjs` 追加 6 项拖动回归（逐帧读取零校验、释放恰好一次、非法拖动仍拒绝并可回滚、拖动中家具/锚点/区域同步且无采样、硬重置关窗、延迟拖动后 V2 导出只含已应用数据）。
 
-### 7.3 DEV-A-FIX-2（**待实施，范围以用户后续说明为准**）
+### 7.3 DEV-A-FIX-2：家具任意角度旋转（**已实现、已通过用户浏览器人工验收 5/5、已归档**）
 
-用户在该轮归档指令中点名「FIX-2 仍为待实施任务」，但**尚未说明范围**。开工前须由用户给出目标与允许范围；本文件不预设其内容，也不得据此提前实现自由旋转或 DEV-B。
+用户批准的 FIX-2 设计（2026-09-26）：家具支持 0°–359.9° 任意数字角度；可关闭的 15° 吸附、默认关闭；围绕自身中心旋转；旋转后的完整轮廓必须留在原所属房间；关联锚点与 `facing` 同步旋转；JSON 导出升级 V3 并保留 V2 原有字段语义。
+
+**统一旋转几何**（新增 `src/three/map/RotatedRect.ts`）：局部/世界坐标换算、四角点、轴对齐包围盒（`rectBoundingAabb`，四分之一转取精确值）、角色圆与旋转矩形（`circleIntersectsRect`）、线段与旋转矩形（`segmentIntersectsRect`）、家具间真实重叠（SAT，`rectsOverlap`）、点到旋转矩形距离（`distanceToRect`）、方形（Chebyshev）膨胀判定（`pointInsideInflatedRect`，与地图测试同口径）、表面瞄准点（`rectSurfacePoint`）与绕点旋转（`rotatePointAround`），另有角度归一化/吸附助手。**旋转约定与 `THREE.Object3D.rotation.y` 一致**，因此 0/90/180/270 的数值与行为与改动前完全相同。
+
+**碰撞与导航**：`Rect` 增加可选 `rotation`（弧度，缺省 0 = 轴对齐）；`CollisionWorld` 新增第二种碰撞体 `OrientedObstacle`（真实旋转足迹 + 仅作粗筛的包围 AABB），`canOccupyStaticXZ`、`isLineBlockedXZ`、`move` 的分轴滑动与角落切线全部支持它；轴对齐路径的数学保持逐字不变（避免回归）。`MapBuilder` 生成网格时应用同一角度，并按真实角点绘制调试轮廓（不再用会画错形状的 `BoxHelper`）；旋转家具**不注册**为 AABB 实体，其包围盒只进粗筛。`ThreeGame` 在初始构建与热重建两处把 `orientedObstacles` 一并交给 `CollisionWorld`，`NavigationSystem` 继续只复用 `canOccupyStaticXZ`（无第二套逻辑），AI 因此能绕行。
+
+**地图校验与感知**：`MapEditModel` 的房间边界改为「四角点均在房间内」、家具重叠改为真实 SAT、门洞改为与「膨胀后的门叶矩形」真实重叠、米点/出生点/门前点沿用方形膨胀、锚点距离改用点到旋转矩形距离、`roomOfRect` 与碰撞世界构建改用 `rectColliders()`（自动分流 Box3 / OrientedObstacle）。`HideInteractionRegion` 的表面瞄准点与遮挡判定改为旋转几何（单测与第二轮测试均通过）。LOS 相关（抓捕资格、门交互、米堆交互）走 `CollisionWorld.isLineBlockedXZ`，因此自动使用真实旋转形状。
+
+**编辑器**：家具可编辑字段由 `rotationQuarter`（0/1/2/3）改为 **`rotationDeg`**（任意角度，输入即归一化到 [0, 360)，`min/max=0/359.9`；非法值 `INVALID_VALUE`；超范围草稿 `INVALID_ROTATION`）；工具栏新增「旋转吸附 15°」复选项（默认关闭，仅影响输入值、不进 JSON）；`syncMeshPreview` 按真实角度旋转网格。FIX-1 的延迟校验窗口、释放时校验、非法回滚、草稿取消、恢复初始值、DEV 冻结与区域采样预览全部保留，`validationRuns` 断言证明旋转编辑仍然「每次修订只校验一次」。
+
+**JSON V3**（`MAP_EXPORT_VERSION = 3`）：每件家具记录 `position`（足迹中心）、`size`（创作尺寸）、`rotationDeg` 与 `rotationRad`（真实角度）、`collisionShape: 'ROTATED_RECT'`，并把轴对齐边界改名为 `boundingAabb` 且附 `boundingAabbRole: 'broad-phase-approximation'`——**V2 的 `collisionAabb` 字段被移除**，避免包围盒冒充碰撞形状；只导出已应用数据；**未开发 JSON 导入器**。藏身点导出保持 V2 语义（`anchor` / `facing` / `interactionRegion` + `units`）。
+
+**测试与结果**：新增 `tests/rotated-rect.test.mjs`（8 项纯几何）、`tests/rotated-furniture.test.mjs`（12 项：真实重叠、房间边界、门洞、LOS/抓捕、导航绕行、藏身区域与遮挡、编辑器事务与吸附、V3 导出），并在 `tests/collision-world.test.mjs` 追加 5 项旋转碰撞（含「90° 等价于旧交换盒」「碰撞形状是真实旋转矩形而非包围盒」「大位移不穿透」「绕转角滑动不穿模」）；`tests/scene-editor.test.mjs`、`tests/hide-interaction-region.test.mjs` 相应迁移到新字段/新格式。归档轮实跑：**`npm test` 420/420 PASS、`npm run build` 退出码 0、`git diff --check` 退出码 0**。
+
+**人工验收与归档（2026-09-26）**：用户浏览器人工验收 **5/5 PASS**——①任意角度输入及 15° 吸附；②旋转后的真实碰撞与 AI 导航；③关联锚点与藏身区域同步、非法旋转拒绝；④取消、应用与 JSON V3 导出；⑤原有流畅拖动等功能回归。本轮随提交 `feat: complete dev-a arbitrary furniture rotation` 建立检查点（实际 SHA 以 `git log -1` 查询）。
+
+**仍需注意**：`HideSpot.x/z` 仍是唯一 anchor（未拆分进入/退出点）；**JSON 导入器刻意未开发**（不属 DEV-A 批准范围）；`HideSystem`、按键藏身、Human `CHECK_HIDE`、出生点随机化、DEV-B 均未实现、未授权；`GAME_CONFIG` 未改。
 
 ---
 

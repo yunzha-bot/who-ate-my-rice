@@ -1,7 +1,32 @@
 import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../config/gameConfig.ts';
 import { nearestPointOnDoorSegment } from '../systems/DoorSystem.ts';
-import type { DoorNode } from './map/apartmentMap.ts';
+import { circleIntersectsRect, localToWorld, pointInRect, rectBoundingAabb,
+  segmentIntersectsRect, worldToLocal } from './map/RotatedRect.ts';
+import type { DoorNode, Rect } from './map/apartmentMap.ts';
+
+// DEV-A-FIX-2: a furniture piece rotated by an arbitrary angle can no longer be
+// described by an axis-aligned Box3. Rotated pieces are registered here as their
+// true oriented footprint; the axis-aligned bounding box is kept only as a cheap
+// broad-phase pre-filter, never as the collision shape itself.
+export interface OrientedObstacle {
+  id?: string;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  minY: number;
+  maxY: number;
+  // Radians around +Y, same convention as THREE.Object3D.rotation.y.
+  rotation: number;
+}
+
+// Collision representation of one map rectangle: exact for 0/90/180/270 degrees,
+// oriented for any other angle.
+export function orientedObstacleFromRect(rect: Rect): OrientedObstacle {
+  return { id: rect.id, x: rect.x, z: rect.z, width: rect.width, depth: rect.depth,
+    minY: 0, maxY: rect.height, rotation: rect.rotation ?? 0 };
+}
 
 export function circleIntersectsAabbXZ(x: number, z: number, radius: number,
   obstacle: Box3, epsilon = 0): boolean {
@@ -24,12 +49,15 @@ export class CollisionWorld {
   private readonly halfWidth: number;
   private readonly halfDepth: number;
   private readonly obstacles: Box3[];
+  private readonly oriented: OrientedObstacle[];
   private readonly dynamicObstacles = new Map<string, Box3>();
 
-  constructor(halfWidth: number, halfDepth: number, obstacles: Box3[]) {
+  constructor(halfWidth: number, halfDepth: number, obstacles: Box3[],
+    oriented: OrientedObstacle[] = []) {
     this.halfWidth = halfWidth;
     this.halfDepth = halfDepth;
     this.obstacles = obstacles;
+    this.oriented = oriented;
   }
 
   setDynamicObstacle(id: string, obstacle: Box3 | null): void {
@@ -49,9 +77,26 @@ export class CollisionWorld {
   canOccupyStaticXZ(x: number, z: number, radius: number, height: number): boolean {
     if (x - radius < -this.halfWidth || x + radius > this.halfWidth ||
         z - radius < -this.halfDepth || z + radius > this.halfDepth) return false;
-    return !this.obstacles.some(obstacle =>
+    if (this.obstacles.some(obstacle =>
       obstacle.max.y > 0 && obstacle.min.y < height &&
-      circleIntersectsAabbXZ(x, z, radius, obstacle, GAME_CONFIG.collision.contactEpsilon));
+      circleIntersectsAabbXZ(x, z, radius, obstacle, GAME_CONFIG.collision.contactEpsilon))) {
+      return false;
+    }
+    return !this.oriented.some(obstacle => this.orientedBlocksCircle(x, z, radius, height,
+      obstacle));
+  }
+
+  // Rotated pieces are tested exactly, but only after the axis-aligned bounding
+  // box has already shown that a contact is possible.
+  private orientedBlocksCircle(x: number, z: number, radius: number, height: number,
+    obstacle: OrientedObstacle): boolean {
+    if (obstacle.maxY <= 0 || obstacle.minY >= height) return false;
+    const bounds = rectBoundingAabb(obstacle);
+    const closestX = Math.max(bounds.x - bounds.width / 2, Math.min(x, bounds.x + bounds.width / 2));
+    const closestZ = Math.max(bounds.z - bounds.depth / 2, Math.min(z, bounds.z + bounds.depth / 2));
+    const broadRadius = Math.max(0, radius - GAME_CONFIG.collision.contactEpsilon);
+    if ((x - closestX) ** 2 + (z - closestZ) ** 2 >= broadRadius * broadRadius) return false;
+    return circleIntersectsRect(x, z, radius, obstacle, GAME_CONFIG.collision.contactEpsilon);
   }
 
   move(position: Vector3, deltaX: number, deltaZ: number,
@@ -84,10 +129,17 @@ export class CollisionWorld {
       ? [...this.obstacles, ...[...this.dynamicObstacles.entries()]
         .filter(([id]) => id !== ignoredDynamicId).map(([, box]) => box)]
       : this.allObstacles();
-    return obstacles.some(obstacle => this.segmentIntersectsRectXZ(
+    if (obstacles.some(obstacle => this.segmentIntersectsRectXZ(
       start.x, start.z, end.x, end.z,
       obstacle.min.x, obstacle.max.x, obstacle.min.z, obstacle.max.z,
-    ));
+    ))) return true;
+    return this.oriented.some(obstacle => {
+      const bounds = rectBoundingAabb(obstacle);
+      if (!this.segmentIntersectsRectXZ(start.x, start.z, end.x, end.z,
+        bounds.x - bounds.width / 2, bounds.x + bounds.width / 2,
+        bounds.z - bounds.depth / 2, bounds.z + bounds.depth / 2)) return false;
+      return segmentIntersectsRect(start, end, obstacle);
+    });
   }
 
   private segmentIntersectsRectXZ(startX: number, startZ: number, endX: number, endZ: number,
@@ -113,9 +165,15 @@ export class CollisionWorld {
     const targetX = position.x + stepX;
     const targetZ = position.z + stepZ;
     const epsilon = GAME_CONFIG.collision.contactEpsilon;
-    let bestX = 0;
-    let bestZ = 0;
-    let bestScore = 0;
+    const choice: { best: { x: number; z: number; score: number } | null } = { best: null };
+    const consider = (cornerX: number, cornerZ: number): void => {
+      const candidate = this.slideFrom(position, cornerX, cornerZ, stepX, stepZ,
+        radius, height, epsilon);
+      if (candidate && (!choice.best || candidate.score > choice.best.score)) {
+        choice.best = candidate;
+      }
+    };
+    // Axis-aligned obstacles keep their original world-space corner maths.
     for (const obstacle of this.allObstacles()) {
       if (obstacle.max.y <= 0 || obstacle.min.y >= height) continue;
       const cornerX = Math.max(obstacle.min.x, Math.min(targetX, obstacle.max.x));
@@ -128,42 +186,64 @@ export class CollisionWorld {
       // a true two-wall dead end must keep the normal axis resolution above.
       if (Math.abs(targetNormalX) <= epsilon || Math.abs(targetNormalZ) <= epsilon ||
           targetDistanceSquared >= radius * radius) continue;
-      const currentNormalX = position.x - cornerX;
-      const currentNormalZ = position.z - cornerZ;
-      const currentDistance = Math.hypot(currentNormalX, currentNormalZ);
-      if (currentDistance <= epsilon) continue;
-      const nx = currentNormalX / currentDistance;
-      const nz = currentNormalZ / currentDistance;
-      const inward = stepX * nx + stepZ * nz;
-      if (inward >= 0) continue;
-      let slideX = stepX - inward * nx;
-      let slideZ = stepZ - inward * nz;
-      if (Math.hypot(slideX, slideZ) <= epsilon) {
-        // A perfectly centered hit on a convex point has no mathematical
-        // tangent preference. Pick a stable side so it cannot glue the actor.
-        const direction = stepX * -nz + stepZ * nx >= 0 ? 1 : -1;
-        const length = Math.hypot(stepX, stepZ);
-        slideX = -nz * length * direction;
-        slideZ = nx * length * direction;
-      }
-      for (const scale of [1, 0.75, 0.5, 0.25]) {
-        const candidateX = slideX * scale;
-        const candidateZ = slideZ * scale;
-        if (!this.canOccupy(position.x + candidateX, position.z + candidateZ, radius, height)) {
-          continue;
-        }
-        const progress = candidateX * stepX + candidateZ * stepZ;
-        const score = progress + Math.hypot(candidateX, candidateZ) * 0.01;
-        if (score > bestScore) {
-          bestX = candidateX;
-          bestZ = candidateZ;
-          bestScore = score;
-        }
-        break;
-      }
+      consider(cornerX, cornerZ);
     }
-    position.x += bestX;
-    position.z += bestZ;
+    // Rotated obstacles run the same maths, but the face-versus-corner decision
+    // has to happen in the piece's own frame so an angled face is not mistaken
+    // for a convex corner.
+    for (const obstacle of this.oriented) {
+      if (obstacle.maxY <= 0 || obstacle.minY >= height) continue;
+      const local = worldToLocal(obstacle, { x: targetX, z: targetZ });
+      const halfWidth = obstacle.width / 2;
+      const halfDepth = obstacle.depth / 2;
+      const clamped = { x: Math.max(-halfWidth, Math.min(local.x, halfWidth)),
+        z: Math.max(-halfDepth, Math.min(local.z, halfDepth)) };
+      const normalX = local.x - clamped.x;
+      const normalZ = local.z - clamped.z;
+      if (Math.abs(normalX) <= epsilon || Math.abs(normalZ) <= epsilon ||
+          normalX * normalX + normalZ * normalZ >= radius * radius) continue;
+      const corner = localToWorld(obstacle, clamped);
+      consider(corner.x, corner.z);
+    }
+    if (choice.best) {
+      position.x += choice.best.x;
+      position.z += choice.best.z;
+    }
+  }
+
+  // The shared tangent search for one contact point.
+  private slideFrom(position: Vector3, cornerX: number, cornerZ: number,
+    stepX: number, stepZ: number, radius: number, height: number, epsilon: number):
+  { x: number; z: number; score: number } | null {
+    const currentNormalX = position.x - cornerX;
+    const currentNormalZ = position.z - cornerZ;
+    const currentDistance = Math.hypot(currentNormalX, currentNormalZ);
+    if (currentDistance <= epsilon) return null;
+    const nx = currentNormalX / currentDistance;
+    const nz = currentNormalZ / currentDistance;
+    const inward = stepX * nx + stepZ * nz;
+    if (inward >= 0) return null;
+    let slideX = stepX - inward * nx;
+    let slideZ = stepZ - inward * nz;
+    if (Math.hypot(slideX, slideZ) <= epsilon) {
+      // A perfectly centered hit on a convex point has no mathematical
+      // tangent preference. Pick a stable side so it cannot glue the actor.
+      const direction = stepX * -nz + stepZ * nx >= 0 ? 1 : -1;
+      const length = Math.hypot(stepX, stepZ);
+      slideX = -nz * length * direction;
+      slideZ = nx * length * direction;
+    }
+    for (const scale of [1, 0.75, 0.5, 0.25]) {
+      const candidateX = slideX * scale;
+      const candidateZ = slideZ * scale;
+      if (!this.canOccupy(position.x + candidateX, position.z + candidateZ, radius, height)) {
+        continue;
+      }
+      const progress = candidateX * stepX + candidateZ * stepZ;
+      return { x: candidateX, z: candidateZ,
+        score: progress + Math.hypot(candidateX, candidateZ) * 0.01 };
+    }
+    return null;
   }
 
   private canOccupy(x: number, z: number, radius: number, height: number): boolean {
