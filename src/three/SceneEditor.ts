@@ -6,7 +6,7 @@ import { SceneEditorPanel } from './SceneEditorPanel.ts';
 import type { ApartmentBuild } from './map/MapBuilder';
 import type { DevFreezeSystem, DevRunState } from '../systems/DevFreezeSystem.ts';
 import type { GamePhase } from '../systems/GameStateSystem.ts';
-import type { HideSpot, Rect } from './map/apartmentMap.ts';
+import { HIDE_SPOTS, type HideSpot, type Rect } from './map/apartmentMap.ts';
 
 export interface CommittedMap {
   furniture: readonly Rect[];
@@ -40,10 +40,22 @@ export function draftFurnitureToRects(drafts: readonly FurnitureDraft[]): Rect[]
   return drafts.map(furnitureRect);
 }
 
+// The DEV editor edits the anchor position only. The authored interaction region
+// is carried through by stable spot id instead of being copied into the editable
+// draft, which would make a second copy of the same authored data.
+const AUTHORED_HIDE_REGIONS = new Map(
+  HIDE_SPOTS.map(spot => [spot.id, spot.interactionRegion] as const));
+
 export function draftSpotsToAnchors(drafts: readonly HideSpotDraft[]): HideSpot[] {
-  return drafts.map(draft => ({ id: draft.id, roomId: draft.roomId, kind: draft.kind,
-    furnitureId: draft.furnitureId, label: draft.label, x: draft.x, z: draft.z,
-    facing: draft.facing }));
+  return drafts.map(draft => {
+    const interactionRegion = AUTHORED_HIDE_REGIONS.get(draft.id);
+    if (!interactionRegion) {
+      throw new Error(`藏身点 ${draft.id} 没有已写定的 interactionRegion 数据`);
+    }
+    return { id: draft.id, roomId: draft.roomId, kind: draft.kind,
+      furnitureId: draft.furnitureId, label: draft.label, x: draft.x, z: draft.z,
+      facing: draft.facing, interactionRegion };
+  });
 }
 
 export function committedMap(session: MapEditSession): CommittedMap {

@@ -821,3 +821,33 @@
 - 已知问题：`docs/AGENT_LOG.md` 与本轮之前的设计文档中仍存在对 `AGENTS.md` 历史章节名与编号的历史陈述（例如 S7B3B 设计文档中「不改 `AGENTS.md` 的阶段状态」），按「历史只追加、不回改」保留，不改写历史记录。
 - 下一步建议：请用户审核本轮迁移结果；确认后再决定是否建立文档检查点。之后若要推进，先由用户逐条批准 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 项参数（S7C-1B），或另行批准 DEV-A / DEV-B 提案。
 - Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：本轮**未 commit、未 push、未创建 Tag**；计划提交标题待用户确认后确定；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。
+
+## 2026-09-26 +08:00｜DEV-A 第一轮：藏身交互区域的数据与几何基础（实现轮）
+
+- 轮次性质：**实现轮**（用户本轮授权范围＝《谁吃了我的米》DEV-A 第一轮）。开始前已读 `AGENTS.md`、`docs/DEEPSEEK_HANDOFF.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/DEV_SCENE_EDITOR_DESIGN.md` 与实际源码，并核对 Git 状态：分支 `main`、`HEAD == origin/main == cc86af14ea0d6e062ff30d8a0b1ead113ca7ea6f`（`docs: separate permanent rules and streamline agent instructions`）、工作区仅未跟踪 `.dsh-meow/` 与 `.trae/`、无 `.git/MERGE_HEAD` / `REBASE_HEAD` 残留。
+- 本次目标（用户要求）：只执行 DEV-A 第一轮——圆形／扇形藏身交互区域的数据与纯几何基础，**不提前完成第二轮的场景编辑器 UI**。
+- 实际完成内容：
+  1. **数据**：`src/three/map/apartmentMap.ts` 新增 `HideInteractionShape` / `HideInteractionRegion` 类型与 `HideSpot.interactionRegion`；8 条藏身点写入用户指定参数（床与纸箱＝圆形 2.0 / 1.2，衣柜与柜架＝扇形 1.6 / 55°）。**8 个锚点坐标一个都没改**，稳定 ID、`furnitureId`、`facing`、`label`、`kind` 全部保持原值。区域中心不单独存储（由 `furnitureId` 反查家具中心），扇形轴由「家具中心 → 现有锚点」推导，因此编辑器四分之一转（只交换 AABB 宽深）不改变区域中心与轴。
+  2. **几何与合法位置基础接口**：新增 `src/three/map/HideInteractionRegion.ts`，明确分三层——①精确连续成员判定（边界含入、角度环绕到 `(-π, π]`）；②合法位置检查（复用真实 `CollisionWorld.canOccupyStaticXZ` 与真实 `NavigationSystem.nearestFree` / `findPath`；遮挡瞄准家具**可接近表面**而不是家具中心，绑定家具不参与自身遮挡集合）；③**明确离散**的采样预览（结果带 `discrete: true` / `method: 'LATTICE'` / `step`，步长依赖由测试固定）。另有 `validateHideRegionData()` 纯数据校验。
+  3. **第一项检查结论（用户要求：先报告、不得直接替换校验）**：既有「锚点 ↔ 家具」校验用的是**家具表面距离**——`tests/hide-spot.test.mjs:48-50` 的 `gapToRect` 与 `:98-102` 的 ≥ 0.05 断言，以及 `src/three/map/MapEditModel.ts:183-187` 的 `rectDistanceXZ` 配合 `:21-23` 的 `EDIT_LIMITS.minAnchorFurnitureGap` / `maxAnchorFurnitureGap`（0.05 / 0.9，使用点在 `:395-412`）。实测 8 个锚点：表面距离 0.255–0.450（全部落在 [0.05, 0.9] 内，`validateEditedMap()` 对原始地图仍为 0 个拒绝）、中心距离 0.900–1.812。本轮新增的区域半径 1.2–2.0 是**中心距离**度量，与表面距离并存、**未替换任何既有校验**；8/8 锚点落在自己的区域内（锚点到区域边界余量 0.188–0.338）。记录一条未来注意点：不得把 `maxAnchorFurnitureGap`（表面）当作半径（中心）的合法上限复用。
+  4. **类型补全（编辑器行为不变）**：`src/three/SceneEditor.ts` 的 `draftSpotsToAnchors()` 改为通过稳定 ID 把 `interactionRegion` 原样透传（否则场景重建路径拿不到完整 `HideSpot`）；区域数据不进可编辑草稿、不进导出 JSON、不进面板字段，编辑器行为与拒绝码零改动。
+  5. **测试**：新增 `tests/hide-interaction-region.test.mjs`（13 项），覆盖批准参数逐条对齐与 kind→形状映射、区域中心/轴与既有 `facing` 的一致性、8 个锚点都在自己区域内、圆形边界精确含入、扇形两侧半角与 ±π 接缝（含「未环绕时必然失败」的断言）、四分之一转不变与锚点四象限轴推导、8 个锚点逐个验证「瞄准中心会被家具自身挡住、瞄准表面可通过且 `LEGAL`」、隔墙误判拒绝（储物间纸箱厨房侧 `(14.6, -4.8)`：在区域内、可站立、有导航格，仅因 `wall_038` 挡住「位置 → 家具表面」的路线而判 `SURFACE_BLOCKED`）、8 个区域各自存在合法位置、合法位置都在本房间内且可从锚点 A* 到达、采样预览的离散标记/内部一致性/步长依赖/非法步长抛错、缺省门状态等价于各门 `initialState`、数据校验的 7 种非法输入、编辑器透传与 `interactionRegion` 只读性。
+  6. **文档**：新增 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`（已批准参数表、三层接口、与既有校验的度量关系、验证结果、第二轮要接的接口与未实现清单）；`docs/DEEPSEEK_HANDOFF.md` 同步授权状态、阶段进度「下一项」行、自动化基线（383/383）、§10 编辑器类型补全说明、§12 DEV-A 状态与 8 问回答映射。
+- 保留的安全边界：**DEV-A 只有第一轮获得过授权**；DEV-A 第二轮（编辑器编辑半径/角度/朝向、校验与导出、DEV 可视化）与 DEV-B、S7C-1B、S7C-2 / 2b / 3 仍未授权；未实现 `HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化；未改 `GAME_CONFIG` 与任何已验收数值；未改已验收的编辑器行为、`MapEditModel` 可编辑字段与拒绝码、`MapBuilder` DEBUG 标记；8 条锚点数据与「单一 anchor（进入点 = 退出点）」语义不变。
+- 新增文件：`src/three/map/HideInteractionRegion.ts`、`tests/hide-interaction-region.test.mjs`、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。修改文件：`src/three/map/apartmentMap.ts`、`src/three/SceneEditor.ts`、`docs/DEEPSEEK_HANDOFF.md`、`docs/AGENT_LOG.md`（本条）。删除文件：无。依赖变化：无。
+- 测试结果：`npm test` **383/383 PASS**（基线 370 + 本轮新增 13，fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。未启动开发服务器（本轮是数据与纯逻辑层，浏览器人工验收步骤由用户在其环境中执行）。
+- 已知问题：`hide_main_wardrobe` 的扇形区域半径 1.6 会在几何上伸进主卧西墙（区域是创作数据、不是碰撞体），其越界格点被 `NOT_STANDABLE` 正确拒绝；`hide_living_carton` 的圆形区域几何上越过客厅/餐厅墙，但越界点到不了角色圆半径，因此不产生任何新的合法位置。两者都不影响 8 个锚点本身仍是合法位置（已逐个断言）。
+- 下一步建议：请用户人工审核本轮数据与接口（第一轮没有 UI，验收以数据、接口与测试为准）；确认后再决定是否建立检查点，以及是否批准第二轮（场景编辑器接入半径/角度/朝向编辑、校验导出与 DEV 可视化）。
+- Git commit 信息（按本项目惯例写成提交前后都成立的措辞）：本轮**未 commit、未 push、未创建 Tag**；计划提交标题待用户确认后确定；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准。
+
+## 2026-09-26 +08:00｜DEV-A 第一轮：Git 归档（用户浏览器人工回归 PASS）
+
+- 任务名称：DEV-A 第一轮 Git 归档（用户授权本轮归档）。**用户已确认本轮浏览器人工回归 5/5 PASS**；归档前的自动化报告为 `npm test` 383/383 PASS、`npm run build` PASS、`git diff --check` PASS。
+- 本轮只归档已完成的 DEV-A 第一轮：8 个 `HideSpot` 的 `interactionRegion` 地图数据；圆形、扇形几何判定；碰撞、家具表面遮挡和导航合法性检查；离散采样辅助接口；`SceneEditor` 必要的新增字段透传；本轮测试及对应开发文档。
+- 归档前核查（`main` / `HEAD` / `origin/main` / `git status` / 合并变基残留 / `git fetch origin`）：分支 `main`；核查时 `HEAD == origin/main` = `cc86af14ea0d6e062ff30d8a0b1ead113ca7ea6f`（`docs: separate permanent rules and streamline agent instructions`）；`.git/{MERGE_HEAD,REBASE_HEAD,CHERRY_PICK_HEAD,rebase-merge,rebase-apply}` 全部不存在；`git fetch origin` 成功且 `git rev-list --left-right --count origin/main...HEAD` = `0 0`（远端无新增提交）；实际差异与授权清单完全一致，无额外文件、无未解释差异、无远端变化。
+- 归档文件（5 个修改 + 3 个新增）：`src/three/map/HideInteractionRegion.ts`（新增）、`src/three/map/apartmentMap.ts`、`src/three/SceneEditor.ts`、`tests/hide-interaction-region.test.mjs`（新增）、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`（新增）、`docs/DEEPSEEK_HANDOFF.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/AGENT_LOG.md`（本条）。
+- 人工验收与范围：**用户确认浏览器人工回归 5/5 PASS（2026-09-26）**；DEV-A 第一轮状态由「已实现、待人工审核」更新为「**已完成、阶段 Gate = PASS**」，并随本轮提交建立检查点。**只有 DEV-A 第一轮标记完成**；DEV-A 整体、DEV-A 第二轮、DEV-B、S7C-1B 均**未完成、未授权**。`AGENTS.md` 长期规则没有变化，本轮未修改。
+- 最终检查：`npm test` **383/383 PASS**（fail 0 / skipped 0，退出码 0）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0；暂存后 `git diff --cached --check` 退出码 0，`git diff --cached --name-status` 与上述清单一致（仅这 8 个文件）。
+- 已知问题（沿用第一轮记录，均不阻断）：`hide_main_wardrobe` 的扇形区域在几何上伸进主卧西墙、`hide_living_carton` 的圆形区域几何上越过客厅/餐厅墙，越界格点都被 `NOT_STANDABLE` / `SURFACE_BLOCKED` 正确拒绝，8 个锚点本身仍是合法位置。
+- 下一步建议：**不得自动进入 DEV-A 第二轮**；DEV-A 第二轮（场景编辑器编辑半径/角度/朝向、校验与导出、DEV 可视化）与 DEV-B、S7C-1B 仍需用户分别授权。
+- Git 归档信息（按本项目惯例写成提交前后都成立的措辞）：提交标题 `feat: complete dev-a hide region geometry foundation`，**不创建 Tag**；实际 commit SHA 与 push 结果以本次 Git 执行和最终汇报为准（不写死自身 SHA）。

@@ -206,6 +206,26 @@ export const SPAWNS = {
 
 export type HideSpotKind = 'WARDROBE' | 'BED' | 'SHELF' | 'CARTON';
 
+export type HideInteractionShape = 'CIRCLE' | 'SECTOR';
+
+// DEV-A round 1: the authored interaction area of one hide spot. This is
+// grey-box map authoring data, not a gameplay balance value, so it deliberately
+// stays out of GAME_CONFIG (same rule as EDIT_LIMITS in MapEditModel).
+//
+// - The region centre is always the centre of the bound furniture. It is not
+//   stored here: it is looked up through `furnitureId`, so a moved furniture
+//   piece moves its region without a second copy of the same coordinate.
+// - CIRCLE: radius only.
+// - SECTOR: radius plus `halfAngleDeg` at each side of the axis that runs from
+//   the furniture centre towards the existing anchor (enter = exit).
+// Geometry, legality checks and the discrete sampling preview live in
+// `HideInteractionRegion.ts`; this interface only carries authored numbers.
+export interface HideInteractionRegion {
+  shape: HideInteractionShape;
+  radius: number; // world units, measured from the bound furniture centre
+  halfAngleDeg?: number; // SECTOR only: half opening angle in degrees (per side)
+}
+
 // S7C-1A map configuration only: hide spots are authored data, never a second
 // collider or navigation obstacle. `MapPoint.x/z` is the one legal approach
 // position (enter = exit) measured against the real actor circle; the furniture
@@ -220,25 +240,35 @@ export interface HideSpot extends MapPoint {
   // the furniture centre, for the presentation layer only.
   facing: number;
   label: string; // DEBUG_MAP marker text only
+  // DEV-A round 1: authored interaction area around the bound furniture centre.
+  interactionRegion: HideInteractionRegion;
 }
 
 export const HIDE_SPOTS: readonly HideSpot[] = [
   { id: 'hide_main_bed', roomId: 'main_bedroom', x: -14.4, z: -6.15, kind: 'BED',
-    furnitureId: 'main_bed', facing: 0.6877, label: '主卧床' },
+    furnitureId: 'main_bed', facing: 0.6877, label: '主卧床',
+    interactionRegion: { shape: 'CIRCLE', radius: 2 } },
   { id: 'hide_second_bed', roomId: 'second_bedroom', x: -14.4, z: 8.9, kind: 'BED',
-    furnitureId: 'second_bed', facing: 0.666, label: '次卧床' },
+    furnitureId: 'second_bed', facing: 0.666, label: '次卧床',
+    interactionRegion: { shape: 'CIRCLE', radius: 2 } },
   { id: 'hide_main_wardrobe', roomId: 'main_bedroom', x: -16.65, z: -6.6,
-    kind: 'WARDROBE', furnitureId: 'main_wardrobe', facing: -1.141, label: '主卧衣柜' },
+    kind: 'WARDROBE', furnitureId: 'main_wardrobe', facing: -1.141, label: '主卧衣柜',
+    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
   { id: 'hide_closet', roomId: 'closet', x: -3.57, z: -8.8, kind: 'WARDROBE',
-    furnitureId: 'closet_wardrobe', facing: 1.9867, label: '衣帽间衣柜' },
+    furnitureId: 'closet_wardrobe', facing: 1.9867, label: '衣帽间衣柜',
+    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
   { id: 'hide_study_bookshelf', roomId: 'study', x: -0.8, z: 11.05, kind: 'SHELF',
-    furnitureId: 'study_bookshelf', facing: 0.9828, label: '书房书柜' },
+    furnitureId: 'study_bookshelf', facing: 0.9828, label: '书房书柜',
+    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
   { id: 'hide_storage_shelf', roomId: 'storage', x: 16.8, z: -8.75, kind: 'SHELF',
-    furnitureId: 'storage_shelf', facing: 1.1563, label: '储物间货架' },
+    furnitureId: 'storage_shelf', facing: 1.1563, label: '储物间货架',
+    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
   { id: 'hide_living_carton', roomId: 'living', x: 7, z: 3.6, kind: 'CARTON',
-    furnitureId: 'living_carton', facing: 0.3218, label: '客厅纸箱' },
+    furnitureId: 'living_carton', facing: 0.3218, label: '客厅纸箱',
+    interactionRegion: { shape: 'CIRCLE', radius: 1.2 } },
   { id: 'hide_storage_carton', roomId: 'storage', x: 16.6, z: -4.8, kind: 'CARTON',
-    furnitureId: 'storage_carton', facing: 3.1416, label: '储物间纸箱' },
+    furnitureId: 'storage_carton', facing: 3.1416, label: '储物间纸箱',
+    interactionRegion: { shape: 'CIRCLE', radius: 1.2 } },
 ];
 
 // S7C-1A debug markers. A normal player view must never receive hide spot

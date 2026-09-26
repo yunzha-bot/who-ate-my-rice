@@ -27,7 +27,7 @@
 
 ## 2. Git 与资料边界
 
-本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**当前 HEAD 以 `main` 的最新提交为准（`git log -1` / `git ls-remote origin refs/heads/main`），本节刻意不写死自身 SHA**；`main` 与 `origin/main` 双向同步、`git rev-list --left-right --count origin/main...HEAD` = `0 0`。最近一次**含阶段内容**的检查点为 `3191bec843606ae4bab01d6932cff0ac87955101`（`feat: complete s7c-1a hide spots and dev scene editor v1`，24 个文件，+3976/−71）——**S7C-1A（8 藏身点数据 + 2 个纸箱）与 DEV 场景热编辑器 V1 + 双阵营调试冻结的阶段 Gate 由该提交承载**；其上有纯文档检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`，5 个文档文件，+152/−23）。再上为 `6a92c5d`（S7B-3B）、`ca18f61`。`.git/` 下无 `MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 残留。
+本次归档快照的 Git 边界：当前目录是指定 Web 主仓库，分支 `main`，`origin` 为 `https://github.com/yunzha-bot/who-ate-my-rice.git`。**当前 HEAD 以 `main` 的最新提交为准（`git log -1` / `git ls-remote origin refs/heads/main`），本节刻意不写死自身 SHA**；`main` 与 `origin/main` 双向同步、`git rev-list --left-right --count origin/main...HEAD` = `0 0`。最近一次**含阶段内容**的检查点为本轮 **DEV-A 第一轮**提交（`feat: complete dev-a hide region geometry foundation`，8 个文件）——**DEV-A 第一轮（藏身交互区域的数据与几何基础）的阶段 Gate 由该提交承载，实际 SHA 以 `git log -1` 查询**；其下依次为 `3191bec843606ae4bab01d6932cff0ac87955101`（`feat: complete s7c-1a hide spots and dev scene editor v1`，24 个文件，+3976/−71，承载 S7C-1A 与 DEV 场景热编辑器 V1 的阶段 Gate）、`6a92c5d`（S7B-3B）、`ca18f61`；两者之间另有纯文档检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`、`a889d3c`、`21e5d18`、`0ed2838` 与 `cc86af14ea0d6e062ff30d8a0b1ead113ca7ea6f`（文档职责重构）。`.git/` 下无 `MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 残留。
 
 本文件更新于 2026-09-26 的纯文档同步轮；该轮已作为检查点 `e1829c92ef3c3f428c0ab52592a7e6a9093d413f`（`docs: sync stage gates and long-term preconditions to checkpoint 3191bec`，5 个文档文件）提交并推送 `origin/main`。如需确认最新状态，仍以 `git log` / `git status` 为准。另有始终未跟踪的 `.trae/` 与 `.dsh-meow/` 用户资料，**必须保留，不得提交、不得读取、不得暂存**。
 
@@ -35,7 +35,7 @@
 
 **全项目通用开发规则与执行规范**（`AGENTS.md` 的长期规则章节，含 Git 基线与工作区保护、开发阶段授权、测试与人工验收、开发环境、已验收功能保护、Git 归档与提交报告、文档维护，以及「阶段专属开工要求不保存在 `AGENTS.md`；开始任一阶段前须先读该阶段设计文档并逐项确认其中的待批准项」这一规定）已整节收录在 `AGENTS.md`，**本文件不重复复制整套规则**，只在此引用；两者冲突时以 `AGENTS.md` 为准。
 
-当前授权状态：S7C-1B 尚未授权，S7C-2 / S7C-2b / S7C-3 同样未授权；**DEV-A**（圆形／扇形藏身交互区域配置、可视化与编辑）与 **DEV-B**（已有抓捕、视觉、听觉等参数的运行时热更新与实际范围可视化）是**待批准的独立提案，不是已经开始的任务**。任何 WIP 都不代表阶段发布、S7B 整体完成、S7C 整体完成或 S7C-1B 已授权。
+当前授权状态：S7C-1B 尚未授权，S7C-2 / S7C-2b / S7C-3 同样未授权；**DEV-A 第一轮（藏身交互区域的数据与几何基础）已完成——用户浏览器人工回归 5/5 PASS（2026-09-26）、阶段 Gate = PASS，并随本轮提交建立检查点（实际 SHA 以 `git log -1` 查询）**；**DEV-A 整体与 DEV-A 第二轮（编辑器编辑、校验、导出、可视化）、DEV-B 均未授权**。任何 WIP 都不代表阶段发布、S7B 整体完成、S7C 整体完成或 S7C-1B 已授权。
 
 ## 3. 实际运行架构
 
@@ -65,7 +65,8 @@
 | S7B overall | 进行中，未完成（S7B-1 ～ 3B-4 均已通过人工验收）。 |
 | S7C-1A | 藏身点白模与地图配置：8 条 `HideSpot` 数据 + 2 个纸箱 `FURNITURE`，**未接入任何玩法**。**用户浏览器人工验收 PASS（2026-09-26）、阶段 Gate = PASS**，已并入稳定检查点 `3191bec` 并推送 `origin/main`。 |
 | DEV 场景热编辑器 V1 + 双阵营调试冻结 | 独立 DEV 工具轮（不计入 S7C）：`DevFreezeSystem`、`MapEditModel`、`SceneEditorView / SceneEditorPanel / SceneEditor`。**用户浏览器人工验收 PASS（2026-09-26，五项）、阶段 Gate = PASS**，已并入稳定检查点 `3191bec` 并推送 `origin/main`。 |
-| 下一项 | S7C-1B（玩家基础藏身交互）**尚未授权、未开始**，开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 行参数（该设计文档 §3.5 即其开工前置条件）。**DEV-A / DEV-B 是待批准的独立提案，尚未排入开发**（专属开工要求见本文件「待批准提案与专属开工要求」节）；S7C-2 / 2b / 3 未授权。 |
+| DEV-A 第一轮 | 藏身交互区域的数据与几何基础：8 条 `HideSpot.interactionRegion`（床与纸箱圆形 2.0 / 1.2，衣柜与柜架扇形 1.6·55°）、圆形／扇形精确几何、合法位置检查（真实 `CollisionWorld` + 真实 `NavigationSystem` + 瞄准家具可接近表面）、离散采样预览接口、`SceneEditor` 字段透传、13 项新测试、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。**用户浏览器人工回归 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，随本轮提交建立检查点。**DEV-A 整体与 DEV-A 第二轮（编辑器编辑/校验/导出/可视化）未授权**；`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化仍未实现。 |
+| 下一项 | S7C-1B（玩家基础藏身交互）**尚未授权、未开始**，开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 第 6 节第 3–14 行参数（该设计文档 §3.5 即其开工前置条件）。**DEV-A 第一轮已完成（Gate = PASS）；DEV-A 整体与第二轮、DEV-B 仍未授权**；S7C-2 / 2b / 3 未授权。 |
 | S7C 后续 | S7C-1B / 2 / 2b / 3 尚未授权；Human `CHECK_HIDE` 仍只是保留接口。 |
 
 历史细节与测试结果以 `docs/AGENT_LOG.md` 为准；不要把单项 PASS 扩大解释为 S7B Gate PASS。
@@ -139,9 +140,9 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - Human AI 自动解锁耗时 8,750 ms 按用户决定留作 S16 平衡复评。
 - 构建的主 JavaScript chunk 约 762 kB，Vite >500 kB 警告非阻断。
 - **S7B-3B 的实机验证口径**：3B-1 主动锁门与 3B-2 防振荡已由用户浏览器人工验收 PASS；但**修复后仍缺一份完整实机 AI JSON**（手上日志产生于侧向证据修复之前），锁门频率、`SPRINT_IN_PROGRESS` 是否归零等仍应以新日志复核。
-- 自动化基线（截至稳定检查点 `3191bec`）：`npm test` **370/370 PASS**；`npm run build`（含 `tsc --noEmit`）PASS；`git diff --check` PASS。
+- 自动化基线（DEV-A 第一轮归档后）：`npm test` **383/383 PASS**（DEV-A 第一轮新增 13 项；前一个含阶段内容的检查点 `3191bec` 时为 370/370）；`npm run build`（含 `tsc --noEmit`）退出码 0；`git diff --check` 退出码 0。
 - 文档同步（历史）：`docs/AI_DEEPSEEK_STATE_TREE.md`（删除与源码漂移的重复数值表、补「主动关门与主动锁门」状态机章节）、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7B3B_DOOR_LOCK_DESIGN.md`。
-- 当前状态：S7B-3B 已并入检查点 `6a92c5d`；**S7C-1A 与 DEV 场景热编辑器 V1 均已通过用户浏览器人工验收、阶段 Gate = PASS，并已并入含阶段内容的检查点 `3191bec`（24 个文件，已推送 `origin/main`）**。其后仅有纯文档检查点（最新提交始终以 `git log -1` 查询，逐轮归档记录见 `docs/AGENT_LOG.md`）。S7C-1B 未授权，Human `CHECK_HIDE` 仍只是保留接口；DEV-A / DEV-B 为待批准提案；**S7B 整体与 S7C 整体均仍未完成**。
+- 当前状态：S7B-3B 已并入检查点 `6a92c5d`；**S7C-1A 与 DEV 场景热编辑器 V1 均已通过用户浏览器人工验收、阶段 Gate = PASS，并已并入含阶段内容的检查点 `3191bec`（24 个文件，已推送 `origin/main`）**。其后仅有纯文档检查点（最新提交始终以 `git log -1` 查询，逐轮归档记录见 `docs/AGENT_LOG.md`）。**DEV-A 第一轮（藏身交互区域的数据与几何基础）已通过用户浏览器人工回归（5/5 PASS，2026-09-26）、阶段 Gate = PASS，并随本轮提交建立检查点**（设计与接口见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`；`npm test` 383/383、`npm run build` 退出码 0、`git diff --check` 退出码 0）。S7C-1B 未授权，Human `CHECK_HIDE` 仍只是保留接口；DEV-A 整体与第二轮、DEV-B 为待批准提案；**S7B 整体与 S7C 整体均仍未完成**。
 
 ## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（人工验收 PASS、阶段 Gate = PASS，2026-09-26）
 
@@ -154,6 +155,7 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - **拒绝必须可见**：纯函数 `sceneEditorRefusalNotice(phase, rejection)` + `.scene-editor-notice`（8 秒自动隐藏）。被拒绝的操作必须有可见反馈；且「面板还在」不等于「点得到」，需用 `elementFromPoint` 证明未被遮挡。
 - **热重建路径**：`ThreeGame.rebuildApartment()` = `ApartmentBuild.dispose()` → 用**已应用数据** `buildApartment` → 新 `CollisionWorld` + `NavigationSystem` → 两套 AI `rebindNavigation()` → `syncAllDoors()`。
 - **刻意的边界**：家具朝向只支持 0/90/180/270°（AABB 碰撞模型的限制，自由旋转需 OBB 碰撞 + 导航重建）；无撤销 / 重做；已应用编辑只在内存，刷新即回到 `apartmentMap.ts`；`EDIT_LIMITS` 等校验常量**刻意不放进 `GAME_CONFIG`**（灰盒创作约束，不是玩法数值）。
+- **DEV-A 第一轮带来的类型补全（编辑器行为不变）**：`HideSpot` 新增 `interactionRegion` 后，`draftSpotsToAnchors()` 改为通过稳定 ID 把该字段**原样透传**（区域数据不进可编辑草稿、不进导出 JSON、不进面板字段），否则场景重建路径拿不到完整 `HideSpot`。编辑器行为、拒绝码与可编辑字段均未改动，既有地图/编辑器测试与新增断言全部通过。
 - 已知非阻断项：窗口高度很矮（实测 762×484）时编辑器对象列表与属性区互相挤压，需要内部滚动。
 
 ## 11. S7C-1A 藏身点地图数据（人工验收 PASS、阶段 Gate = PASS，2026-09-26）
@@ -162,17 +164,21 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 
 **藏身玩法仍未实现**：没有 `HideSystem`、没有进入 / 退出藏身键、没有 `VisionSystem` 改动、没有 Human `CHECK_HIDE`、没有地图随机化；`DEBUG_MAP` 标记由纯函数 `hideSpotDebugMarkers(enabled)` 产出，关闭时返回空数组（有测试断言）。S7C-1B 的参数（进入 400 ms、与 Human ≥ 1.5、交互距离 1.0 或 1.3、表现 V1/V2/V3、`HIDE_*` 事件）**仍属建议值，不构成授权**，开工前须逐条批准设计文档第 6 节第 3–14 项。床底不做实心碰撞改动（真钻床底需「床框 + 空洞」专项设计单独批准）。
 
-**DEV-A 与现有锚点数据的关系（未决设计约束）**：DEV-A 提出的圆形／扇形藏身交互区域**尚未批准**，因此**暂时保留现有单一 anchor**——`HideSpot.x/z` 就是唯一的进入点与退出点，上列 8 条锚点数据继续有效、语义不变；圆形／扇形只作为待批准的扩展。**是否把进入锚点与退出锚点拆成两个独立点，留到未来单独决定**（完整专属开工要求见下方「待批准提案与专属开工要求」节）。
+**DEV-A 与现有锚点数据的关系（2026-09-26 DEV-A 第一轮后更新）**：圆形／扇形藏身交互区域已在 DEV-A 第一轮按用户指定参数落地为**地图创作数据**（`HideSpot.interactionRegion`，见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`），**未接入任何玩法**；**现有单一 anchor 保持不变**——`HideSpot.x/z` 就是唯一的进入点与退出点，上列 8 条锚点数据继续有效、一个都没改。**是否把进入锚点与退出锚点拆成两个独立点，留到未来单独决定**（完整专属开工要求见下方「待批准提案与专属开工要求」节）。
 
 ## 12. 待批准提案与专属开工要求（DEV-A / DEV-B，尚未授权）
 
-> 本节承接原 `AGENTS.md`「长期开发路线与全阶段开发前置条件」中属于**具体阶段**的内容（原前置条件 3、4）。**这是文档职责调整，不代表批准任何玩法**：DEV-A、DEV-B、S7C-1B、S7C-2、S7C-2b、S7C-3 仍未授权。
+> 本节承接原 `AGENTS.md`「长期开发路线与全阶段开发前置条件」中属于**具体阶段**的内容（原前置条件 3、4）。**本节的存在不代表批准任何玩法**：S7C-1B、S7C-2、S7C-2b、S7C-3 仍未授权；**DEV-A 第一轮（数据与几何基础）已完成（Gate = PASS），DEV-A 整体与第二轮仍未授权**；DEV-B 未授权。
 >
-> DEV-A 与 DEV-B 的**先后顺序属于当前规划，不是不可改变的强制技术依赖**；两者都是待批准的独立提案，不是已经开始的任务。
+> DEV-A 与 DEV-B 的**先后顺序属于当前规划，不是不可改变的强制技术依赖**。
 >
-> **待单独批准（尚未授权）**：S7C-1B → S7C-2 → S7C-2b → S7C-3；**候选独立任务（待批准，不是正在开发）**：DEV-A → DEV-B。
+> **待单独批准（尚未授权）**：S7C-1B → S7C-2 → S7C-2b → S7C-3；DEV-A 第二轮 → DEV-B。**DEV-A 第一轮已完成并建立检查点。**
 
-### DEV-A：圆形／扇形藏身交互区域配置、可视化与编辑（待批准的独立提案）
+### DEV-A：圆形／扇形藏身交互区域配置、可视化与编辑（**第一轮已完成，Gate = PASS；整体与第二轮未授权**）
+
+> **状态（2026-09-26）**：DEV-A **第一轮「藏身交互区域的数据与几何基础」已完成**——`HideSpot.interactionRegion`（8 条已批准参数）、新增 `src/three/map/HideInteractionRegion.ts`（精确几何 / 合法位置检查 / 离散采样预览 / 纯数据校验）、新增 `tests/hide-interaction-region.test.mjs`（13 项），`npm test` 383/383。**用户浏览器人工回归 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，并随本轮提交 `feat: complete dev-a hide region geometry foundation` 建立检查点（实际 SHA 以 `git log -1` 查询）；设计、参数表、接口与验证细节见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。
+>
+> **第一轮明确不含**：场景编辑器 UI、家具移动后的锚点自动同步、JSON 导出升级、`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、任何 `GAME_CONFIG` 改动；现有单一 anchor（`HideSpot.x/z` 进入点 = 退出点）语义不变。**DEV-A 第二轮**（编辑器调整半径/角度/朝向、校验与导出、DEV 可视化）与 **DEV-B** 仍**未授权**。
 
 正式开发前必须逐项明确：
 
@@ -185,9 +191,11 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 7. 场景编辑器如何调整半径、角度及朝向；
 8. 改动如何校验和导出。
 
+> **第一轮已回答第 1–6 问**（第 6 问结论：本轮继续保留单一 anchor，不拆分进入/退出点）；**第 7–8 问属第二轮**。逐条结论见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md` §1。
+
 该阶段**只实现交互区域的数据、几何校验、编辑及 DEV 可视化**；没有额外授权，**不得提前实现 `HideSystem`、实际按键藏身或 Human `CHECK_HIDE`**。
 
-**未决设计约束（2026-09-26 记录，只作约束、不开始实现）**：DEV-A 提出的**圆形／扇形藏身交互区域尚未批准**，因此**暂时保留现有单一 anchor**——`HideSpot.x/z` 就是唯一的进入点与退出点，现有 8 条锚点数据在未批准前继续有效、语义不变；圆形／扇形只作为**待批准的扩展**存在，不得据此改动现有锚点数据或提前实现区域判定。**是否把「进入锚点」与「退出锚点」拆成两个独立点，留到未来单独决定**，本阶段不做拆分、不预留两套字段。
+**未决设计约束（2026-09-26 记录，同日 DEV-A 第一轮后更新）**：DEV-A 的**圆形／扇形交互区域已在第一轮按用户指定参数落地**（`HideSpot.interactionRegion`：纯数据 + 精确几何 + 合法位置检查接口，**未接入任何玩法**、没有任何系统用它做判定，目前只被 `HideInteractionRegion.ts` 与测试读取）；**现有单一 anchor 仍然不变**——`HideSpot.x/z` 就是唯一的进入点与退出点，8 条锚点数据一个都没改、语义不变。**是否把「进入锚点」与「退出锚点」拆成两个独立点，留到未来单独决定**，本阶段不做拆分、不预留两套字段。
 
 ### DEV-B：已有抓捕、视觉、听觉等参数的运行时热更新与实际范围可视化（待批准的独立提案）
 
@@ -209,7 +217,8 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - `MANUAL_DEV_FREEZE` 和 `SCENE_EDITOR` 双冻结原因；
 - READY 阶段独立计时；
 - 现有 DEV 调控台及其全部按钮；
-- 场景编辑后的碰撞及导航重建流程（`dispose → buildApartment → 新 CollisionWorld + NavigationSystem → rebindNavigation → syncAllDoors`）。
+- 场景编辑后的碰撞及导航重建流程（`dispose → buildApartment → 新 CollisionWorld + NavigationSystem → rebindNavigation → syncAllDoors`）；
+- **DEV-A 第一轮**的区域数据与几何/合法性接口（`HideSpot.interactionRegion` 的已批准参数 2.0 / 1.6·55° / 1.2、`HideInteractionRegion.ts` 的精确几何、瞄准家具可接近表面、离散采样语义——不得擅自改动参数，也不得把离散采样呈现为精确面积）。
 
 两条长期禁令：**新增按钮不得覆盖原 DEV 入口**（入口必须作为 `DebugDetailsPanel.topRow` 的 flex 项，禁止再引入绝对定位覆盖层）；**不得将 READY 计时误接到 PLAYING 冻结时间源**（`readyDelta` 与 `gameplayDelta` 是两个不同的时间缝）。
 
