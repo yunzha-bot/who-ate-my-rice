@@ -35,13 +35,13 @@
 
 **全项目通用开发规则与执行规范**（`AGENTS.md` 的长期规则章节，含 Git 基线与工作区保护、开发阶段授权、测试与人工验收、开发环境、已验收功能保护、Git 归档与提交报告、文档维护，以及「阶段专属开工要求不保存在 `AGENTS.md`；开始任一阶段前须先读该阶段设计文档并逐项确认其中的待批准项」这一规定）已整节收录在 `AGENTS.md`，**本文件不重复复制整套规则**，只在此引用；两者冲突时以 `AGENTS.md` 为准。
 
-当前授权状态：DEV-B 已完成批准范围、人工验收通过并归档；其任何后续扩展仍需单独授权。S7C-1B、S7C-2、S7C-2b、S7C-3 尚未授权；S7B 与 S7C 整体均未完成。DEV-A 的未实施范围仅包括刻意未做的 JSON 导入器与尚未决定的进入/退出锚点拆分。
+当前授权状态：DEV-B 已完成批准范围、人工验收通过并归档；其任何后续扩展仍需单独授权。**S7C-1B 已获完整授权、浏览器人工验收 6/6 通过，并由本轮提交归档**（DeepSeek 藏身、Human 玩家 Q 扇形搜查与手动抓捕、DeepSeek 玩家 Q 锁门 20 秒冷却、感知与常规抓捕联动、地图应用预检、DEV `Hide / 藏身` 分类与 AI JSON `hideEvents`）。S7C-2、S7C-2b、S7C-3 尚未授权；S7B 与 S7C 整体均未完成。DEV-A 的未实施范围仅包括刻意未做的 JSON 导入器与尚未决定的进入/退出锚点拆分。Human AI 的 `CHECK_HIDE` 仍是预留接口（本轮只实现玩家侧搜查）。
 
 ## 3. 实际运行架构
 
 1. `src/main.ts` 创建 `ThreeGame`。`src/three/ThreeGame.ts` 初始化 Three.js Scene / Renderer / OrthographicCamera、白模地图、角色、门和米视图，负责每帧调度及 HTML HUD。
 2. `ThreeGame` 将玩家正式阵营、临时输入目标、AI 输入、碰撞移动和状态结果接到各系统。AI 仅在相应正式玩家阵营时运行；暂停、结算、另一角色的开发临时接管期间不夺取控制。
-3. `src/systems/HumanAIController.ts` 实现 Human 的巡逻、调查、追逐、抓捕、搜索及门决策；`CHECK_HIDE` 是为后续藏身检查保留的状态，正式藏身玩法尚未实现。
+3. `src/systems/HumanAIController.ts` 实现 Human 的巡逻、调查、追逐、抓捕、搜索及门决策；`CHECK_HIDE` 仍是尚未接入的预留状态。玩家侧藏身与 Human 玩家 Q 搜查已在 S7C-1B 实现并验收。
 4. `src/systems/DeepSeekAIController.ts` 实现 DeepSeek 找米、进食意图、威胁回避、好奇和安全通行、SAFE_WAIT 及本次条件关门。它只接收当前系统提供的视觉、声音、Last Seen 和独立 Human 静止信息，不应增加隔墙读取 Human 实时位置的逻辑。
 5. `src/systems/NavigationSystem.ts` 提供共用 XZ 网格 A*，查询 `DoorState`、静态碰撞和可选避让区。最终角色移动仍走 `CollisionWorld`，禁止由 AI 瞬移或绕过实体碰撞。
 6. `src/systems/DoorSystem.ts` 是门状态唯一来源，支持真实 `OPEN / CLOSED / LOCKED` 状态、toggle、DeepSeek 锁门、Human 解锁/强破与 reset。`ThreeGame.applyDoorResult()` 将门状态同步至 `DoorView`、动态碰撞及门声音。
@@ -50,6 +50,7 @@
 9. `src/config/gameConfig.ts` 导出 `GAME_CONFIG`；所有可调玩法参数由此定义，改动时同步 `docs/GAME_BALANCE_CONFIG.md`。地图坐标和状态枚举仍属于相应地图/系统。
 10. `src/three/DebugDetailsPanel.ts` 和 `ThreeGame.ts` 展示可收纳 UE Details 风格 DEV 面板。`src/systems/AILogCollector.ts` 以状态快照差异和显式事件记录 AI JSON；面板提供当前局导出。
 11. **DEV-B 实时 AI 调试工具**（开发环境专用，接入 DEV 面板，不替换场景编辑器）：`src/systems/RuntimeDebugOverrides.ts`（仅内存的参数覆盖层，38 项白名单）、`src/systems/DevBRuntimeBinding.ts`（半径变化清空抓捕进度、新局清覆盖、有效速度）、`src/systems/DevBObserver.ts`（只读状态整理）、`src/three/DevBView.ts`（抓捕圈 / 视觉距离圆 / 真实视线 / AI 路径 / 声音事件）、`src/three/DevBPanel.ts` + `src/three/DevBDebug.ts`（面板与编排）。感知与两套 AI 通过可选 `SoundTuning` / `OcclusionTuning` / `VisionTuning` / `setRuntimeTuning()` 读取有效值；正式 `GAME_CONFIG` 始终只读。
+12. **S7C-1B 藏身与 Q 技能**（用户浏览器人工验收 6/6 通过，本轮归档）：`src/systems/HideSystem.ts`（纯逻辑藏身状态机：E 点按立即切换、每条拒绝路径、退出原因与事件）、`src/systems/HumanSearchSkill.ts`（Human Q 扇形判定核心，与按键、冷却、特效分离，可被未来 S7C-2 的 Human AI 复用）、`src/systems/HideInteractionArbitration.ts`（E 键唯一仲裁：扫雷 > 门 > 藏身 > 进食）、`src/systems/SkillCooldown.ts` + `src/systems/SkillGates.ts`（两个 Q 的冷却与门禁）、`src/three/HideSearchView.ts`（扇形特效与命中家具临时高亮，几何体只创建一次）、`src/three/map/MapApplicationPrecheck.ts`（地图应用前只读预检）。`ThreeGame` 负责接线：`VisionSystem.setConcealed()`、抓捕资格门控、`GameStateSystem.forceCapture()`（复用同一条抓捕结算）、藏身期间位移/冲刺/进食/锁门封锁、普通 HUD 技能提示与 DEV `Hide / 藏身` 分类。
 
 ## 4. 阶段进度
 
@@ -70,8 +71,9 @@
 | DEV-A 第二轮 + DEV-A-FIX-1 | 区域编辑器：可编辑区域半径／扇形半角（`REGION_AUTHORING_LIMITS` 半径 0.5–3、半角 10–150°）、家具移动或旋转时锚点跟随、区域类校验拒绝码、JSON 导出升为 **V2**、DEV 面板「交互区域预览」开关 + 按 `code` 着色的离散采样点与图例（精确轮廓与离散采样分开呈现）；以及**流畅拖动**（延迟校验窗口 `beginDeferredValidation` + 释放时校验一次、预览对象长期复用）。**用户浏览器人工验收：第二轮区域编辑／预览／校验／JSON V2 及旧功能回归全部通过；FIX-1 流畅拖动 5/5 PASS；阶段 Gate = PASS**，随本轮提交建立检查点。**阶段 Gate = PASS**，随本轮提交建立检查点。 |
 | DEV-A-FIX-2 | 家具任意角度旋转与 JSON **V3** 导出：`Rect.rotation` + `RotatedRect.ts` 统一旋转几何（约定同 `THREE.Object3D.rotation.y`）、`CollisionWorld` 的 `OrientedObstacle` 真实旋转碰撞（包围 AABB 仅粗筛、轴对齐路径数学逐字未改）、`rotationQuarter`→`rotationDeg`（0°–359.9°）与可关闭的 15° 吸附（默认关闭、不进 JSON）、房间边界改为四角点均在房间内、家具重叠改为真实 SAT、门洞改为与膨胀门叶真实重叠、关联锚点与 `facing` 同步旋转、编辑器/导航/遮挡全部改用真实旋转轮廓。**用户浏览器人工验收 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，随本轮提交建立检查点。**DEV-A 已批准范围至此全部完成**；未完成的 DEV-A 相关项只有 JSON 导入器（刻意未开发）与进入/退出锚点拆分（未决定）。 |
 | DEV-B（实时 AI 调试工具） | 已完成批准范围并经用户浏览器人工验收 6/6 通过。最终验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。38 项临时参数仅在内存中生效，正式 `GAME_CONFIG` 不变；完整功能、限制与测试清单见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`，历史见 `docs/AGENT_LOG.md`。|
-| 下一项 | S7C-1B（玩家基础藏身交互）尚未授权、未开始；开工前须逐条确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 的待批准参数。S7C-2 / 2b / 3 同样未授权；DEV-B 后续扩展需单独授权。|
-| S7C 后续 | S7C-1B / 2 / 2b / 3 尚未授权；Human `CHECK_HIDE` 仍只是保留接口。 |
+| S7C-1B | 玩家基础藏身交互 + Human 玩家 Q 扇形搜查/手动抓捕 + DeepSeek 玩家 Q 锁门冷却：**浏览器人工验收 6/6 通过，并由本轮提交归档**。数值来源：`GAME_CONFIG.humanSearch`（半径 1.5、半角 60°＝张角 120°、冷却 12 秒）与 `GAME_CONFIG.door.playerLockCooldownMs`（20 秒，只有 `lock()` 返回 `LOCKED` 才开始计时）。未新增藏身音效；未实现 Human AI 的 `CHECK_HIDE`、DeepSeek AI 自主藏身与地图随机化。 |
+| 下一项 | S7C-1B 已验收并归档；S7C-2（Human AI 搜查藏身点与 `CHECK_HIDE`）、S7C-2b、S7C-3 尚未授权、未开始；DEV-B 后续扩展需单独授权。|
+| S7C 后续 | S7C-1B 已验收并归档；S7C-2 / 2b / 3 尚未授权；Human AI `CHECK_HIDE` 仍只是保留接口（本轮只实现 Human 玩家主动搜查）。 |
 
 历史细节与测试结果以 `docs/AGENT_LOG.md` 为准；不要把单项 PASS 扩大解释为 S7B Gate PASS。
 
@@ -141,28 +143,28 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - **S7B-3B 的实机日志缺口**：用户验收已通过，但缺少侧向证据修复后的完整 AI JSON；锁门频率等仍应由新日志复核。
 - 最近一次已记录的 DEV-B 验证：`npm test` 472/472、`npx tsc --noEmit`、`npm run build`、`git diff --check` 均通过。此为历史基线，不代表本轮重跑。
 - 各阶段的测试增量、构建体积和文档变更历史见 `docs/AGENT_LOG.md`。
-- 当前状态：S7B 整体仍未完成；S7C 整体仍未完成。S7C-1B 未授权，Human `CHECK_HIDE` 仍为预留接口。DEV-A 已完成批准范围；DEV-B 已通过 6/6 浏览器人工验收并随本轮归档。各阶段细节与旧测试结果见 `docs/AGENT_LOG.md`。
+- 当前状态：S7B 整体仍未完成；S7C 整体仍未完成。**S7C-1B 已通过用户浏览器人工验收并由本轮提交归档**；DEV-A 已完成批准范围；DEV-B 已通过 6/6 浏览器人工验收并归档。各阶段细节与旧测试结果见 `docs/AGENT_LOG.md`。
 
 ## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（已验收并归档）
 
 独立 DEV 工具，不接入藏身玩法；验收与检查点见 docs/DEV_SCENE_EDITOR_DESIGN.md 和 docs/AGENT_LOG.md。长期保护点：READY 计时与 PLAYING 冻结时间分离；手动冻结与场景编辑冻结可叠加；编辑仅在应用时重建碰撞、导航和门状态；拒绝操作须有可见反馈，DEV 入口不得被覆盖。
 
-## 11. S7C-1A 藏身点地图数据（已验收并归档）
+## 11. S7C-1A 藏身点地图数据与 S7C-1B 藏身玩法（均已验收并归档）
 
-地图含 8 个 HideSpot 和 2 个纸箱，每个藏身点仍只有一个 HideSpot.x/z 锚点，家具通过稳定 ID 关联。DEV-A 区域属于地图创作数据，不接入玩法。正式 HideSystem、按键藏身、Human CHECK_HIDE 与地图随机化均未实现；S7C-1B 及后续阶段尚未授权。地图和阶段方案见 docs/MAP_SPEC.md、docs/S7C_HIDE_RANDOMIZATION_DESIGN.md；区域与编辑器细节见 docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md。
+地图含 8 个 HideSpot 和 2 个纸箱，每个藏身点仍只有一个 `HideSpot.x/z` 锚点（进入＝退出），家具通过稳定 ID 关联。DEV-A 区域（圆形／扇形精确交互区域）属于地图创作数据，S7C-1B 起**已正式作为藏身合法性判定**接入玩法。**S7C-1B 已实现**：E 点按立即藏身/退出、藏身期间禁止移动/冲刺/进食/锁门与门交互、普通视觉与常规抓捕对藏身者无效、Human 玩家 Q 扇形搜查（1.5 / 120° / 12 秒）命中藏身家具即搜出并立即抓捕、DeepSeek 玩家 Q 锁门 20 秒冷却、DEV `Hide / 藏身` 分类与 AI JSON `hideEvents`。**Human AI 的 `CHECK_HIDE`、地图随机化仍未实现**；S7C-2 / 2b / 3 尚未授权。地图和阶段方案见 docs/MAP_SPEC.md、docs/S7C_HIDE_RANDOMIZATION_DESIGN.md；区域与编辑器细节见 docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md。
 
-## 12. 待批准提案与专属开工要求（S7C-1B / 2 / 2b / 3 尚未授权；DEV-A、DEV-B 已完成各自批准范围）
+## 12. 待批准提案与专属开工要求（S7C-2 / 2b / 3 尚未授权；DEV-A、DEV-B 已完成各自批准范围）
 
 > 本节列出尚待批准的阶段开工要求；文档存在不代表获得授权。DEV-A 与 DEV-B 已完成各自批准范围，任何后续扩展仍需单独授权。
 >
 > DEV-A 与 DEV-B 的**先后顺序属于当前规划，不是不可改变的强制技术依赖**。
 >
-> **待单独批准（尚未授权）**：S7C-1B → S7C-2 → S7C-2b → S7C-3，以及 DEV-A / DEV-B 的任何后续扩展。
+> **待单独批准（尚未授权）**：S7C-2 → S7C-2b → S7C-3，以及 DEV-A / DEV-B 的任何后续扩展。S7C-1B 已完成验收并随本轮提交归档。
 
 ### DEV-A：藏身交互区域与编辑器（已完成批准范围）
 
 - 已完成：交互区域数据与几何、编辑器区域调整和校验、流畅家具拖动、任意角度旋转碰撞及 JSON V3；未接入正式藏身玩法。
-- 未完成/未授权：JSON 导入器刻意未开发；是否拆分进入/退出锚点尚未决定；`HideSystem`、按键藏身、Human `CHECK_HIDE` 与地图随机化属于 S7C 后续工作。
+- 未完成/未授权：JSON 导入器刻意未开发；是否拆分进入/退出锚点尚未决定；Human AI `CHECK_HIDE`、DeepSeek AI 自主藏身与地图随机化属于 S7C 后续工作。
 - 实现、参数与验收历史见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md` 和 `docs/AGENT_LOG.md`。
 
 ### DEV-B：运行时 AI 调试工具（已完成并通过用户人工验收）
@@ -171,7 +173,7 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - 人工验收：6/6 通过。归档验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。
 - 参数、生效时机、已知限制、测试和人工验收细节见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`；历史步骤见 `docs/AGENT_LOG.md`。正式视觉/听觉仍不使用家具遮挡，视觉规则没有视锥角。
 
-**其他阶段的专属开工要求位置**：S7C-1B / S7C-2 / S7C-2b / S7C-3 → `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§3.5 前置、§4 S7C-2、§5 S7C-3、§6 第 3–14 项与第 15–18 项待批准参数）；DEV 场景热编辑器（已完成 V1，后续扩展）→ `docs/DEV_SCENE_EDITOR_DESIGN.md`。
+**其他阶段的专属开工要求位置**：S7C-2 / S7C-2b / S7C-3 → `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§4 S7C-2、§5 S7C-3、§6 未决参数）；DEV 场景热编辑器（已完成 V1，后续扩展）→ `docs/DEV_SCENE_EDITOR_DESIGN.md`。
 
 ## 13. 当前受保护功能清单（已通过 Gate，改动时不得破坏）
 
@@ -196,7 +198,7 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 
 - 住宅 / 公寓式 3D 灰盒地图已完成；旧九宫格布局已废弃。地图包含 10 个主要空间与阳台、衣帽间两个附属空间，并保留三条追逐环路。
 - 14 个 `RiceCandidate` 每局无重复随机激活 5 个 Active Rice；每份大米拥有独立持久进度，完成 5 / 5 后 DeepSeek 娘获胜。
-- 18 个 `DoorNode` 已升级为正式 Door System；8 个 `HideSpot` 已登记为地图数据（含 2 个新增纸箱 `living_carton (7.9, 3.9)`、`storage_carton (15.7, -4.8)`），`DEBUG_MAP` 下可查看标记；**正式藏身玩法仍未实现**（S7C-1B 未授权）。
+- 18 个 `DoorNode` 已升级为正式 Door System；8 个 `HideSpot` 已登记为地图数据（含 2 个新增纸箱 `living_carton (7.9, 3.9)`、`storage_carton (15.7, -4.8)`），`DEBUG_MAP` 下可查看标记；**正式藏身玩法已实现并通过 S7C-1B 验收归档（含 Human 玩家 Q 扇形搜查）**。藏身中普通视觉为 `CONCEALED`、常规抓捕不累计；Human AI 的 `CHECK_HIDE` 与地图随机化仍未实现。
 - DEV 工具（仅开发环境显示入口）：场景热编辑器 V1 + 双阵营调试冻结（`MANUAL_DEV_FREEZE` / `SCENE_EDITOR`）；生产构建不出现入口与编辑器数据。
 - 角色移动保留 Camera-Relative Movement、玩家相机跟随、XZ Circle Footprint、分轴碰撞与 Wall Sliding。
 - 单份大米正式设计时长 60 秒；当前开发测试值 5 秒（发布前必须切回 60 秒并重新验收）。

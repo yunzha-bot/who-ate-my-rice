@@ -944,3 +944,37 @@
 - **文档整理**：交接文档更新为 DEV-B 当前验收与归档状态；DEV-B 设计文档保留参数、机制、测试和限制细节；长期规范只修正 DEV-A / DEV-B 设计文档定位，不写入动态进度。既有 DEV-B 各轮日志保留原样，本条作为最终状态补记。
 - **Git**：归档提交标题为 `feat: complete dev-b runtime ai debugging tools`；本条随该归档提交保存。提交 SHA 与远端同步状态按 Git 查询结果报告；不创建 Tag。
 - **未完成与授权**：DEV-B 后续扩展需另行授权；S7C-1B 及后续藏身玩法未因此获批。正式视觉/听觉仍不包含家具遮挡，视觉系统仍无视锥角。
+
+## 2026-09-26 +08:00｜S7C-1B 一次性完整实施：藏身、Human 玩家 Q 扇形搜查与抓捕、DeepSeek Q 锁门冷却（待用户浏览器统一验收）
+
+- 任务与授权：用户当轮给出 **S7C-1B 完整授权**，把该子阶段改为「DeepSeek 娘藏身 vs Human 玩家主动搜查与抓捕」，要求一次性交付全部功能、自行安排内部编码顺序并在完成后集中报告一次；重大架构冲突才暂停。**未 commit、未 push、未创建 Tag**（未获归档授权）。
+- 起始核实（前置条件 1、8）：`main`、`HEAD == origin/main == 9b048fb`（`docs: consolidate project logs and stage documentation`），工作区仅未跟踪 `.trae/`、`.dsh-meow/`，无 `.git/MERGE_HEAD` 等残留、无 stash；`src/` 中**不存在任何** `HideSystem` / `CONCEALED` / Human Q 搜查实现，因此没有既有 S7C-1B 成果可复用或覆盖。基线 `npm test` 472/472、退出码 0。
+- 纯逻辑层（全部可单测、无 DOM / Three.js）：新增 `src/systems/HideSystem.ts`（`OUTSIDE ⇄ CONCEALED`；E 点按立即切换，**取消原方案的 400 ms ENTERING 计时**；每条拒绝路径 `NOT_PLAYING` / `WRONG_FACTION` / `NOT_PLAYER_CONTROLLED` / `ALREADY_CONCEALED` / `STUNNED` / `SPRINT_ACTIVE` / `CAPTURE_IN_PROGRESS` / `NO_HIDE_SPOT` / `POSITION_ILLEGAL`；退出原因 `PLAYER_E` / `SEARCHED` / `ROUND_RESET` / `ROUND_FINISHED` / `MAP_APPLIED`；Human 碰撞圆重叠时拒绝退出且**保持藏身**；`occupancyOf()` 仅供 DEV/测试）；`src/systems/HumanSearchSkill.ts`（Human Q 判定核心：释放瞬间半径 1.5 / 张角 120° 只判一次，藏身目标瞄**绑定家具的可接近表面**而不是家具中心或藏身者实时坐标，被墙/非 OPEN 门叶挡住即 `BLOCKED`，与按键、冷却、特效完全分离，供未来 S7C-2 的 Human AI 复用）；`src/systems/HideInteractionArbitration.ts`（E 键唯一仲裁：扫雷 > 门 > 藏身 > 进食；藏身中只输出 `HIDE_EXIT`）；`src/systems/SkillCooldown.ts` + `src/systems/SkillGates.ts`（两个 Q 的冷却与门禁；`resolveQSkill()` 保证一个按键只映射一个技能；`lockArmsPlayerCooldown()` 规定只有 `LOCKED` 才消耗冷却）。
+- 正式数值（写入 `GAME_CONFIG` 并同步 `docs/GAME_BALANCE_CONFIG.md`）：`humanSearch.range = 1.5`、`halfAngleDeg = 60`（张角 120°）、`cooldownMs = 12_000`；`door.playerLockCooldownMs = 20_000`。**藏身本身没有新增任何可调数值**（进入是点按即切换，也没有独立的 Human 距离门槛），交互区域复用 DEV-A 已批准的地图创作数据。扇形特效的淡入/停留/淡出（120 / 140 / 260 ms）是表现层常量，留在 `src/three/HideSearchView.ts`，不进 `GAME_CONFIG`。
+- 接线（`src/three/ThreeGame.ts`）：`E` 走唯一仲裁后执行门 / 进入藏身 / 退出藏身；`Q` 按 `resolveQSkill()` 分流为 DeepSeek 锁门（成功才起 20 秒冷却）与 Human 扇形搜查（有效释放即起 12 秒冷却，未命中同样消耗）；藏身期间**位移强制为 0**（与 STUNNED 同构）、`Space` 冲刺被拦、`rice.interrupt()` 且不累计进食、门与锁门被拒并给出通俗提示；进入藏身时把既有抓捕进度归零。视觉上藏身期间隐藏角色可视体（**根节点不动**，碰撞与抓捕锚点不变，最省事的 V3 风格表现）。
+- 感知与抓捕联动：`PerceptionSystem.VisionSystem` 新增 `setConcealed()` 与 `VisionStatus = 'CONCEALED'`（**单向抑制**：藏身者不可见且不再刷新其 `lastSeen`，另一方视线保持原逻辑，原记录仍按既有生命周期自然过期）；常规抓捕资格在藏身期间直接判为 `false`（既有 `advancePlaying` 会把进度归零，不新增第二套抓捕规则）；`GameStateSystem.forceCapture()` 复用同一条结算路径实现「Q 命中即立即抓捕成功」，未新建胜负系统。Human AI 输入里**没有**任何占用信息，两套 AI 都没有新增藏身行为。
+- 地图编辑与生命周期：新增 `src/three/map/MapApplicationPrecheck.ts`（只读预检：两个角色站位 + 正在使用的藏身出口在新地图上仍可站立、藏身点仍存在），`SceneEditor.applyEdits()` 在 `session.apply()` **之前**调用 `onPrecheck`，失败即拒绝应用并保留旧地图与旧藏身状态；`rebuildApartment()` 只在**地图内容真的变化**时安全清空藏身（关闭/放弃草稿重建同一张图不会把人从柜子里请出来）；重开、返回阵营页、局终、暂停与地图应用分别清理藏身、两个冷却与扇形特效。
+- DEV 与日志：DEV 面板新增 `Hide / 藏身` 分类（藏身状态、藏身点、真实进入位置＝退出位置、当前位置的检查码与最近匹配点、最近拒绝/退出原因、本局进入/退出/拒绝次数、视觉与抓捕影响、两个 Q 的冷却与最近命中结果、玩家可见提示）；普通 HUD 新增 `.skill-hud`（只显示当前控制方自己的状态与冷却，**不含对手藏身信息**）；`AILogCollector` 新增独立 `hideEvents` 时间线（`formatVersion` 由 `1.1` 升为 `1.2`），人工控制 DeepSeek 时同样可导出。
+- 与批准规则的逐条对应：E 点按立即藏身且无 400 ms / 无独立 Human 距离门槛（`captureProgressMs === 0` 仍在）；进入不传送、记录真实位置并沿用为退出位置；Human 碰撞圆重叠时拒绝退出、非重叠时即便身处抓捕圈也允许退出；藏身中禁移动/冲刺/进食/锁门与门交互；普通视觉与常规抓捕无效、退出立即恢复且无额外免疫；Q 释放只判一次、淡入淡出不重复命中；空家具/扇形外/墙后/关闭门后不误抓；DeepSeek Q 成功才起冷却、失败不消耗。
+- 自动化测试 472 → **518**（新增 46 项，7 个新文件）：`tests/hide-system.test.mjs`（8 项：进入成功与事件、8 条拒绝路径不改变状态、重复进入、退出与 Human 重叠拒绝、非重叠放行、退出原因区分、`occupancyOf`、`reset` 清空）、`tests/hide-interaction-arbitration.test.mjs`（6 项：扫雷优先、藏身中只退出、门优先含距离相等、门不优先时藏身先于进食、回落到进食/无操作、全组合确定性）、`tests/human-search-skill.test.mjs`（8 项：数值来自 `GAME_CONFIG`、藏身目标瞄家具表面且忽略实时坐标、家具中心在扇形内也不隔墙命中、未藏身命中、半径边界含入、张角边界含入与对称、缺目标/缺点/缺家具、表现层与判定共用 `rotation.y = -heading` 约定）、`tests/skill-cooldown.test.mjs`（7 项：冷却生命周期、**只随传入 delta 推进**（源码断言不自带时钟）、`reset`、Q 技能归属唯一、两个门禁文案、只有 `LOCKED` 消耗冷却）、`tests/hide-map-precheck.test.mjs`（6 项：正式地图通过、角色非法、藏身点缺失、藏身出口无法站立、**预检只读**、无藏身者时只查两个角色）、`tests/hide-integration.test.mjs`（5 项：藏身期间 `CONCEALED` 且不刷新 `lastSeen`、退出立即恢复、藏身时抓捕资格 `false` 且进度归零、`forceCapture` 只在 PLAYING 生效且走同一结算、**源码断言两个 AI 控制器都不含 `HideSystem`/`occupancyOf`/`isConcealed`、DeepSeek 状态机没有新增藏身状态、`CHECK_HIDE` 仍是保留接口**）、`tests/hide-search-view.test.mjs`（6 项：扇形参数等于已批准数值、快照位置与朝向、淡入淡出曲线、**连续 25 次释放几何体与材质对象不变、场景对象数不增长**、命中反馈自行消失、`reset` 与幂等 `dispose`）。同步更新 3 处既有断言：DEV 分类清单新增 `hide`、`visionStatus` 联合类型新增 `CONCEALED` 的中文映射、AI JSON `formatVersion` 升为 `1.2`——均为与新行为保持同步，未削弱任何断言、未删除任何测试。
+- 门禁（本轮实测）：`npm test` **518/518 通过**（失败 0 / 已取消 0 / 已跳过 0，退出码 0）；`npx tsc --noEmit` 退出码 0；`npm run build`（含 tsc）退出码 0（仅既有 >500 kB chunk 警告，JS 858.91 kB / gzip 229.54 kB、CSS 13.68 kB）；`git diff --check` 退出码 0；`src/config/gameConfig.ts` 只新增两个已批准数值、无既有数值变化。
+- 真实浏览器复核（本机 Chrome `--headless=new` + CDP，脚本写 `%TEMP%`、用完删除，复用已在运行的 5173 dev server）：控制台 **0 错误**（仅既知 `/favicon.ico` 404）。**DeepSeek 侧闭环**：从玄关出生点用真实按键走图（先按 E 打开玄关→客厅的门，`door-message` 显示「门已打开」，再穿门洞到客厅纸箱）→ DEV 面板 `藏身检查` 读到 **`LEGAL / hide_living_carton`** → 点按 E → **`藏身中（hide_living_carton）`**、真实进入位置 `(7.0, 3.9)`、本局**进入 1 / 退出 0 / 拒绝 0**；此时 `Human 看到的 DeepSeek：CONCEALED`、常规抓捕**不累计**；按住 W 700 ms 后坐标**完全不变**、`Space` 后冲刺状态仍 `NORMAL`、`Q` 给出「藏身中不能锁门；按 E 退出藏身」；再次点按 E → 回到 `普通`、退出原因 **`PLAYER_E`**、视觉恢复、计数 **1/1/0**。**Human 侧**：临时控制 Human 后按 Q，冷却立刻读到 **11.5 秒**、释放/命中 **1/0**、结果为「目标不在扇形半径内」（距离 16.66、偏差 19.6°），HUD 同步显示「人类：Q 扇形搜查（半径 1.5、张角 120°）｜Q：冷却中 11.5 秒」。**搜查命中的完整链路**：重新藏身后等 Human AI 走近并接管，走到纸箱南侧朝家具按 Q → 结果 **`搜出藏身目标｜瞄点 (7.9, 3.4)｜距离 0.29`**、计数 **2/1**、藏身状态回到 `普通`、退出原因 **`SEARCHED`**、结算界面显示 **「人类获胜／原因：抓捕完成」**（对局 01:02）。另截图目视核对技能 HUD 与 DEV `Hide / 藏身` 分类：中文单行无重叠、无缺字。浏览器侧只报 DOM 文本、命中测试与坐标读数，**未编造 FPS 或耗时**。
+- 已知限制：①藏身音效未新增（既不新增 `SoundType`，藏身期间也不产生新声音）；②Human AI 的 `CHECK_HIDE`、DeepSeek AI 自主藏身与地图随机化**未实现**（属 S7C-2 / 2b / 3，未授权）；③扇形不穿墙、不穿关闭/上锁的门，但**家具不作为视觉/搜查遮挡**（沿用既有感知规则）；④进入藏身后普通 `Last Seen` 记录不再刷新，但要等既有 8 秒生命周期自然过期；⑤视觉表现只隐藏角色可视体，没有正式的「进柜子」动画或家具拆件。
+- Git 与下一步：本轮共 **16 个修改 + 14 个新增 = 30 个文件**（含本日志与 `docs/GAME_BALANCE_CONFIG.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/DEEPSEEK_HANDOFF.md` 的状态同步）；未 commit / push / tag，未读取或暂存 `.trae/`、`.dsh-meow/`。**请用户按本文件与设计文档列出的验收点集中做一次浏览器人工验收**；通过并经**单独授权**后再建立 Git 检查点（届时须重跑门禁并复核暂存清单）。S7C-2 / 2b / 3 仍未授权。
+
+## 2026-09-26｜S7C-1B 最终人工验收与 Git 归档
+
+- 阶段与日期：S7C-1B 藏身与主动搜捕，2026-09-26。
+- 完成内容：用户确认藏身、Human 玩家搜查与抓捕、DeepSeek 玩家锁门及状态回归均符合本轮批准范围；不包含 AI 自主藏身或自主搜查。
+- 自动化测试与人工验收：
+
+| 检查项目 | 结果 |
+|---|---|
+| `npm test` | 518 项全部通过 |
+| `npm run build` | 通过；含 `tsc --noEmit`，有非阻断的 Vite 体积提示 |
+| `git diff --check` | 通过 |
+| 浏览器人工验收 | 6 项全部通过 |
+
+- 人工验收项目：DeepSeek 点按 E 藏身、藏身状态与安全退出、Human Q 手动抓捕、Human Q 搜查家具、DeepSeek Q 锁门、状态及旧功能回归。
+- Git 检查点：本记录与 S7C-1B 实现随本次 `feat: complete s7c-1b hiding and manual search` 提交归档并推送至 `origin/main`；完整提交编号以最终 Git 查询为准。不创建 Tag。
+- 已知限制与下一项任务：DeepSeek AI 自主藏身、安全判断及自主现身归入 S7C-2b；Human AI 自主搜查归入 S7C-2；地图随机化归入 S7C-3。以上后续阶段均未获授权，不因本次归档自动开始。

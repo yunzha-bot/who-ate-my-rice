@@ -206,7 +206,7 @@ test('export returns correct structure with config snapshot', () => {
   collector.advance(5000, true);
   collector.diffSnapshot(baseSnapshot());
   const data = collector.export();
-  assert.equal(data.formatVersion, '1.1');
+  assert.equal(data.formatVersion, '1.2');
   assert.equal(typeof data.exportedAt, 'string');
   assert.equal(data.matchDurationMs, 5000);
   assert.deepEqual(data.config.deepseekAI, C.deepseekAI);

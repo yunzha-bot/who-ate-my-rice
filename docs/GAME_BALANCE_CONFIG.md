@@ -158,11 +158,24 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.door.maxActiveLocks` | 3 | 把；**同时**有效的锁上限 | **不限制整局总次数**；破解/强破后释放一格，失效锁芯本局不能重锁。 |
 | `C.door.humanFreeOpenClosedDoor` | `true` | 开关；Human Space 免费快速打开普通 CLOSED 门 | 设为 `false` 会禁用该 Space 行为；E 普通开门不受影响。 |
 | `C.door.humanForceBreakCooldownMs` | 30,000 | 毫秒；Space 强破 LOCKED 门的冷却 | 不限制普通门快速开，也不限制 E 扫雷。 |
+| `C.door.playerLockCooldownMs` | 20,000 | 毫秒；**DeepSeek 玩家**按 Q 主动锁门的冷却（S7C-1B） | 只有 `lock()` 真的返回 `LOCKED`（即门为 CLOSED、锁芯 ACTIVE、锁位未满）才开始计时；状态不允许、超距、锁位已满、锁芯失效都不消耗冷却。AI 的锁门走 `lockDoorFromCommand`，**不读**这个冷却。 |
 | `C.door.leafHeight` / `leafThickness` / `openAngle` | 1.2 / 0.16 / `Math.PI / 2` | 世界单位 / 世界单位 / 弧度；门叶几何 | 门厚会影响碰撞、视线和声音的门遮挡判定。 |
 | `C.door.colors.open` / `closed` / `locked` / `lockCore` / `lockCoreDisabled` | `0x6d8f73` / `0x8a644b` / `0xa0443f` / `0xffc247` / `0x565d63` | 颜色；灰盒门叶与锁芯状态 | 只改变显示，保持不同状态容易辨认。 |
 | `C.pulseLock.rows` / `cols` / `mines` | 4 / 4 / 3 | 行 / 列 / 颗；扫雷棋盘 | 雷数必须至少 1 且小于格数；修改后测试首次点击和胜利判定。 |
 | `C.pulseLock.firstRevealSafe` | `true` | 开关；首次揭格不放雷 | 改为 `false` 将允许首击踩雷，会改变当前已验收规则。 |
 | `C.pulseLock.failureFeedbackMs` | 1,500 | 毫秒；踩雷后的状态反馈时间 | 不影响门是否仍 LOCKED。 |
+
+## S7C-1B 藏身与 Q 技能（Human 扇形搜查 / DeepSeek 锁门）
+
+藏身（E）本身**没有新增可调数值**：进入是点按即切换，没有进入耗时、也没有独立的 Human 距离门槛；「精确交互区域」复用 DEV-A 已批准的地图创作数据（`HideSpot.interactionRegion`，床与纸箱圆形 2.0 / 1.2，衣柜与柜架扇形 1.6·55°），因此不在本表重复。
+
+| 变量 | 当前值 | 单位 / 作用 | 修改注意 |
+|---|---:|---|---|
+| `C.humanSearch.range` | 1.5 | 世界单位；Human Q 扇形半径 | 与 `C.match.captureRadius`（0.70）、`C.door.interactionRange`（1.3）不同，不要混用；改大等于增强手动搜查。 |
+| `C.humanSearch.halfAngleDeg` | 60 | 度（每侧）；扇形半角，整体张角 = 2 × 60 = 120° | 只影响 Human 玩家的 Q；判定与扇形特效共用 `GAME_CONFIG.humanSearch`，两者不会不一致。 |
+| `C.humanSearch.cooldownMs` | 12,000 | 毫秒；每次有效释放（含未命中）后的冷却 | 冷却只随 PLAYING 的玩法时间推进（暂停与 DEV 冻结期间不推进）；重开/返回阵营页清零。 |
+
+Q 的**判定**与**冷却**是两条独立路径：`evaluateHumanSearch()`（`src/systems/HumanSearchSkill.ts`）只回答「释放瞬间打到了什么」，`SkillCooldown` + `SkillGates` 负责可用性与冷却；藏身目标必须命中其绑定家具的**可接近表面**且不被墙/非 OPEN 门叶挡住，命中即调用 `GameStateSystem.forceCapture()` 走同一条抓捕结算。扇形特效的淡入/停留/淡出时长是表现层常量（`src/three/HideSearchView.ts`），不是玩法数值。
 
 ## Sound 与声音可视化
 

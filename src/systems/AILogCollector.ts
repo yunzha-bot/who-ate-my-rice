@@ -81,6 +81,16 @@ export interface AILogExport {
   events: AILogEvent[];
   eventCount: number;
   truncated: boolean;
+  /** S7C-1B：藏身进入 / 退出 / 拒绝（含中断）的独立时间线 —— 与 AI 状态无关，
+   *  因此人工控制 DeepSeek 娘时也能导出。 */
+  hideEvents: AILogHideEvent[];
+}
+
+export interface AILogHideEvent {
+  t: number;
+  type: string;
+  reason: string;
+  spotId: string | null;
 }
 
 interface DiffRule {
@@ -126,6 +136,8 @@ export class AILogCollector {
   private truncated = false;
   private previous: AILogSnapshot | null = null;
   private readonly maxEvents = 2000;
+  private hideTimeline: AILogHideEvent[] = [];
+  private readonly maxHideEvents = 500;
 
   startMatch(): void {
     this.events = [];
@@ -133,6 +145,19 @@ export class AILogCollector {
     this.matchStartMs = 0;
     this.truncated = false;
     this.previous = null;
+    this.hideTimeline = [];
+  }
+
+  /** 藏身事件由 ThreeGame 每帧投放；不依赖 DeepSeek AI 是否在运行。 */
+  recordHideEvents(events: readonly { type: string; reason: string;
+    spotId: string | null }[]): void {
+    if (events.length === 0) return;
+    const t = this.nowMs - this.matchStartMs;
+    for (const event of events) {
+      if (this.hideTimeline.length >= this.maxHideEvents) break;
+      this.hideTimeline.push({ t, type: event.type, reason: event.reason,
+        spotId: event.spotId });
+    }
   }
 
   advance(deltaMs: number, running: boolean): void {
@@ -221,13 +246,14 @@ export class AILogCollector {
 
   export(): AILogExport {
     return {
-      formatVersion: '1.1',
+      formatVersion: '1.2',
       exportedAt: new Date().toISOString(),
       matchDurationMs: this.nowMs - this.matchStartMs,
       config: { deepseekAI: GAME_CONFIG.deepseekAI },
       events: this.events,
       eventCount: this.events.length,
       truncated: this.truncated,
+      hideEvents: this.hideTimeline,
     };
   }
 }

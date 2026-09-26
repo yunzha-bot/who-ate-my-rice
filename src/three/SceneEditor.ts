@@ -26,6 +26,11 @@ export interface SceneEditorHooks {
   // Game-side safe rebuild: the caller replaces the static collision world and
   // the navigation grid from the validated data, then returns the new build.
   onRebuild: (map: CommittedMap) => ApartmentBuild;
+  // S7C-1B: a read-only precheck that runs BEFORE the draft is committed. It
+  // returns a rejection message when the candidate map would leave an actor (or
+  // a concealed player's exit position) standing somewhere illegal; the caller
+  // then refuses the application and keeps the current map and hide state.
+  onPrecheck?: (map: CommittedMap) => string | null;
   onFocus: (point: { x: number; z: number }) => void;
   onZoom: (direction: number) => void;
   onPan: (deltaX: number, deltaY: number) => void;
@@ -174,6 +179,20 @@ export class SceneEditor {
 
   applyEdits(): boolean {
     this.endDragWindow();
+    // The precheck runs against the draft that WOULD be applied, before
+    // `session.apply()` commits anything: a refused map application must leave
+    // the old map and the old hide state completely untouched.
+    const candidate: CommittedMap = {
+      furniture: draftFurnitureToRects(this.session.furnitureList()),
+      hideSpots: draftSpotsToAnchors(this.session.hideSpotList()),
+    };
+    const precheckRejection = this.hooks.onPrecheck?.(candidate) ?? null;
+    if (precheckRejection) {
+      this.lastRejection = precheckRejection;
+      this.message = `已拒绝应用（地图预检失败）：${precheckRejection}`;
+      this.panel.showNotice(this.message);
+      return false;
+    }
     const result = this.session.apply();
     this.rebuildFromCommitted();
     if (result.ok) {

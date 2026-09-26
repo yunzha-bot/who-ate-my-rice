@@ -251,3 +251,12 @@ body.scene-editor-open .debug-panel { right: 366px; }
 .dev-b-entry-value[data-tone="curious"] { color: #8fc7e8; }
 .dev-b-limits { margin: 0; padding: 6px 8px 8px 24px; color: #a3aab2; }
 .dev-b-limits li { margin-bottom: 3px; }
+/* S7C-1B：当前控制方的技能 HUD（普通玩家可见；不包含对手藏身信息）。 */
+.skill-hud { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 2px; align-items: center;
+  padding: 6px 12px; border-radius: 6px; background: rgba(18, 20, 23, 0.62);
+  color: #e6e9ec; font-size: 13px; line-height: 1.5; pointer-events: none;
+  text-align: center; max-width: min(560px, 92vw); }
+.skill-hud[hidden] { display: none; }
+.skill-hud-state { color: #8fc7e8; }
+.skill-hud-notice { color: #e5c56f; }

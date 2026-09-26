@@ -9,7 +9,7 @@ import {
 
 test('Details panel includes the collapsible escape-door category and keeps defaults', () => {
   assert.deepEqual(DEBUG_CATEGORY_DEFINITIONS.map(({ id }) => id), [
-    'human-ai', 'deepseek-ai', 'threat-escape', 'door-escape', 'door-lock',
+    'human-ai', 'deepseek-ai', 'threat-escape', 'door-escape', 'door-lock', 'hide',
     'sprint', 'safe-wait', 'curiosity-passage', 'animation', 'dev-freeze', 'other',
   ]);
   assert.deepEqual(DEFAULT_EXPANDED_DEBUG_CATEGORIES, [

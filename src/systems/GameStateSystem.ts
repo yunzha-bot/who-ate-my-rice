@@ -62,6 +62,17 @@ export class GameStateSystem {
     }
   }
 
+  /**
+   * S7C-1B：一次合法的 Q 搜查命中＝立即抓捕成功（不需要等待常规累计时间）。
+   * 它复用同一条结算路径 `finish('HUMAN', 'CAPTURED')`，不新开第二套胜负系统。
+   */
+  forceCapture(): boolean {
+    if (this.phase !== 'PLAYING') return false;
+    this.captureProgressMs = this.captureMs;
+    this.finish('HUMAN', 'CAPTURED');
+    return true;
+  }
+
   pause(): boolean {
     if (this.phase !== 'PLAYING') return false;
     this.phase = 'PAUSED';

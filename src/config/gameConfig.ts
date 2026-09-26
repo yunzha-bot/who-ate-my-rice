@@ -145,6 +145,15 @@ export const GAME_CONFIG = {
     // 连续有效接触时间：毫秒。
     captureMs: 350,
   },
+  // S7C-1B：Human 玩家 Q「扇形搜查与手动抓捕」。已批准数值，不随 DEV 调试改写。
+  humanSearch: {
+    // 扇形半径：世界单位。
+    range: 1.5,
+    // 扇形半角：度（每侧）；整体张角 = 2 × 该值 = 120°。
+    halfAngleDeg: 60,
+    // 每次有效释放后的冷却：毫秒；未命中也消耗。
+    cooldownMs: 12_000,
+  },
   door: {
     // 门交互距离及门段端点内缩量：XZ 世界单位。
     interactionRange: 1.3,
@@ -154,6 +163,9 @@ export const GAME_CONFIG = {
     humanFreeOpenClosedDoor: true,
     // 仅强破 LOCKED 门触发的冷却：毫秒。
     humanForceBreakCooldownMs: 30_000,
+    // S7C-1B：DeepSeek 玩家 Q 主动锁门的冷却：毫秒；只有锁门成功才开始计时，
+    // 失败（状态不允许、超距、锁位已满、锁芯失效）不消耗冷却。
+    playerLockCooldownMs: 20_000,
     leafHeight: 1.2,
     leafThickness: 0.16,
     openAngle: Math.PI / 2,

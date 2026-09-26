@@ -267,7 +267,8 @@ export const DEV_B_VALUE_GLOSS: Record<string, Record<string, string>> = {
     PAUSED: '已暂停', FINISHED: '已结束',
   },
   faction: { HUMAN: '人类', DEEPSEEK: 'DeepSeek 娘' },
-  visionStatus: { VISIBLE: '看得见', BLOCKED: '被挡住', OUT_OF_RANGE: '在视觉距离外' },
+  visionStatus: { VISIBLE: '看得见', BLOCKED: '被挡住', OUT_OF_RANGE: '在视觉距离外',
+    CONCEALED: '已藏身（普通视觉看不见）' },
   sprintState: { NORMAL: '正常', SPRINT_RUNNING: '冲刺中', STUNNED: '眩晕中' },
   sprintRisk: { SAFE: '不会摔倒', FALL_ON_END: '冲刺结束会摔倒' },
   humanAiState: {

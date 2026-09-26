@@ -200,7 +200,7 @@ test('internal state codes are shown as Chinese with the original code kept', ()
   // SprintSystem / HumanAIController / DeepSeekAIController）。
   const expected = {
     phase: ['FACTION_SELECT', 'READY', 'PLAYING', 'PAUSED', 'FINISHED'],
-    visionStatus: ['VISIBLE', 'BLOCKED', 'OUT_OF_RANGE'],
+    visionStatus: ['VISIBLE', 'BLOCKED', 'OUT_OF_RANGE', 'CONCEALED'],
     sprintState: ['NORMAL', 'SPRINT_RUNNING', 'STUNNED'],
     sprintRisk: ['SAFE', 'FALL_ON_END'],
     humanAiState: ['PATROL', 'INVESTIGATE', 'CHASE', 'CAPTURE', 'SEARCH', 'CHECK_HIDE'],
