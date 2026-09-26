@@ -1,4 +1,5 @@
 import { EDIT_LIMITS, type EditTarget, type MapEditSession } from './map/MapEditModel.ts';
+import { DEFAULT_REGION_SAMPLE_STEP, REGION_AUTHORING_LIMITS } from './map/HideInteractionRegion.ts';
 
 export interface SceneEditorPanelOptions {
   container: HTMLElement;
@@ -17,6 +18,7 @@ export interface SceneEditorPanelOptions {
   onResetTarget: (id: string) => void;
   onExport: () => void;
   onAnchorsVisible: (visible: boolean) => void;
+  onRegionPreviewVisible: (visible: boolean) => void;
 }
 
 const NOTICE_VISIBLE_MS = 8_000;
@@ -45,7 +47,30 @@ const HIDE_SPOT_NUMERIC_FIELDS: readonly { field: string; label: string; step: n
   { field: 'x', label: '锚点 X', step: 0.05 },
   { field: 'z', label: '锚点 Z', step: 0.05 },
   { field: 'facing', label: 'facing（弧度）', step: 0.05 },
+  { field: 'interactionRegion.radius', label: '区域半径（世界单位）',
+    step: REGION_AUTHORING_LIMITS.radiusStep },
+  { field: 'interactionRegion.halfAngleDeg', label: '扇形半角（度）',
+    step: REGION_AUTHORING_LIMITS.halfAngleStepDeg },
 ];
+
+function targetNumber(target: EditTarget, field: string): number | undefined {
+  if (field === 'interactionRegion.radius' && target.editKind === 'HIDE_SPOT') {
+    return target.interactionRegion.radius;
+  }
+  if (field === 'interactionRegion.halfAngleDeg' && target.editKind === 'HIDE_SPOT') {
+    return target.interactionRegion.halfAngleDeg;
+  }
+  const value = (target as unknown as Record<string, unknown>)[field];
+  return typeof value === 'number' ? value : undefined;
+}
+
+function fieldBounds(field: string): { min?: number; max?: number } {
+  if (field === 'interactionRegion.radius') return {
+    min: REGION_AUTHORING_LIMITS.minRadius, max: REGION_AUTHORING_LIMITS.maxRadius };
+  if (field === 'interactionRegion.halfAngleDeg') return {
+    min: REGION_AUTHORING_LIMITS.minHalfAngleDeg, max: REGION_AUTHORING_LIMITS.maxHalfAngleDeg };
+  return {};
+}
 
 export class SceneEditorPanel {
   private readonly launch: HTMLButtonElement;
@@ -54,6 +79,7 @@ export class SceneEditorPanel {
   private readonly freezeLabel: HTMLElement;
   private readonly search: HTMLInputElement;
   private readonly anchorsToggle: HTMLInputElement;
+  private readonly regionPreviewToggle: HTMLInputElement;
   private readonly list: HTMLElement;
   private readonly detail: HTMLElement;
   private readonly status: HTMLElement;
@@ -110,7 +136,15 @@ export class SceneEditorPanel {
     const anchorsLabel = document.createElement('label');
     anchorsLabel.className = 'scene-editor-anchors';
     anchorsLabel.append(this.anchorsToggle, document.createTextNode('锚点标记'));
-    toolbar.append(anchorsLabel, this.button('应用编辑', () => options.onApply()),
+    this.regionPreviewToggle = document.createElement('input');
+    this.regionPreviewToggle.type = 'checkbox';
+    this.regionPreviewToggle.checked = true;
+    this.regionPreviewToggle.addEventListener('change', () =>
+      options.onRegionPreviewVisible(this.regionPreviewToggle.checked));
+    const regionPreviewLabel = document.createElement('label');
+    regionPreviewLabel.className = 'scene-editor-anchors';
+    regionPreviewLabel.append(this.regionPreviewToggle, document.createTextNode('交互区域预览'));
+    toolbar.append(anchorsLabel, regionPreviewLabel, this.button('应用编辑', () => options.onApply()),
       this.button('放弃草稿', () => options.onDiscard()),
       this.button('导出地图 JSON', () => options.onExport()));
     this.panel.append(toolbar);
@@ -285,11 +319,13 @@ export class SceneEditorPanel {
       this.detail.replaceChildren(this.buildDetail(target));
     }
     const fields = target.editKind === 'FURNITURE'
-      ? FURNITURE_NUMERIC_FIELDS : HIDE_SPOT_NUMERIC_FIELDS;
+      ? FURNITURE_NUMERIC_FIELDS
+      : HIDE_SPOT_NUMERIC_FIELDS.filter(field => field.field !== 'interactionRegion.halfAngleDeg' ||
+        target.interactionRegion.shape === 'SECTOR');
     for (const { field } of fields) {
       const input = this.inputs.get(field);
-      const value = (target as unknown as Record<string, number>)[field];
-      if (input && document.activeElement !== input && Number(input.value) !== value) {
+      const value = targetNumber(target, field);
+      if (input && value !== undefined && document.activeElement !== input && Number(input.value) !== value) {
         input.value = String(value);
       }
     }
@@ -344,7 +380,9 @@ export class SceneEditorPanel {
     const form = document.createElement('div');
     form.className = 'scene-editor-form';
     const fields = target.editKind === 'FURNITURE'
-      ? FURNITURE_NUMERIC_FIELDS : HIDE_SPOT_NUMERIC_FIELDS;
+      ? FURNITURE_NUMERIC_FIELDS
+      : HIDE_SPOT_NUMERIC_FIELDS.filter(field => field.field !== 'interactionRegion.halfAngleDeg' ||
+        target.interactionRegion.shape === 'SECTOR');
     for (const { field, label, step } of fields) {
       const wrapper = document.createElement('label');
       wrapper.className = 'scene-editor-field';
@@ -352,7 +390,10 @@ export class SceneEditorPanel {
       const input = document.createElement('input');
       input.type = 'number';
       input.step = String(step);
-      input.value = String((target as unknown as Record<string, number>)[field]);
+      const bounds = fieldBounds(field);
+      if (bounds.min !== undefined) input.min = String(bounds.min);
+      if (bounds.max !== undefined) input.max = String(bounds.max);
+      input.value = String(targetNumber(target, field) ?? '');
       input.dataset.field = field;
       input.addEventListener('change', () => {
         this.options.onFieldChange(target.id, field, Number(input.value));
@@ -382,6 +423,27 @@ export class SceneEditorPanel {
     const rejection = document.createElement('div');
     rejection.className = 'scene-editor-rejection';
     fragment.append(diff, rejection);
+    if (target.editKind === 'HIDE_SPOT') {
+      const preview = document.createElement('div');
+      preview.className = 'scene-editor-region-legend';
+      preview.style.display = 'grid';
+      preview.style.gap = '4px';
+      preview.style.marginTop = '10px';
+      preview.style.padding = '7px';
+      preview.style.border = '1px solid #3f444a';
+      preview.style.borderRadius = '3px';
+      preview.style.color = '#b9c0c8';
+      preview.style.background = '#1a1d21';
+      preview.append(this.legendTitle('交互区域预览'),
+        this.legendRow('蓝线：区域边界近似显示（底层按精确圆形 / 扇形计算）', '#5cc8ff', true),
+        this.legendRow('绿色：LEGAL｜可用采样点', '#65d987'),
+        this.legendRow('橙色：SURFACE_BLOCKED｜到家具表面被挡', '#ffa552'),
+        this.legendRow('红色：NOT_STANDABLE｜角色站不下', '#ff595e'),
+        this.legendRow('紫色：NOT_NAVIGABLE｜附近无导航点', '#d879e8'),
+        this.legendRow('黄色：NOT_REACHABLE｜从锚点不可达', '#f0d264'),
+        this.legendTitle(`采样间隔 ${DEFAULT_REGION_SAMPLE_STEP} 世界单位；采样点不代表整个连续区域。`));
+      fragment.append(preview);
+    }
     return fragment;
   }
 
@@ -402,5 +464,28 @@ export class SceneEditorPanel {
     element.className = 'scene-editor-hint';
     element.textContent = text;
     return element;
+  }
+
+  private legendTitle(text: string): HTMLElement {
+    const element = document.createElement('small');
+    element.textContent = text;
+    element.style.color = '#aeb4bc';
+    return element;
+  }
+
+  private legendRow(text: string, color: string, line = false): HTMLElement {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '6px';
+    const marker = document.createElement('i');
+    marker.style.flex = '0 0 9px';
+    marker.style.width = '9px';
+    marker.style.height = '9px';
+    marker.style.borderRadius = line ? '50%' : '50%';
+    marker.style.background = line ? 'transparent' : color;
+    marker.style.border = line ? `2px solid ${color}` : '0';
+    row.append(marker, document.createTextNode(text));
+    return row;
   }
 }

@@ -29,6 +29,10 @@ export const REGION_EPSILON = 1e-9;
 export const REGION_NAV_SNAP_LIMIT = 0.45;
 // Lattice step of the discrete preview; matches the map authoring grid step.
 export const DEFAULT_REGION_SAMPLE_STEP = 0.3;
+// DEV-A round 2 authoring limits (world units / degrees), not gameplay config.
+export const REGION_AUTHORING_LIMITS = { minRadius: 0.5, maxRadius: 3,
+  radiusStep: 0.05, minHalfAngleDeg: 10, maxHalfAngleDeg: 150,
+  halfAngleStepDeg: 1 } as const;
 
 export function wrapToPi(angle: number): number {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -159,7 +163,8 @@ export interface HideRegionPositionCheck {
 // Base legal-position check for one point. Reachability is opt-in because it
 // runs a full A* query; without it `reachable` stays null instead of guessing.
 export function checkHideRegionPosition(setup: HideRegionSetup, point: Point,
-  world: HideRegionWorld, options: { reachable?: boolean } = {}): HideRegionPositionCheck {
+  world: HideRegionWorld, options: { reachable?: boolean;
+    isReachable?: (point: Point) => boolean } = {}): HideRegionPositionCheck {
   const doorStates = world.doorStates ?? [];
   const insideRegion = pointInHideRegion(setup.geometry, point);
   const standable = world.collision.canOccupyStaticXZ(point.x, point.z,
@@ -170,9 +175,10 @@ export function checkHideRegionPosition(setup: HideRegionSetup, point: Point,
     Math.hypot(navigationCell.x - point.x, navigationCell.z - point.z) <= REGION_NAV_SNAP_LIMIT;
   // A* snaps both ends to free cells, so this is only meaningful together with
   // `navigable` (the point itself sits on a free cell).
-  const reachable = options.reachable
-    ? world.navigation.findPath(setup.geometry.anchor, point, doorStates) !== null
-    : null;
+  const reachable = options.isReachable ? options.isReachable(point)
+    : options.reachable
+      ? world.navigation.findPath(setup.geometry.anchor, point, doorStates) !== null
+      : null;
   const code: HideRegionPositionCode = !insideRegion ? 'OUTSIDE_REGION'
     : !standable ? 'NOT_STANDABLE'
       : !surfaceClear ? 'SURFACE_BLOCKED'
@@ -209,7 +215,8 @@ export interface HideRegionSamplePreview {
 }
 
 export function sampleHideRegion(setup: HideRegionSetup, world: HideRegionWorld,
-  options: { step?: number; reachable?: boolean } = {}): HideRegionSamplePreview {
+  options: { step?: number; reachable?: boolean;
+    isReachable?: (point: Point) => boolean } = {}): HideRegionSamplePreview {
   const step = options.step ?? DEFAULT_REGION_SAMPLE_STEP;
   if (!Number.isFinite(step) || step <= 0) {
     throw new Error(`sampleHideRegion 需要正的栅格步长，收到 ${step}`);
@@ -223,7 +230,7 @@ export function sampleHideRegion(setup: HideRegionSetup, world: HideRegionWorld,
         z: setup.geometry.centre.z + iz * step };
       if (!pointInHideRegion(setup.geometry, point)) continue;
       const check = checkHideRegionPosition(setup, point, world,
-        { reachable: options.reachable });
+        { reachable: options.reachable, isReachable: options.isReachable });
       if (check.legal) legalSamples++;
       samples.push({ x: point.x, z: point.z, standable: check.standable,
         surfaceClear: check.surfaceClear, navigable: check.navigable,
@@ -232,7 +239,7 @@ export function sampleHideRegion(setup: HideRegionSetup, world: HideRegionWorld,
   }
   return { discrete: true, method: 'LATTICE', step, spotId: setup.spot.id,
     geometry: setup.geometry, samples, legalSamples,
-    reachabilityEvaluated: options.reachable === true };
+    reachabilityEvaluated: options.reachable === true || options.isReachable !== undefined };
 }
 
 export type HideRegionDataIssueCode =
@@ -241,6 +248,8 @@ export type HideRegionDataIssueCode =
   | 'UNSUPPORTED_SHAPE'
   | 'INVALID_RADIUS'
   | 'INVALID_HALF_ANGLE'
+  | 'RADIUS_OUT_OF_AUTHORING_RANGE'
+  | 'HALF_ANGLE_OUT_OF_AUTHORING_RANGE'
   | 'UNEXPECTED_HALF_ANGLE'
   | 'ANCHOR_OUTSIDE_REGION';
 
@@ -282,6 +291,11 @@ export function validateHideRegionData(spots: readonly HideSpot[] = HIDE_SPOTS,
         `${spot.id} 的区域半径必须是正数，实际 ${region.radius}`);
       continue;
     }
+    if (region.radius < REGION_AUTHORING_LIMITS.minRadius ||
+        region.radius > REGION_AUTHORING_LIMITS.maxRadius) {
+      issue(spot.id, 'RADIUS_OUT_OF_AUTHORING_RANGE',
+        `${spot.id} 的区域半径需在 ${REGION_AUTHORING_LIMITS.minRadius}–${REGION_AUTHORING_LIMITS.maxRadius} 之间`);
+    }
     const halfAngle = region.halfAngleDeg;
     if (region.shape === 'CIRCLE') {
       if (halfAngle !== undefined) {
@@ -292,6 +306,11 @@ export function validateHideRegionData(spots: readonly HideSpot[] = HIDE_SPOTS,
       issue(spot.id, 'INVALID_HALF_ANGLE',
         `${spot.id} 的扇形半角必须在 (0, 180) 度之间，实际 ${halfAngle}`);
       continue;
+    }
+    if (region.shape === 'SECTOR' && ((halfAngle ?? 0) < REGION_AUTHORING_LIMITS.minHalfAngleDeg ||
+        (halfAngle ?? 0) > REGION_AUTHORING_LIMITS.maxHalfAngleDeg)) {
+      issue(spot.id, 'HALF_ANGLE_OUT_OF_AUTHORING_RANGE',
+        `${spot.id} 的扇形半角需在 ${REGION_AUTHORING_LIMITS.minHalfAngleDeg}–${REGION_AUTHORING_LIMITS.maxHalfAngleDeg} 度之间`);
     }
     const geometry = hideRegionGeometry(spot, own);
     if (!pointInHideRegion(geometry, geometry.anchor)) {

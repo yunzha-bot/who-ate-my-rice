@@ -1,13 +1,20 @@
 import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../../config/gameConfig.ts';
 import { CollisionWorld } from '../CollisionWorld.ts';
+import { NavigationSystem } from '../../systems/NavigationSystem.ts';
+import type { DoorState } from '../../systems/DoorSystem.ts';
+import { checkHideRegionPosition, hideRegionGeometry, hideRegionSetup, sampleHideRegion,
+  validateHideRegionData, REGION_AUTHORING_LIMITS, DEFAULT_REGION_SAMPLE_STEP,
+  type HideRegionGeometry, type HideRegionPositionCode, type HideRegionSamplePreview }
+  from './HideInteractionRegion.ts';
 import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, PLAYER_DIAMETER,
   RICE_CANDIDATES, ROOMS, SPAWNS, WALLS,
-  type DoorNode, type HideSpot, type HideSpotKind, type MapPoint, type Rect, type Room,
+  type DoorNode, type HideInteractionRegion, type HideSpot, type HideSpotKind,
+  type MapPoint, type Rect, type Room,
 } from './apartmentMap.ts';
 
 export const MAP_EXPORT_FORMAT = 'who-ate-my-rice/apartment-map';
-export const MAP_EXPORT_VERSION = 1;
+export const MAP_EXPORT_VERSION = 2;
 
 // DEV scene-editor validation limits. These are authoring constraints for the
 // grey-box map, not gameplay balance, so they deliberately stay out of
@@ -48,12 +55,26 @@ export interface HideSpotDraft {
   x: number;
   z: number;
   facing: number; // radians, presentation only
+  interactionRegion: HideInteractionRegion;
 }
+
+export interface HideRegionEditorPreview {
+  geometry: HideRegionGeometry;
+  sampling: HideRegionSamplePreview | null;
+  sampleStep: number;
+}
+
+// What the DEV panel shows as "草稿状态". DRAGGING is the lightweight state used
+// while an object is being dragged: the draft changes on every pointermove, so a
+// full map validation must not run per frame. The editor validates once on
+// release instead.
+export type DraftStatus = 'UNCHANGED' | 'DRAGGING' | 'VALID' | 'INVALID';
 
 export type EditTarget = FurnitureDraft | HideSpotDraft;
 
 export const EDITABLE_FURNITURE_FIELDS = ['x', 'z', 'rotationQuarter', 'width', 'depth', 'height'] as const;
-export const EDITABLE_HIDE_SPOT_FIELDS = ['x', 'z', 'facing'] as const;
+export const EDITABLE_HIDE_SPOT_FIELDS = ['x', 'z', 'facing',
+  'interactionRegion.radius', 'interactionRegion.halfAngleDeg'] as const;
 export const READ_ONLY_FIELDS = ['id', 'editKind', 'kind', 'roomId', 'furnitureId', 'label'] as const;
 
 export type FurnitureField = typeof EDITABLE_FURNITURE_FIELDS[number];
@@ -73,7 +94,13 @@ export type RejectionCode =
   | 'ROOM_UNREACHABLE'
   | 'ANCHOR_INSIDE_OBSTACLE'
   | 'ANCHOR_DETACHED'
-  | 'OVERLAPS_FURNITURE';
+  | 'OVERLAPS_FURNITURE'
+  | 'INVALID_REGION_RADIUS'
+  | 'INVALID_REGION_ANGLE'
+  | 'INVALID_REGION_DATA'
+  | 'ANCHOR_OUTSIDE_REGION'
+  | 'ANCHOR_REGION_ILLEGAL'
+  | 'NO_LEGAL_REGION_SAMPLE';
 
 export interface EditRejection {
   targetId: string;
@@ -116,6 +143,9 @@ export interface HideSpotExport {
   anchor: { x: number; z: number };
   facing: number;
   facingDeg: number;
+  interactionRegion: HideInteractionRegion & {
+    units: { radius: 'world-unit'; halfAngle: 'degree' };
+  };
 }
 
 export interface MapExportDocument {
@@ -152,6 +182,11 @@ export function authoredMapSource(): MapSource {
 
 export function rotationDegrees(quarter: number): number {
   return ((quarter % 4) + 4) % 4 * 90;
+}
+
+function authoredDoorStates(doors: readonly DoorNode[]): DoorState[] {
+  return doors.map(door => ({ id: door.id, nodeId: door.id, state: door.initialState,
+    locked: false, lockCoreState: 'ACTIVE' }));
 }
 
 // Quarter turns are the only rotations the AABB collision model can represent,
@@ -376,6 +411,24 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
 
   const boxes = [...source.walls, ...rects].map(rectBox);
   const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+  const regionSpots: HideSpot[] = hideSpots.map(spot => ({ ...spot,
+    interactionRegion: { ...spot.interactionRegion } }));
+  const regionIssues = validateHideRegionData(regionSpots, rects);
+  const issueCodes = new Map(regionIssues.map(issue => [issue.spotId, issue]));
+  for (const issue of regionIssues) {
+    const code: RejectionCode = issue.code === 'ANCHOR_OUTSIDE_REGION'
+      ? 'ANCHOR_OUTSIDE_REGION'
+      : issue.code === 'INVALID_RADIUS' || issue.code === 'RADIUS_OUT_OF_AUTHORING_RANGE'
+        ? 'INVALID_REGION_RADIUS'
+        : issue.code === 'INVALID_HALF_ANGLE' || issue.code === 'HALF_ANGLE_OUT_OF_AUTHORING_RANGE' ||
+            issue.code === 'UNEXPECTED_HALF_ANGLE'
+          ? 'INVALID_REGION_ANGLE' : 'INVALID_REGION_DATA';
+    reject(issue.spotId, code, issue.message);
+  }
+  const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, source.doors);
+  const doorStates = authoredDoorStates(source.doors);
+  const regionWorld = { collision, navigation, doorStates,
+    doorNodes: source.doors, walls: source.walls };
   for (const spot of hideSpots) {
     const room = source.rooms.find(value => value.id === spot.roomId);
     if (!Number.isFinite(spot.x) || !Number.isFinite(spot.z) || !Number.isFinite(spot.facing)) {
@@ -410,6 +463,28 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
       reject(spot.id, 'ANCHOR_DETACHED',
         `${spot.id} 距所属家具 ${spot.furnitureId} ${gap.toFixed(3)}，已与家具脱离（上限 ${EDIT_LIMITS.maxAnchorFurnitureGap}）`);
     }
+    if (issueCodes.has(spot.id)) continue;
+    const setup = hideRegionSetup(regionSpots.find(value => value.id === spot.id)!, rects);
+    if (!setup) continue;
+    const anchorCheck = checkHideRegionPosition(setup, setup.geometry.anchor, regionWorld,
+      { reachable: true });
+    if (!anchorCheck.legal) {
+      reject(spot.id, 'ANCHOR_REGION_ILLEGAL',
+        `唯一锚点不是合法交互位置：${anchorCheck.code}`);
+      continue;
+    }
+    // Sample legality is explicitly a lattice check, not a continuous-area proof.
+    // Reuse the editor's already-computed reachable grid instead of running A* per sample.
+    let preview = sampleHideRegion(setup, regionWorld,
+      { step: 0.1, isReachable: point => reach.hasPoint(point.x, point.z) });
+    if (preview.legalSamples === 0) {
+      preview = sampleHideRegion(setup, regionWorld,
+        { step: 0.05, isReachable: point => reach.hasPoint(point.x, point.z) });
+    }
+    if (preview.legalSamples === 0) {
+      reject(spot.id, 'NO_LEGAL_REGION_SAMPLE',
+        `${spot.id} 在 0.05 世界单位的加细采样下仍未检测到合法位置；这是采样结果，不是连续空间证明`);
+    }
   }
 
   return rejections;
@@ -417,7 +492,9 @@ export function validateEditedMap(furniture: readonly FurnitureDraft[],
 
 function cloneFurniture(draft: FurnitureDraft): FurnitureDraft { return { ...draft }; }
 
-function cloneSpot(draft: HideSpotDraft): HideSpotDraft { return { ...draft }; }
+function cloneSpot(draft: HideSpotDraft): HideSpotDraft {
+  return { ...draft, interactionRegion: { ...draft.interactionRegion } };
+}
 
 function sourceFurnitureDraft(rect: Rect): FurnitureDraft {
   const room = roomOfRect(rect);
@@ -436,7 +513,26 @@ function roomOfRect(rect: Rect): string {
 
 function sourceSpotDraft(spot: HideSpot): HideSpotDraft {
   return { editKind: 'HIDE_SPOT', id: spot.id, roomId: spot.roomId, kind: spot.kind,
-    furnitureId: spot.furnitureId, label: spot.label, x: spot.x, z: spot.z, facing: spot.facing };
+    furnitureId: spot.furnitureId, label: spot.label, x: spot.x, z: spot.z,
+    facing: spot.facing, interactionRegion: { ...spot.interactionRegion } };
+}
+
+function wrapAngle(angle: number): number {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function rotateAnchorAroundFurniture(spot: HideSpotDraft, oldFurniture: FurnitureDraft,
+  newFurniture: FurnitureDraft): HideSpotDraft {
+  const turns = ((newFurniture.rotationQuarter - oldFurniture.rotationQuarter) % 4 + 4) % 4;
+  const theta = turns * Math.PI / 2;
+  const dx = spot.x - oldFurniture.x, dz = spot.z - oldFurniture.z;
+  // Match THREE.Object3D.rotation.y in the XZ ground plane.
+  const cos = Math.cos(theta), sin = Math.sin(theta);
+  const rotated = turns === 0 ? { x: dx, z: dz }
+    : { x: dx * cos + dz * sin, z: -dx * sin + dz * cos };
+  return { ...spot, x: newFurniture.x + rotated.x,
+    z: newFurniture.z + rotated.z,
+    facing: wrapAngle(spot.facing - theta) };
 }
 
 export class MapEditSession {
@@ -446,6 +542,10 @@ export class MapEditSession {
   private draftFurniture: FurnitureDraft[];
   private draftSpots: HideSpotDraft[];
   private appliedCount = 0;
+  private revision = 0;
+  private validationCache: { revision: number; result: EditRejection[] } | null = null;
+  private validationRunCount = 0;
+  private validationWindowOpen = false;
   lastRejection: EditRejection | null = null;
   private readonly editEvents: EditEvent[] = [];
 
@@ -469,10 +569,28 @@ export class MapEditSession {
       this.draftSpots.some((draft, index) => !sameSpot(draft, this.committedSpots[index]));
   }
 
-  get draftStatus(): 'UNCHANGED' | 'VALID' | 'INVALID' {
+  get draftStatus(): DraftStatus {
+    // A drag rewrites the draft on every pointermove. While the deferral window
+    // is open this per-frame status read stays cheap and reports DRAGGING; the
+    // editor runs the full validation once on release instead.
+    if (this.validationWindowOpen) return 'DRAGGING';
     if (!this.isDirty) return 'UNCHANGED';
     return this.validateDraft().length ? 'INVALID' : 'VALID';
   }
+
+  // How often the full map validation (collision world + navigation grid + flood
+  // fill + region sampling) really ran. Cache hits do not count, so the drag
+  // regression tests can prove a whole drag validates exactly once.
+  get validationRuns(): number { return this.validationRunCount; }
+
+  get validationDeferred(): boolean { return this.validationWindowOpen; }
+
+  // Opened by the scene editor on pointerdown, closed on pointerup. While it is
+  // open `validateDraft()` still works (the release path uses it); only the
+  // per-frame `draftStatus` read is suppressed.
+  beginDeferredValidation(): void { this.validationWindowOpen = true; }
+
+  endDeferredValidation(): void { this.validationWindowOpen = false; }
 
   list(): EditTarget[] {
     return [...this.draftFurniture.map(cloneFurniture), ...this.draftSpots.map(cloneSpot)];
@@ -488,6 +606,35 @@ export class MapEditSession {
   furnitureList(): FurnitureDraft[] { return this.draftFurniture.map(cloneFurniture); }
 
   hideSpotList(): HideSpotDraft[] { return this.draftSpots.map(cloneSpot); }
+
+  hideSpotForTarget(targetId: string): string | null {
+    const spot = this.draftSpots.find(value => value.id === targetId || value.furnitureId === targetId);
+    return spot?.id ?? null;
+  }
+
+  regionPreview(targetId: string, includeSamples = true,
+    step = DEFAULT_REGION_SAMPLE_STEP): HideRegionEditorPreview | null {
+    const spotId = this.hideSpotForTarget(targetId);
+    const spotDraft = this.draftSpots.find(value => value.id === spotId);
+    if (!spotDraft) return null;
+    const rects = this.draftFurniture.map(furnitureRect);
+    const regionSpot: HideSpot = { ...spotDraft, interactionRegion: { ...spotDraft.interactionRegion } };
+    const setup = hideRegionSetup(regionSpot, rects);
+    const dataIssues = validateHideRegionData([regionSpot], rects);
+    if (!setup || dataIssues.some(issue => issue.code !== 'ANCHOR_OUTSIDE_REGION')) return null;
+    const geometry = hideRegionGeometry(regionSpot, setup.furniture);
+    if (!includeSamples) return { geometry, sampling: null, sampleStep: step };
+    const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
+      [...this.source.walls, ...rects].map(rectBox));
+    const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, this.source.doors);
+    const reach = reachableCells(this.source, rects);
+    const world = { collision, navigation,
+      doorStates: authoredDoorStates(this.source.doors),
+      doorNodes: this.source.doors, walls: this.source.walls };
+    const sampling = sampleHideRegion(setup, world,
+      { step, isReachable: point => reach.hasPoint(point.x, point.z) });
+    return { geometry, sampling, sampleStep: step };
+  }
 
   setField(id: string, field: string, value: number): EditRejection | null {
     if ((READ_ONLY_FIELDS as readonly string[]).includes(field)) {
@@ -511,7 +658,16 @@ export class MapEditSession {
       if (field === 'height' && (value < EDIT_LIMITS.minHeight || value > EDIT_LIMITS.maxHeight)) {
         return this.reject(id, 'SIZE_OUT_OF_RANGE', `高度需在 ${EDIT_LIMITS.minHeight}–${EDIT_LIMITS.maxHeight} 之间`);
       }
+      const old = cloneFurniture(furniture);
       (furniture as unknown as Record<string, number>)[field] = value;
+      if (field === 'x' || field === 'z' || field === 'rotationQuarter') {
+        for (let index = 0; index < this.draftSpots.length; index++) {
+          if (this.draftSpots[index].furnitureId === id) {
+            this.draftSpots[index] = rotateAnchorAroundFurniture(this.draftSpots[index], old, furniture);
+          }
+        }
+      }
+      this.invalidateValidation();
       return null;
     }
     const spot = this.draftSpots.find(draft => draft.id === id);
@@ -520,7 +676,26 @@ export class MapEditSession {
       return this.reject(id, 'READ_ONLY_FIELD', `${field} 不是藏身锚点可编辑字段`);
     }
     if (!Number.isFinite(value)) return this.reject(id, 'INVALID_VALUE', `${field} 必须是数字`);
-    (spot as unknown as Record<string, number>)[field] = value;
+    if (field === 'interactionRegion.radius') {
+      if (value < REGION_AUTHORING_LIMITS.minRadius || value > REGION_AUTHORING_LIMITS.maxRadius) {
+        return this.reject(id, 'INVALID_REGION_RADIUS',
+          `区域半径需在 ${REGION_AUTHORING_LIMITS.minRadius}–${REGION_AUTHORING_LIMITS.maxRadius} 之间`);
+      }
+      spot.interactionRegion.radius = value;
+    } else if (field === 'interactionRegion.halfAngleDeg') {
+      if (spot.interactionRegion.shape !== 'SECTOR') {
+        return this.reject(id, 'READ_ONLY_FIELD', '圆形区域没有扇形半角');
+      }
+      if (value < REGION_AUTHORING_LIMITS.minHalfAngleDeg ||
+          value > REGION_AUTHORING_LIMITS.maxHalfAngleDeg) {
+        return this.reject(id, 'INVALID_REGION_ANGLE',
+          `扇形半角需在 ${REGION_AUTHORING_LIMITS.minHalfAngleDeg}–${REGION_AUTHORING_LIMITS.maxHalfAngleDeg} 度之间`);
+      }
+      spot.interactionRegion.halfAngleDeg = value;
+    } else {
+      (spot as unknown as Record<string, number>)[field] = value;
+    }
+    this.invalidateValidation();
     return null;
   }
 
@@ -530,16 +705,28 @@ export class MapEditSession {
     return this.setField(id, 'z', z);
   }
 
-  diff(id: string): { field: string; from: number; to: number }[] {
+  diff(id: string): { field: string; from: number | string; to: number | string }[] {
     const draft = this.get(id);
     if (!draft) return [];
     const committed = draft.editKind === 'FURNITURE'
       ? this.committedFurniture.find(value => value.id === id)!
       : this.committedSpots.find(value => value.id === id)!;
-    const result: { field: string; from: number; to: number }[] = [];
+    const result: { field: string; from: number | string; to: number | string }[] = [];
     for (const field of Object.keys(draft)) {
       if (field === 'editKind' || field === 'id' || field === 'roomId' || field === 'kind' ||
           field === 'furnitureId' || field === 'label') continue;
+      if (field === 'interactionRegion') {
+        if (draft.editKind !== 'HIDE_SPOT') continue;
+        const committedSpot = this.committedSpots.find(value => value.id === id);
+        if (!committedSpot) continue;
+        for (const regionField of ['shape', 'radius', 'halfAngleDeg'] as const) {
+          const from = committedSpot.interactionRegion[regionField];
+          const to = draft.interactionRegion[regionField];
+          if (from !== to) result.push({ field: `interactionRegion.${regionField}`,
+            from: from ?? '无', to: to ?? '无' });
+        }
+        continue;
+      }
       const from = (committed as unknown as Record<string, number>)[field];
       const to = (draft as unknown as Record<string, number>)[field];
       if (from !== undefined && from !== to) result.push({ field, from, to });
@@ -553,6 +740,11 @@ export class MapEditSession {
       const authored = this.source.furniture.find(rect => rect.id === id);
       if (!authored) return false;
       this.draftFurniture[furnitureIndex] = sourceFurnitureDraft(authored);
+      for (let index = 0; index < this.draftSpots.length; index++) {
+        const sourceSpot = this.source.hideSpots.find(spot => spot.id === this.draftSpots[index].id);
+        if (sourceSpot?.furnitureId === id) this.draftSpots[index] = sourceSpotDraft(sourceSpot);
+      }
+      this.invalidateValidation();
       return true;
     }
     const spotIndex = this.draftSpots.findIndex(draft => draft.id === id);
@@ -560,6 +752,7 @@ export class MapEditSession {
       const authored = this.source.hideSpots.find(spot => spot.id === id);
       if (!authored) return false;
       this.draftSpots[spotIndex] = sourceSpotDraft(authored);
+      this.invalidateValidation();
       return true;
     }
     return false;
@@ -569,6 +762,9 @@ export class MapEditSession {
     this.draftFurniture = this.committedFurniture.map(cloneFurniture);
     this.draftSpots = this.committedSpots.map(cloneSpot);
     this.lastRejection = null;
+    // A whole-draft reset ends any drag window: there is nothing left to defer.
+    this.validationWindowOpen = false;
+    this.invalidateValidation();
   }
 
   // Rolls one target back to the last applied value (used when a drag or a
@@ -579,6 +775,13 @@ export class MapEditSession {
       const committed = this.committedFurniture.find(draft => draft.id === id);
       if (!committed) return false;
       this.draftFurniture[furnitureIndex] = cloneFurniture(committed);
+      for (let index = 0; index < this.draftSpots.length; index++) {
+        if (this.draftSpots[index].furnitureId === id) {
+          const committedSpot = this.committedSpots.find(spot => spot.id === this.draftSpots[index].id);
+          if (committedSpot) this.draftSpots[index] = cloneSpot(committedSpot);
+        }
+      }
+      this.invalidateValidation();
       return true;
     }
     const spotIndex = this.draftSpots.findIndex(draft => draft.id === id);
@@ -586,13 +789,23 @@ export class MapEditSession {
       const committed = this.committedSpots.find(draft => draft.id === id);
       if (!committed) return false;
       this.draftSpots[spotIndex] = cloneSpot(committed);
+      this.invalidateValidation();
       return true;
     }
     return false;
   }
 
   validateDraft(): EditRejection[] {
-    return validateEditedMap(this.draftFurniture, this.draftSpots, this.source);
+    if (this.validationCache?.revision === this.revision) return this.validationCache.result;
+    const result = validateEditedMap(this.draftFurniture, this.draftSpots, this.source);
+    this.validationRunCount++;
+    this.validationCache = { revision: this.revision, result };
+    return result;
+  }
+
+  private invalidateValidation(): void {
+    this.revision++;
+    this.validationCache = null;
   }
 
   // Rejected edits must never pollute the applied map: the draft rolls back to
@@ -608,6 +821,7 @@ export class MapEditSession {
     this.committedFurniture = this.draftFurniture.map(cloneFurniture);
     this.committedSpots = this.draftSpots.map(cloneSpot);
     this.appliedCount++;
+    this.invalidateValidation();
     this.lastRejection = null;
     this.recordEvent('SCENE_OBJECT_EDIT_APPLY', 'MAP',
       `应用编辑：家具 ${this.committedFurniture.length} 件 / 藏身点 ${this.committedSpots.length} 个`);
@@ -642,7 +856,9 @@ export class MapEditSession {
       hideSpots: this.committedSpots.map(draft => ({ id: draft.id, kind: draft.kind,
         roomId: draft.roomId, furnitureId: draft.furnitureId, label: draft.label,
         anchor: { x: draft.x, z: draft.z }, facing: draft.facing,
-        facingDeg: draft.facing * 180 / Math.PI })),
+        facingDeg: draft.facing * 180 / Math.PI,
+        interactionRegion: { ...draft.interactionRegion,
+          units: { radius: 'world-unit', halfAngle: 'degree' } } })),
     };
   }
 
@@ -669,5 +885,8 @@ function sameFurniture(a: FurnitureDraft, b: FurnitureDraft): boolean {
 }
 
 function sameSpot(a: HideSpotDraft, b: HideSpotDraft): boolean {
-  return a.x === b.x && a.z === b.z && a.facing === b.facing;
+  return a.x === b.x && a.z === b.z && a.facing === b.facing &&
+    a.interactionRegion.shape === b.interactionRegion.shape &&
+    a.interactionRegion.radius === b.interactionRegion.radius &&
+    a.interactionRegion.halfAngleDeg === b.interactionRegion.halfAngleDeg;
 }

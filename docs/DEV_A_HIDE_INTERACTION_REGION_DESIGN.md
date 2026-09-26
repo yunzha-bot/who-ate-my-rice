@@ -1,8 +1,8 @@
-# DEV-A 藏身交互区域设计（第一轮：数据与几何基础）
+# DEV-A 藏身交互区域设计（第一轮数据/几何基础 + 第二轮编辑器与拖动修复）
 
-> **状态（2026-09-26）**：DEV-A **第一轮（区域数据 + 纯几何 + 合法位置检查基础接口）已完成**：`npm test` 383/383、`npm run build` 退出码 0、`git diff --check` 退出码 0；**用户浏览器人工回归 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，并随提交 `feat: complete dev-a hide region geometry foundation` 建立检查点（实际 SHA 以 `git log -1` 查询）。
-> **本轮的硬边界（用户原话范围）**：暂不接入场景编辑器 UI；暂不实现家具移动后锚点自动同步；暂不升级 JSON 导出；不得实现 `HideSystem`、按键藏身、Human `CHECK_HIDE` 或随机化；不得修改正式 `GAME_CONFIG`；不得覆盖已经验收的编辑器功能。
-> **本文件只记录本轮实际落地的事实与第二轮要接的接口，不代表批准第二轮**。DEV-A 第二轮（编辑器编辑/校验/导出/可视化）与 DEV-B 均**未授权**（授权状态见 `docs/DEEPSEEK_HANDOFF.md`）。
+> **状态（2026-09-26）**：DEV-A **第一轮**（区域数据 + 纯几何 + 合法位置检查基础接口）、**第二轮**（编辑器编辑区域半径/半角、家具移动或旋转时锚点跟随、区域校验、JSON **V2** 导出、DEV 可视化）、**DEV-A-FIX-1**（拖动流畅度）**均已完成并随各自提交建立检查点**：`npm test` **395/395**、`npm run build` 退出码 0、`git diff --check` 退出码 0。用户浏览器人工验收：第一轮 5/5 PASS；第二轮的区域编辑／预览／校验／JSON V2 与旧功能回归全部通过；FIX-1 流畅拖动 5/5 PASS。**DEV-A 整体仍未完成——DEV-A-FIX-2 为待实施任务（范围以用户后续说明为准）**。实际 SHA 一律以 `git log -1` 查询。
+> **第一轮当时的硬边界（用户原话范围，历史）**：暂不接入场景编辑器 UI；暂不实现家具移动后锚点自动同步；暂不升级 JSON 导出；不得实现 `HideSystem`、按键藏身、Human `CHECK_HIDE` 或随机化；不得修改正式 `GAME_CONFIG`；不得覆盖已经验收的编辑器功能。
+> **仍未实现**：`HideSystem`、按键藏身、Human `CHECK_HIDE`、地图随机化、任意角度自由旋转；**DEV-B 未授权**（授权状态见 `docs/DEEPSEEK_HANDOFF.md`）。
 
 ---
 
@@ -130,7 +130,7 @@ export interface HideSpot extends MapPoint {
 |---|---|
 | `src/three/map/apartmentMap.ts` | 新增 `HideInteractionShape` / `HideInteractionRegion` 类型与 `HideSpot.interactionRegion` 字段；为 8 条藏身点写入 §2 参数（锚点坐标未改） |
 | `src/three/map/HideInteractionRegion.ts` | **新增**：几何、表面瞄准、合法位置检查、离散采样预览、纯数据校验 |
-| `src/three/SceneEditor.ts` | `draftSpotsToAnchors()` 通过稳定 ID 把 `interactionRegion` 原样透传（类型完整性所需）；区域**不可编辑**，编辑器行为不变 |
+| `src/three/SceneEditor.ts` | 第一轮：`draftSpotsToAnchors()` 透传 `interactionRegion`（类型完整性）。**第二轮已改为从草稿携带区域**（区域可编辑，见 §7.1） |
 | `tests/hide-interaction-region.test.mjs` | **新增** 13 项测试（见表下清单） |
 | `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md` | **新增**本文件 |
 | `docs/DEEPSEEK_HANDOFF.md` / `docs/AGENT_LOG.md` | 状态与日志同步 |
@@ -143,21 +143,45 @@ export interface HideSpot extends MapPoint {
 
 ---
 
-## 7. 第二轮需要接入的接口（本轮全部未实现）
+## 7. 第二轮接入清单与后续修复轮（2026-09-26 更新）
+
+### 7.1 第二轮接入清单（**已全部实现并通过人工验收**）
 
 1. **场景编辑器编辑区域**：半径、半角、朝向（Q7）。编辑器需要为 `HideSpotDraft` 增加区域字段或单独的区域编辑面板，并决定半径/半角的合法范围与拒绝码（**不要**复用 `maxAnchorFurnitureGap`）。
 2. **校验与导出**（Q8）：`MapEditModel.validateEditedMap()` 接入 `validateHideRegionData()` + `checkHideRegionPosition()`（例如「区域内至少存在一个合法位置」「锚点仍是合法位置」）；`HideSpotExport` 增加 `interactionRegion`（含度/弧度单位）并决定 `MAP_EXPORT_VERSION` 是否升版。
 3. **DEV 可视化**：用 `hideRegionGeometry()` 画精确的圆环/扇形轮廓（连续几何），用 `sampleHideRegion()` 的 `samples` 画**离散**采样点并按 `code` 着色——两者必须在 UI 上明确区分，不能让采样点看起来像区域边界。
-4. **家具移动后锚点/区域同步**：本轮明确未实现（用户禁止）。第二轮若要加，必须先决定「锚点自动跟随」还是「仅提示」，且不得静默移动已批准锚点。
-5. **进入 / 退出锚点是否拆分**：仍**未决定**，本轮保持单一 anchor；任何拆分都属于未来单独批准的改动。
+4. **家具移动后锚点/区域同步**：**已在第二轮实现**——家具移动或四分之一转时关联锚点跟随（`rotateAnchorAroundFurniture`），不静默改写已批准锚点以外的数据。
+5. **进入 / 退出锚点是否拆分**：仍**未决定**，继续保持单一 anchor；任何拆分都属于未来单独批准的改动。
 6. 现有接口可直接复用（不需要改签名）：`hideRegionSetup` / `hideRegionGeometry` / `pointInHideRegion` / `furnitureApproachSurfacePoint` / `hideRegionSurfaceClear` / `checkHideRegionPosition` / `sampleHideRegion` / `validateHideRegionData`，常量 `REGION_NAV_SNAP_LIMIT`(0.45)、`DEFAULT_REGION_SAMPLE_STEP`(0.3)、`REGION_EPSILON`。
+
+**第二轮实际落地（2026-09-26，已验收）**：
+
+- 数据：`HideSpotDraft` 携带 `interactionRegion`（`draftSpotsToAnchors` 直接使用草稿区域，不再按 ID 反查）。
+- 可编辑字段与边界：`interactionRegion.radius`、`interactionRegion.halfAngleDeg`；`REGION_AUTHORING_LIMITS = { minRadius: 0.5, maxRadius: 3, radiusStep: 0.05, minHalfAngleDeg: 10, maxHalfAngleDeg: 150, halfAngleStepDeg: 1 }`（**仍不进 `GAME_CONFIG`**）。拒绝码：`INVALID_REGION_RADIUS` / `INVALID_REGION_ANGLE`（字段级）、`RADIUS_OUT_OF_AUTHORING_RANGE` / `HALF_ANGLE_OUT_OF_AUTHORING_RANGE`（数据校验级）、`ANCHOR_OUTSIDE_REGION` / `ANCHOR_REGION_ILLEGAL` / `NO_LEGAL_REGION_SAMPLE`（地图校验级）。圆形藏身点不显示半角输入；字段输入带 `min`/`max`。
+- 预览：`MapEditSession.regionPreview(targetId, includeSamples, step)` 返回 `{ geometry, sampling, sampleStep }`；`regionPreview(id, false)` 只给精确轮廓（拖动路径），`true` 才做离散采样。面板提供「交互区域预览」开关，采样点按 `code` 着色 + 图例（精确轮廓与离散采样明确分开呈现）。
+- 导出：`MAP_EXPORT_VERSION = 2`，`HideSpotExport.interactionRegion` 带 `units`（半径 world-unit、半角 degree），**只导出已应用数据**。
+- 性能：`checkHideRegionPosition` / `sampleHideRegion` 新增 `isReachable` 快速路径，复用连通性洪水填充结果，避免每个采样点各跑一次 A*。
+
+### 7.2 DEV-A-FIX-1：拖动流畅度（**已实现并 5/5 人工验收 PASS**）
+
+- **根因**：`SceneEditor.onFrame()` 每帧读取 `session.draftStatus`，该 getter 会执行完整地图校验（新建 `CollisionWorld` + `NavigationSystem` + 3 格连通性洪水填充 + 区域采样）；拖动时草稿每帧变化使 revision 缓存必然失效 → **每帧一次完整校验**（实测 236–435 ms/次，卡顿主因）。次因是 `SceneEditorView.setRegionPreview()` 每次调用都销毁并重建轮廓线与采样实例（实测 0.0177 ms/次，次要项）。
+- **修复**：`MapEditSession` 增加**延迟校验窗口**——`beginDeferredValidation()` / `endDeferredValidation()` / `validationDeferred`，窗口内 `draftStatus` 返回新状态 `'DRAGGING'`（O(1)，不触发校验），另加只读计数 `validationRuns`（仅缓存未命中时 +1）用于回归断言。`SceneEditorView` 新增 `onDragStart` 钩子；`SceneEditor.beginDrag()` 在 pointerdown 开窗，`commitDrag()`（pointerup）关窗并**校验一次**；`close` / `discardDraft` / `applyEdits` / `dispose` / `MapEditSession.resetAll()` 兜底关窗。预览对象改为长期存活：轮廓线原地改写 position 缓冲 + 重算包围球；采样 `InstancedMesh` 按 `code` 复用、数量未变只重写矩阵；**拖动期间仅隐藏采样点**（不重采样），释放时立即重绘。
+- **不变式**：拖动期间仍然实时更新家具 mesh、关联锚点与精确轮廓（不靠隐藏 UI 掩盖）；`apply()` 仍全量复验、`commitDrag()` 仍释放时校验并回滚（非法位置无法进入地图）；校验函数本身与编辑器数据语义未改。
+- **实测（Node，模型/视图层毫秒，不是浏览器 FPS）**：120 次 pointermove 触发的完整校验 **119 → 1 次**；每次拖动移动的编辑器开销中位 **0.011 ms**；释放时区域重采样约 **19 ms**（每次释放 1 次）；轮廓 A/B（真实 three API + 真实 `SceneEditorView`，400 次/组）**0.0177 → 0.0111 ms**（中位）。
+- **测试**：`tests/scene-editor.test.mjs` 追加 6 项拖动回归（逐帧读取零校验、释放恰好一次、非法拖动仍拒绝并可回滚、拖动中家具/锚点/区域同步且无采样、硬重置关窗、延迟拖动后 V2 导出只含已应用数据）。
+
+### 7.3 DEV-A-FIX-2（**待实施，范围以用户后续说明为准**）
+
+用户在该轮归档指令中点名「FIX-2 仍为待实施任务」，但**尚未说明范围**。开工前须由用户给出目标与允许范围；本文件不预设其内容，也不得据此提前实现自由旋转或 DEV-B。
 
 ---
 
-## 8. 明确未实现（本轮禁止项，逐条核对）
+## 8. 第一轮明确未实现（当时禁止项，逐条核对；2026-09-26 历史快照）
+
+> 本节是第一轮结束时的状态快照。其中**场景编辑器 UI、`MapEditModel` 的区域可编辑字段与拒绝码、JSON 导出升级、家具移动后的锚点同步已在 DEV-A 第二轮实现并验收**（见 §7.1）；其余各项仍未实现。
 
 - 没有 `HideSystem`、没有藏身进入/退出按键、没有移动限制、没有抓捕门控、没有 `VisionSystem` 隐藏入口、没有 `HideSpotView`。
 - 没有 Human `CHECK_HIDE`、没有 AI 藏身、没有地图随机化。
 - 没有改 `GAME_CONFIG`、没有改 `docs/GAME_BALANCE_CONFIG.md`、没有改任何已验收数值。
-- 没有接场景编辑器 UI、没有改 `MapEditModel` 的可编辑字段与拒绝码、没有升级 JSON 导出、没有改 `MapBuilder` 的 DEBUG 标记、没有做家具移动后的锚点同步。
+- 没有接场景编辑器 UI、没有改 `MapEditModel` 的可编辑字段与拒绝码、没有升级 JSON 导出、没有改 `MapBuilder` 的 DEBUG 标记、没有做家具移动后的锚点同步。**（前四项已在第二轮实现并验收）**
 - 8 个藏身点的稳定 ID、家具绑定、唯一锚点语义**全部不变**。

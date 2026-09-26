@@ -6,7 +6,7 @@ import { SceneEditorPanel } from './SceneEditorPanel.ts';
 import type { ApartmentBuild } from './map/MapBuilder';
 import type { DevFreezeSystem, DevRunState } from '../systems/DevFreezeSystem.ts';
 import type { GamePhase } from '../systems/GameStateSystem.ts';
-import { HIDE_SPOTS, type HideSpot, type Rect } from './map/apartmentMap.ts';
+import type { HideSpot, Rect } from './map/apartmentMap.ts';
 
 export interface CommittedMap {
   furniture: readonly Rect[];
@@ -40,22 +40,10 @@ export function draftFurnitureToRects(drafts: readonly FurnitureDraft[]): Rect[]
   return drafts.map(furnitureRect);
 }
 
-// The DEV editor edits the anchor position only. The authored interaction region
-// is carried through by stable spot id instead of being copied into the editable
-// draft, which would make a second copy of the same authored data.
-const AUTHORED_HIDE_REGIONS = new Map(
-  HIDE_SPOTS.map(spot => [spot.id, spot.interactionRegion] as const));
-
 export function draftSpotsToAnchors(drafts: readonly HideSpotDraft[]): HideSpot[] {
-  return drafts.map(draft => {
-    const interactionRegion = AUTHORED_HIDE_REGIONS.get(draft.id);
-    if (!interactionRegion) {
-      throw new Error(`藏身点 ${draft.id} 没有已写定的 interactionRegion 数据`);
-    }
-    return { id: draft.id, roomId: draft.roomId, kind: draft.kind,
+  return drafts.map(draft => ({ id: draft.id, roomId: draft.roomId, kind: draft.kind,
       furnitureId: draft.furnitureId, label: draft.label, x: draft.x, z: draft.z,
-      facing: draft.facing, interactionRegion };
-  });
+      facing: draft.facing, interactionRegion: { ...draft.interactionRegion } }));
 }
 
 export function committedMap(session: MapEditSession): CommittedMap {
@@ -82,6 +70,8 @@ export class SceneEditor {
   private readonly view: SceneEditorView;
   private readonly panel: SceneEditorPanel;
   private opened = false;
+  private regionPreviewVisible = true;
+  private draggingId: string | null = null;
   private build: ApartmentBuild | null = null;
   message = '';
   lastRejection = '无';
@@ -94,6 +84,7 @@ export class SceneEditor {
       dom: hooks.dom,
       onSelect: id => this.select(id),
       onPreview: (id, x, z) => this.preview(id, x, z),
+      onDragStart: id => this.beginDrag(id),
       onCommit: id => this.commitDrag(id),
       onZoom: hooks.onZoom,
       onPan: hooks.onPan,
@@ -112,6 +103,10 @@ export class SceneEditor {
       onResetTarget: id => this.resetTarget(id),
       onExport: () => this.exportMap(),
       onAnchorsVisible: visible => this.view.setAnchorsVisible(visible),
+      onRegionPreviewVisible: visible => {
+        this.regionPreviewVisible = visible;
+        this.refreshRegionPreview();
+      },
     });
   }
 
@@ -145,6 +140,7 @@ export class SceneEditor {
 
   close(): void {
     if (!this.opened) return;
+    this.endDragWindow();
     // Unapplied drafts are never kept: closing clears the preview and restores
     // the last applied map. Applied edits stay in memory.
     this.session.resetAll();
@@ -159,9 +155,13 @@ export class SceneEditor {
   }
 
   select(id: string | null): void {
+    // The dragged object stays selected until the release: switching selection
+    // mid-drag would point the region preview at another object.
+    if (this.draggingId && id !== this.draggingId) return;
     this.selection = id;
     this.view.select(id);
     if (id) this.view.setPreviewValidity(null);
+    this.refreshRegionPreview();
   }
 
   focus(id: string): void {
@@ -171,9 +171,11 @@ export class SceneEditor {
   }
 
   applyEdits(): boolean {
+    this.endDragWindow();
     const result = this.session.apply();
     this.rebuildFromCommitted();
     if (result.ok) {
+      this.refreshRegionPreview();
       this.message = '已应用编辑：静态碰撞与导航网格已按校验后的数据重建。';
       this.lastRejection = '无';
       return true;
@@ -184,6 +186,7 @@ export class SceneEditor {
   }
 
   discardDraft(): void {
+    this.endDragWindow();
     this.session.resetAll();
     this.rebuildFromCommitted();
     this.message = '已放弃未应用的草稿，场景恢复为已应用地图。';
@@ -192,6 +195,7 @@ export class SceneEditor {
   resetTarget(id: string): void {
     if (!this.session.resetTarget(id)) return;
     this.syncMeshPreview(id);
+    this.refreshRegionPreview();
     this.message = `${id} 已恢复为初始白模数值（仍需点「应用编辑」写入地图）。`;
   }
 
@@ -227,6 +231,9 @@ export class SceneEditor {
 
   statusEntries(): SceneEditorStatusEntry[] {
     const freezeState: DevRunState = this.hooks.freeze.state;
+    // One cached read for all three rows: the full map validation must not run
+    // once per row per frame.
+    const draftStatus = this.session.draftStatus;
     return [
       { label: '双阵营状态', value: freezeState,
         tone: freezeState === 'FROZEN' ? 'warning' : 'success' },
@@ -239,9 +246,9 @@ export class SceneEditor {
       { label: '场景编辑', value: this.opened ? '已开启' : '已关闭',
         tone: this.opened ? 'curious' : 'normal' },
       { label: '当前选中物体', value: this.selection ?? '无' },
-      { label: '编辑草稿是否合法', value: this.session.draftStatus,
-        tone: this.session.draftStatus === 'INVALID' ? 'danger'
-          : this.session.draftStatus === 'VALID' ? 'warning' : 'normal' },
+      { label: '编辑草稿是否合法', value: draftStatus,
+        tone: draftStatus === 'INVALID' ? 'danger'
+          : draftStatus === 'VALID' ? 'warning' : 'normal' },
       { label: '最近拒绝编辑原因', value: this.lastRejection,
         tone: this.lastRejection === '无' ? 'normal' : 'danger' },
       { label: '已应用编辑次数', value: String(this.session.appliedEditCount) },
@@ -255,28 +262,53 @@ export class SceneEditor {
   }
 
   dispose(): void {
+    this.endDragWindow();
     this.view.dispose();
     this.panel.dispose();
     this.build = null;
   }
 
+  // A drag rewrites the draft on every pointermove, so the per-frame status read
+  // must not run the full map validation (collision world + navigation grid +
+  // flood fill + region sampling). The window is opened on pointerdown and the
+  // release path validates exactly once. Illegal drafts still cannot reach the
+  // map: applyEdits() revalidates the whole draft before committing anything.
+  private beginDrag(id: string): void {
+    this.draggingId = id;
+    this.session.beginDeferredValidation();
+  }
+
+  private endDragWindow(): void {
+    this.draggingId = null;
+    this.session.endDeferredValidation();
+  }
+
   private preview(id: string, x: number, z: number): void {
+    // Lightweight per-move path only: draft values, the furniture mesh, its
+    // linked anchors and the exact region outline. No map validation, no region
+    // sampling and no geometry rebuild.
     this.session.moveTarget(id, x, z);
-    this.view.previewPosition(id, x, z);
+    this.syncMeshPreview(id);
+    this.refreshRegionPreview(false);
     this.view.setPreviewValidity(null);
   }
 
   private commitDrag(id: string): void {
-    const rejections = this.session.validateDraft().filter(item => item.targetId === id);
+    this.endDragWindow();
+    const linkedSpot = this.session.hideSpotForTarget(id);
+    const rejections = this.session.validateDraft().filter(item =>
+      item.targetId === id || item.targetId === linkedSpot);
     if (rejections.length) {
       this.session.revertToCommitted(id);
       this.rebuildFromCommitted();
       this.lastRejection = rejections[0].message;
       this.message = `拖动被拒绝（${rejections[0].code}）：${rejections[0].message}`;
       this.view.setPreviewValidity(false);
+      this.refreshRegionPreview();
       return;
     }
     this.view.setPreviewValidity(true);
+    this.refreshRegionPreview();
     this.message = '拖动已写入草稿；点「应用编辑」才会重建碰撞与导航。';
   }
 
@@ -286,9 +318,11 @@ export class SceneEditor {
       this.lastRejection = rejection.message;
       this.message = `已拒绝修改（${rejection.code}）：${rejection.message}`;
       this.syncMeshPreview(id);
+      this.refreshRegionPreview();
       return;
     }
     this.syncMeshPreview(id);
+    this.refreshRegionPreview();
     this.message = `${id}.${field} = ${value} 已写入草稿（未应用）。`;
   }
 
@@ -307,12 +341,29 @@ export class SceneEditor {
     mesh.rotation.y = draft.rotationQuarter * Math.PI / 2;
     mesh.scale.set(draft.width / authored.width, draft.height / authored.height,
       draft.depth / authored.depth);
+    for (const spot of this.session.hideSpotList()) {
+      if (spot.furnitureId === id) this.view.previewPosition(spot.id, spot.x, spot.z);
+    }
+  }
+
+  private refreshRegionPreview(includeSamples = true): void {
+    if (!this.regionPreviewVisible || !this.opened || !this.selection) {
+      this.view.setRegionPreview(null);
+      return;
+    }
+    const preview = this.session.regionPreview(this.selection, includeSamples);
+    this.view.setRegionPreview(preview ? {
+      geometry: preview.geometry,
+      samples: preview.sampling?.samples ?? null,
+      sampleStep: preview.sampleStep,
+    } : null);
   }
 
   private rebuildFromCommitted(): void {
     const build = this.hooks.onRebuild(committedMap(this.session));
     this.setBuild(build);
     this.view.select(this.selection);
+    this.refreshRegionPreview();
   }
 
   private eventList(): string[] {

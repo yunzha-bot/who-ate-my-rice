@@ -154,6 +154,19 @@ canvas { display: block; }
 .scene-editor-field { display: flex; flex-direction: column; gap: 2px; }
 .scene-editor-field input, .scene-editor-field select { border: 1px solid #4d535b;
   border-radius: 3px; padding: 3px 5px; color: #e4e6e9; background: #191c20; font: inherit; }
+.scene-editor-region-legend { display: grid; gap: 4px; margin-top: 10px; padding: 7px;
+  border: 1px solid #3f444a; border-radius: 3px; color: #b9c0c8; background: #1a1d21; }
+.scene-editor-region-legend > small:first-child { color: #d6d9de; font-weight: 600; }
+.scene-editor-region-legend div { display: flex; align-items: center; gap: 6px; }
+.scene-editor-region-legend i { display: inline-block; flex: 0 0 9px; width: 9px; height: 9px; }
+.scene-editor-region-legend .region-legend-boundary { border: 2px solid #5cc8ff; border-radius: 50%; }
+.scene-editor-region-legend .region-legend-dot { border-radius: 50%; }
+.scene-editor-region-legend .legal { background: #65d987; }
+.scene-editor-region-legend .blocked { background: #ffa552; }
+.scene-editor-region-legend .invalid { background: #ff595e; }
+.scene-editor-region-legend .nav { background: #d879e8; }
+.scene-editor-region-legend .unreachable { background: #f0d264; }
+.scene-editor-region-legend small { margin-top: 3px; color: #9199a3; }
 .scene-editor-actions { display: flex; gap: 5px; margin-top: 8px; }
 .scene-editor-diff, .scene-editor-rejection { margin-top: 6px; color: #aeb4bc;
   overflow-wrap: anywhere; }

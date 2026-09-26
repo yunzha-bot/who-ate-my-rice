@@ -105,6 +105,98 @@ test('a rotated piece keeps an axis-aligned collision box and records its degree
   assert.deepEqual(exported.collisionAabb, { width: 1.0, depth: 1.2 });
 });
 
+test('furniture transform moves the linked anchor in the same draft transaction', () => {
+  const session = new MapEditSession();
+  const oldFurniture = session.get('main_bed');
+  const oldAnchor = session.get('hide_main_bed');
+  assert.equal(session.setField('main_bed', 'x', oldFurniture.x + 0.2), null);
+  assert.equal(session.setField('main_bed', 'z', oldFurniture.z - 0.1), null);
+  const moved = session.get('hide_main_bed');
+  assert.ok(Math.abs(moved.x - oldAnchor.x - 0.2) < 1e-9);
+  assert.ok(Math.abs(moved.z - oldAnchor.z + 0.1) < 1e-9);
+  assert.equal(moved.facing, oldAnchor.facing);
+  const beforeTurn = session.get('main_bed');
+  assert.equal(session.setField('main_bed', 'rotationQuarter', 1), null);
+  const afterFurniture = session.get('main_bed');
+  const turned = session.get('hide_main_bed');
+  const dx = moved.x - beforeTurn.x, dz = moved.z - beforeTurn.z;
+  assert.ok(Math.abs(turned.x - (afterFurniture.x + dz)) < 1e-9);
+  assert.ok(Math.abs(turned.z - (afterFurniture.z - dx)) < 1e-9);
+  assert.ok(Math.abs(Math.atan2(Math.sin(turned.facing - (oldAnchor.facing - Math.PI / 2)),
+    Math.cos(turned.facing - (oldAnchor.facing - Math.PI / 2)))) < 1e-9);
+});
+
+test('furniture resize does not move the linked anchor or enlarge its region', () => {
+  const session = new MapEditSession();
+  const beforeFurniture = session.get('main_bed');
+  const beforeSpot = session.get('hide_main_bed');
+  assert.equal(session.setField('main_bed', 'width', beforeFurniture.width + 0.1), null);
+  const afterSpot = session.get('hide_main_bed');
+  assert.deepEqual({ x: afterSpot.x, z: afterSpot.z,
+    interactionRegion: afterSpot.interactionRegion }, { x: beforeSpot.x, z: beforeSpot.z,
+    interactionRegion: beforeSpot.interactionRegion });
+});
+
+test('reverting a furniture drag restores both the furniture and its linked anchor', () => {
+  const session = new MapEditSession();
+  const beforeFurniture = session.get('main_bed');
+  const beforeSpot = session.get('hide_main_bed');
+  session.moveTarget('main_bed', beforeFurniture.x + 0.1, beforeFurniture.z + 0.1);
+  assert.notDeepEqual(session.get('hide_main_bed'), beforeSpot);
+  assert.equal(session.revertToCommitted('main_bed'), true);
+  assert.deepEqual(session.get('main_bed'), beforeFurniture);
+  assert.deepEqual(session.get('hide_main_bed'), beforeSpot);
+  assert.equal(session.isDirty, false);
+});
+
+test('region controls enforce authoring bounds and preview the current draft as discrete samples', () => {
+  const session = new MapEditSession();
+  assert.equal(session.setField('hide_main_bed', 'interactionRegion.radius', 0.49)?.code,
+    'INVALID_REGION_RADIUS');
+  assert.equal(session.setField('hide_main_wardrobe', 'interactionRegion.halfAngleDeg', 151)?.code,
+    'INVALID_REGION_ANGLE');
+  assert.equal(session.setField('hide_main_bed', 'interactionRegion.halfAngleDeg', 45)?.code,
+    'READ_ONLY_FIELD');
+  assert.equal(session.setField('hide_main_bed', 'interactionRegion.radius', 2.4), null);
+  assert.equal(session.setField('hide_main_wardrobe', 'interactionRegion.halfAngleDeg', 70), null);
+  const preview = session.regionPreview('main_bed');
+  assert.ok(preview);
+  assert.equal(preview.geometry.radius, 2.4);
+  assert.equal(preview.sampling.discrete, true);
+  assert.equal(preview.sampling.method, 'LATTICE');
+  assert.ok(preview.sampling.samples.some(sample => sample.code === 'LEGAL'));
+  assert.equal(session.regionPreview('hide_main_bed', false).sampling, null);
+  session.moveTarget('hide_main_bed', -10.5, -5);
+  assert.ok(session.validateDraft().some(item => item.targetId === 'hide_main_bed' &&
+    item.code === 'ANCHOR_OUTSIDE_REGION'));
+  assert.ok(session.regionPreview('hide_main_bed', false),
+    'the exact region outline remains visible while an anchor draft is invalid');
+});
+
+test('V2 export contains only applied region data and names both units', () => {
+  const session = new MapEditSession();
+  const original = session.exportJson().hideSpots.find(item => item.id === 'hide_main_bed');
+  assert.equal(session.setField('hide_main_bed', 'interactionRegion.radius', 2.2), null);
+  assert.deepEqual(session.exportJson().hideSpots.find(item => item.id === 'hide_main_bed')
+    .interactionRegion, original.interactionRegion);
+  assert.equal(session.apply().ok, true);
+  assert.deepEqual(session.exportJson().hideSpots.find(item => item.id === 'hide_main_bed')
+    .interactionRegion, { shape: 'CIRCLE', radius: 2.2,
+      units: { radius: 'world-unit', halfAngle: 'degree' } });
+});
+
+test('map validation rejects an out-of-range region and an anchor outside its shape', () => {
+  const session = new MapEditSession();
+  const badRadius = session.hideSpotList();
+  badRadius.find(item => item.id === 'hide_main_bed').interactionRegion.radius = 3.5;
+  assert.ok(validateEditedMap(session.furnitureList(), badRadius)
+    .some(item => item.targetId === 'hide_main_bed' && item.code === 'INVALID_REGION_RADIUS'));
+  const badAnchor = session.hideSpotList();
+  badAnchor.find(item => item.id === 'hide_main_bed').x = -11;
+  assert.ok(validateEditedMap(session.furnitureList(), badAnchor)
+    .some(item => item.targetId === 'hide_main_bed' && item.code === 'ANCHOR_OUTSIDE_REGION'));
+});
+
 test('field-level guards reject illegal values without touching the draft', () => {
   const cases = [
     ['living_sofa', 'x', 8.5, 'ROOM_BOUNDARY', true],
@@ -206,9 +298,13 @@ test('hide spot anchors must stay standing, clear, inside their room and attache
     .find(item => item.id === 'hide_living_carton').facing, 1.25);
 
   const furnitureSession = new MapEditSession();
-  furnitureSession.moveTarget('living_carton', 4, 3.6);
-  assert.ok(furnitureSession.validateDraft().some(item =>
-    item.code === 'ANCHOR_DETACHED' && item.targetId === 'hide_living_carton'));
+  const cartonAnchor = furnitureSession.get('hide_living_carton');
+  assert.equal(furnitureSession.moveTarget('living_carton', 7.95, 3.95), null);
+  const movedAnchor = furnitureSession.get('hide_living_carton');
+  assert.ok(Math.abs(movedAnchor.x - cartonAnchor.x - 0.05) < 1e-9);
+  assert.ok(Math.abs(movedAnchor.z - cartonAnchor.z - 0.05) < 1e-9);
+  assert.deepEqual(furnitureSession.validateDraft(), [],
+    'the bound anchor must follow a legal furniture move within the same draft');
 });
 
 test('resetTarget restores authored values and resetAll drops a whole draft', () => {
@@ -304,4 +400,108 @@ test('a refused scene editor open always produces a visible reason', () => {
   }
   const busy = sceneEditorRefusalNotice('PLAYING', 'ALREADY_OPEN：场景编辑器已经打开');
   assert.equal(busy, '场景编辑未打开：ALREADY_OPEN：场景编辑器已经打开');
+});
+
+// --- DEV-A-FIX-1: a drag must not run the full map validation per pointermove --
+// The editor opens the session's deferred-validation window on pointerdown and
+// closes it on pointerup. `draftStatus` is exactly what the editor reads every
+// frame (SceneEditor.onFrame + statusEntries), so this window is what keeps a
+// drag from rebuilding the collision world, the navigation grid, the
+// connectivity flood fill and the region sampling on every frame. Validation
+// itself is unchanged and still runs on release and again inside apply().
+
+function simulateDrag(session, id, moves) {
+  const statuses = [];
+  session.beginDeferredValidation();
+  for (const [x, z] of moves) {
+    session.moveTarget(id, x, z);
+    statuses.push(session.draftStatus); // the per-frame read
+    session.regionPreview(id, false); // the per-move outline refresh
+  }
+  return statuses;
+}
+
+test('a drag never runs the full map validation per pointermove', () => {
+  const session = new MapEditSession();
+  const before = session.validationRuns;
+  const statuses = simulateDrag(session, 'living_carton',
+    [[7.95, 3.95], [8.0, 4.0], [8.05, 4.05], [8.1, 4.1], [8.15, 4.15], [8.2, 4.2]]);
+  assert.deepEqual([...new Set(statuses)], ['DRAGGING']);
+  assert.equal(session.validationDeferred, true);
+  assert.equal(session.validationRuns, before,
+    'six pointermoves and six frame reads must not validate the whole map');
+});
+
+test('releasing the drag validates exactly once and then serves the cache', () => {
+  const session = new MapEditSession();
+  const before = session.validationRuns;
+  simulateDrag(session, 'living_carton', [[7.95, 3.95], [8.0, 4.0], [8.05, 4.05]]);
+  session.endDeferredValidation();
+  const release = session.validateDraft().filter(item =>
+    item.targetId === 'living_carton' || item.targetId === 'hide_living_carton');
+  assert.deepEqual(release, []);
+  assert.equal(session.validationRuns, before + 1);
+  assert.equal(session.draftStatus, 'VALID');
+  assert.equal(session.draftStatus, 'VALID');
+  assert.equal(session.validationRuns, before + 1,
+    'repeated frame reads must reuse the cached validation');
+});
+
+test('an illegal drag is still rejected on release and rolls back', () => {
+  const session = new MapEditSession();
+  const before = session.validationRuns;
+  simulateDrag(session, 'hide_main_bed', [[-14.3, -6.1], [-14.1, -6.0], [-10.5, -5]]);
+  assert.equal(session.validationRuns, before, 'an illegal draft is not validated mid-drag');
+  session.endDeferredValidation();
+  const rejections = session.validateDraft().filter(item => item.targetId === 'hide_main_bed');
+  assert.ok(rejections.some(item => item.code === 'ANCHOR_OUTSIDE_REGION'));
+  assert.equal(session.validationRuns, before + 1);
+  assert.equal(session.draftStatus, 'INVALID');
+  assert.equal(session.revertToCommitted('hide_main_bed'), true);
+  assert.deepEqual(session.diff('hide_main_bed'), []);
+});
+
+test('a dragged furniture keeps its anchor and exact region in sync while dragging', () => {
+  const session = new MapEditSession();
+  const beforeAnchor = session.get('hide_living_carton');
+  simulateDrag(session, 'living_carton', [[7.95, 3.95], [8.0, 4.0]]);
+  const during = session.regionPreview('living_carton', false);
+  assert.ok(during, 'the exact outline stays available while dragging');
+  assert.deepEqual({ x: during.geometry.centre.x, z: during.geometry.centre.z }, { x: 8, z: 4 });
+  assert.equal(during.sampling, null, 'no discrete sampling while dragging');
+  const anchor = session.get('hide_living_carton');
+  assert.ok(Math.abs(anchor.x - beforeAnchor.x - 0.1) < 1e-9);
+  assert.ok(Math.abs(anchor.z - beforeAnchor.z - 0.1) < 1e-9);
+
+  session.endDeferredValidation();
+  const after = session.regionPreview('living_carton', true);
+  assert.equal(after.sampling.discrete, true);
+  assert.equal(after.sampling.spotId, 'hide_living_carton');
+  assert.ok(after.sampling.samples.length > 0, 'the release refreshes the full sampling');
+});
+
+test('a hard reset ends the drag window without needing a validation', () => {
+  const session = new MapEditSession();
+  const before = session.validationRuns;
+  session.beginDeferredValidation();
+  session.moveTarget('dining_table', 13.2, 3.5);
+  assert.equal(session.draftStatus, 'DRAGGING');
+  session.resetAll();
+  assert.equal(session.validationDeferred, false);
+  assert.equal(session.draftStatus, 'UNCHANGED');
+  assert.equal(session.validationRuns, before);
+});
+
+test('a deferred drag still exports applied data with the V2 document', () => {
+  const session = new MapEditSession();
+  assert.equal(MAP_EXPORT_VERSION, 2);
+  simulateDrag(session, 'dining_table', [[13.1, 3.4], [13.2, 3.5]]);
+  const pending = session.exportJson();
+  assert.equal(pending.formatVersion, MAP_EXPORT_VERSION);
+  assert.deepEqual(pending.furniture.find(item => item.id === 'dining_table').position,
+    { x: 12, z: 1.5 }, 'unapplied drag data must never be exported');
+  session.endDeferredValidation();
+  assert.equal(session.apply().ok, true);
+  const applied = session.exportJson().furniture.find(item => item.id === 'dining_table');
+  assert.deepEqual(applied.position, { x: 13.2, z: 3.5 });
 });
