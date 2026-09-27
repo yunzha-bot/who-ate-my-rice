@@ -57,6 +57,10 @@ export interface AILogSnapshot {
   heardDangerSoundType: string | null;
   heardDangerAudibleStrength: number | null;
   humanVisibleDistance: number | null;
+  /** S7D：藏身相位与出口闸门码（只用于整局摘要里的「藏身卡住」判定）。 */
+  hidePhase?: string;
+  hideExitGate?: string;
+  hideConcealedMs?: number;
 }
 
 export interface AILogEvent {
@@ -103,6 +107,67 @@ export interface AILogExport {
    * v1.5 新增字段，v1.4 的全部字段保持原样，因此旧消费者不受影响。
    */
   playerSearchEvents: AILogPlayerSearchEvent[];
+  /**
+   * S7D：**整局摘要**。v1.7 新增字段，v1.6 的全部字段保持原样。
+   *
+   * 这里只放「本局是什么、怎么结束的、关键动作各发生了几次、AI 在哪里卡过」这类
+   * 有界计数与有限条目，不逐帧积累，也不新增第二套 AI 时钟。它让一份导出的 AI JSON
+   * 自己就能回答整局验证需要的复现与复盘问题：随机种子、玩家阵营、开局与结算信息、
+   * 对局时长与胜负、完成的大米数量、门操作 / 冲刺 / 摔倒 / 藏身 / 搜查 / 抓捕计数，
+   * 以及 S7B-3B 主动锁门的逐条实机事件和 AI 卡路 / 异常状态记录。
+   */
+  matchSummary: AILogMatchSummary;
+}
+
+/** S7D：整局摘要（有界，全部是计数或有限条目）。 */
+export interface AILogMatchSummary {
+  /** 本局随机种子；未开局或未接线时为 null。 */
+  matchSeed: number | null;
+  /** 玩家选择的正式阵营。 */
+  playerFaction: 'HUMAN' | 'DEEPSEEK' | null;
+  /** 当前阶段（导出当帧）。 */
+  phase: string;
+  /** 胜负与原因；未结算时为 null。 */
+  winner: 'DEEPSEEK' | 'HUMAN' | null;
+  reason: 'RICE_COMPLETED' | 'CAPTURED' | null;
+  /** 结算时（或导出时）的对局时长。 */
+  durationMs: number;
+  riceCompleted: number;
+  riceTotal: number;
+  counts: AILogMatchCounts;
+  /** S7B-3B 实机证据：本局逐条锁门事件（上限 50 条）。 */
+  doorLockEvidence: { t: number; type: string; reason: string }[];
+  /** S7B-3A 实机证据：本局逐条关门 / 跳过事件（上限 50 条）。 */
+  doorEscapeEvidence: { t: number; type: string; reason: string }[];
+  /** AI 卡路 / 异常状态的可疑点（上限 100 条，按种类去重后保留首次与持续时长）。 */
+  anomalies: AILogMatchAnomaly[];
+}
+
+export interface AILogMatchCounts {
+  doorOpened: number;
+  doorClosed: number;
+  doorLocked: number;
+  doorUnlocked: number;
+  forceBreak: number;
+  sprintStarted: number;
+  falls: number;
+  hideEntered: number;
+  hideExited: number;
+  hideRejected: number;
+  humanCheckStarted: number;
+  humanCheckHit: number;
+  humanCheckMiss: number;
+  /** 强制抓捕（Q 搜查命中 / 家具搜查命中）次数。 */
+  forcedCaptures: number;
+}
+
+export interface AILogMatchAnomaly {
+  t: number;
+  kind: string;
+  detail: string;
+  state: string;
+  /** 该现象已持续的时长（毫秒）；一次性事件为 0。 */
+  lastedMs: number;
 }
 
 export interface AILogHideEvent {
@@ -293,6 +358,27 @@ export class AILogCollector {
   private readonly maxHumanSearchEvents = 500;
   private playerSearchTimeline: AILogPlayerSearchEvent[] = [];
   private readonly maxPlayerSearchEvents = 500;
+  // S7D：整局摘要计数器。全部是 O(1) 数字或**有上限**的条目，绝不逐帧累积。
+  private readonly counts: AILogMatchCounts = {
+    doorOpened: 0, doorClosed: 0, doorLocked: 0, doorUnlocked: 0, forceBreak: 0,
+    sprintStarted: 0, falls: 0, hideEntered: 0, hideExited: 0, hideRejected: 0,
+    humanCheckStarted: 0, humanCheckHit: 0, humanCheckMiss: 0, forcedCaptures: 0 };
+  private readonly doorLockEvidence: { t: number; type: string; reason: string }[] = [];
+  private readonly doorEscapeEvidence: { t: number; type: string; reason: string }[] = [];
+  private readonly anomalies: AILogMatchAnomaly[] = [];
+  private readonly maxDoorEvidence = 50;
+  private readonly maxAnomalies = 100;
+  private matchContext: { seed: number | null;
+    playerFaction: 'HUMAN' | 'DEEPSEEK' | null;
+    riceTotal: number } = { seed: null, playerFaction: null, riceTotal: 0 };
+  private matchResult: { winner: 'DEEPSEEK' | 'HUMAN'; reason: 'RICE_COMPLETED' | 'CAPTURED';
+    durationMs: number; riceCompleted: number } | null = null;
+  private phase = 'FACTION_SELECT';
+  /** 上一条异常的种类，用来把「同一现象持续」折叠成一条带时长的记录。 */
+  private openAnomaly: { kind: string; detail: string; state: string; sinceMs: number } | null =
+    null;
+  private lastRiceProgressMs = 0;
+  private riceCompletedCount = 0;
 
   startMatch(): void {
     this.events = [];
@@ -303,6 +389,59 @@ export class AILogCollector {
     this.hideTimeline = [];
     this.humanSearchTimeline = [];
     this.playerSearchTimeline = [];
+    this.doorLockEvidence.length = 0;
+    this.doorEscapeEvidence.length = 0;
+    this.anomalies.length = 0;
+    this.openAnomaly = null;
+    this.matchResult = null;
+    this.lastRiceProgressMs = 0;
+    this.riceCompletedCount = 0;
+    for (const key of Object.keys(this.counts) as (keyof AILogMatchCounts)[]) {
+      this.counts[key] = 0;
+    }
+    this.matchContext = { seed: null, playerFaction: null, riceTotal: 0 };
+    this.phase = 'FACTION_SELECT';
+  }
+
+  /** S7D：开局时登记本局的复现字段（随机种子、玩家阵营、大米总数、开局阶段）。 */
+  noteMatchContext(context: { seed: number | null;
+    playerFaction: 'HUMAN' | 'DEEPSEEK' | null; riceTotal: number }): void {
+    this.matchContext = { ...context };
+  }
+
+  /** S7D：当前阶段（战斗 HUD 与 AI JSON 摘要共用同一事实）。 */
+  notePhase(phase: string): void {
+    this.phase = phase;
+  }
+
+  /** S7D：结算时登记胜负、原因、时长与完成的大米数量。 */
+  noteMatchResult(result: { winner: 'DEEPSEEK' | 'HUMAN';
+    reason: 'RICE_COMPLETED' | 'CAPTURED'; durationMs: number;
+    riceCompleted: number }): void {
+    this.matchResult = { ...result };
+    this.riceCompletedCount = result.riceCompleted;
+  }
+
+  /**
+   * S7D：门操作计数（与 `DoorSystem` 的结果码同源）。只计数，不复制门状态，
+   * 因此不会形成第二份门状态真相。
+   */
+  recordDoorResult(result: string): void {
+    if (result === 'OPENED') this.counts.doorOpened++;
+    else if (result === 'CLOSED') this.counts.doorClosed++;
+    else if (result === 'LOCKED') this.counts.doorLocked++;
+    else if (result === 'UNLOCKED') this.counts.doorUnlocked++;
+    else if (result === 'FORCE_OPENED') this.counts.forceBreak++;
+  }
+
+  recordSprintStart(): void { this.counts.sprintStarted++; }
+  recordFall(): void { this.counts.falls++; }
+  /** S7D：强制抓捕（Q 搜查命中 / 家具搜查命中）——复用同一条胜负结算的那次调用。 */
+  recordForcedCapture(): void { this.counts.forcedCaptures++; }
+  /** S7D：本局已吃到的大米数量（每帧同步，只有结算前的最终值会被导出）。 */
+  recordRiceProgress(completed: number): void {
+    this.riceCompletedCount = completed;
+    if (completed > 0) this.lastRiceProgressMs = this.nowMs - this.matchStartMs;
   }
 
   /** 藏身事件由 ThreeGame 每帧投放；不依赖 DeepSeek AI 是否在运行。 */
@@ -311,6 +450,15 @@ export class AILogCollector {
     if (events.length === 0) return;
     const t = this.nowMs - this.matchStartMs;
     for (const event of events) {
+      // S7D：整局摘要的藏身计数与时间线共用同一批事件，不新增第二套藏身统计来源。
+      if (event.type === 'HIDE_ENTER' || event.type === 'HIDE_AI_ENTERED') {
+        this.counts.hideEntered++;
+      } else if (event.type === 'HIDE_EXIT' || event.type === 'HIDE_AI_EXITED') {
+        this.counts.hideExited++;
+      } else if (event.type === 'HIDE_REJECT' || event.type === 'HIDE_AI_REJECTED' ||
+          event.type === 'HIDE_AI_SPOT_BLOCKED') {
+        this.counts.hideRejected++;
+      }
       if (this.hideTimeline.length >= this.maxHideEvents) break;
       this.hideTimeline.push({ t, type: event.type, reason: event.reason,
         spotId: event.spotId });
@@ -323,6 +471,11 @@ export class AILogCollector {
     if (events.length === 0) return;
     const t = this.nowMs - this.matchStartMs;
     for (const event of events) {
+      // S7D：正式搜查的开始 / 搜中 / 搜空进整局摘要；未完成合法检查不计入搜空。
+      // 事件类型沿用 S7C-2 既有时间线的 `HUMAN_HIDE_SEARCH_*`，不新造类型。
+      if (event.type === 'HUMAN_HIDE_SEARCH_START') this.counts.humanCheckStarted++;
+      else if (event.type === 'HUMAN_HIDE_SEARCH_HIT') this.counts.humanCheckHit++;
+      else if (event.type === 'HUMAN_HIDE_SEARCH_MISS') this.counts.humanCheckMiss++;
       if (this.humanSearchTimeline.length >= this.maxHumanSearchEvents) break;
       this.humanSearchTimeline.push({ t, type: event.type, reason: event.reason,
         spotId: event.spotId,
@@ -360,6 +513,10 @@ export class AILogCollector {
         prevState: null, reason: event.reason,
         riceTargetId: snapshot.targetRiceId, roomId: snapshot.roomId,
         count: 1, firstT: t, lastT: t, context: { ...snapshot } });
+      // S7D：S7B-3A 关门 / 跳过的逐条实机证据（有上限）。
+      if (this.doorEscapeEvidence.length < this.maxDoorEvidence) {
+        this.doorEscapeEvidence.push({ t, type: event.type, reason: event.reason });
+      }
     }
 
     for (const event of snapshot.doorLockEvents ?? []) {
@@ -367,6 +524,10 @@ export class AILogCollector {
         prevState: null, reason: event.reason,
         riceTargetId: snapshot.targetRiceId, roomId: snapshot.roomId,
         count: 1, firstT: t, lastT: t, context: { ...snapshot } });
+      // S7D：S7B-3B 主动锁门的逐条实机证据（有上限），供整局摘要直接引用。
+      if (this.doorLockEvidence.length < this.maxDoorEvidence) {
+        this.doorLockEvidence.push({ t, type: event.type, reason: event.reason });
+      }
     }
 
     if (!this.previous) {
@@ -406,7 +567,54 @@ export class AILogCollector {
       });
     }
 
+    // S7D：异常 / 卡路折叠（只写有界条目，不逐帧刷屏）。
+    const suspicion = this.suspicionFor(snapshot);
+    if (suspicion) this.noteAnomaly(t, suspicion.kind, suspicion.detail, snapshot.state);
+    else this.closeOpenAnomaly(t);
+
     this.previous = { ...snapshot };
+  }
+
+  /**
+   * S7D：AI 卡路 / 异常状态的**有界**可疑点判定。
+   *
+   * 只由这一帧已有的公开快照推导（状态、导航原因、安全等待原因、局部循环标记、
+   * 藏身相位与出口闸门码），不新增时钟、不读隐藏信息、不逐帧写日志。
+   * 同一现象持续期间只保留一条记录，结束时折叠成「首次时间 + 持续时长」。
+   */
+  private suspicionFor(snapshot: AILogSnapshot): { kind: string; detail: string } | null {
+    if (snapshot.localLoopTriggered) {
+      return { kind: 'LOCAL_LOOP', detail: snapshot.noMovementReason };
+    }
+    if (snapshot.lastNavigationReason.includes('NO_ROUTE')) {
+      return { kind: 'NO_ROUTE_TO_RICE', detail: snapshot.lastNavigationReason };
+    }
+    if (snapshot.state === 'SAFE_WAIT' &&
+        snapshot.safeWaitReason === 'RICE_OR_ROUTE_STILL_DANGEROUS') {
+      return { kind: 'SAFE_WAIT_THREAT_PERSISTS', detail: snapshot.safeWaitReason };
+    }
+    if (snapshot.state === 'HIDE' && snapshot.hidePhase === 'CONCEALED' &&
+        (snapshot.hideConcealedMs ?? 0) >= 30_000) {
+      return { kind: 'HIDE_LONG_CONCEALMENT',
+        detail: `出口闸门 ${snapshot.hideExitGate ?? 'UNKNOWN'}` };
+    }
+    return null;
+  }
+
+  private noteAnomaly(t: number, kind: string, detail: string, state: string): void {
+    if (this.openAnomaly?.kind === kind) return;
+    this.closeOpenAnomaly(t);
+    this.openAnomaly = { kind, detail, state, sinceMs: t };
+  }
+
+  private closeOpenAnomaly(t: number): void {
+    if (!this.openAnomaly) return;
+    if (this.anomalies.length < this.maxAnomalies) {
+      this.anomalies.push({ t: this.openAnomaly.sinceMs, kind: this.openAnomaly.kind,
+        detail: this.openAnomaly.detail, state: this.openAnomaly.state,
+        lastedMs: Math.max(0, t - this.openAnomaly.sinceMs) });
+    }
+    this.openAnomaly = null;
   }
 
   private pushEvent(event: AILogEvent): void {
@@ -432,14 +640,18 @@ export class AILogCollector {
   }
 
   export(match?: Pick<AILogExport, 'matchSeed' | 'matchSetup'>): AILogExport {
+    const t = this.nowMs - this.matchStartMs;
+    // 让「仍在持续」的异常也能被导出（重复导出不会重复记，因为折叠会清空当前项）。
+    this.closeOpenAnomaly(t);
     return {
       // S7C-2b：1.5 → 1.6，只在既有 `hideEvents` 时间线里新增 DeepSeek AI 自主藏身
       // 的事件种类（HIDE_AI_REQUEST / ENTERED / REJECTED / EXIT_REQUEST / EXITED /
       // ABORT / SPOT_BLOCKED）；既有 events / hideEvents / humanSearchEvents /
       // playerSearchEvents 的字段与语义完全不变。
-      formatVersion: '1.6',
+      // S7D：1.6 → 1.7，只新增 `matchSummary`（整局摘要）。v1.6 的全部字段保持原样。
+      formatVersion: '1.7',
       exportedAt: new Date().toISOString(),
-      matchDurationMs: this.nowMs - this.matchStartMs,
+      matchDurationMs: t,
       config: { deepseekAI: GAME_CONFIG.deepseekAI },
       ...match,
       events: this.events,
@@ -448,6 +660,20 @@ export class AILogCollector {
       hideEvents: this.hideTimeline,
       humanSearchEvents: this.humanSearchTimeline,
       playerSearchEvents: this.playerSearchTimeline,
+      matchSummary: {
+        matchSeed: this.matchContext.seed,
+        playerFaction: this.matchContext.playerFaction,
+        phase: this.phase,
+        winner: this.matchResult?.winner ?? null,
+        reason: this.matchResult?.reason ?? null,
+        durationMs: this.matchResult?.durationMs ?? t,
+        riceCompleted: this.matchResult?.riceCompleted ?? this.riceCompletedCount,
+        riceTotal: this.matchContext.riceTotal,
+        counts: { ...this.counts },
+        doorLockEvidence: [...this.doorLockEvidence],
+        doorEscapeEvidence: [...this.doorEscapeEvidence],
+        anomalies: [...this.anomalies],
+      },
     };
   }
 }

@@ -95,7 +95,14 @@ test('rice proximity never authorizes an unsafe route or a distant unrelated Hum
   assert.equal(blocked.passageActive, false);
   assert.equal(blocked.passageCancelReason, 'NO_REACHABLE_ROUTE_OUTSIDE_CAPTURE_ZONE');
 
-  const farHuman = { x: rice.x, z: rice.z + C.deepseekAI.dangerRouteRadius + 1 };
+  // S7D：静止 Human 是否「挡住这堆米」的判据，由 `dangerRouteRadius`(3.0) 扩展到
+  // 也覆盖 AI 自己的逃跑距离 `visionEvadeDistance`(5.0)：米堆只要落在逃跑距离内，
+  // AI 每次靠近都会先被判成 HIGH 威胁，因此永远不可能站上去吃——那就是「挡住」。
+  // 原来的 3.0 让「米堆在 3～5 u 之间且 Human 全程不动」退化成一整局的
+  // MOVE_TO_RICE → EVADE → RECOVER 循环（种子 20292603 实测 24 条 AI 随机流里
+  // 有 5 条因此 600 秒不结算，修复后 24/24 结算）。
+  // **安全边界没有放宽**：没有抓捕圈外的安全路线时依旧拒绝放行——见本用例上半段。
+  const farHuman = { x: rice.x, z: rice.z + C.deepseekAI.visionEvadeDistance + 1 };
   const unrelated = new DeepSeekAIController(noBypassNavigation, [], [], () => 0.5);
   unrelated.update(input(start, true, 100, { visibleHuman: farHuman }));
   assert.equal(unrelated.passageGateReason, 'HUMAN_NOT_ON_RICE_ROUTE');

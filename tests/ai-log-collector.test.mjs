@@ -222,7 +222,8 @@ test('export returns correct structure with config snapshot', () => {
   const data = collector.export();
   // S7C-2b：1.5 → 1.6，只在既有 `hideEvents` 时间线里新增 DeepSeek AI 自主藏身的
   // 事件种类；v1.4 / v1.5 的全部字段与语义保持原样。
-  assert.equal(data.formatVersion, '1.6');
+  // S7D：1.6 → 1.7，只新增 `matchSummary`（整局摘要）；v1.6 的全部字段保持原样。
+  assert.equal(data.formatVersion, '1.7');
   assert.equal(typeof data.exportedAt, 'string');
   assert.equal(data.matchDurationMs, 5000);
   assert.deepEqual(data.config.deepseekAI, C.deepseekAI);

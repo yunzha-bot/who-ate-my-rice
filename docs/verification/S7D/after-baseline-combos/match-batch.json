@@ -1,0 +1,3143 @@
+{
+  "generatedAt": "2026-09-27T16:57:50.062Z",
+  "kind": "headless-logic-simulation",
+  "caveat": "无头逻辑仿真（非浏览器实机、非真人试玩）；复用生产系统与两套 AI 的同一批源码。",
+  "perCombo": 5,
+  "seedBase": 20260927,
+  "maxFrames": 12000,
+  "comboSet": "baseline",
+  "wallMs": 5500,
+  "matchCount": 30,
+  "thresholds": {
+    "STUCK_FRAMES_LIMIT": 100,
+    "NO_PROGRESS_LIMIT_MS": 60000,
+    "LOOP_LIMIT": 20
+  },
+  "totals": {
+    "HUMAN/idle": {
+      "matches": 5,
+      "wins": {
+        "DEEPSEEK/RICE_COMPLETED": 5
+      },
+      "timedOut": 0,
+      "anomalies": 0,
+      "hideEntered": 1,
+      "hideExited": 1,
+      "doorLocked": 1,
+      "doorClosed": 1,
+      "sprintStarted": 1,
+      "falls": 1,
+      "humanCheckStarted": 0,
+      "humanCheckHit": 0,
+      "humanCheckMiss": 0,
+      "humanCheckIncomplete": 0,
+      "eventTypes": {
+        "MATCH_START": 5,
+        "ROOM_CHANGE": 38,
+        "THREAT_CHANGE": 12,
+        "THREAT_SOURCE_CHANGE": 14,
+        "PASSAGE_GATE": 28,
+        "STATE_TRANSITION": 60,
+        "CURIOSITY_RESULT": 2,
+        "TARGET_CHANGE": 22,
+        "SELECTION_REASON": 9,
+        "PASSAGE_ACTIVE": 4,
+        "TRANSITION_REASON": 16,
+        "PASSAGE_RESULT": 2,
+        "PASSAGE_ROUTE_SAFETY": 4,
+        "NAVIGATION_RESULT": 9,
+        "PASSAGE_CANCEL": 2,
+        "ESCAPE_SWITCH": 3,
+        "RECOVERY_BLOCK": 15,
+        "NO_MOVEMENT": 15,
+        "SPRINT_DECISION": 22,
+        "DOOR_ESCAPE_SKIP": 15,
+        "ESCAPE_ROOM": 8,
+        "SPRINT_READINESS": 4,
+        "DOOR_ESCAPE_EVALUATE": 1,
+        "DOOR_ESCAPE_CLOSE": 1,
+        "DOOR_LOCK_PENDING": 1,
+        "DOOR_LOCK_EVALUATE": 1,
+        "DOOR_LOCK_APPLY": 1
+      }
+    },
+    "HUMAN/pursue": {
+      "matches": 5,
+      "wins": {
+        "HUMAN/CAPTURED": 2,
+        "DEEPSEEK/RICE_COMPLETED": 3
+      },
+      "timedOut": 0,
+      "anomalies": 0,
+      "hideEntered": 0,
+      "hideExited": 0,
+      "doorLocked": 3,
+      "doorClosed": 3,
+      "sprintStarted": 3,
+      "falls": 2,
+      "humanCheckStarted": 0,
+      "humanCheckHit": 0,
+      "humanCheckMiss": 0,
+      "humanCheckIncomplete": 0,
+      "eventTypes": {
+        "MATCH_START": 5,
+        "THREAT_CHANGE": 56,
+        "THREAT_SOURCE_CHANGE": 60,
+        "DOOR_ESCAPE_SKIP": 37,
+        "STATE_TRANSITION": 68,
+        "NAVIGATION_RESULT": 17,
+        "TRANSITION_REASON": 26,
+        "ESCAPE_SWITCH": 14,
+        "ESCAPE_ROOM": 19,
+        "RECOVERY_BLOCK": 43,
+        "SPRINT_DECISION": 56,
+        "NO_MOVEMENT": 34,
+        "ROOM_CHANGE": 50,
+        "TARGET_CHANGE": 22,
+        "SELECTION_REASON": 10,
+        "PASSAGE_GATE": 18,
+        "LOCAL_LOOP": 3,
+        "SPRINT_READINESS": 10,
+        "DOOR_ESCAPE_EVALUATE": 3,
+        "DOOR_ESCAPE_CLOSE": 3,
+        "DOOR_LOCK_PENDING": 3,
+        "DOOR_LOCK_EVALUATE": 3,
+        "DOOR_LOCK_APPLY": 3,
+        "SAFE_WAIT_FAILURES": 6
+      }
+    },
+    "HUMAN/wander": {
+      "matches": 5,
+      "wins": {
+        "DEEPSEEK/RICE_COMPLETED": 5
+      },
+      "timedOut": 0,
+      "anomalies": 0,
+      "hideEntered": 0,
+      "hideExited": 0,
+      "doorLocked": 0,
+      "doorClosed": 0,
+      "sprintStarted": 2,
+      "falls": 2,
+      "humanCheckStarted": 0,
+      "humanCheckHit": 0,
+      "humanCheckMiss": 0,
+      "humanCheckIncomplete": 0,
+      "eventTypes": {
+        "MATCH_START": 5,
+        "THREAT_CHANGE": 39,
+        "THREAT_SOURCE_CHANGE": 53,
+        "DOOR_ESCAPE_SKIP": 23,
+        "STATE_TRANSITION": 64,
+        "NAVIGATION_RESULT": 11,
+        "TRANSITION_REASON": 18,
+        "ESCAPE_SWITCH": 7,
+        "ESCAPE_ROOM": 13,
+        "RECOVERY_BLOCK": 28,
+        "SPRINT_DECISION": 43,
+        "NO_MOVEMENT": 30,
+        "ROOM_CHANGE": 49,
+        "TARGET_CHANGE": 23,
+        "SELECTION_REASON": 9,
+        "PASSAGE_GATE": 16,
+        "SAFE_WAIT_FAILURES": 4,
+        "SPRINT_READINESS": 7,
+        "LOCAL_LOOP": 1
+      }
+    },
+    "DEEPSEEK/idle": {
+      "matches": 5,
+      "wins": {
+        "HUMAN/CAPTURED": 5
+      },
+      "timedOut": 0,
+      "anomalies": 0,
+      "hideEntered": 0,
+      "hideExited": 0,
+      "doorLocked": 0,
+      "doorClosed": 0,
+      "sprintStarted": 0,
+      "falls": 0,
+      "humanCheckStarted": 0,
+      "humanCheckHit": 0,
+      "humanCheckMiss": 0,
+      "humanCheckIncomplete": 0,
+      "eventTypes": {}
+    },
+    "DEEPSEEK/eat": {
+      "matches": 5,
+      "wins": {
+        "HUMAN/CAPTURED": 5
+      },
+      "timedOut": 0,
+      "anomalies": 0,
+      "hideEntered": 0,
+      "hideExited": 0,
+      "doorLocked": 0,
+      "doorClosed": 0,
+      "sprintStarted": 0,
+      "falls": 0,
+      "humanCheckStarted": 0,
+      "humanCheckHit": 0,
+      "humanCheckMiss": 0,
+      "humanCheckIncomplete": 0,
+      "eventTypes": {}
+    },
+    "DEEPSEEK/evadeEat": {
+      "matches": 5,
+      "wins": {
+        "HUMAN/CAPTURED": 5
+      },
+      "timedOut": 0,
+      "anomalies": 0,
+      "hideEntered": 0,
+      "hideExited": 0,
+      "doorLocked": 0,
+      "doorClosed": 0,
+      "sprintStarted": 0,
+      "falls": 0,
+      "humanCheckStarted": 0,
+      "humanCheckHit": 0,
+      "humanCheckMiss": 0,
+      "humanCheckIncomplete": 0,
+      "eventTypes": {}
+    }
+  },
+  "anomalies": [],
+  "matches": [
+    {
+      "seed": 20260927,
+      "playerFaction": "HUMAN",
+      "policy": "idle",
+      "wallMs": 290,
+      "frames": 1183,
+      "simMs": 59150,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 56150,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_01",
+          "rice_14",
+          "rice_08",
+          "rice_10"
+        ],
+        "doorOpenCount": 12
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 1,
+        "playerSprints": 0,
+        "falls": 1,
+        "hideEntered": 1,
+        "hideExited": 1,
+        "hideRejected": 1,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 1,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 17050,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 19,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 56100,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EAT",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "ROOM_CHANGE": 11,
+          "THREAT_CHANGE": 6,
+          "THREAT_SOURCE_CHANGE": 8,
+          "PASSAGE_GATE": 19,
+          "STATE_TRANSITION": 19,
+          "CURIOSITY_RESULT": 1,
+          "TARGET_CHANGE": 5,
+          "SELECTION_REASON": 3,
+          "PASSAGE_ACTIVE": 2,
+          "TRANSITION_REASON": 10,
+          "PASSAGE_RESULT": 1,
+          "PASSAGE_ROUTE_SAFETY": 2,
+          "NAVIGATION_RESULT": 5,
+          "PASSAGE_CANCEL": 1,
+          "ESCAPE_SWITCH": 1,
+          "RECOVERY_BLOCK": 10,
+          "NO_MOVEMENT": 10,
+          "SPRINT_DECISION": 14,
+          "DOOR_ESCAPE_SKIP": 7,
+          "ESCAPE_ROOM": 4,
+          "SPRINT_READINESS": 4
+        },
+        "hideCounts": {
+          "HIDE_ENTER": 1,
+          "HIDE_AI_REQUEST": 2,
+          "HIDE_AI_ENTERED": 1,
+          "HIDE_EXIT": 1,
+          "HIDE_AI_EXIT_REQUEST": 1,
+          "HIDE_AI_EXITED": 1,
+          "HIDE_REJECT": 1,
+          "HIDE_AI_REJECTED": 1,
+          "HIDE_AI_SPOT_BLOCKED": 1,
+          "HIDE_AI_ABORT": 1
+        },
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 144,
+        "hideEventCount": 11,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20268846,
+      "playerFaction": "HUMAN",
+      "policy": "idle",
+      "wallMs": 144,
+      "frames": 810,
+      "simMs": 40500,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 37500,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_storage",
+          "roomId": "storage",
+          "x": 16.6,
+          "z": -6
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_03",
+          "rice_13",
+          "rice_06",
+          "rice_14"
+        ],
+        "doorOpenCount": 6
+      },
+      "telemetry": {
+        "doorOpened": 3,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 3800,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 37450,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 4
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 19,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20276765,
+      "playerFaction": "HUMAN",
+      "policy": "idle",
+      "wallMs": 116,
+      "frames": 829,
+      "simMs": 41450,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 38450,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_11",
+          "rice_03",
+          "rice_14",
+          "rice_07",
+          "rice_04"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 5700,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 38400,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 7
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 22,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20284684,
+      "playerFaction": "HUMAN",
+      "policy": "idle",
+      "wallMs": 125,
+      "frames": 879,
+      "simMs": 43950,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 40950,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_13",
+          "rice_08",
+          "rice_12",
+          "rice_07"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 7500,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 40900,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 8,
+          "THREAT_CHANGE": 2,
+          "THREAT_SOURCE_CHANGE": 3,
+          "CURIOSITY_RESULT": 1,
+          "PASSAGE_GATE": 5
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 34,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20292603,
+      "playerFaction": "HUMAN",
+      "policy": "idle",
+      "wallMs": 204,
+      "frames": 987,
+      "simMs": 49350,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 46350,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_main_bedroom",
+          "roomId": "main_bedroom",
+          "x": -11.399999999999999,
+          "z": -5.199999999999999
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_02",
+          "rice_13",
+          "rice_14",
+          "rice_06"
+        ],
+        "doorOpenCount": 7
+      },
+      "telemetry": {
+        "doorOpened": 4,
+        "doorClosed": 1,
+        "doorLocked": 1,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 7400,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 14,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 46300,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EAT",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "ROOM_CHANGE": 8,
+          "STATE_TRANSITION": 14,
+          "TARGET_CHANGE": 5,
+          "SELECTION_REASON": 3,
+          "PASSAGE_ACTIVE": 2,
+          "THREAT_CHANGE": 4,
+          "THREAT_SOURCE_CHANGE": 3,
+          "TRANSITION_REASON": 6,
+          "PASSAGE_RESULT": 1,
+          "PASSAGE_GATE": 4,
+          "PASSAGE_ROUTE_SAFETY": 2,
+          "PASSAGE_CANCEL": 1,
+          "DOOR_ESCAPE_SKIP": 8,
+          "NAVIGATION_RESULT": 4,
+          "ESCAPE_SWITCH": 2,
+          "ESCAPE_ROOM": 4,
+          "RECOVERY_BLOCK": 5,
+          "SPRINT_DECISION": 8,
+          "DOOR_ESCAPE_EVALUATE": 1,
+          "DOOR_ESCAPE_CLOSE": 1,
+          "DOOR_LOCK_PENDING": 1,
+          "NO_MOVEMENT": 5,
+          "DOOR_LOCK_EVALUATE": 1,
+          "DOOR_LOCK_APPLY": 1
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 95,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20260927,
+      "playerFaction": "HUMAN",
+      "policy": "pursue",
+      "wallMs": 273,
+      "frames": 777,
+      "simMs": 38850,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 35850,
+      "riceCompleted": 3,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_01",
+          "rice_14",
+          "rice_08",
+          "rice_10"
+        ],
+        "doorOpenCount": 12
+      },
+      "telemetry": {
+        "doorOpened": 4,
+        "doorClosed": 1,
+        "doorLocked": 1,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 1,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 8500,
+        "localLoopTriggers": 623,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 14,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 30700,
+        "deepseekGapMs": 5100
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EVADE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EVADE>RECOVER",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "THREAT_CHANGE": 13,
+          "THREAT_SOURCE_CHANGE": 11,
+          "DOOR_ESCAPE_SKIP": 11,
+          "STATE_TRANSITION": 14,
+          "NAVIGATION_RESULT": 5,
+          "TRANSITION_REASON": 8,
+          "ESCAPE_SWITCH": 5,
+          "ESCAPE_ROOM": 5,
+          "RECOVERY_BLOCK": 11,
+          "SPRINT_DECISION": 18,
+          "NO_MOVEMENT": 12,
+          "ROOM_CHANGE": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 2,
+          "PASSAGE_GATE": 3,
+          "LOCAL_LOOP": 2,
+          "SPRINT_READINESS": 3,
+          "DOOR_ESCAPE_EVALUATE": 1,
+          "DOOR_ESCAPE_CLOSE": 1,
+          "DOOR_LOCK_PENDING": 1,
+          "DOOR_LOCK_EVALUATE": 1,
+          "DOOR_LOCK_APPLY": 1,
+          "SAFE_WAIT_FAILURES": 1
+        },
+        "hideCounts": {
+          "HIDE_AI_ABORT": 1
+        },
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 143,
+        "hideEventCount": 1,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20268846,
+      "playerFaction": "HUMAN",
+      "policy": "pursue",
+      "wallMs": 144,
+      "frames": 810,
+      "simMs": 40500,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 37500,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_storage",
+          "roomId": "storage",
+          "x": 16.6,
+          "z": -6
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_03",
+          "rice_13",
+          "rice_06",
+          "rice_14"
+        ],
+        "doorOpenCount": 6
+      },
+      "telemetry": {
+        "doorOpened": 3,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 3800,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 37450,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 4
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 19,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20276765,
+      "playerFaction": "HUMAN",
+      "policy": "pursue",
+      "wallMs": 127,
+      "frames": 829,
+      "simMs": 41450,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 38450,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_11",
+          "rice_03",
+          "rice_14",
+          "rice_07",
+          "rice_04"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 5700,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 38400,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 7
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 22,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20284684,
+      "playerFaction": "HUMAN",
+      "policy": "pursue",
+      "wallMs": 186,
+      "frames": 732,
+      "simMs": 36600,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 33600,
+      "riceCompleted": 3,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_13",
+          "rice_08",
+          "rice_12",
+          "rice_07"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 1,
+        "playerSprints": 0,
+        "falls": 1,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 1,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 7500,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 10,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 29350,
+        "deepseekGapMs": 4200
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EAT",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 10,
+          "THREAT_CHANGE": 14,
+          "THREAT_SOURCE_CHANGE": 17,
+          "TARGET_CHANGE": 3,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 8,
+          "PASSAGE_GATE": 7,
+          "DOOR_ESCAPE_SKIP": 6,
+          "NAVIGATION_RESULT": 3,
+          "TRANSITION_REASON": 3,
+          "ESCAPE_SWITCH": 2,
+          "ESCAPE_ROOM": 3,
+          "SAFE_WAIT_FAILURES": 1,
+          "RECOVERY_BLOCK": 8,
+          "SPRINT_DECISION": 8,
+          "SPRINT_READINESS": 3,
+          "NO_MOVEMENT": 6
+        },
+        "hideCounts": {
+          "HIDE_AI_ABORT": 1
+        },
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 104,
+        "hideEventCount": 1,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20292603,
+      "playerFaction": "HUMAN",
+      "policy": "pursue",
+      "wallMs": 373,
+      "frames": 1530,
+      "simMs": 76500,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 73500,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_main_bedroom",
+          "roomId": "main_bedroom",
+          "x": -11.399999999999999,
+          "z": -5.199999999999999
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_02",
+          "rice_13",
+          "rice_14",
+          "rice_06"
+        ],
+        "doorOpenCount": 7
+      },
+      "telemetry": {
+        "doorOpened": 8,
+        "doorClosed": 2,
+        "doorLocked": 2,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 1,
+        "playerSprints": 0,
+        "falls": 1,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 1,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 17300,
+        "localLoopTriggers": 671,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 26,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 73450,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EVADE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EVADE>RECOVER",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "THREAT_CHANGE": 29,
+          "THREAT_SOURCE_CHANGE": 32,
+          "ROOM_CHANGE": 22,
+          "DOOR_ESCAPE_SKIP": 20,
+          "STATE_TRANSITION": 26,
+          "NAVIGATION_RESULT": 9,
+          "TRANSITION_REASON": 15,
+          "ESCAPE_SWITCH": 7,
+          "ESCAPE_ROOM": 11,
+          "RECOVERY_BLOCK": 24,
+          "SPRINT_DECISION": 30,
+          "TARGET_CHANGE": 7,
+          "SELECTION_REASON": 5,
+          "PASSAGE_GATE": 8,
+          "SAFE_WAIT_FAILURES": 4,
+          "SPRINT_READINESS": 4,
+          "NO_MOVEMENT": 16,
+          "DOOR_ESCAPE_EVALUATE": 2,
+          "DOOR_ESCAPE_CLOSE": 2,
+          "DOOR_LOCK_PENDING": 2,
+          "DOOR_LOCK_EVALUATE": 2,
+          "DOOR_LOCK_APPLY": 2,
+          "LOCAL_LOOP": 1
+        },
+        "hideCounts": {
+          "HIDE_REJECT": 1,
+          "HIDE_AI_REQUEST": 1,
+          "HIDE_AI_REJECTED": 1,
+          "HIDE_AI_SPOT_BLOCKED": 1,
+          "HIDE_AI_ABORT": 1
+        },
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 281,
+        "hideEventCount": 5,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20260927,
+      "playerFaction": "HUMAN",
+      "policy": "wander",
+      "wallMs": 268,
+      "frames": 1338,
+      "simMs": 66900,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 63900,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_01",
+          "rice_14",
+          "rice_08",
+          "rice_10"
+        ],
+        "doorOpenCount": 12
+      },
+      "telemetry": {
+        "doorOpened": 4,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 1,
+        "playerSprints": 0,
+        "falls": 1,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 1,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 19700,
+        "localLoopTriggers": 363,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 20,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 63850,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "EVADE>RECOVER>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        },
+        {
+          "pattern": "MOVE_TO_RICE>EVADE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "THREAT_CHANGE": 18,
+          "THREAT_SOURCE_CHANGE": 28,
+          "DOOR_ESCAPE_SKIP": 14,
+          "STATE_TRANSITION": 20,
+          "NAVIGATION_RESULT": 7,
+          "TRANSITION_REASON": 10,
+          "ESCAPE_SWITCH": 5,
+          "ESCAPE_ROOM": 7,
+          "RECOVERY_BLOCK": 15,
+          "SPRINT_DECISION": 29,
+          "NO_MOVEMENT": 22,
+          "ROOM_CHANGE": 19,
+          "TARGET_CHANGE": 5,
+          "SELECTION_REASON": 2,
+          "PASSAGE_GATE": 8,
+          "SAFE_WAIT_FAILURES": 2,
+          "SPRINT_READINESS": 3,
+          "LOCAL_LOOP": 1
+        },
+        "hideCounts": {
+          "HIDE_AI_ABORT": 1
+        },
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 216,
+        "hideEventCount": 1,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20268846,
+      "playerFaction": "HUMAN",
+      "policy": "wander",
+      "wallMs": 143,
+      "frames": 810,
+      "simMs": 40500,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 37500,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_storage",
+          "roomId": "storage",
+          "x": 16.6,
+          "z": -6
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_03",
+          "rice_13",
+          "rice_06",
+          "rice_14"
+        ],
+        "doorOpenCount": 6
+      },
+      "telemetry": {
+        "doorOpened": 3,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 3800,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 37450,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 4
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 19,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20276765,
+      "playerFaction": "HUMAN",
+      "policy": "wander",
+      "wallMs": 124,
+      "frames": 829,
+      "simMs": 41450,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 38450,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_11",
+          "rice_03",
+          "rice_14",
+          "rice_07",
+          "rice_04"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 5700,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 38400,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 7
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 22,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20284684,
+      "playerFaction": "HUMAN",
+      "policy": "wander",
+      "wallMs": 123,
+      "frames": 879,
+      "simMs": 43950,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 40950,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_13",
+          "rice_08",
+          "rice_12",
+          "rice_07"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 7500,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 9,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 40900,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 3
+        },
+        {
+          "pattern": "EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "STATE_TRANSITION": 9,
+          "THREAT_CHANGE": 8,
+          "THREAT_SOURCE_CHANGE": 11,
+          "TARGET_CHANGE": 4,
+          "SELECTION_REASON": 1,
+          "ROOM_CHANGE": 8,
+          "PASSAGE_GATE": 2
+        },
+        "hideCounts": {},
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 44,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20292603,
+      "playerFaction": "HUMAN",
+      "policy": "wander",
+      "wallMs": 220,
+      "frames": 1110,
+      "simMs": 55500,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 52500,
+      "riceCompleted": 5,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_main_bedroom",
+          "roomId": "main_bedroom",
+          "x": -11.399999999999999,
+          "z": -5.199999999999999
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_02",
+          "rice_13",
+          "rice_14",
+          "rice_06"
+        ],
+        "doorOpenCount": 7
+      },
+      "telemetry": {
+        "doorOpened": 5,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 1,
+        "playerSprints": 0,
+        "falls": 1,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 1,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 7250,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 17,
+        "humanStateTransitions": 0,
+        "lastRiceProgressMs": 52450,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "EVADE>RECOVER>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT",
+          "count": 2
+        },
+        {
+          "pattern": "RECOVER>MOVE_TO_RICE>EAT>MOVE_TO_RICE>EAT>MOVE_TO_RICE",
+          "count": 2
+        },
+        {
+          "pattern": "MOVE_TO_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {
+          "MATCH_START": 1,
+          "THREAT_CHANGE": 13,
+          "THREAT_SOURCE_CHANGE": 14,
+          "ROOM_CHANGE": 11,
+          "DOOR_ESCAPE_SKIP": 9,
+          "STATE_TRANSITION": 17,
+          "NAVIGATION_RESULT": 4,
+          "TRANSITION_REASON": 8,
+          "ESCAPE_SWITCH": 2,
+          "ESCAPE_ROOM": 6,
+          "RECOVERY_BLOCK": 13,
+          "SPRINT_DECISION": 14,
+          "TARGET_CHANGE": 6,
+          "SELECTION_REASON": 4,
+          "PASSAGE_GATE": 6,
+          "SAFE_WAIT_FAILURES": 2,
+          "SPRINT_READINESS": 4,
+          "NO_MOVEMENT": 8
+        },
+        "hideCounts": {
+          "HIDE_REJECT": 1,
+          "HIDE_AI_REQUEST": 1,
+          "HIDE_AI_REJECTED": 1,
+          "HIDE_AI_SPOT_BLOCKED": 1,
+          "HIDE_AI_ABORT": 1
+        },
+        "searchCounts": {},
+        "truncated": false,
+        "eventCount": 142,
+        "hideEventCount": 5,
+        "humanSearchEventCount": 0
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20260927,
+      "playerFaction": "DEEPSEEK",
+      "policy": "idle",
+      "wallMs": 122,
+      "frames": 196,
+      "simMs": 9800,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 6800,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_01",
+          "rice_14",
+          "rice_08",
+          "rice_10"
+        ],
+        "doorOpenCount": 12
+      },
+      "telemetry": {
+        "doorOpened": 0,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 6800
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 2
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20268846,
+      "playerFaction": "DEEPSEEK",
+      "policy": "idle",
+      "wallMs": 222,
+      "frames": 447,
+      "simMs": 22350,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 19350,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_storage",
+          "roomId": "storage",
+          "x": 16.6,
+          "z": -6
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_03",
+          "rice_13",
+          "rice_06",
+          "rice_14"
+        ],
+        "doorOpenCount": 6
+      },
+      "telemetry": {
+        "doorOpened": 5,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 19350
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 2
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20276765,
+      "playerFaction": "DEEPSEEK",
+      "policy": "idle",
+      "wallMs": 170,
+      "frames": 304,
+      "simMs": 15200,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 12200,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_11",
+          "rice_03",
+          "rice_14",
+          "rice_07",
+          "rice_04"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 3,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 12200
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 2
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20284684,
+      "playerFaction": "DEEPSEEK",
+      "policy": "idle",
+      "wallMs": 181,
+      "frames": 382,
+      "simMs": 19100,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 16100,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_13",
+          "rice_08",
+          "rice_12",
+          "rice_07"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 16100
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 2
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20292603,
+      "playerFaction": "DEEPSEEK",
+      "policy": "idle",
+      "wallMs": 159,
+      "frames": 237,
+      "simMs": 11850,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 8850,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_main_bedroom",
+          "roomId": "main_bedroom",
+          "x": -11.399999999999999,
+          "z": -5.199999999999999
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_02",
+          "rice_13",
+          "rice_14",
+          "rice_06"
+        ],
+        "doorOpenCount": 7
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 8850
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 2
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20260927,
+      "playerFaction": "DEEPSEEK",
+      "policy": "eat",
+      "wallMs": 115,
+      "frames": 156,
+      "simMs": 7800,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 4800,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_01",
+          "rice_14",
+          "rice_08",
+          "rice_10"
+        ],
+        "doorOpenCount": 12
+      },
+      "telemetry": {
+        "doorOpened": 0,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 2400,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 3,
+        "lastRiceProgressMs": 4750,
+        "deepseekGapMs": 0
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 3
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 3
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20268846,
+      "playerFaction": "DEEPSEEK",
+      "policy": "eat",
+      "wallMs": 237,
+      "frames": 465,
+      "simMs": 23250,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 20250,
+      "riceCompleted": 1,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_storage",
+          "roomId": "storage",
+          "x": 16.6,
+          "z": -6
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_03",
+          "rice_13",
+          "rice_06",
+          "rice_14"
+        ],
+        "doorOpenCount": 6
+      },
+      "telemetry": {
+        "doorOpened": 6,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 1300,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 3,
+        "lastRiceProgressMs": 6250,
+        "deepseekGapMs": 13950
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_TRACE_FOUND": 3,
+          "HUMAN_TRACE_DIRECTION": 2,
+          "HUMAN_HIDE_GIVE_UP": 1,
+          "HUMAN_AI_STATE": 3,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 10
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20276765,
+      "playerFaction": "DEEPSEEK",
+      "policy": "eat",
+      "wallMs": 164,
+      "frames": 268,
+      "simMs": 13400,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 10400,
+      "riceCompleted": 1,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_11",
+          "rice_03",
+          "rice_14",
+          "rice_07",
+          "rice_04"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 3,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 1200,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 3,
+        "lastRiceProgressMs": 6150,
+        "deepseekGapMs": 4200
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 3,
+          "HUMAN_TRACE_FOUND": 4,
+          "HUMAN_TRACE_DIRECTION": 3,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 11
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20284684,
+      "playerFaction": "DEEPSEEK",
+      "policy": "eat",
+      "wallMs": 191,
+      "frames": 391,
+      "simMs": 19550,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 16550,
+      "riceCompleted": 1,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_13",
+          "rice_08",
+          "rice_12",
+          "rice_07"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 1200,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 6150,
+        "deepseekGapMs": 10350
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_TRACE_FOUND": 6,
+          "HUMAN_TRACE_DIRECTION": 2,
+          "HUMAN_AI_STATE": 2,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 11
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20292603,
+      "playerFaction": "DEEPSEEK",
+      "policy": "eat",
+      "wallMs": 156,
+      "frames": 229,
+      "simMs": 11450,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 8450,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_main_bedroom",
+          "roomId": "main_bedroom",
+          "x": -11.399999999999999,
+          "z": -5.199999999999999
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_02",
+          "rice_13",
+          "rice_14",
+          "rice_06"
+        ],
+        "doorOpenCount": 7
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 0,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 4,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 8450
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 4
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 4
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20260927,
+      "playerFaction": "DEEPSEEK",
+      "policy": "evadeEat",
+      "wallMs": 131,
+      "frames": 222,
+      "simMs": 11100,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 8100,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_01",
+          "rice_14",
+          "rice_08",
+          "rice_10"
+        ],
+        "doorOpenCount": 12
+      },
+      "telemetry": {
+        "doorOpened": 0,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 1,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 2400,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 3050,
+        "deepseekGapMs": 5000
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2,
+          "HUMAN_TRACE_FOUND": 18,
+          "HUMAN_TRACE_DIRECTION": 15,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 36
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20268846,
+      "playerFaction": "DEEPSEEK",
+      "policy": "evadeEat",
+      "wallMs": 234,
+      "frames": 483,
+      "simMs": 24150,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 21150,
+      "riceCompleted": 1,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "human": {
+          "id": "spawn_storage",
+          "roomId": "storage",
+          "x": 16.6,
+          "z": -6
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_03",
+          "rice_13",
+          "rice_06",
+          "rice_14"
+        ],
+        "doorOpenCount": 6
+      },
+      "telemetry": {
+        "doorOpened": 5,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 1,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 1300,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 3,
+        "lastRiceProgressMs": 6250,
+        "deepseekGapMs": 14850
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_TRACE_FOUND": 3,
+          "HUMAN_TRACE_DIRECTION": 2,
+          "HUMAN_HIDE_GIVE_UP": 1,
+          "HUMAN_AI_STATE": 3,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 10
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20276765,
+      "playerFaction": "DEEPSEEK",
+      "policy": "evadeEat",
+      "wallMs": 175,
+      "frames": 309,
+      "simMs": 15450,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 12450,
+      "riceCompleted": 1,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_11",
+          "rice_03",
+          "rice_14",
+          "rice_07",
+          "rice_04"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 3,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 1,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 1200,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 3,
+        "lastRiceProgressMs": 6150,
+        "deepseekGapMs": 6250
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 3,
+          "HUMAN_TRACE_FOUND": 9,
+          "HUMAN_TRACE_DIRECTION": 8,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 21
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20284684,
+      "playerFaction": "DEEPSEEK",
+      "policy": "evadeEat",
+      "wallMs": 211,
+      "frames": 402,
+      "simMs": 20100,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 17100,
+      "riceCompleted": 1,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_dining",
+          "roomId": "dining",
+          "x": 11.8,
+          "z": 0.40000000000000036
+        },
+        "human": {
+          "id": "spawn_closet",
+          "roomId": "closet",
+          "x": -5.399999999999999,
+          "z": -6.4
+        },
+        "riceIds": [
+          "rice_04",
+          "rice_13",
+          "rice_08",
+          "rice_12",
+          "rice_07"
+        ],
+        "doorOpenCount": 11
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 1,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 1200,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 6150,
+        "deepseekGapMs": 10900
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_TRACE_FOUND": 6,
+          "HUMAN_TRACE_DIRECTION": 2,
+          "HUMAN_AI_STATE": 2,
+          "HUMAN_CLUE_DEFERRED": 1
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 11
+      },
+      "anomalies": []
+    },
+    {
+      "seed": 20292603,
+      "playerFaction": "DEEPSEEK",
+      "policy": "evadeEat",
+      "wallMs": 166,
+      "frames": 258,
+      "simMs": 12900,
+      "timedOut": false,
+      "phase": "FINISHED",
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 9900,
+      "riceCompleted": 0,
+      "riceTotal": 5,
+      "setup": {
+        "attempts": 1,
+        "fallback": false,
+        "validation": "PASS",
+        "deepseek": {
+          "id": "spawn_main_bedroom",
+          "roomId": "main_bedroom",
+          "x": -11.399999999999999,
+          "z": -5.199999999999999
+        },
+        "human": {
+          "id": "spawn_study",
+          "roomId": "study",
+          "x": -3.3999999999999986,
+          "z": 10
+        },
+        "riceIds": [
+          "rice_05",
+          "rice_02",
+          "rice_13",
+          "rice_14",
+          "rice_06"
+        ],
+        "doorOpenCount": 7
+      },
+      "telemetry": {
+        "doorOpened": 2,
+        "doorClosed": 0,
+        "doorLocked": 0,
+        "doorUnlocked": 0,
+        "forceBreak": 0,
+        "sprintStarted": 0,
+        "playerSprints": 1,
+        "falls": 0,
+        "hideEntered": 0,
+        "hideExited": 0,
+        "hideRejected": 0,
+        "humanCheckStarted": 0,
+        "humanCheckHit": 0,
+        "humanCheckMiss": 0,
+        "humanCheckIncomplete": 0,
+        "deepseekStuckFrames": 0,
+        "humanStuckFrames": 0,
+        "deepseekNoMoveMs": 0,
+        "humanNoMoveMs": 0,
+        "longestNoRiceProgressMs": 0,
+        "localLoopTriggers": 0,
+        "unreachableCount": 0,
+        "deepseekStateTransitions": 0,
+        "humanStateTransitions": 2,
+        "lastRiceProgressMs": 0,
+        "deepseekGapMs": 9900
+      },
+      "loop": [
+        {
+          "pattern": "SEEK_RICE",
+          "count": 1
+        }
+      ],
+      "events": {
+        "counts": {},
+        "hideCounts": {},
+        "searchCounts": {
+          "HUMAN_AI_STATE": 2
+        },
+        "truncated": false,
+        "eventCount": 0,
+        "hideEventCount": 0,
+        "humanSearchEventCount": 2
+      },
+      "anomalies": []
+    }
+  ]
+}

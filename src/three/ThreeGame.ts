@@ -823,6 +823,7 @@ export class ThreeGame {
       debug, this.debugPossessionEnabled);
     let deepseekCommand: DeepSeekAICommand | null = null;
     this.aiLogCollector.advance(deltaMs, this.match.phase === 'PLAYING');
+    this.aiLogCollector.notePhase(this.match.phase);
     if (deepseekAiEnabled) {
       if (!this.deepseekAiWasActive) this.deepseekAI.resumeAfterManualControl();
       const sight = this.vision.get('DEEPSEEK');
@@ -959,18 +960,23 @@ export class ThreeGame {
         humanVisibleDistance: sight.visible
           ? Math.hypot(this.player.position.x - this.human.position.x,
             this.player.position.z - this.human.position.z) : null,
+        // S7D：藏身相位 / 出口闸门 / 已藏身时长，供整局摘要判定「藏身卡住」。
+        hidePhase: this.deepseekAI.hidePhase,
+        hideExitGate: this.deepseekAI.hideExitGate,
+        hideConcealedMs: this.deepseekAI.hideConcealedMs,
       });
     }
     this.deepseekAiWasActive = deepseekAiEnabled;
     const activeDeepseekDirection = deepseekCommand
       ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
     if (deepseekCommand?.startSprint && !concealedDeepseek) {
-      this.sprint.tryStart(activeDeepseekDirection, ratio,
-        `AI_${this.deepseekAI.sprintDecision}`);
+      if (this.sprint.tryStart(activeDeepseekDirection, ratio,
+          `AI_${this.deepseekAI.sprintDecision}`)) this.aiLogCollector.recordSprintStart();
     }
     if (this.input.consumePress('Space')) {
       if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek) {
-        this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE');
+        if (this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE'))
+          this.aiLogCollector.recordSprintStart();
       } else if (this.control.isControlling('HUMAN') && !this.minesweeper.isOpen) {
         const nearby = this.nearestInteractableDoor(this.human.position);
         if (nearby) {
@@ -990,6 +996,7 @@ export class ThreeGame {
     this.sprint.advance(deltaMs, activeDeepseekDirection);
     if (previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED') {
       this.sound.emit('FALL', this.player.position, 'DEEPSEEK');
+      this.aiLogCollector.recordFall();
     }
     // 藏身中禁止移动（与 STUNNED 同构：位移强制为 0，不新增物理特性）。
     const movement = concealedDeepseek
@@ -1117,9 +1124,18 @@ export class ThreeGame {
     this.captureZoneActive = !concealedDeepseek && isCaptureEligibleXZ(
       this.human.position, this.player.position, this.runtime.captureRadius, this.captureZoneBlocked);
     this.match.advancePlaying(deltaMs, this.captureZoneActive, this.rice.completed);
+    // S7D：整局摘要的「完成的大米数量」与阶段都取同一帧的正式事实。
+    this.aiLogCollector.recordRiceProgress(this.rice.completedCount);
+    this.aiLogCollector.notePhase(this.match.phase);
     this.captureZone.setProgress(
       this.match.captureProgressMs, C.match.captureMs, this.captureZoneActive);
     if (this.match.result) {
+      // S7D：结算信息进整局摘要（胜负 / 原因 / 时长 / 完成米数）。
+      this.aiLogCollector.noteMatchResult({
+        winner: this.match.result.winner, reason: this.match.result.reason,
+        durationMs: this.match.result.elapsedMs,
+        riceCompleted: this.rice.completedCount,
+      });
       this.rice.interrupt();
       this.closeMinesweeper();
       this.releaseHide('ROUND_FINISHED');
@@ -1347,6 +1363,7 @@ export class ThreeGame {
       this.releaseHide('SEARCHED');
       this.setHideNotice(`家具搜查命中：已从「${label}」搜出藏身目标并立即抓捕`);
       // 复用 S7C-1B 的同一套正式结算，不新开胜负系统。
+      this.aiLogCollector.recordForcedCapture();
       this.match.forceCapture();
       return true;
     }
@@ -1429,6 +1446,7 @@ export class ThreeGame {
       this.setHideNotice('搜查命中：抓到未藏身的 DeepSeek 娘');
     }
     // 立即抓捕成功走正式结算路径（同一 GameStateSystem，不新开胜负系统）。
+    this.aiLogCollector.recordForcedCapture();
     this.match.forceCapture();
   }
 
@@ -1797,6 +1815,7 @@ export class ThreeGame {
       if (realSpotId) this.showSearchFurnitureFeedback(realSpotId);
       this.releaseHide('SEARCHED');
       // 复用 S7C-1B 的正式结算：同一条抓捕路径、同一套胜负与 UI 结果。
+      this.aiLogCollector.recordForcedCapture();
       this.match.forceCapture();
     }
     this.humanAI.onCheckHideResult(spotId, resolution.hit);
@@ -2041,6 +2060,8 @@ export class ThreeGame {
 
   private applyDoorResult(id: string | null, result: DoorActionResult,
     actorOverride?: Faction): void {
+    // S7D：整局摘要只做计数，不复制门状态（门状态唯一来源仍是 DoorSystem）。
+    this.aiLogCollector.recordDoorResult(result);
     if (id && (result === 'OPENED' || result === 'CLOSED' ||
         result === 'LOCKED' || result === 'UNLOCKED' || result === 'FORCE_OPENED')) {
       this.syncDoor(id);
@@ -2118,6 +2139,7 @@ export class ThreeGame {
   }
 
   private exportAILog(): void {
+    this.aiLogCollector.notePhase(this.match.phase);
     const data = this.aiLogCollector.export(this.matchSetup ? {
       matchSeed: this.matchSetup.seed,
       matchSetup: {
@@ -2213,6 +2235,13 @@ export class ThreeGame {
     this.deepseekAI.reset();
     this.deepseekAiWasActive = false;
     this.aiLogCollector.startMatch();
+    // S7D：把本局的复现字段交给整局摘要（随机种子 / 玩家阵营 / 大米总数）。
+    this.aiLogCollector.noteMatchContext({
+      seed: this.matchSetup.seed,
+      playerFaction: this.control.selectedFaction,
+      riceTotal: this.rice.portions.length,
+    });
+    this.aiLogCollector.notePhase(this.match.phase);
     // S7C-1B：藏身状态、两个 Q 冷却与扇形特效都属于本局状态，重开/返回阵营页
     // 必须全部清空，不留下异常抓捕免疫或输入锁定。
     this.hide.reset();

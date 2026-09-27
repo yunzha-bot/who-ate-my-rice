@@ -1049,10 +1049,25 @@ export class DeepSeekAIController {
     if (!intended) { this.passageGateReason = 'NO_REACHABLE_RICE'; return; }
     const humanNearDefaultRoute = !this.pathClearOfHuman(
       [input.deepseek, ...intended.path, intended.rice], human,
-      cfg.stationaryPassageBlockRadius);
+      // S7D：SAFE_WAIT 自己是按 `dangerRouteRadius`(3.0) 判定「这条路仍然危险」的，
+      // 而静止通行的闸门原来只按 `stationaryPassageBlockRadius`(1.5) 判定「Human 是否
+      // 挡路」。落在 1.5～3.0 之间时两边结论相反：SAFE_WAIT 一直拒绝前进、通行闸门却
+      // 认为没人挡路（`HUMAN_NOT_ON_RICE_ROUTE`），于是 AI 在最后一堆米前无限等待，
+      // 整局无法结算。已经处于 SAFE_WAIT 时就按 SAFE_WAIT 的同一个危险半径来判断，
+      // 让既有的「静止 Human 安全通行」去接管这条路线；非 SAFE_WAIT 的判定保持原值。
+      this.state === 'SAFE_WAIT' ? cfg.dangerRouteRadius
+        : cfg.stationaryPassageBlockRadius);
     // A default A* route may skirt a stationary Human while its destination
     // rice is still inside the existing danger area. Check both independently.
-    const humanNearRice = distance(intended.rice, human) <= cfg.dangerRouteRadius;
+    //
+    // S7D：米堆只要落在 AI 自己的「看见 Human 就逃跑」距离（`visionEvadeDistance`）
+    // 以内，AI 就永远不可能站上去吃——每次靠近都会先被判成 HIGH 威胁。这正是「静止
+    // Human 挡住了这堆米」的判据。原来这里只用 `dangerRouteRadius`(3.0)，比逃跑距离
+    // (5.0) 小，于是「米堆在 3～5 u 之间且 Human 全程不动」会退化成一整局的
+    // MOVE_TO_RICE → EVADE → RECOVER 循环（实测种子 20292603 有 5/24 条 AI 随机流
+    // 因此 600 秒不结算）。两者都是既有数值，这里取其中更大的那个作为判据。
+    const humanNearRice = distance(intended.rice, human) <=
+      Math.max(cfg.dangerRouteRadius, cfg.visionEvadeDistance);
     if (!humanNearDefaultRoute && !humanNearRice) {
       this.passageGateReason = 'HUMAN_NOT_ON_RICE_ROUTE';
       return;
@@ -1964,8 +1979,24 @@ export class DeepSeekAIController {
     if (this.hideConcealedMs < cfg.hideMinConcealMs) {
       return { ok: false, code: 'MIN_CONCEAL_MS', reason: '最短藏身时间未到' };
     }
-    if (input.visibleHuman) {
-      return { ok: false, code: 'THREAT_STILL_VISIBLE', reason: '仍能看见 Human' };
+    if (input.visibleHuman &&
+        distance(input.deepseek, input.visibleHuman) <= cfg.visionEvadeDistance) {
+      // S7D：藏身期间 AI 自己的视觉不被遮蔽，所以「看得见 Human」本身不等于有危险；
+      // 真正危险的是这个 Human 落在 AI 自己的危险距离内（与 `assessThreat` 里
+      // `visionEvadeDistance` 是同一条判据）。原先「只要看得见就不出」会让 AI 在一个
+      // 站在 8 u 外、只构成 CAUTION 的 Human 面前永远藏下去——AI 不推进目标、Human
+      // 也搜不到它（无公开线索时），整局无法结算。
+      //
+      // S7D 第二处：危险距离内也再给一个**公开**出口——如果这个可见 Human 已经被
+      // `HumanStillness` 公开地判定为长时间真的静止（`curiosityStillMs` 是 S7B-2
+      // 用来授权「绕过静止 Human 去吃饭」的同一条既有门槛），那它此刻不是追捕者，
+      // 继续无限期藏着只会让整局无法结算（实测种子 20260927 有 10/12 条 AI 随机流
+      // 因此 600 秒不结算）。Human 一动、或只是短暂停下，仍然照原样继续藏着。
+      const stillEnough = (input.humanStillMs ?? 0) >= cfg.curiosityStillMs;
+      if (!stillEnough) {
+        return { ok: false, code: 'THREAT_STILL_VISIBLE',
+          reason: '仍能看见 Human 且在危险距离内' };
+      }
     }
     const fresh = threat.source === 'LAST_SEEN' || threat.source === 'SOUND';
     if (fresh && this.threatEstimate) {

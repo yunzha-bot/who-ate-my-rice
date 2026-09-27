@@ -1,0 +1,427 @@
+{
+  "generatedAt": "2026-09-27T17:00:30.475Z",
+  "kind": "real-browser-driven-match",
+  "caveat": "真实浏览器整局（玩家站桩）；不是真人试玩，也不复现仿真的同种子轨迹。",
+  "headless": true,
+  "matches": [
+    {
+      "id": "human-20268846",
+      "faction": "HUMAN",
+      "seed": 20268846,
+      "expect": "DeepSeek 娘获胜",
+      "why": "玩家 Human 站桩，DeepSeek AI 自主吃完 5/5 米",
+      "phases": [],
+      "settled": true,
+      "menuReady": true,
+      "factionSelected": "OK",
+      "confirmClicked": "CLICKED",
+      "reachedPlaying": true,
+      "stateAtStart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "wallMs": 37812,
+      "overlay": "DeepSeek 娘获胜\n原因：5 份大米完成\n对局时间：00:37\n大米：5/5",
+      "stateAtEnd": {
+        "menuHidden": true,
+        "skillVisible": false,
+        "overlay": "DeepSeek 娘获胜\n原因：5 份大米完成\n对局时间：00:37\n大米：5/5",
+        "resultVisible": true,
+        "pauseVisible": false
+      },
+      "exportClicked": "CLICKED",
+      "formatVersion": "1.7",
+      "matchSummary": {
+        "matchSeed": 20268846,
+        "playerFaction": "HUMAN",
+        "phase": "FINISHED",
+        "winner": "DEEPSEEK",
+        "reason": "RICE_COMPLETED",
+        "durationMs": 37384.699999999255,
+        "riceCompleted": 5,
+        "riceTotal": 5,
+        "counts": {
+          "doorOpened": 3,
+          "doorClosed": 0,
+          "doorLocked": 0,
+          "doorUnlocked": 0,
+          "forceBreak": 0,
+          "sprintStarted": 0,
+          "falls": 0,
+          "hideEntered": 0,
+          "hideExited": 0,
+          "hideRejected": 0,
+          "humanCheckStarted": 0,
+          "humanCheckHit": 0,
+          "humanCheckMiss": 0,
+          "forcedCaptures": 0
+        },
+        "doorLockEvidence": [],
+        "doorEscapeEvidence": [],
+        "anomalies": []
+      },
+      "lastEvents": [
+        "12.9s STATE_TRANSITION=MOVE_TO_RICE",
+        "12.9s TARGET_CHANGE=rice_03",
+        "14.0s ROOM_CHANGE=living",
+        "16.2s STATE_TRANSITION=EAT",
+        "21.6s STATE_TRANSITION=MOVE_TO_RICE",
+        "21.6s TARGET_CHANGE=rice_05",
+        "22.7s ROOM_CHANGE=dining",
+        "23.9s STATE_TRANSITION=EAT",
+        "29.3s STATE_TRANSITION=MOVE_TO_RICE",
+        "29.3s TARGET_CHANGE=rice_06",
+        "30.0s ROOM_CHANGE=kitchen",
+        "32.0s STATE_TRANSITION=EAT"
+      ],
+      "expectationMet": true,
+      "restartClicked": "CLICKED",
+      "restartBackToPlay": true,
+      "restartReachedPlaying": true,
+      "stateAfterRestart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "pauseMenuOpened": true,
+      "stateWhenPaused": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "游戏已暂停\n按 Esc 或点击按钮继续",
+        "resultVisible": false,
+        "pauseVisible": true
+      },
+      "menuClicked": "CLICKED",
+      "menuVisibleAgain": true
+    },
+    {
+      "id": "human-20292603",
+      "faction": "HUMAN",
+      "seed": 20292603,
+      "expect": "结算（不限胜负）",
+      "why": "S7D 修复用的固定种子：修复前 SAFE_WAIT 会无限等待",
+      "phases": [],
+      "settled": true,
+      "menuReady": true,
+      "factionSelected": "OK",
+      "confirmClicked": "CLICKED",
+      "reachedPlaying": true,
+      "stateAtStart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "wallMs": 46000,
+      "overlay": "DeepSeek 娘获胜\n原因：5 份大米完成\n对局时间：00:45\n大米：5/5",
+      "stateAtEnd": {
+        "menuHidden": true,
+        "skillVisible": false,
+        "overlay": "DeepSeek 娘获胜\n原因：5 份大米完成\n对局时间：00:45\n大米：5/5",
+        "resultVisible": true,
+        "pauseVisible": false
+      },
+      "exportClicked": "CLICKED",
+      "formatVersion": "1.7",
+      "matchSummary": {
+        "matchSeed": 20292603,
+        "playerFaction": "HUMAN",
+        "phase": "FINISHED",
+        "winner": "DEEPSEEK",
+        "reason": "RICE_COMPLETED",
+        "durationMs": 45644.099999997765,
+        "riceCompleted": 5,
+        "riceTotal": 5,
+        "counts": {
+          "doorOpened": 5,
+          "doorClosed": 1,
+          "doorLocked": 1,
+          "doorUnlocked": 0,
+          "forceBreak": 0,
+          "sprintStarted": 0,
+          "falls": 0,
+          "hideEntered": 0,
+          "hideExited": 0,
+          "hideRejected": 0,
+          "humanCheckStarted": 0,
+          "humanCheckHit": 0,
+          "humanCheckMiss": 0,
+          "forcedCaptures": 0
+        },
+        "doorLockEvidence": [
+          {
+            "t": 16918.699999999255,
+            "type": "DOOR_LOCK_PENDING",
+            "reason": "door_hall_study:CLOSE_CONFIRMED_FAR_SIDE"
+          },
+          {
+            "t": 16944,
+            "type": "DOOR_LOCK_EVALUATE",
+            "reason": "door_hall_study:LOCK_WITH_CLOSE_SIDE_EVIDENCE"
+          },
+          {
+            "t": 16944,
+            "type": "DOOR_LOCK_APPLY",
+            "reason": "door_hall_study:LOCKED"
+          }
+        ],
+        "doorEscapeEvidence": [
+          {
+            "t": 16402.300000000745,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "NONE:NO_NEARBY_OPEN_DOOR"
+          },
+          {
+            "t": 16465.800000000745,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "door_hall_study:DOOR_NOT_RECENTLY_PASSED"
+          },
+          {
+            "t": 16867.89999999851,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "door_hall_study:DOOR_OCCUPIED_OR_INACCESSIBLE"
+          },
+          {
+            "t": 16918.699999999255,
+            "type": "DOOR_ESCAPE_EVALUATE",
+            "reason": "door_hall_study:CLOSE_HAS_PURSUIT_VALUE"
+          },
+          {
+            "t": 16918.699999999255,
+            "type": "DOOR_ESCAPE_CLOSE",
+            "reason": "door_hall_study:CLOSED"
+          },
+          {
+            "t": 16980.199999999255,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "NONE:NO_NEARBY_OPEN_DOOR"
+          },
+          {
+            "t": 18684.89999999851,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "door_closet_hall:DOOR_NOT_RECENTLY_PASSED"
+          },
+          {
+            "t": 19041.89999999851,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "door_closet_hall:HUMAN_SIDE_UNKNOWN"
+          },
+          {
+            "t": 19340.599999997765,
+            "type": "DOOR_ESCAPE_SKIP",
+            "reason": "NONE:NO_NEARBY_OPEN_DOOR"
+          }
+        ],
+        "anomalies": []
+      },
+      "lastEvents": [
+        "21.1s ROOM_CHANGE=living",
+        "22.9s STATE_TRANSITION=EAT",
+        "28.3s STATE_TRANSITION=MOVE_TO_RICE",
+        "28.3s TARGET_CHANGE=rice_06",
+        "30.0s ROOM_CHANGE=balcony",
+        "31.2s NAVIGATION_RESULT=DOOR_STATE_CHANGED",
+        "31.6s ROOM_CHANGE=kitchen",
+        "31.8s STATE_TRANSITION=EAT",
+        "37.2s STATE_TRANSITION=MOVE_TO_RICE",
+        "37.2s TARGET_CHANGE=rice_05",
+        "39.8s ROOM_CHANGE=dining",
+        "40.3s STATE_TRANSITION=EAT"
+      ],
+      "expectationMet": true,
+      "restartClicked": "CLICKED",
+      "restartBackToPlay": true,
+      "restartReachedPlaying": true,
+      "stateAfterRestart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "pauseMenuOpened": true,
+      "stateWhenPaused": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "游戏已暂停\n按 Esc 或点击按钮继续",
+        "resultVisible": false,
+        "pauseVisible": true
+      },
+      "menuClicked": "CLICKED",
+      "menuVisibleAgain": true
+    },
+    {
+      "id": "deepseek-20260927",
+      "faction": "DEEPSEEK",
+      "seed": 20260927,
+      "expect": "人类获胜",
+      "why": "玩家 DeepSeek 站桩，Human AI 自主抓获取胜",
+      "phases": [],
+      "settled": true,
+      "menuReady": true,
+      "factionSelected": "OK",
+      "confirmClicked": "CLICKED",
+      "reachedPlaying": true,
+      "stateAtStart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "wallMs": 7131,
+      "overlay": "人类获胜\n原因：抓捕完成\n对局时间：00:06\n大米：0/5",
+      "stateAtEnd": {
+        "menuHidden": true,
+        "skillVisible": false,
+        "overlay": "人类获胜\n原因：抓捕完成\n对局时间：00:06\n大米：0/5",
+        "resultVisible": true,
+        "pauseVisible": false
+      },
+      "exportClicked": "CLICKED",
+      "formatVersion": "1.7",
+      "matchSummary": {
+        "matchSeed": 20260927,
+        "playerFaction": "DEEPSEEK",
+        "phase": "FINISHED",
+        "winner": "HUMAN",
+        "reason": "CAPTURED",
+        "durationMs": 6792.300000000745,
+        "riceCompleted": 0,
+        "riceTotal": 5,
+        "counts": {
+          "doorOpened": 0,
+          "doorClosed": 0,
+          "doorLocked": 0,
+          "doorUnlocked": 0,
+          "forceBreak": 0,
+          "sprintStarted": 0,
+          "falls": 0,
+          "hideEntered": 0,
+          "hideExited": 0,
+          "hideRejected": 0,
+          "humanCheckStarted": 0,
+          "humanCheckHit": 0,
+          "humanCheckMiss": 0,
+          "forcedCaptures": 0
+        },
+        "doorLockEvidence": [],
+        "doorEscapeEvidence": [],
+        "anomalies": []
+      },
+      "lastEvents": [],
+      "expectationMet": true,
+      "restartClicked": "CLICKED",
+      "restartBackToPlay": true,
+      "restartReachedPlaying": true,
+      "stateAfterRestart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "pauseMenuOpened": true,
+      "stateWhenPaused": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "游戏已暂停\n按 Esc 或点击按钮继续",
+        "resultVisible": false,
+        "pauseVisible": true
+      },
+      "menuClicked": "CLICKED",
+      "menuVisibleAgain": true
+    },
+    {
+      "id": "deepseek-20276765",
+      "faction": "DEEPSEEK",
+      "seed": 20276765,
+      "expect": "人类获胜",
+      "why": "同上，换一个典型随机种子",
+      "phases": [],
+      "settled": true,
+      "menuReady": true,
+      "factionSelected": "OK",
+      "confirmClicked": "CLICKED",
+      "reachedPlaying": true,
+      "stateAtStart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "wallMs": 12278,
+      "overlay": "人类获胜\n原因：抓捕完成\n对局时间：00:11\n大米：0/5",
+      "stateAtEnd": {
+        "menuHidden": true,
+        "skillVisible": false,
+        "overlay": "人类获胜\n原因：抓捕完成\n对局时间：00:11\n大米：0/5",
+        "resultVisible": true,
+        "pauseVisible": false
+      },
+      "exportClicked": "CLICKED",
+      "formatVersion": "1.7",
+      "matchSummary": {
+        "matchSeed": 20276765,
+        "playerFaction": "DEEPSEEK",
+        "phase": "FINISHED",
+        "winner": "HUMAN",
+        "reason": "CAPTURED",
+        "durationMs": 11870.300000000745,
+        "riceCompleted": 0,
+        "riceTotal": 5,
+        "counts": {
+          "doorOpened": 3,
+          "doorClosed": 0,
+          "doorLocked": 0,
+          "doorUnlocked": 0,
+          "forceBreak": 0,
+          "sprintStarted": 0,
+          "falls": 0,
+          "hideEntered": 0,
+          "hideExited": 0,
+          "hideRejected": 0,
+          "humanCheckStarted": 0,
+          "humanCheckHit": 0,
+          "humanCheckMiss": 0,
+          "forcedCaptures": 0
+        },
+        "doorLockEvidence": [],
+        "doorEscapeEvidence": [],
+        "anomalies": []
+      },
+      "lastEvents": [],
+      "expectationMet": true,
+      "restartClicked": "CLICKED",
+      "restartBackToPlay": true,
+      "restartReachedPlaying": true,
+      "stateAfterRestart": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "",
+        "resultVisible": false,
+        "pauseVisible": false
+      },
+      "pauseMenuOpened": true,
+      "stateWhenPaused": {
+        "menuHidden": true,
+        "skillVisible": true,
+        "overlay": "游戏已暂停\n按 Esc 或点击按钮继续",
+        "resultVisible": false,
+        "pauseVisible": true
+      },
+      "menuClicked": "CLICKED",
+      "menuVisibleAgain": true
+    }
+  ],
+  "consoleErrors": [
+    "[log:error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}

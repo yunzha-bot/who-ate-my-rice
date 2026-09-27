@@ -1418,3 +1418,60 @@
 
 - Git 检查点：本次授权的独立提交说明为 `feat: persist DEV-B runtime debug presets`；完整 SHA 与推送结果以提交后 Git 及实时远端查询为准，不预填尚未发生的结果。S7B overall Gate 与 S7D 的未提交内容不得混入本次归档。
 - 已知限制与下一项任务：本地预设不跨浏览器或设备同步；清理站点数据后预设消失。不同浏览器／无痕、浏览器禁用本地存储、配额写满、超大畸形存档及极矮窗口按钮可达性仍未全部做真实浏览器覆盖，不将 10/10 人工验收扩写为这些边界已验证。本次归档后不自动开始其他开发任务。
+
+---
+
+## 2026-09-27｜S7D：双阵营完整 Alpha 开发与整局验证（**已实现，待用户集中人工验收**）
+
+- 阶段与授权：S7D。用户**一次性授权完整实施 S7D、单阶段交付、一次集中人工验收**；**本次不授权 commit、push 或 Tag**，开发完成后停止等待集中人工验收，不自动进入 S8。范围：玩家选 Human 时 DeepSeek AI 自主找米 / 进食 / 逃跑 / 冲刺 / 关门 / 锁门 / 藏身；玩家选 DeepSeek 娘时 Human AI 自主巡逻 / 调查 / 追逐 / 搜索 / 开门或解锁 / 检查藏身家具；两种阵营都要能从阵营选择推进到结算、重开与返回菜单。**优先整合和修复已有机制，不新增未经授权的玩法。**
+- 开工前核实（实测）：分支 `main`，HEAD = `b2df4e6ae6497c0d3cfb876e9a14ef253b4c9bc8`（`docs: finalize S7B overall gate`），远端 `refs/heads/main` 与 HEAD 相同，`git rev-list --left-right --count origin/main...HEAD` = `0 0`，无合并 / 变基在进行，暂存区为空；未提交修改只有 `src/three/ThreeGame.ts` 的 **1 行空白差异**，与用户给出的开工信息一致。
+- 那条空行差异的真实来源（用户点名要求核实）：`git diff --ignore-blank-lines b2df4e6 -- src/three/ThreeGame.ts` 为空 ⇒ 只有空行不同；`893296a` 的该文件没有这个空行，而 `9aafd2e:src/three/ThreeGame.ts` 的 blob = `42f19eb97b09caf1e861752e90923ddd8023b5e9`（与该轮归档笔记记录的暂存 blob 完全一致）、`c65333c` 与 `b2df4e6` 都是 `abd0ac93`（= 前者 + DEV-B 持久化接线），工作区是 `31d9404c`（= `abd0ac93` 少这一个空行，173,795 字节、LF 3,133）。**结论：它是上一轮「玩家声音可视化停用」精确暂存时替换文本自带的空行，不是 DEV-B 轮或 S7B Gate 造成的，功能零影响。按用户要求不重置、不删除、不混入本阶段。**
+- 整局验证方法（两条独立证据腿，互不改写）：① `tests/s7d-match-sim.mjs` 无头逻辑仿真——用**同一批生产系统**（CollisionWorld / NavigationSystem / DoorSystem / HumanDoorSkill / PerceptionGeometry / SoundEventSystem / VisionSystem / RiceTraceSystem / HideSystem / HumanStillness / SprintSystem / RiceField / GameStateSystem / AILogCollector / 两套 AI，以及权威的 `resolveDeepSeekAiHideEntry`、`humanBlocksHideExit`、`createHumanAiMapSnapshot`、`resolveHumanAiHideCheck`）在 Node 里重放 `updatePlaying()` 的玩法与 AI 通路；它是**逻辑仿真，不是浏览器实机、也不是真人试玩**。② `docs/verification/S7D/browser-check.mjs` 真实 Chrome（headless + CDP）整局，走真实 DOM 与真实 DEV 面板导出。仿真器为可复现把 AI 掷骰改成种子派生流（正式游戏是 `Math.random`），因此**同一 `matchSeed` 的两条腿轨迹不保证一致**。
+- 审计发现并修复 **4 处可复现的整局阻断**，根因是同一类问题——「这个 Human 是不是威胁 / 是不是挡住了路」在 `DeepSeekAIController` 不同位置用了互不一致的判据（`dangerRouteRadius` 3.0 / `stationaryPassageBlockRadius` 1.5 / `visionEvadeDistance` 5.0）：
+  - **A：SAFE_WAIT 在最后一堆米前无限等待。** 复现 `analyze-match.mjs 20292603 HUMAN idle`。最后一堆米 `rice_13 (-6.2,7.1)`、站桩 Human `(-3.40,10.00)`：米距 Human 4.03 u、A* 路线最近只到 1.60 u——`updateSafeWait()` 按 3.0 判「路线仍危险」而一直等待，静止通行闸门按 1.5 判「没人挡路」而拒绝出手，只剩一堆米也无处可换。修复前 **600 秒未结算、4/5 米、最长 559,850 ms 没进食**；修复（`tryStartPassage()` 在 `SAFE_WAIT` 时改用 SAFE_WAIT 自己的危险半径）后 **74.3 秒结算、5/5 米**。
+  - **B：MOVE_TO_RICE → EVADE → RECOVER 整局循环。** 复现 `analyze-match.mjs 20292603 HUMAN idle - 4`。米堆落在 AI 的「看见 Human 就逃」距离（5.0）以内时，AI 每次靠近都必然被判 HIGH 威胁，永远吃不到；而静止通行闸门判断「米堆是否靠近 Human」只用了 3.0（4.03 > 3.0）⇒ 判定没挡路。修复前种子 `20292603` 的 24 条 AI 随机流里 **5 条 600 秒不结算**；修复（`humanNearRice` 取 `dangerRouteRadius` 与 `visionEvadeDistance` 中更大者）后 **24/24 结算、中位 45.9 秒、0 异常**。
+  - **C：藏身后「只要看得见 Human 就不退出」。** 复现 `diagnose-hide-lock.mjs`（种子 `20300522` + `pursue`：Human 在 8.38 u 外、威胁只有 CAUTION/VISION，仍连续 **570 秒**拒绝退出）。藏身期间 AI 自己的视觉不被遮蔽，而 `evaluateHideExit()` 的第一条是「可见即不出」，与 `assessThreat()` 只在 5 u 内才判 HIGH 不一致。修复：可见 Human 只有在**同时**落在 `visionEvadeDistance` 内时才继续拒绝退出。
+  - **D：危险距离内 Human 长时间静止也永不退出。** 复现 `robustness-sweep.mjs 12 20260927`：该布局 Human 出生点距 AI 会选的藏身家具只有 **3.03 u**，AI 藏进去后 Human 全程不动（stillMs 涨到 578 秒），修复 C 之后仍然一直藏着。修复：危险距离内再加一个**公开**出口——若这个可见 Human 已被 `HumanStillness` 公开地判定为长时间真的静止（门槛用既有的 `curiosityStillMs`，正是 S7B-2 授权「绕过静止 Human 去吃饭」的同一条门槛），允许退出；Human 一动或只是短暂停下仍然继续藏着。修复前 **2/12 结算**，修复后 **12/12 结算、中位 56.1 秒、0 异常**。
+- 边界守门：**本轮没有修改任何 `GAME_CONFIG` 数值**（`src/config/gameConfig.ts` 无改动）；没有恢复玩家声音可视化；没有改动 DEV-B 38 项参数 / 本地预设、场景编辑器 V2 存档、S7C-3 随机化、双阵营冻结与 READY 独立计时；「没有抓捕圈外的安全路线就拒绝放行」的安全边界未放宽，AI 没有抓捕免疫，也没有瞬移或读取隐藏实时坐标。**唯一被改写的既有测试**：`tests/deepseek-curiosity-priority.test.mjs` 的「rice proximity never authorizes an unsafe route or a distant unrelated Human」——它原先用 `dangerRouteRadius + 1`（4.0 u）代表「远处无关的 Human」，而修复 B 正是让 3～5 u 也算「挡住了这堆米」；已把该处改为 `visionEvadeDistance + 1`（6.0 u）并保留其真正的安全断言（无安全路线时拒绝放行），属**有证据的语义修订，需用户在验收时确认**。
+- 整局遥测（复用既有 `AILogCollector`，不新建第二套时钟 / 事件来源）：新增 `matchSummary`，AI JSON `formatVersion` **1.6 → 1.7**（v1.6 字段语义不变）：随机种子 / 玩家阵营 / 阶段 / 胜负与原因 / 时长 / 完成米数、门开·关·锁·解锁·强破与冲刺 / 摔倒 / 藏身进入·退出·拒绝 / Human AI 搜查开始·搜中·搜空 / 强制抓捕的 **O(1) 计数**、S7B-3A 关门与 S7B-3B 锁门的**逐条实机证据**（各上限 50）、AI 卡路与异常状态 `LOCAL_LOOP` / `NO_ROUTE_TO_RICE` / `SAFE_WAIT_THREAT_PERSISTS` / `HIDE_LONG_CONCEALMENT`（折叠成「首次时间 + 持续时长」，上限 100）。
+- 整局验证结果：
+
+| 检查项目 | 本次实际结果 |
+|---|---|
+| `npm test` | **743 / 743 通过**，退出码 0（727 基线 + 新增整局回归 7 项 + 整局摘要 9 项；其中 1 项既有边界用例按上文做了有证据的修订） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0 |
+| `git diff --check` | 通过，退出码 0 |
+| 自动化批量（无头逻辑仿真，30 局） | 严格同组合 A/B：**修复前 28/30 结算、2 局 600 秒未结算、2 条异常 → 修复后 30/30 结算、0 条异常**；AI 藏身计数由 1 进 0 出变为 1 进 1 出（无反复进出） |
+| 稳健性扫描（6 种子 × 12 条 AI 随机流） | **72 / 72 结算，0 异常**（修复前：`20260927` 2/12、`20292603` 19/24） |
+| 真实浏览器整局（4 局） | **4 / 4 正确结算**：Human 阵营 2 局（DeepSeek 娘 5/5 米胜，37.8 秒与 46.0 秒，其中 46.0 秒那局是修复用的固定种子 `20292603`，修复前曾在浏览器里 180 秒未结算）、DeepSeek 阵营 2 局（人类抓捕胜，7.1 秒与 12.3 秒） |
+| 浏览器重开 / 返回菜单 | 4/4 都验证了「再来一局 → 回到 READY → 再次进入正式对局」与「Esc → 暂停面板 → 返回阵营选择 → 阵营菜单可见」 |
+| 浏览器 AI JSON 导出 | 4/4 都从 DEV 面板**真实导出**一份 `formatVersion 1.7` 的 AI JSON，`matchSummary` 的胜负 / 原因 / 完成米数 / 种子 / 阵营与结算面板一致，异常记录均为 0 |
+| 与既有阶段的回归 | 藏身生命周期 / 循环抑制 / 搜查等 **75/75** 通过；SAFE_WAIT / 静止安全通行 / 好奇优先级全部通过；玩家声音可视化仍停用；未读取 / 修改 / 暂存 `.trae/`、`.dsh-meow/`、`.codex/` 与既有未跟踪验证材料 |
+| 用户集中人工验收 | **尚未进行**（本轮以「开发完成后停止、等待用户集中人工验收」收尾） |
+
+- 本轮文件：新增 `tests/s7d-match-sim.mjs`（整局仿真器）、`tests/s7d-full-match.test.mjs`（整局回归 7 项）、`tests/ai-log-match-summary.test.mjs`（整局摘要 9 项）、`docs/S7D_ALPHA_FULL_MATCH_DESIGN.md`、`docs/verification/S7D/`（`README.md` + `run-match-batch.mjs` + `analyze-match.mjs` + `diagnose-safewait.mjs` + `diagnose-hide-lock.mjs` + `robustness-sweep.mjs` + `browser-check.mjs` + `probe-dom.mjs` + `smoke-sim.mjs` + `baseline/` `after/` `after-baseline-combos/` `browser/` 四组证据）；修改 `src/systems/DeepSeekAIController.ts`（`tryStartPassage()` 与 `evaluateHideExit()` 两处判据）、`src/systems/AILogCollector.ts`（`matchSummary`）、`src/three/ThreeGame.ts`（遥测接线与藏身快照字段）、`tests/ai-log-collector.test.mjs`（格式版本 1.6→1.7）、`tests/deepseek-curiosity-priority.test.mjs`（上文那处边界修订）、`docs/DEEPSEEK_HANDOFF.md`、本日志。删除文件：无。依赖变化：无。`src/config/gameConfig.ts` 与 `src/three/SoundVisualView.ts` 无改动。
+- Git 检查点：**本轮未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash / amend / rebase。工作区保留本轮全部改动，另有开工前就存在的 `src/three/ThreeGame.ts` 单空行差异（见上，按用户要求原样保留、未暂存）。
+- 已知限制与下一项任务：① 真实浏览器同种子不复现仿真轨迹（AI 掷骰是 `Math.random`，`?matchSeed=` 只固定布局）；② S7B-2「偶发原地停留」已修掉 4 个可复现的整局版本，但不能证明清零，仍留后续优化项；③ `deepseekAi` 的 `hideMaxConcealMs` 仍为 **0（不限制）**，本轮未改数值，而是收窄了「什么才算仍然有威胁」的判据（72/72 结算，无需硬兜底）；④ 正式 GLB 角色 / IDLE 动画未导入；⑤ Human AI 自动解锁 8,750 ms 留待 S16。**下一步：等用户集中人工验收；未获授权前不 commit / push / Tag，也不进入 S8。**
+
+---
+
+## 2026-09-28｜S7D 最终集中验收与正式归档
+
+- 阶段与日期：S7D 双阵营完整 Alpha 开发与整局验证，2026-09-28。用户已授权本轮独立提交并正常推送；不创建 Tag，不进入 S8。
+- 完成内容：沿用前一条实施记录的四处整局阻断修复、AI JSON `matchSummary` 和完整对局验证。本轮不改源码、`GAME_CONFIG` 或玩家声音可视化；开工前已有的 `src/three/ThreeGame.ts` 单空行差异原样保留，不纳入 S7D 提交。
+- 自动化测试与人工验收：
+
+| 证据类别 | 结果与边界 |
+|---|---|
+| 本轮 `npm test` | **743 / 743 通过**，退出码 0。 |
+| 本轮 `npx tsc --noEmit` | 通过，退出码 0。 |
+| 本轮 `npm run build` | 通过，退出码 0；Vite 大于 500 kB 的提示不阻断。 |
+| 本轮 `git diff --check` | 通过，退出码 0；仅有 LF→CRLF 提示。 |
+| 既有无头逻辑仿真 | 同组合 30/30 结算；6 个种子 × 12 条 AI 随机流 72/72 结算。它们不是浏览器实机或真人试玩。 |
+| 既有真实浏览器脚本 | 4/4 整局结算并验证重开与返回菜单；玩家侧由脚本控制，不是真人试玩。 |
+| 用户最终集中人工验收 | 静止通行修订、藏身退出修订、Human 阵营完整对局、DeepSeek 娘阵营完整对局、生命周期及复现、DEV 与声音显示回归，六组均 **PASS**。 |
+| 用户真人试玩 | Human 玩家 **30 局**、DeepSeek 娘玩家 **30 局**，合计 **60 局**，无阻断整局完成的问题。此为用户亲自确认，不写成代理测试。 |
+
+- Git 检查点：提交说明 `feat: complete S7D dual-faction alpha`。本条记录用户授权和本轮已完成的检查；完整 SHA、推送与远端一致性以实际 Git 核验为准，不预填尚未发生的结果。
+- 已知限制与下一项任务：S7B 遗留的偶发原地停留仍列为观察项，不宣称绝对根除。用户操控 DeepSeek 娘时感觉 Human AI 抓捕速度比自己操控 Human 更快；**仅为未测量的平衡体感**，不预设原因、不改任何已验收数值。固定 `matchSeed` 只复现布局、不固定正式游戏 AI 掷骰。S8 未授权，本轮完成后停止。
