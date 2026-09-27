@@ -7,10 +7,21 @@ import type { GamePhase } from './GameStateSystem.ts';
 import type { DoorNode, Point, Room } from '../three/map/apartmentMap.ts';
 import type { Faction } from '../three/LocalControl.ts';
 import type { RuntimeTuning } from './RuntimeDebugOverrides.ts';
+import { selectHideSpot, type DeepSeekHideCandidate,
+  type DeepSeekHideCandidateResult, type DeepSeekHideMapSnapshot,
+  type DeepSeekHideWorld } from './DeepSeekHideCandidates.ts';
 
 export type DeepSeekAIState = 'SEEK_RICE' | 'MOVE_TO_RICE' | 'EAT' | 'RESELECT' |
-  'EVADE' | 'RECOVER' | 'SAFE_WAIT' |
+  'EVADE' | 'RECOVER' | 'SAFE_WAIT' | 'HIDE' |
   'CURIOUS_APPROACH' | 'CURIOUS_OBSERVE' | 'CURIOUS_PASSAGE';
+
+/**
+ * S7C-2b：自主藏身的相位。刻意照 Human AI `HumanCheckHidePhase`
+ * （`NONE | TRAVEL | DWELL | DONE`）的同构写法：只有一个顶层状态 `HIDE`，
+ * 走位 / 藏身 / 退出用相位区分，避免再拆三个顶层状态与新的一套日志。
+ */
+export type DeepSeekHidePhase = 'NONE' | 'TRAVEL' | 'CONCEALED' | 'EXIT';
+
 export type DeepSeekThreatSource = 'NONE' | 'VISION' | 'SOUND' | 'LAST_SEEN' | 'MEMORY';
 
 /** Only sounds implying motion or forced entry interrupt an authorized trial. */
@@ -50,6 +61,20 @@ export interface DeepSeekAIInput {
   riceProgressRatio?: number;
   sprintState?: SprintState;
   captureProgressMs?: number;
+  /**
+   * S7C-2b：当前已应用地图的**公开**藏身点快照（含地图代次）。它只有公开地图数据；
+   * 任何「某个藏身点里有没有人」的信息都不在这里，AI 侧也读不到。
+   */
+  hideMap?: DeepSeekHideMapSnapshot | null;
+  /** S7C-2b：真实几何接缝（碰撞可站立 / 导航 / 墙体与门叶遮挡）。 */
+  hideWorld?: DeepSeekHideWorld | null;
+  /** S7C-2b：游戏层本帧签发的**一次性** AI 进入令牌；不回传就不可能进入藏身。 */
+  hideRequestToken?: number;
+  /**
+   * S7C-2b：游戏层给出的**自身**藏身事实（自己是否藏着、藏在哪个点）。这只是玩家
+   * 自己也会看到的状态，绝不包含对手位置或任何藏身点的占用情况。
+   */
+  hideSelf?: { hiding: boolean; spotId: string | null } | null;
 }
 
 export interface DeepSeekAICommand {
@@ -59,6 +84,12 @@ export interface DeepSeekAICommand {
   lockDoorId: string | null;
   eatRiceId: string | null;
   startSprint: boolean;
+  /** S7C-2b：请求进入藏身（游戏层权威复核 + 令牌校验后才能生效）。 */
+  hideSpotId: string | null;
+  /** S7C-2b：本帧令牌；只有与游戏层本帧签发的值一致才会被接受。 */
+  hideRequestToken: number | null;
+  /** S7C-2b：请求退出藏身（游戏层复核出口物理安全）。 */
+  hideExitRequest: boolean;
 }
 
 export interface DeepSeekAIPathProgress {
@@ -177,6 +208,31 @@ export class DeepSeekAIController {
   doorLockWindowRemainingMs = 0;
   doorLockUsedEvidence = false;
   doorLockEvidenceDoorId: string | null = null;
+  // --- S7C-2b：AI 自主藏身（全部是纯诊断字段，DEV 面板与 AI JSON 用） ---
+  hidePhase: DeepSeekHidePhase = 'NONE';
+  hideSpotId: string | null = null;
+  hideStancePoint: Point | null = null;
+  /** 公开理由：为什么进入 / 为什么退回逃跑（不含任何对手真值）。 */
+  hideReason = 'NONE';
+  hideBlockedReason = 'NONE';
+  hideRejectCode = 'NONE';
+  hideLastExitReason = 'NONE';
+  hideConcealedMs = 0;
+  hideRequestCount = 0;
+  hideEnterCount = 0;
+  hideRejectCount = 0;
+  hideExitCount = 0;
+  hideAbortCount = 0;
+  hideSpotBlockedCount = 0;
+  hideConsecutiveCount = 0;
+  hideCandidateCount = 0;
+  hideCandidateSummary = 'NONE';
+  hideCandidateScores: { spotId: string; code: string; score: number | null;
+    travelLength: number | null; detail: string }[] = [];
+  hideCooldownSummary = 'NONE';
+  hideRecentSpotIds: string[] = [];
+  hideExitGate = 'NOT_CONCEALED';
+  hideTravelLength: number | null = null;
 
   private navigation: NavigationSystem;
   private readonly doorNodes: Map<string, DoorNode>;
@@ -221,6 +277,21 @@ export class DeepSeekAIController {
   private doorLockEvidence: { doorId: string; deepseekSide: number } | null = null;
   private doorLockAttemptedId: string | null = null;
   private doorLockEvents: { type: string; reason: string }[] = [];
+  // --- S7C-2b 内部状态 ---
+  private hideMap: DeepSeekHideMapSnapshot | null = null;
+  private hideMapRevision: number | null = null;
+  private hideEvaluateRemainingMs = 0;
+  private hideRecheckRemainingMs = 0;
+  private hideExitRetryRemainingMs = 0;
+  private hideEnterPending = false;
+  private hidePathStalls = 0;
+  // 刻意不叫 hideCooldowns：公开只读方法 `hideCooldowns()` 会取这个名字，
+  // 类字段初始化会覆盖同名原型方法，导致运行期「方法不是函数」。
+  private readonly hideSpotCooldowns = new Map<string, number>();
+  private hideRecentSpots: { spotId: string; atMs: number }[] = [];
+  private lastHideProgressRatio = 0;
+  private lastHideAbortReason = 'NONE';
+  private hideEvents: { type: string; reason: string; spotId: string | null }[] = [];
   private tuning: RuntimeTuning | null = null;
 
   constructor(navigation: NavigationSystem, doors: readonly DoorNode[],
@@ -273,7 +344,109 @@ export class DeepSeekAIController {
     this.lastNavigationReason = 'MAP_REBUILT';
   }
 
+  /**
+   * S7C-2b：地图重建后刷新公开藏身快照。`changed` 为真时连当前藏身计划一起作废，
+   * 绝不允许 AI 抱着被移动或删除的旧家具位置继续走。
+   */
+  rebindMap(map: DeepSeekHideMapSnapshot | null, changed = true): void {
+    this.hideMap = map;
+    this.hideMapRevision = map?.revision ?? null;
+    if (changed) this.abortHidePlan('MAP_REBOUND');
+  }
+
+  /**
+   * S7C-2b：游戏层权威执行的**回执**。回执只给布尔级结果与拒绝码——AI 拿不到
+   * 「谁在哪个家具里」这类真值，只能知道自己这次请求成没成。
+   */
+  onHideResult(spotId: string, result: string): void {
+    const cfg = GAME_CONFIG.deepseekAI;
+    this.hideEnterPending = false;
+    if (result === 'ENTERED') {
+      this.hidePhase = 'CONCEALED';
+      this.hideSpotId = spotId;
+      this.hideConcealedMs = 0;
+      this.hideRecheckRemainingMs = cfg.hideRecheckMs;
+      this.hideExitRetryRemainingMs = 0;
+      this.hideEnterCount++;
+      this.hideConsecutiveCount++;
+      this.hideReason = 'ENTER_CONFIRMED';
+      this.hideBlockedReason = 'NONE';
+      this.path = [];
+      this.pathIndex = 0;
+      this.resetPathProgress();
+      this.recordHideEvent('HIDE_AI_ENTERED', spotId, spotId);
+      this.recordHideSpotVisit(spotId);
+      return;
+    }
+    if (result === 'EXITED') {
+      this.hideLastExitReason = this.hideReason;
+      this.hideExitCount++;
+      this.recordHideEvent('HIDE_AI_EXITED', this.hideReason, spotId);
+      this.setHideCooldown(spotId, cfg.hideReenterCooldownMs, 'REENTER_COOLDOWN');
+      this.hidePhase = 'NONE';
+      this.hideSpotId = null;
+      this.hideStancePoint = null;
+      this.hideTravelLength = null;
+      this.hideConcealedMs = 0;
+      this.enterRecoveryAfterHide();
+      return;
+    }
+    if (result === 'HUMAN_BLOCKING') {
+      // 出口被 Human 角色圆压住：退回藏身，等下一次重查，绝不逐帧重发请求。
+      this.hidePhase = 'CONCEALED';
+      this.hideExitRetryRemainingMs = cfg.hideRecheckMs;
+      this.hideRecheckRemainingMs = cfg.hideRecheckMs;
+      this.hideReason = 'EXIT_BLOCKED_HUMAN_OVERLAP';
+      this.hideRejectCode = 'HUMAN_BLOCKING';
+      this.recordHideEvent('HIDE_AI_REJECTED', 'EXIT_HUMAN_BLOCKING', spotId);
+      return;
+    }
+    // 其余全部是进入被拒：写公开失败记忆与冷却，并退回既有逃跑流程。
+    this.hideRejectCount++;
+    this.hideRejectCode = result;
+    this.hideSpotBlockedCount++;
+    this.recordHideEvent('HIDE_AI_REJECTED', result, spotId);
+    this.recordHideEvent('HIDE_AI_SPOT_BLOCKED', result, spotId);
+    this.setHideCooldown(spotId, cfg.hideCandidateFailCooldownMs, `ENTER_REJECTED:${result}`);
+    this.abortHidePlan(`ENTER_REJECTED:${result}`);
+  }
+
+  /** 局终 / 重开 / 地图应用 / 被搜出时，游戏层强制清空藏身后的通知。 */
+  onForcedHideExit(reason: string): void {
+    const spotId = this.hideSpotId;
+    if (this.hidePhase === 'CONCEALED' || this.hidePhase === 'EXIT') {
+      this.hideExitCount++;
+      this.hideLastExitReason = reason;
+      this.recordHideEvent('HIDE_AI_EXITED', reason, spotId);
+      if (spotId) this.setHideCooldown(spotId, GAME_CONFIG.deepseekAI.hideReenterCooldownMs,
+        'REENTER_COOLDOWN');
+    }
+    this.hidePhase = 'NONE';
+    this.hideSpotId = null;
+    this.hideStancePoint = null;
+    this.hideTravelLength = null;
+    this.hideConcealedMs = 0;
+    this.hideEnterPending = false;
+    this.hideRecheckRemainingMs = 0;
+    this.hideExitRetryRemainingMs = 0;
+    this.path = [];
+    this.pathIndex = 0;
+    this.resetPathProgress();
+    if (this.state === 'HIDE') this.state = 'RESELECT';
+  }
+
+  /** S7C-2b：AI 藏身事件（请求 / 进入 / 拒绝 / 退出 / 中止 / 点被封锁）。 */
+  drainHideEvents(): { type: string; reason: string; spotId: string | null }[] {
+    return this.hideEvents.splice(0, this.hideEvents.length);
+  }
+
+  /** 只给 DEV 面板与测试：AI 自己记的失败 / 再进冷却（公开信息，不含占用）。 */
+  hideCooldowns(): readonly { spotId: string; remainingMs: number }[] {
+    return this.hideCooldownSnapshot();
+  }
+
   reset(): void {
+    this.clearHideState();
     this.doorEscapeCandidateId = null;
     this.doorEscapeDistance = null;
     this.doorEscapePassed = false;
@@ -384,6 +557,9 @@ export class DeepSeekAIController {
 
   resumeAfterManualControl(): void {
     this.finishPassage('MANUAL_CONTROL_RELEASED');
+    // S7C-2b：人工接管期间角色可能被玩家自己藏起来或带走了，走位中的藏身计划一律
+    // 作废；真正的藏身事实由游戏层通过 `hideSelf` 回灌（`syncSelfConcealment`）。
+    this.abortHidePlan('MANUAL_CONTROL_RELEASED');
     this.path = [];
     this.pathIndex = 0;
     this.doorSignature = '';
@@ -448,6 +624,16 @@ export class DeepSeekAIController {
     for (const rice of input.rice) if (rice.completed)
       this.clearDangerousEntryFailures(rice.id);
     this.trackPathProgress(input.deepseek, deltaMs);
+    // S7C-2b：地图代次一变就作废旧藏身计划（游戏层同时会强制退出藏身）。
+    if (input.hideMap && input.hideMap.revision !== this.hideMapRevision) {
+      const firstMap = this.hideMapRevision === null;
+      this.hideMap = input.hideMap;
+      this.hideMapRevision = input.hideMap.revision;
+      if (!firstMap) this.abortHidePlan('MAP_REVISION_CHANGED');
+    } else if (input.hideMap) {
+      this.hideMap = input.hideMap;
+    }
+    this.syncSelfConcealment(input);
 
     const signature = input.doors.map(door =>
       `${door.id}:${door.state}:${door.lockCoreState}`).join('|');
@@ -527,7 +713,9 @@ export class DeepSeekAIController {
       return this.updateSafeWait(input, threat, urgentHumanSound);
     if (threat.level === 'HIGH') {
       this.alertRemainingMs = cfg.alertHoldMs;
-      if (this.state !== 'EVADE') {
+      // S7C-2b：藏身计划（含走位中）拥有自己的有界中止条件，绝不让这里直接把它
+      // 拆掉——否则 AI 一看见 Human 就永远进不了家具。
+      if (this.state !== 'EVADE' && this.state !== 'HIDE') {
         this.recordDangerousEntry(input, threat);
         this.enterEvade(threat.source);
       }
@@ -538,7 +726,7 @@ export class DeepSeekAIController {
       this.alertRemainingMs = Math.max(this.alertRemainingMs,
         cfg.lastSeenAlertMs - age);
     }
-    if (this.state === 'EVADE' || this.state === 'RECOVER')
+    if (this.state === 'EVADE' || this.state === 'RECOVER' || this.state === 'HIDE')
       return this.updateSafety(input, threat, deltaMs);
     if (this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE')
       return this.updateCuriosity(input, deltaMs);
@@ -1220,6 +1408,8 @@ export class DeepSeekAIController {
   }
 
   private enterEvade(source: DeepSeekThreatSource): void {
+    // S7C-2b：任何真实进入 EVADE 的路径都要先有界地结束走位中的藏身计划。
+    this.abortHidePlan('ENTER_EVADE');
     this.state = 'EVADE';
     this.localLoopTriggered = false;
     this.loopReplanPending = false;
@@ -1248,7 +1438,6 @@ export class DeepSeekAIController {
   private updateSafety(input: DeepSeekAIInput, threat: ThreatAssessment,
     deltaMs: number): DeepSeekAICommand {
     const cfg = GAME_CONFIG.deepseekAI;
-    this.recordEscapeRoom(input.deepseek, threat.level === 'HIGH');
     const approachSpeed = threat.visibleDistance !== null &&
       this.previousVisibleDistance !== null && deltaMs > 0
       ? (this.previousVisibleDistance - threat.visibleDistance) * 1000 / deltaMs : 0;
@@ -1258,9 +1447,13 @@ export class DeepSeekAIController {
       this.noMovementReason = 'STUNNED';
       this.recoveryBlockReason = 'STUNNED';
       this.cancelPendingLock('STUNNED');
+      if (this.state === 'HIDE') this.abortHidePlan('STUNNED');
       return this.command();
     }
     if (this.state === 'RECOVER') return this.updateRecovery(input, deltaMs);
+    // S7C-2b：藏身是一个与 EVADE / RECOVER 并列的安全分支，不重写逃跑评分。
+    if (this.state === 'HIDE') return this.updateHide(input, threat, deltaMs);
+    this.recordEscapeRoom(input.deepseek, threat.level === 'HIGH');
     this.evadeElapsedMs += deltaMs;
     if (threat.source === 'NONE' && this.alertRemainingMs > 0)
       this.threatSource = 'MEMORY';
@@ -1324,6 +1517,9 @@ export class DeepSeekAIController {
         threat.visibleDistance !== null &&
         threat.visibleDistance <= cfg.riskySprintDistance)
       this.selectEscapeGoal(input, 'HUMAN_CLOSE_REVIEW');
+    // S7C-2b：逃跑目标已经选出，此时才有「藏身 vs 继续跑」的可比长度。
+    const hideCommand = this.tryStartHide(input, threat, deltaMs);
+    if (hideCommand) return hideCommand;
     const lockDoorId = this.evaluateEscapeLock(input, approachSpeed);
     if (lockDoorId) {
       this.sprintDecision = 'LOCKING_ESCAPE_DOOR';
@@ -1379,6 +1575,418 @@ export class DeepSeekAIController {
       this.sprintDecision = risky ? 'RISK_SPRINT_HELD' : 'MOVE_WITHOUT_SPRINT';
     }
     return movement;
+  }
+
+  // -------------------------------------------------------------------------
+  // S7C-2b：AI 自主藏身
+  //
+  // 设计纪律（与逃跑房间同一套）：
+  //   · 只用公开信息：自己的位置、公开威胁估计（真实目视 / 有效 Last Seen / 声音八方向
+  //     投影）、公开藏身点数据、门状态、米堆状态、自身藏身事实与冷却；
+  //   · 不读取任何「藏身点里有没有人」的信息，不读取 Human 的实时坐标，不引用
+  //     玩家专用的白色指向轮廓或按键仲裁；
+  //   · 进入 / 退出的最终裁决权都在游戏层（权威几何层 + 藏身状态机），
+  //     AI 只能发请求并收到一个拒绝码；
+  //   · 每个相位都有有界的推进或放弃条件，绝不出现「原地不动且永远不结束」。
+  // -------------------------------------------------------------------------
+
+  /** 游戏层给出的自身藏身事实优先：绝不允许出现「实际藏着、AI 却不知道」。 */
+  private syncSelfConcealment(input: DeepSeekAIInput): void {
+    const self = input.hideSelf ?? null;
+    if (self?.hiding) {
+      if (self.spotId) this.hideSpotId = self.spotId;
+      if (this.hidePhase !== 'CONCEALED' && this.hidePhase !== 'EXIT') {
+        this.hidePhase = 'CONCEALED';
+        this.hideConcealedMs = 0;
+        this.hideRecheckRemainingMs = 0;
+      }
+      this.hideEnterPending = false;
+      this.state = 'HIDE';
+      return;
+    }
+    if (this.hidePhase === 'CONCEALED' || this.hidePhase === 'EXIT') {
+      // 游戏层已经强制退出（搜查命中 / 局终 / 地图应用）而控制器还没收到回执。
+      this.hidePhase = 'NONE';
+      this.hideSpotId = null;
+      this.hideStancePoint = null;
+      this.hideConcealedMs = 0;
+      if (this.state === 'HIDE') this.state = 'EVADE';
+    }
+  }
+
+  private hideSpotSnapshot(map: DeepSeekHideMapSnapshot | null, spotId: string | null) {
+    if (!map || !spotId) return null;
+    return map.spots.find(entry => entry.spot.id === spotId) ?? null;
+  }
+
+  private hideCooldownSnapshot(): { spotId: string; remainingMs: number }[] {
+    return [...this.hideSpotCooldowns.entries()].map(([spotId, remainingMs]) =>
+      ({ spotId, remainingMs }));
+  }
+
+  private setHideCooldown(spotId: string, ms: number, reason: string): void {
+    if (!spotId || ms <= 0) return;
+    this.hideSpotCooldowns.set(spotId, ms);
+    this.hideCooldownSummary = `${spotId}:${Math.round(ms)}(${reason})`;
+  }
+
+  private recordHideSpotVisit(spotId: string): void {
+    this.hideRecentSpots.push({ spotId, atMs: this.elapsedMs });
+    while (this.hideRecentSpots.length > GAME_CONFIG.deepseekAI.hideRecentSpotCount)
+      this.hideRecentSpots.shift();
+    this.hideRecentSpotIds = this.hideRecentSpots.map(entry => entry.spotId);
+  }
+
+  private recordHideEvent(type: string, reason: string, spotId: string | null): void {
+    this.hideEvents.push({ type, reason, spotId });
+  }
+
+  /** 走位阶段的有界放弃：只有真实走位才允许中止，藏身中一律不在这里清状态。 */
+  private abortHidePlan(reason: string): void {
+    if (this.hidePhase === 'NONE' || this.hidePhase === 'CONCEALED' ||
+        this.hidePhase === 'EXIT') return;
+    const spotId = this.hideSpotId;
+    this.hidePhase = 'NONE';
+    this.hideSpotId = null;
+    this.hideStancePoint = null;
+    this.hideTravelLength = null;
+    this.hideEnterPending = false;
+    this.hidePathStalls = 0;
+    this.hideReason = `ABORT:${reason}`;
+    this.path = [];
+    this.pathIndex = 0;
+    this.resetPathProgress();
+    this.hideAbortCount++;
+    this.recordHideEvent('HIDE_AI_ABORT', reason, spotId);
+    if (this.state === 'HIDE') {
+      this.state = 'EVADE';
+      this.recoveryBlockReason = 'CURRENT_THREAT';
+      this.lastTransitionReason = `HIDE_ABORT_${reason}`;
+    }
+  }
+
+  private clearHideState(): void {
+    // 注意：`hideMap` / `hideMapRevision` 是**地图事实**而不是对局状态，重开一局
+    // 不重建地图，因此这里刻意不清它们，只清与这一局有关的计数与计划。
+    this.hidePhase = 'NONE';
+    this.hideSpotId = null;
+    this.hideStancePoint = null;
+    this.hideReason = 'NONE';
+    this.hideBlockedReason = 'NONE';
+    this.hideRejectCode = 'NONE';
+    this.hideLastExitReason = 'NONE';
+    this.hideConcealedMs = 0;
+    this.hideRequestCount = 0;
+    this.hideEnterCount = 0;
+    this.hideRejectCount = 0;
+    this.hideExitCount = 0;
+    this.hideAbortCount = 0;
+    this.hideSpotBlockedCount = 0;
+    this.hideConsecutiveCount = 0;
+    this.hideCandidateCount = 0;
+    this.hideCandidateSummary = 'NONE';
+    this.hideCandidateScores = [];
+    this.hideCooldownSummary = 'NONE';
+    this.hideRecentSpotIds = [];
+    this.hideExitGate = 'NOT_CONCEALED';
+    this.hideTravelLength = null;
+    this.hideEvaluateRemainingMs = 0;
+    this.hideRecheckRemainingMs = 0;
+    this.hideExitRetryRemainingMs = 0;
+    this.hideEnterPending = false;
+    this.hidePathStalls = 0;
+    this.hideSpotCooldowns.clear();
+    this.hideRecentSpots = [];
+    this.lastHideProgressRatio = 0;
+    this.lastHideAbortReason = 'NONE';
+    this.hideEvents = [];
+  }
+
+  /** 退出藏身后回到既有 `RECOVER` 流程；不新增第二套「脱险后回米」逻辑。 */
+  private enterRecoveryAfterHide(): void {
+    this.state = 'RECOVER';
+    this.lastTransitionReason = 'HIDE_EXITED_RESUME_RICE';
+    this.recoveryBlockReason = 'NONE';
+    this.recoverRemainingMs = GAME_CONFIG.deepseekAI.recoverMs;
+    this.escapeTarget = null;
+    this.escapeRoomId = null;
+    this.escapeGoalScore = null;
+    this.escapeCandidateScores = [];
+    this.escapeExitThreatened = false;
+    this.escapeReplanRemainingMs = 0;
+    this.escapeGoalHoldRemainingMs = 0;
+    this.previousVisibleDistance = null;
+    this.stalledRepaths = 0;
+    this.sprintDecision = 'RESUME_RICE';
+    this.noMovementReason = 'HIDE_EXITED';
+    this.path = [];
+    this.pathIndex = 0;
+    this.resetPathProgress();
+  }
+
+  /**
+   * 是否「还有事可做」：至少一份未完成米堆从这里还能走到。
+   * `threatFree` = 退出条件用的加强版：额外要求路线不穿过已知威胁的**抓捕半径**
+   * （复用既有的有效抓捕半径，不新增第二个同义参数，也不用更宽的探索半径——
+   * 藏身者本来就在最后一次目击点附近，用 3 u 会把所有路线一并否掉）。
+   */
+  private hasReachableRiceFrom(point: Point, input: DeepSeekAIInput,
+    threatFree: boolean): boolean {
+    const pending = input.rice.filter(rice => !rice.completed);
+    if (!pending.length) return false;
+    const threat = this.threatEstimate;
+    if (!threatFree || !threat) return pending.some(rice =>
+      !!this.navigation.findPath(point, rice, input.doors)?.length);
+    const guard = this.effectiveCaptureRadius;
+    return pending.some(rice => {
+      const path = this.navigation.findPath(point, rice, input.doors);
+      if (!path?.length) return false;
+      return distance(rice, threat) >= guard &&
+        path.every(step => distance(step, threat) >= guard);
+    });
+  }
+
+  /**
+   * 藏身的**值得性**判断（公开）：只有威胁已经贴近（`hideThreatDistance`）才考虑，
+   * 并且藏身点必须是「更近的活路」——空手逃跑没有可行路线，或者藏身路线比逃跑路线更短。
+   * 这样贴近时优先钻进家具，远离家具时继续按既有逃跑评分跑开，不会为了藏身横穿整层楼。
+   */
+  private tryStartHide(input: DeepSeekAIInput, threat: ThreatAssessment,
+    deltaMs: number): DeepSeekAICommand | null {
+    const cfg = GAME_CONFIG.deepseekAI;
+    this.hideEvaluateRemainingMs = Math.max(0, this.hideEvaluateRemainingMs - deltaMs);
+    const ratio = input.riceProgressRatio ?? 0;
+    if (ratio > this.lastHideProgressRatio + 1e-6) {
+      // 真实吃米进展 = 这一轮「连续藏身」的解除条件（不靠最大藏身时长兜底）。
+      this.lastHideProgressRatio = ratio;
+      this.hideConsecutiveCount = 0;
+    }
+    if (threat.level !== 'HIGH') {
+      this.hideBlockedReason = 'THREAT_NOT_HIGH';
+      return null;
+    }
+    const threatDistance = this.threatEstimate
+      ? distance(input.deepseek, this.threatEstimate) : Infinity;
+    if (threatDistance > cfg.hideThreatDistance) {
+      this.hideBlockedReason = 'THREAT_TOO_FAR';
+      return null;
+    }
+    if (this.hideConsecutiveCount >= cfg.hideMaxConsecutive) {
+      this.hideBlockedReason = 'CONSECUTIVE_LIMIT';
+      return null;
+    }
+    if (!input.hideMap || !input.hideWorld) {
+      this.hideBlockedReason = 'NO_PUBLIC_HIDE_DATA';
+      return null;
+    }
+    if (this.hideEvaluateRemainingMs > 0) return null;
+    this.hideEvaluateRemainingMs = cfg.escapeReplanMs;
+    const result = selectHideSpot({ map: input.hideMap, position: input.deepseek,
+      doors: input.doors, threat: this.threatEstimate, world: input.hideWorld,
+      cooldowns: this.hideCooldownSnapshot(), recentSpots: this.hideRecentSpots,
+      nowMs: this.elapsedMs, preferredSpotId: this.hideSpotId });
+    this.applyHideEvaluation(result);
+    if (!result.ok || !result.candidate) {
+      this.hideBlockedReason = result.code;
+      this.noteHideAbort(result.code, null);
+      return null;
+    }
+    const candidate = result.candidate;
+    // 值得性判断刻意**只**用设计里已有的那一条：藏身路线必须比当前的逃跑路线更近
+    // （或当前根本没有可行逃跑路线）。这里不额外引入「藏身点必须多近」的新门槛——
+    // 真实公寓里两点之间的 A* 路线常常比直线长好几倍，任何绝对距离门槛都会让
+    // 「被追进卧室后钻进床底」这种正常情形永远不触发。
+    const escapeLength = this.escapeTarget && this.path.length
+      ? this.pathLength(input.deepseek, this.path, this.escapeTarget) : null;
+    if (escapeLength !== null && candidate.travelLength >= escapeLength) {
+      this.hideBlockedReason = 'FLEEING_IS_CLOSER';
+      return null;
+    }
+    if (!this.hasReachableRiceFrom(candidate.stancePoint, input, false)) {
+      // 「没有可达米堆就不进入藏身」：这是防止藏到天荒地老的第一道兜底。
+      this.hideBlockedReason = 'NO_REACHABLE_RICE';
+      this.noteHideAbort('NO_REACHABLE_RICE', candidate.spotId);
+      return null;
+    }
+    this.lastHideAbortReason = 'NONE';
+    this.enterHideTravel(candidate);
+    return this.updateHide(input, threat, deltaMs);
+  }
+
+  private applyHideEvaluation(result: DeepSeekHideCandidateResult): void {
+    this.hideCandidateCount = result.legalStanceCount;
+    this.hideCandidateSummary = result.reason;
+    this.hideCandidateScores = result.evaluations.map(entry => ({ spotId: entry.spotId,
+      code: entry.code, score: entry.score, travelLength: entry.travelLength,
+      detail: entry.detail }));
+  }
+
+  /** 同一原因只记一次，避免每次重评估都刷屏。 */
+  private noteHideAbort(code: string, spotId: string | null): void {
+    if (this.lastHideAbortReason === code) return;
+    this.lastHideAbortReason = code;
+    this.recordHideEvent('HIDE_AI_ABORT', code, spotId);
+  }
+
+  private enterHideTravel(candidate: DeepSeekHideCandidate): void {
+    this.state = 'HIDE';
+    this.hidePhase = 'TRAVEL';
+    this.hideSpotId = candidate.spotId;
+    this.hideStancePoint = { ...candidate.stancePoint };
+    this.hideTravelLength = candidate.travelLength;
+    this.hideReason = 'THREAT_CLOSE_HIDE_CANDIDATE';
+    this.hideBlockedReason = 'NONE';
+    this.hidePathStalls = 0;
+    this.hideEnterPending = false;
+    this.hideExitGate = 'NOT_CONCEALED';
+    this.path = [...candidate.path];
+    this.pathIndex = 0;
+    this.escapeTarget = null;
+    this.escapeRoomId = null;
+    this.escapeGoalScore = null;
+    this.escapeCandidateScores = [];
+    this.escapeExitThreatened = false;
+    this.cancelPendingLock('ENTER_HIDE');
+    this.resetPathProgress();
+    this.lastTransitionReason = `THREAT_${this.threatSource}_HIDE`;
+    this.sprintDecision = 'HIDE_TRAVEL';
+  }
+
+  private updateHide(input: DeepSeekAIInput, threat: ThreatAssessment,
+    deltaMs: number): DeepSeekAICommand {
+    for (const [id, remaining] of this.hideSpotCooldowns) {
+      if (remaining <= deltaMs) this.hideSpotCooldowns.delete(id);
+      else this.hideSpotCooldowns.set(id, remaining - deltaMs);
+    }
+    this.hideCooldownSummary = this.hideSpotCooldowns.size
+      ? [...this.hideSpotCooldowns.entries()].map(([id, ms]) =>
+        `${id}:${(ms / 1000).toFixed(1)}s`).join('｜') : '无';
+    if (this.hidePhase === 'CONCEALED' || this.hidePhase === 'EXIT')
+      return this.updateConcealed(input, threat, deltaMs);
+    if (this.hidePhase === 'NONE') {
+      this.state = 'EVADE';
+      return this.command();
+    }
+    return this.updateHideTravel(input);
+  }
+
+  private updateHideTravel(input: DeepSeekAIInput): DeepSeekAICommand {
+    const stance = this.hideStancePoint;
+    const spotId = this.hideSpotId;
+    if (!stance || !spotId || !this.hideSpotSnapshot(input.hideMap ?? null, spotId)) {
+      this.abortHidePlan('PLAN_INVALID');
+      return this.command();
+    }
+    // 真实危险：抓捕已经开始或自己已经摔倒，藏身也救不回来，立刻回到逃跑。
+    if ((input.captureProgressMs ?? 0) > 0) {
+      this.abortHidePlan('CAPTURE_ATTEMPT');
+      return this.command();
+    }
+    if (input.sprintState === 'STUNNED') {
+      this.abortHidePlan('STUNNED');
+      return this.command();
+    }
+    const arrived = distance(input.deepseek, stance) <=
+      GAME_CONFIG.deepseekAI.waypointTolerance + GAME_CONFIG.collision.contactEpsilon;
+    if (arrived) {
+      if (!this.hideEnterPending) {
+        this.hideEnterPending = true;
+        this.hideRequestCount++;
+        this.hideReason = 'ARRIVED_REQUEST_ENTER';
+        // 事件带公开理由；真正的裁决在游戏层，回执只给结果码。
+        this.recordHideEvent('HIDE_AI_REQUEST', `ARRIVED:${spotId}`, spotId);
+      }
+      this.noMovementReason = 'HIDE_ENTER_REQUEST';
+      this.sprintDecision = 'HIDE_ENTER_REQUEST';
+      return { ...this.command(), hideSpotId: spotId,
+        hideRequestToken: input.hideRequestToken ?? null };
+    }
+    if (!this.path.length) {
+      const path = this.navigation.findPath(input.deepseek, stance, input.doors);
+      if (!path?.length) {
+        this.abortHidePlan('NO_ROUTE_TO_HIDE_SPOT');
+        return this.command();
+      }
+      this.path = path;
+      this.pathIndex = 0;
+      this.resetPathProgress();
+    }
+    this.noMovementReason = 'HIDE_TRAVEL';
+    this.sprintDecision = 'HIDE_TRAVEL';
+    const movement = this.followPath(input, stance);
+    if (movement.openDoorId) this.noMovementReason = 'OPENING_DOOR';
+    else if (movement.direction.x === 0 && movement.direction.z === 0)
+      this.noMovementReason = 'HIDE_PATH_BLOCKED';
+    return movement;
+  }
+
+  private updateConcealed(input: DeepSeekAIInput, threat: ThreatAssessment,
+    deltaMs: number): DeepSeekAICommand {
+    const cfg = GAME_CONFIG.deepseekAI;
+    this.hideConcealedMs += deltaMs;
+    this.hideRecheckRemainingMs = Math.max(0, this.hideRecheckRemainingMs - deltaMs);
+    this.hideExitRetryRemainingMs = Math.max(0, this.hideExitRetryRemainingMs - deltaMs);
+    this.noMovementReason = 'HIDING_CONCEALED';
+    this.sprintDecision = 'HIDDEN';
+    if (this.hidePhase === 'EXIT') {
+      // 回执在同一帧内到达；没有回执说明这一帧的请求没有被处理，退回藏身等下一次
+      // 重查，绝不逐帧重复发请求。
+      this.hidePhase = 'CONCEALED';
+      this.hideRecheckRemainingMs = cfg.hideRecheckMs;
+      this.noMovementReason = 'HIDE_EXIT_AWAITING_RECEIPT';
+      return this.command();
+    }
+    if (this.hideRecheckRemainingMs > 0) return this.command();
+    this.hideRecheckRemainingMs = cfg.hideRecheckMs;
+    const gate = this.evaluateHideExit(input, threat);
+    this.hideExitGate = gate.code;
+    if (!gate.ok) {
+      this.hideReason = `CONCEALED:${gate.code}`;
+      return this.command();
+    }
+    this.hidePhase = 'EXIT';
+    this.hideReason = gate.reason;
+    this.recordHideEvent('HIDE_AI_EXIT_REQUEST', gate.reason, this.hideSpotId);
+    return { ...this.command(), hideExitRequest: true };
+  }
+
+  /**
+   * 退出条件（全部公开，任一条不成立就继续藏着并按 `hideRecheckMs` 重查）：
+   *   ① 最短藏身时长已满（防「一进就出」）；
+   *   ② 威胁已解除：当前看不见 Human，且新鲜的已知威胁点已经在安全间距之外；
+   *   ③ 还有事可做：存在一条可达且不穿过已知威胁半径的未完成米堆路线；
+   *   ④ 可选的 `hideMaxConcealMs`（默认 0 = 不限制）只是兜底，仍须过 ③。
+   * 出口的**物理**安全（Human 角色圆是否压住出口）由游戏层裁决，AI 只收到结果码。
+   */
+  private evaluateHideExit(input: DeepSeekAIInput,
+    threat: ThreatAssessment): { ok: boolean; code: string; reason: string } {
+    const cfg = GAME_CONFIG.deepseekAI;
+    if (this.hideConcealedMs < cfg.hideMinConcealMs) {
+      return { ok: false, code: 'MIN_CONCEAL_MS', reason: '最短藏身时间未到' };
+    }
+    if (input.visibleHuman) {
+      return { ok: false, code: 'THREAT_STILL_VISIBLE', reason: '仍能看见 Human' };
+    }
+    const fresh = threat.source === 'LAST_SEEN' || threat.source === 'SOUND';
+    if (fresh && this.threatEstimate) {
+      const separation = distance(input.deepseek, this.threatEstimate);
+      if (separation < cfg.escapeMinSeparation) {
+        return { ok: false, code: 'THREAT_STILL_NEAR',
+          reason: `已知威胁仍在 ${separation.toFixed(2)} u 内` };
+      }
+    }
+    if (cfg.hideMaxConcealMs > 0 && this.hideConcealedMs >= cfg.hideMaxConcealMs) {
+      if (!this.hasReachableRiceFrom(input.deepseek, input, true)) {
+        return { ok: false, code: 'MAX_CONCEAL_NO_ROUTE',
+          reason: '已达可选最大藏身时长但没有安全的米堆路线' };
+      }
+      return { ok: true, code: 'MAX_CONCEAL_MS', reason: '达到可选最大藏身时长' };
+    }
+    if (!this.hasReachableRiceFrom(input.deepseek, input, true)) {
+      return { ok: false, code: 'NO_SAFE_RICE_ROUTE',
+        reason: '没有可达且不穿过已知威胁的米堆路线' };
+    }
+    return { ok: true, code: 'THREAT_CLEARED', reason: '威胁解除且仍有可达米堆' };
   }
 
   /** A crossing is physical movement through the open leaf, not merely proximity. */
@@ -2071,6 +2679,21 @@ export class DeepSeekAIController {
         this.enterEvade('VISION');
         return;
       }
+      if (this.state === 'HIDE') {
+        // S7C-2b：走位到藏身点的卡路处理必须有界——允许换一条路，超过上限就
+        // 放弃这个点并回到 EVADE，绝不无限重寻路。
+        this.hidePathStalls++;
+        if (this.hidePathStalls >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
+          this.abortHidePlan('TRAVEL_STALLED');
+        } else {
+          this.avoidedWaypoint = { x: waypoint.x, z: waypoint.z };
+          this.path = [];
+          this.pathIndex = 0;
+          this.lastNavigationReason = 'HIDE_PATH_STALLED_REPATH';
+          this.resetPathProgress();
+        }
+        return;
+      }
       if (this.state === 'EVADE') {
         if (this.stalledRepaths >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
           this.avoidedEscapeRoomId = this.escapeRoomId;
@@ -2124,6 +2747,7 @@ export class DeepSeekAIController {
     eatRiceId: string | null = null): DeepSeekAICommand {
     this.lastCommandedMovement = x !== 0 || z !== 0;
     return { direction: { x, z }, openDoorId, closeDoorId: null, lockDoorId: null,
-      eatRiceId, startSprint: false };
+      eatRiceId, startSprint: false, hideSpotId: null, hideRequestToken: null,
+      hideExitRequest: false };
   }
 }

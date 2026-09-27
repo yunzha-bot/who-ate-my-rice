@@ -155,6 +155,30 @@ export class NavigationSystem {
     return index < 0 ? null : this.point(index);
   }
 
+  // S7C-2b：只读的格心枚举。DeepSeek AI 自主藏身只在**真实导航格心**上落脚
+  // （这样 A* 终点本身就是可行走点，不需要 S7C-2 那种容差走位），因此它需要
+  // 「某个圆内有哪些格心」这个查询。语义与 `nearestFree` 完全一致：只排除静态
+  // 不可站立和被锁住的门口格，返回按距离升序（同距按坐标）的稳定序列。
+  freeCellsWithin(centre: Point, radius: number, doors: readonly DoorState[]): Point[] {
+    if (!Number.isFinite(radius) || radius < 0) return [];
+    const states = new Map(doors.map(door => [door.id, door.state]));
+    const found: { point: Point; distance: number }[] = [];
+    for (let index = 0; index < this.staticFree.length; index++) {
+      if (!this.staticFree[index]) continue;
+      const doorId = this.doorAt[index];
+      if (doorId && states.get(doorId) === 'LOCKED') continue;
+      const point = this.point(index);
+      const value = Math.hypot(point.x - centre.x, point.z - centre.z);
+      if (value > radius) continue;
+      found.push({ point, distance: value });
+    }
+    return found.sort((a, b) => a.distance - b.distance ||
+      a.point.x - b.point.x || a.point.z - b.point.z).map(entry => entry.point);
+  }
+
+  /** Grid step in world units; callers must not re-derive the cell size. */
+  get cellSize(): number { return this.cell; }
+
   private nearestPassable(point: Point, passable: (index: number) => boolean): number {
     let nearest = -1, best = Infinity;
     for (let index = 0; index < this.staticFree.length; index++) {

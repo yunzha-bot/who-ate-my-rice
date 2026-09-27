@@ -1,0 +1,40 @@
+{
+ "chased": true,
+ "concealed": true,
+ "afterChase": {
+  "dp": {
+   "x": 7.07,
+   "z": 3.38
+  },
+  "human": {
+   "x": 12.03,
+   "z": -2.5
+  },
+  "hideState": "藏身中（hide_living_carton）",
+  "hideCapture": "不累计",
+  "phase": "CONCEALED（HIDE）｜hide_living_carton｜(7.0, 3.6)｜路线 6.46",
+  "reason": "CONCEALED:MIN_CONCEAL_MS｜阻止 NONE",
+  "candidate": "8 个合法站位｜hide_living_carton｜路线 6.46｜评分 -3.27（候选 8）",
+  "loopguard": "无｜近期 hide_living_carton｜连续 1 / 2｜冷却明细 无",
+  "exitGate": "0.71 秒｜MIN_CONCEAL_MS｜最近退出 NONE",
+  "entry": "1 次成功 / 0 次被拒｜0 次退出｜0 次中止｜点被封锁 0 次｜令牌 已签发未使用",
+  "entryDetail": "ENTERED｜权威层确认位置合法，允许进入藏身｜真实位置通过完整合法性复核（7.07,3.38）｜游戏层计数 1 / 0 / 0｜最近 AI 退出 NONE",
+  "scores": "hide_main_bed:CANDIDATE(-28.03/31.22)｜hide_second_bed:CANDIDATE(-29.05/32.24)｜hide_main_wardrobe:CANDIDATE(-29.25/32.44)｜hide_closet:CANDIDATE(-23.86/27.05)｜hide_study_bookshelf:CANDIDATE(-15.12/18.31)｜hide_storage_shelf:CANDIDATE(-17.61/11.52)｜hide_living_carton:CANDIDATE(-3.27/6.46)｜hide_storage_carton:CANDIDATE(-9.31/8.46)",
+  "dpMode": "HIDE",
+  "dpThreat": null,
+  "dpEscapeTarget": null,
+  "dpNavigation": "DOOR_STATE_CHANGED"
+ },
+ "chaseSamples": 4,
+ "formatVersion": "1.6",
+ "hideEvents": [
+  "29167ms HIDE_ENTER｜hide_living_carton:AI｜hide_living_carton",
+  "29167ms HIDE_AI_REQUEST｜ARRIVED:hide_living_carton｜hide_living_carton",
+  "29167ms HIDE_AI_ENTERED｜hide_living_carton｜hide_living_carton",
+  "31753ms HIDE_EXIT｜AI_EXIT｜hide_living_carton",
+  "31753ms HIDE_AI_EXIT_REQUEST｜威胁解除且仍有可达米堆｜hide_living_carton",
+  "31753ms HIDE_AI_EXITED｜威胁解除且仍有可达米堆｜hide_living_carton"
+ ],
+ "consoleEntries": 4,
+ "exceptions": []
+}

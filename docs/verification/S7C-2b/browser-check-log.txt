@@ -1,0 +1,30 @@
+已选择阵营 HUMAN（此时 DeepSeek AI 运行）
+DEV 字段 hide/hide-ai-phase：存在
+DEV 字段 hide/hide-ai-reason：存在
+DEV 字段 hide/hide-ai-entry：存在
+DEV 字段 hide/hide-ai-loopguard：存在
+对局阶段：对局中 / 00:00
+DEV-B 覆盖 movement.playerSpeed = 60 → 已应用
+DEV-B 覆盖 movement.humanSpeedMultiplier = 6 → 已应用
+DEV-B 覆盖 capture.radius = 0.2 → 已应用
+按键基向量：W → (-0.707, -0.707)，D → (0.664, -0.747)，实测速度约 1.03 世界单位/秒
+追逐前：{"dp":{"x":5,"z":5.88},"human":{"x":10.22,"z":-5.5},"hideState":"普通","hideCapture":"不累计","phase":"NONE（MOVE_TO_RICE）｜无｜无｜路线 —","reason":"NONE｜阻止 NONE","candidate":"0 个合法站位｜NONE","loopguard":"NONE｜近期 无｜连续 0 / 2｜冷却明细 无","exitGate":"0.00 秒｜NOT_CONCEALED｜最近退出 NONE","entry":"0 次成功 / 0 次被拒｜0 次退出｜0 次中止｜点被封锁 0 次｜令牌 已签发未使用","entryDetail":"NONE｜无｜游戏层计数 0 / 0 / 0｜最近 AI 退出 NONE","scores":"还没有评估","dpMode":"MOVE_TO_RICE","dpThreat":null,"dpEscapeTarget":null,"dpNavigation":"DOOR_STATE_CHANGED"}
+追逐 0s：距离 11.64｜AI NONE（MOVE_TO_RICE）｜无｜无｜路线 —｜DP 威胁 null
+追逐结束（接近过）：最终距离 7.59
+贴近后：{"dp":{"x":7.07,"z":3.38},"human":{"x":12.03,"z":-2.5},"hideState":"藏身中（hide_living_carton）","hideCapture":"不累计","phase":"CONCEALED（HIDE）｜hide_living_carton｜(7.0, 3.6)｜路线 6.46","reason":"CONCEALED:MIN_CONCEAL_MS｜阻止 NONE","candidate":"8 个合法站位｜hide_living_carton｜路线 6.46｜评分 -3.27（候选 8）","loopguard":"无｜近期 hide_living_carton｜连续 1 / 2｜冷却明细 无","exitGate":"0.71 秒｜MIN_CONCEAL_MS｜最近退出 NONE","entry":"1 次成功 / 0 次被拒｜0 次退出｜0 次中止｜点被封锁 0 次｜令牌 已签发未使用","entryDetail":"ENTERED｜权威层确认位置合法，允许进入藏身｜真实位置通过完整合法性复核（7.07,3.38）｜游戏层计数 1 / 0 / 0｜最近 AI 退出 NONE","scores":"hide_main_bed:CANDIDATE(-28.03/31.22)｜hide_second_bed:CANDIDATE(-29.05/32.24)｜hide_main_wardrobe:CANDIDATE(-29.25/32.44)｜hide_closet:CANDIDATE(-23.86/27.05)｜hide_study_bookshelf:CANDIDATE(-15.12/18.31)｜hide_storage_shelf:CANDIDATE(-17.61/11.52)｜hide_living_carton:CANDIDATE(-3.27/6.46)｜hide_storage_carton:CANDIDATE(-9.31/8.46)","dpMode":"HIDE","dpThreat":null,"dpEscapeTarget":null,"dpNavigation":"DOOR_STATE_CHANGED"}
+>>> 观察到 AI 自主藏身：{"dp":{"x":7.07,"z":3.38},"human":{"x":12.03,"z":-2.5},"hideState":"藏身中（hide_living_carton）","hideCapture":"不累计","phase":"CONCEALED（HIDE）｜hide_living_carton｜(7.0, 3.6)｜路线 6.46","reason":"ENTER_CONFIRMED｜阻止 NONE","candidate":"8 个合法站位｜hide_living_carton｜路线 6.46｜评分 -3.27（候选 8）","loopguard":"无｜近期 hide_living_carton｜连续 1 / 2｜冷却明细 无","exitGate":"0.27 秒｜NOT_CONCEALED｜最近退出 NONE","entry":"1 次成功 / 0 次被拒｜0 次退出｜0 次中止｜点被封锁 0 次｜令牌 已签发未使用","entryDetail":"ENTERED｜权威层确认位置合法，允许进入藏身｜真实位置通过完整合法性复核（7.07,3.38）｜游戏层计数 1 / 0 / 0｜最近 AI 退出 NONE","scores":"hide_main_bed:CANDIDATE(-28.03/31.22)｜hide_second_bed:CANDIDATE(-29.05/32.24)｜hide_main_wardrobe:CANDIDATE(-29.25/32.44)｜hide_closet:CANDIDATE(-23.86/27.05)｜hide_study_bookshelf:CANDIDATE(-15.12/18.31)｜hide_storage_shelf:CANDIDATE(-17.61/11.52)｜hide_living_carton:CANDIDATE(-3.27/6.46)｜hide_storage_carton:CANDIDATE(-9.31/8.46)","dpMode":"HIDE","dpThreat":null,"dpEscapeTarget":null,"dpNavigation":"DOOR_STATE_CHANGED"}
+拉开距离：走向 (26.91, -20.14)
+拉开后：{"dp":{"x":-5.53,"z":7.84},"human":{"x":14.34,"z":-11.5},"hideState":"普通","hideCapture":"不累计","phase":"NONE（EAT）｜无｜无｜路线 —","reason":"威胁解除且仍有可达米堆｜阻止 THREAT_NOT_HIGH","candidate":"8 个合法站位｜hide_living_carton｜路线 6.46｜评分 -3.27（候选 8）","loopguard":"hide_living_carton:8000(REENTER_COOLDOWN)｜近期 hide_living_carton｜连续 1 / 2｜冷却明细 hide_living_carton:8.0s","exitGate":"0.00 秒｜THREAT_CLEARED｜最近退出 威胁解除且仍有可达米堆","entry":"1 次成功 / 0 次被拒｜1 次退出｜0 次中止｜点被封锁 0 次｜令牌 已签发未使用","entryDetail":"ENTERED｜权威层确认位置合法，允许进入藏身｜真实位置通过完整合法性复核（7.07,3.38）｜游戏层计数 1 / 0 / 1｜最近 AI 退出 AI_EXIT","scores":"hide_main_bed:CANDIDATE(-28.03/31.22)｜hide_second_bed:CANDIDATE(-29.05/32.24)｜hide_main_wardrobe:CANDIDATE(-29.25/32.44)｜hide_closet:CANDIDATE(-23.86/27.05)｜hide_study_bookshelf:CANDIDATE(-15.12/18.31)｜hide_storage_shelf:CANDIDATE(-17.61/11.52)｜hide_living_carton:CANDIDATE(-3.27/6.46)｜hide_storage_carton:CANDIDATE(-9.31/8.46)","dpMode":"EAT","dpThreat":null,"dpEscapeTarget":null,"dpNavigation":"DOOR_STATE_CHANGED"}
+AI JSON：formatVersion 1.6｜hideEvents 6 条
+  29167ms HIDE_ENTER｜hide_living_carton:AI｜hide_living_carton
+  29167ms HIDE_AI_REQUEST｜ARRIVED:hide_living_carton｜hide_living_carton
+  29167ms HIDE_AI_ENTERED｜hide_living_carton｜hide_living_carton
+  31753ms HIDE_EXIT｜AI_EXIT｜hide_living_carton
+  31753ms HIDE_AI_EXIT_REQUEST｜威胁解除且仍有可达米堆｜hide_living_carton
+  31753ms HIDE_AI_EXITED｜威胁解除且仍有可达米堆｜hide_living_carton
+  状态迁移 24837ms HIDE
+控制台条目 4 条（异常 0 条）
+  [debug] [vite] connecting...
+  [debug] [vite] connected.
+  [warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+  [log:error] Failed to load resource: the server responded with a status of 404 (Not Found)

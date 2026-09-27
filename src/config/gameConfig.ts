@@ -111,6 +111,18 @@ export const GAME_CONFIG = {
     doorEscapeMinHumanDistance: 1.5, // EVADE 关门时与当前可见 Human 的最低距离：世界单位；大于实际抓捕圈。
     doorEscapeCrossingWindowMs: 1_800, // 实际穿过门后允许考虑关门的时间：毫秒；不返回远门。
     doorEscapeCooldownMs: 5_000, // 同一扇门再次考虑关门的冷却：毫秒；避免 Human 开门后原地振荡。
+    // S7C-2b DeepSeek 娘 AI 自主藏身（用户 2026-09-27 批准值，不得擅自调整）。
+    // 退出安全间距刻意**复用** escapeMinSeparation（3）与逃跑语义同源，不新增同义参数；
+    // 近期藏身点惩罚也不复用逃跑的 escapeRecentVisitPenalty，而是独立列出（用户批准值）。
+    hideThreatDistance: 3.5, // 已知威胁点距离小于此值时才考虑藏身：世界单位。
+    hideMinConcealMs: 2_500, // 最短藏身时长，防「一进就出」：毫秒。
+    hideRecheckMs: 500, // 藏身中重新评估退出条件的间隔：毫秒；避免逐帧 A*。
+    hideReenterCooldownMs: 8_000, // 同一点退出后再次进入的冷却：毫秒。
+    hideCandidateFailCooldownMs: 6_000, // 走位失败 / 进入被拒后该点的冷却：毫秒。
+    hideRecentSpotCount: 3, // 近期藏身点记忆条数：个（防两点之间往返）。
+    hideRecentSpotPenalty: 5, // 每个近期藏身点扣减的候选评分：无量纲，随时间衰减。
+    hideMaxConsecutive: 2, // 连续藏身次数上限：次；有一次真实米进度增长后重置。
+    hideMaxConcealMs: 0, // 可选最大藏身时长：毫秒；0 = 不限制（兜底是可藏的前提与连续上限）。
   },
   characterAnimation: {
     fallPoseMs: 220, // 毫秒；摔倒占位姿态显示时间，不改变眩晕时长。

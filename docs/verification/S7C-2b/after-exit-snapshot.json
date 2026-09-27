@@ -1,0 +1,24 @@
+{
+ "dp": {
+  "x": -5.53,
+  "z": 7.84
+ },
+ "human": {
+  "x": 14.34,
+  "z": -11.5
+ },
+ "hideState": "普通",
+ "hideCapture": "不累计",
+ "phase": "NONE（EAT）｜无｜无｜路线 —",
+ "reason": "威胁解除且仍有可达米堆｜阻止 THREAT_NOT_HIGH",
+ "candidate": "8 个合法站位｜hide_living_carton｜路线 6.46｜评分 -3.27（候选 8）",
+ "loopguard": "hide_living_carton:8000(REENTER_COOLDOWN)｜近期 hide_living_carton｜连续 1 / 2｜冷却明细 hide_living_carton:8.0s",
+ "exitGate": "0.00 秒｜THREAT_CLEARED｜最近退出 威胁解除且仍有可达米堆",
+ "entry": "1 次成功 / 0 次被拒｜1 次退出｜0 次中止｜点被封锁 0 次｜令牌 已签发未使用",
+ "entryDetail": "ENTERED｜权威层确认位置合法，允许进入藏身｜真实位置通过完整合法性复核（7.07,3.38）｜游戏层计数 1 / 0 / 1｜最近 AI 退出 AI_EXIT",
+ "scores": "hide_main_bed:CANDIDATE(-28.03/31.22)｜hide_second_bed:CANDIDATE(-29.05/32.24)｜hide_main_wardrobe:CANDIDATE(-29.25/32.44)｜hide_closet:CANDIDATE(-23.86/27.05)｜hide_study_bookshelf:CANDIDATE(-15.12/18.31)｜hide_storage_shelf:CANDIDATE(-17.61/11.52)｜hide_living_carton:CANDIDATE(-3.27/6.46)｜hide_storage_carton:CANDIDATE(-9.31/8.46)",
+ "dpMode": "EAT",
+ "dpThreat": null,
+ "dpEscapeTarget": null,
+ "dpNavigation": "DOOR_STATE_CHANGED"
+}

@@ -1163,3 +1163,54 @@
 - 已知限制与未验证：① 受限沙箱的根因未定；② 完全访问模式下的自动 commit / push 未测试；③ `.git/config.lock` 的拒绝来源未定（ACL / 沙箱规则 / 其他）；④ 本轮未复测任何权限命令，也没有验证 `http.sslBackend` 的持久化方案；⑤ 本轮未做浏览器验证（无游戏代码改动）。
 - 下一步：S7C-2b 的技术设计与任务拆分（本轮已启动，见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 与交接文档）；**不实现功能代码、不改 `GAME_CONFIG`、不改已验收的 S7C-2 机制、不提前实现 S7C-3**。归档相关结论保持「暂定工作流」措辞，等用户另行授权。
 - Git 检查点：本轮**未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash；未读取、暂存或修改 `.trae/`、`.dsh-meow/`。
+
+## 2026-09-27 · S7C-2b：DeepSeek 娘 AI 自主藏身、逃跑与人类威胁适应（已实现，待人工验收）
+
+- 阶段与日期：S7C-2b（2026-09-27）。**用户本轮明确授权按一个完整阶段开发**（「不要再拆成需要我逐个批准的小阶段」），并直接给出建议参数与内部实现顺序；同时规定**本轮先不做 Git 提交 / 推送 / Tag**，等人工验收通过后再单独申请归档授权。因此本阶段当前状态＝**已实现、待用户浏览器人工验收、未提交**，**不是 Gate = PASS**。
+- 完成内容（按用户给的 H1→H5 内部顺序，未逐切片请示）：
+  1. **公开候选层** `src/systems/DeepSeekHideCandidates.ts`（新）：`createDeepSeekHideMapSnapshot()` 是 AI 可见的公开藏身点快照的**唯一构造点**（照 `createHumanAiMapSnapshot()` 先例，只含公开地图数据 + 地图代次）；`selectHideSpot()` 用 `navigation.freeCellsWithin()` 枚举区域内真实空闲导航格心 → 逐条 `checkHideRegionPosition()` 复核（区域成员 + 真实可站立 + 家具可接近表面无遮挡 + 导航格吸附）→ 取离唯一锚点最近的合法格心作 AI 站位 → A* 可达性 → 公开评分。**AI 只在真实格心上落脚**，因此 A* 终点就是可行走点，不需要 S7C-2 那种容差走位。
+  2. **走位**：控制器顶层新增 `HIDE` 状态 + `DeepSeekHidePhase = NONE / TRAVEL / CONCEALED / EXIT`（照 `HumanCheckHidePhase` 同构，不拆新顶层状态）；复用 `followPath`，卡路处理有界（`maxStuckRepathsPerTarget` 内换路，超限放弃该点回 `EVADE`）。
+  3. **权威进入** `src/systems/DeepSeekHideResolution.ts`（新）：`resolveDeepSeekAiHideEntry()` 用**本帧真实位置**复核「计划仍属当前地图 → 确实走到规划站位 → 通过完整几何合法性」，三条全过才允许进入；`HideSystem.enterAsAI()` 再复核状态机条件与**一次性令牌**（`issueAiEntryToken()`；令牌一被消费立刻作废，重放得到 `TOKEN_REPLAY`）。玩家 `enter()` 语义一字未改（AI 走它仍得到 `NOT_PLAYER_CONTROLLED`）。进入后与玩家 E 同一套后果：中断进食、抓捕进度归零、位移/冲刺/进食/锁门封锁、`VisionSystem.setConcealed`、抓捕资格 false。
+  4. **退出**：`hideMinConcealMs` + 威胁解除（不可见且新鲜威胁已在安全间距外）+ 「仍有可达且不穿过威胁抓捕半径的米堆路线」+ `hideRecheckMs` 重查；出口**物理**安全由游戏层用 `humanBlocksHideExit()` 裁决（玩家 E 与 AI 退出**共用同一条公式**），被挡住时回执 `HUMAN_BLOCKING` 并退回藏身，绝不卡在 `EXIT`；退出后回到既有 `RECOVER`。
+  5. **循环抑制 / DEV / 日志**：同点再进冷却、失败记忆、近期藏身点惩罚、`hideMaxConsecutive`（真实米进度增长才重置）、「无可达米堆不进入藏身」、地图代次变化即作废旧计划、同一中止原因只记一条事件；DEV `Hide` 分类新增 8 行 AI 字段（相位 / 目标点 / 公开理由 / 逐点公开评分 / 循环抑制 / 退出闸门 / 权威计数 / 最近权威进入明细）；`AILogCollector` `formatVersion` 1.5 → **1.6**，`hideEvents` 时间线新增 `HIDE_AI_REQUEST / ENTERED / REJECTED / EXIT_REQUEST / EXITED / ABORT / SPOT_BLOCKED`。
+- 复用与新增参数：直接复用 `HideSystem`、`checkHideRegionPosition` + `interactionRegion`、`NavigationSystem`（只新增只读 `freeCellsWithin()`）、`CollisionWorld`、`PerceptionSystem`、`GameStateSystem`、`AILogCollector`、DEV 面板；`src/config/gameConfig.ts` 只新增用户批准的 `deepseekAI.hideThreatDistance`(3.5) / `hideMinConcealMs`(2500) / `hideRecheckMs`(500) / `hideReenterCooldownMs`(8000) / `hideCandidateFailCooldownMs`(6000) / `hideRecentSpotCount`(3) / `hideRecentSpotPenalty`(5) / `hideMaxConsecutive`(2) / `hideMaxConcealMs`(0)，退出安全间距复用 `escapeMinSeparation`(3)、威胁无关的路线检查复用有效抓捕半径，**没有调整任何既有数值**，也没有动 `interactionRegion`(2.0/1.6·55°/1.2)、`humanSearch`(1.5/120°/12s)、`hideCheckFailureCooldownMs`(6000)、`hideCheckMaxPerRound`(1)、`lastSeenMs`(8000)、`traceLifetimeMs`(15000)。
+- **两处实现澄清（已在设计文档 §4.10.14 写明，未新增参数）**：① 藏身候选评分改成「到达时间」货币（−路线长度 + 遮挡奖励 − 路线威胁风险 − 朝威胁跑惩罚 − 近期惩罚），因为「离威胁更远」是逃跑房间的货币，用它排序会把 AI 送到 15 世界单位外（实测首选 `hide_storage_carton` 路线 14.89，改后首选 0.40 处的 `hide_living_carton`）；② 「值得藏身」只用既有那一条判据——藏身路线必须短于当前逃跑路线（没有可行逃跑路线时直接允许）。实现期间曾临时加过「藏身路线不得超过 `hideThreatDistance`」的绝对门槛，实测在真实公寓里会把「被追进卧室后钻进床底」这类正常情形一并否掉（候选路线 13.5–35.3 世界单位），**该门槛已移除**。
+- 新增文件：`src/systems/DeepSeekHideCandidates.ts`、`src/systems/DeepSeekHideResolution.ts`、`tests/deepseek-ai-walk.mjs`、`tests/deepseek-hide-candidates.test.mjs`、`tests/deepseek-hide-integration.test.mjs`、`tests/deepseek-hide-lifecycle.test.mjs`、`tests/deepseek-hide-loop-guard.test.mjs`、`docs/verification/S7C-2b/`（复核脚本 + 日志 + 快照 + 4 张截图 + 导出 AI JSON + README）。修改文件：`src/systems/DeepSeekAIController.ts`、`src/systems/HideSystem.ts`、`src/systems/NavigationSystem.ts`、`src/systems/AILogCollector.ts`、`src/three/ThreeGame.ts`、`src/config/gameConfig.ts`、`docs/GAME_BALANCE_CONFIG.md`、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`、`docs/DEEPSEEK_HANDOFF.md`、`tests/hide-integration.test.mjs`、`tests/ai-log-collector.test.mjs`、本条日志。删除文件：无。依赖变化：无。`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未暂存、未修改。
+- 自动化测试与人工验收：
+
+| 检查项目 | 本轮实际结果 |
+|---|---|
+| `npm test` | **670 / 670 通过**，退出码 0（基线 642 + 新增 28 项：候选层 9、集成 4、生命周期 8、循环抑制 7） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0；JS **979.79 kB**（gzip 262.80 kB）、CSS 13.68 kB；仍有 Vite >500 kB 非阻断提示（基线 952.15 kB / 255.27 kB） |
+| `git diff --check` | 通过，退出码 0（仅既有换行符提示） |
+| 变异验证（4 次） | ① 把「区域内的合法格心」改成直接用锚点 → `deepseek-hide-candidates` 的「8 个藏身点都有真实导航格心候选」用例失败；② 取消同点再进冷却 → `deepseek-hide-loop-guard` 的「下一次藏身必须换一个点」失败；③ 把占用真值字段塞进 `DeepSeekAIInput` → `hide-integration` 的源码级反作弊守卫失败；④ 令 `humanBlocksHideExit()` 恒返回 false → `deepseek-hide-integration` 与 `deepseek-hide-lifecycle` 的出口用例共 2 项失败。四次均确认失败后**原样复原**，复原后 670/670 再次全绿。 |
+| 浏览器真实复核 | `docs/verification/S7C-2b/`（本机 Chrome headless + CDP，真实按键 + 真实碰撞追逐）：追逐 24.8 秒时 AI 自主进入 `HIDE` 并藏入 `hide_living_carton`（权威层回执 `ENTERED`，真实位置 `(7.07, 3.38)` 通过完整合法性复核）；藏身期间 `hide-state` = 藏身中、`hide-capture` = 不累计、HUD 显示「AI 已自主藏身：hide_living_carton（Human 搜查仍可把它搜出来）」；拉开距离后 **2.586 秒**（≥ `hideMinConcealMs` 2500）自主退出并回到 `EAT`，退出闸门读数 `THREAT_CLEARED`；`hide-ai-loopguard` 显示 `hide_living_carton:8000(REENTER_COOLDOWN)`；AI JSON `formatVersion` **1.6**，`hideEvents` 含 `HIDE_AI_REQUEST / HIDE_AI_ENTERED / HIDE_AI_EXIT_REQUEST / HIDE_AI_EXITED`；控制台**无异常**（唯一 404 是浏览器自动请求 `/favicon.ico`，与本轮无关） |
+| 未在浏览器覆盖的场景（BLOCKED，不得记 PASS） | Human AI（而非玩家）把藏身中的 DP 搜出来的完整链路、反复逼近拉开多次的抖动表现、暂停 / 重开 / 返回阵营页的状态清理、地图热应用后丢弃失效藏身点：这四项由 `tests/human-ai-check-hide.test.mjs`、`tests/deepseek-hide-loop-guard.test.mjs`、`tests/deepseek-hide-lifecycle.test.mjs`、`tests/hide-integration.test.mjs` 与既有 `dev-freeze` 用例覆盖，**浏览器侧留给本轮人工验收** |
+
+- 已知限制与下一步：① 本阶段**尚未人工验收、未提交**，不得在任何文档里写成 Gate = PASS；② 上述四项浏览器未覆盖场景需人工验收；③ DEV-B 的 38 项运行时白名单**没有**加入 `hide*`（避免扩大已验收 DEV-B 的范围，本轮未授权）；④ 藏身音效与「被发现后反制」按设计刻意不做；⑤ 长时间贴着藏身家具时「看不见 Human 就不退出」是设计选择（退出条件 2），Human 直接搜查家具即可结束对局。
+- 下一步建议：请用户按集中验收清单实机复验（追近时 DP 主动跑向家具、进入后可视体隐藏且抓捕不累计、Human 搜查仍能搜出、拉开距离后自主出来、反复逼近不抖动、暂停 / 重开 / 地图热应用状态干净、不影响 S7C-2 已验收功能）；通过并另行授权后再走 commit / push。
+- 环境记录（本轮实测，供后续轮次参考）：当前 DSH 沙箱**禁止子进程捕获式 spawn**，`npm test`（Node 测试运行器逐文件 spawn）与 `npm run build`（esbuild service spawn）都会 `EPERM`；本轮分别改用 `node --test --test-isolation=none` 与一次客户端提权重试完成**同一命令**的实跑；`npm run dev`（Vite）同样需要提权才能起，已留在 `http://127.0.0.1:5173/` 供人工验收复用。另：在项目根目录新建/改写文件会使 Vite 文件监听抛 `EBUSY` 并让 dev server 退出（本轮踩到一次），复核脚本的临时文件因此放在 `%TEMP%`。
+- Git 检查点：本轮**未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash；未读取、暂存或修改 `.trae/`、`.dsh-meow/`、`.codex/`。
+
+---
+
+## 2026-09-27 · S7C-2b 正式归档（用户集中浏览器人工验收 8/8 PASS）
+
+- 阶段与日期：S7C-2b（2026-09-27）。任务性质＝**已完成阶段的最终归档，不是新一轮开发**。用户本轮明确授权：完成最终文档更新、完整自动化回归、精确暂存、创建一个本地提交、正常推送 `origin/main`，并核实 GitHub 实时远端；门禁全部通过即一次性执行完毕，不逐步重新申请业务授权。**不进入 S7C-3；不新增玩法；不调整已验收参数。**
+- 用户正式确认的人工验收（**用户实机结果，不得改写为 DPH 自己完成的浏览器测试**）：**8/8 PASS** —— ① DeepSeek NPC 自主寻找家具；② 隐藏与普通抓捕阻断；③ Human 玩家搜出 NPC；④ NPC 自主退出并恢复行动；⑤ 反复逼近与拉开无原地进出抖动；⑥ 暂停 / 重开 / 返回菜单的状态清理；⑦ 地图热应用后旧计划正确作废；⑧ 玩家白色轮廓、Human Q、Human AI 搜查、玩家 E、门锁与 DEV 等旧功能回归。DPH 此前未在浏览器覆盖的三项（Human AI 搜出藏身者全链路、反复逼近抖动、暂停 / 重开 / 地图热应用清理）继续按自动化覆盖如实记录，**未虚报为已实测**。
+- 归档前核对（本轮实测，只读）：分支 `main`，暂存区为空；12 个已跟踪文件被修改 + 7 个新文件 + 未跟踪的 `docs/verification/S7C-2b/`，全部属于 S7C-2b；`git diff src/config/gameConfig.ts` **只新增 9 行**，与用户批准值逐项一致（`hideThreatDistance` 3.5 / `hideMinConcealMs` 2_500 / `hideRecheckMs` 500 / `hideReenterCooldownMs` 8_000 / `hideCandidateFailCooldownMs` 6_000 / `hideRecentSpotCount` 3 / `hideRecentSpotPenalty` 5 / `hideMaxConsecutive` 2 / `hideMaxConcealMs` 0）；`src/systems/HumanHideSearchResolution.ts`、`src/systems/HumanAIController.ts`、`src/systems/HumanSearchSkill.ts`、`src/systems/HumanSearchTuning.ts`、`src/three/HideSearchView.ts` **零改动**（S7C-2 已验收机制未被修改）；`AILogCollector` 的 `formatVersion` 为 **1.6**；`.git/{MERGE_HEAD,REBASE_HEAD,CHERRY_PICK_HEAD,rebase-merge,rebase-apply}` 全部不存在；对全部改动与新增源码扫描 `MUTATION|XXX|FIXME|TEMP_|console.log(` **无命中**，无测试期残留。
+- 文档更新（本轮）：`docs/DEEPSEEK_HANDOFF.md`（S7C-2b 状态改为「8/8 PASS + 已归档」、运行架构新增第 14 条与受保护清单新增 S7C-2b 条目、阶段进度表新增 S7C-2b 行并改写「下一项」、§16 重写、Codex 与 DSH 的权限结论显式分离）、`docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§4.10 标题与状态、§4.10.9 参数已写入、§4.10.14 实现与验收结果、§4.10.12 指向实际执行的 8 项清单、§6 第 1 行结案、§7 路线状态、§8.4 末尾补记）、`docs/GAME_BALANCE_CONFIG.md`（S7C-2b 段新增阶段状态与「九个数值未调整」的核对方式）、本条日志。**`AGENT_LOG.md` 只追加，未回改任何历史条目。**
+- 验证材料（`docs/verification/S7C-2b/`）：纳入 `README.md`、`browser-check.mjs`、`browser-check-summary.json`、`browser-check-log.txt`、`chase-timeline.json`、`concealed-snapshot.json`、`after-exit-snapshot.json` 与 4 张关键截图（进入前 / 追逐后 / 藏身中 / 退出后）；**未纳入** 234 kB 的 `s7c2b-ai-json.json` 与临时进度文件 `browser-check-progress.txt`，二者**原地保留、未删除**。`docs/verification/S7C-2-r2/`、`r3/`、`r4/` 全部未改动。
+- 自动化门禁（归档轮实测）：
+
+| 检查项目 | 本轮实际结果 |
+|---|---|
+| `npm test` | **670 / 670 通过**，退出码 0（fail 0） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0；`dist/assets/index-DsDQo4NM.js` 979,785 B（979.79 kB）、`index-C42TrByy.css` 13,677 B（13.68 kB）；本地 zlib level 9 重新压缩实测 gzip **261.75 kB**（上一轮 Vite 自报 262.80 kB，差异来自压缩实现与等级）；仍有 Vite >500 kB 非阻断提示 |
+| `git diff --check` | 通过，退出码 0（仅既有 LF→CRLF 提示） |
+
+- Git 检查点：本轮以用户 2026-09-27 的明确授权**创建一个归档提交并正常推送**，提交标题 `feat: add autonomous deepseek npc hiding`；本地 HEAD 与远端 `origin/main` 的实际 SHA 一律以 `git log -1` / `git ls-remote origin refs/heads/main` 现场查询，**不在本文写死会自我过期的 SHA**。未创建 Tag（用户未要求）、未 force push、未 reset / clean / stash、未改写历史。
+- 已知限制与下一项任务：① S7C-2b 的九个参数与「值得藏身」判据已冻结，任何改动需用户单独批准；② **S7C-3（出生点与门状态随机化）未授权、未开始**，开工前须逐项确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §5 / §6；③ DEV-A 的 JSON 导入器与进入 / 退出锚点拆分仍未决定；④ DEV-B 的 38 项运行时白名单未加入 `hide*`；⑤ 藏身音效与「被发现后反制」按设计刻意不做；⑥ 长期待办：S7B-2 偶发原地停留、正式 GLB 待机（S10）、Human AI 自动解锁 8,750 ms（S16）、矮窗口下的编辑器布局。
+- 环境记录（本轮实测）：当前沙箱在普通模式下禁止子进程创建，`npm test` 与 `npm run build` 需要一次命令级提权重试（本会话已多次记录同一限制）；本轮归档的**全部门禁只用 1 次提权**完成。人工验收用的 dev server（我起的后台作业）已在归档开始时停止，避免文件监听在批量改文档时抛 `EBUSY`。`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未暂存、未修改。

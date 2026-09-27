@@ -39,6 +39,11 @@ import { resolveHideInteractionTarget, resolvePlayerQPlan, HIDE_TARGET_CODE_TEXT
   type HideTargetCandidate, type HideTargetPointing, type HideTargetResolution,
   type PlayerQPlanReason } from '../systems/HideTargetResolution';
 import { selectVisibleTraces } from '../systems/RiceTraceClues';
+import { createDeepSeekHideMapSnapshot,
+  type DeepSeekHideMapSnapshot, type DeepSeekHideWorld }
+  from '../systems/DeepSeekHideCandidates';
+import { resolveDeepSeekAiHideEntry, humanBlocksHideExit,
+  DEEPSEEK_HIDE_ENTRY_CODE_TEXT } from '../systems/DeepSeekHideResolution';
 import { HideSearchView } from './HideSearchView';
 import { type HideRegionWorld } from './map/HideInteractionRegion';
 import { precheckMapApplication } from './map/MapApplicationPrecheck';
@@ -137,6 +142,19 @@ export class ThreeGame {
   private mapFurniture: readonly Rect[] = FURNITURE;
   private hideSpots: readonly HideSpot[] = HIDE_SPOTS;
   private appliedMapSignature = '';
+  // S7C-2b：交给 DeepSeek AI 的**公开**藏身点快照 + 地图代次。快照只在
+  // `rebuildApartment` 与构造时各建一次，AI 一见代次变化就作废手头的藏身计划。
+  private deepseekHideMap: DeepSeekHideMapSnapshot | null = null;
+  private deepseekHideRevision = 0;
+  // S7C-2b：每帧签发一次的 AI 进入令牌。AI 必须在同一帧把它回传才可能进入藏身；
+  // 令牌由 `HideSystem` 消费后立刻作废，因此重放必然被拒。
+  private deepseekHideTokenCounter = 0;
+  private deepseekHideEntryCode = 'NONE';
+  private deepseekHideEntryDetail = '无';
+  private deepseekHideEnterCount = 0;
+  private deepseekHideRejectCount = 0;
+  private deepseekHideExitCount = 0;
+  private deepseekHideLastExitReason = 'NONE';
   private hideCandidateCode = 'NONE';
   private hideCandidateSpotId: string | null = null;
   private hideNotice = '';
@@ -220,6 +238,8 @@ export class ThreeGame {
     this.humanAI = new HumanAIController(this.navigation, ROOMS, DOOR_NODES, Math.random,
       this.humanAiMapSnapshot());
     this.deepseekAI = new DeepSeekAIController(this.navigation, DOOR_NODES, ROOMS);
+    // S7C-2b：初始地图也要有公开藏身点快照，否则 AI 在开局就没有可评估的候选。
+    this.rebuildDeepseekHideMap(false);
     // DEV-B: both AI controllers read the same effective values the panel edits.
     this.humanAI.setRuntimeTuning(this.runtime);
     this.deepseekAI.setRuntimeTuning(this.runtime);
@@ -619,8 +639,30 @@ export class ThreeGame {
     // S7C-2：AI 的公开地图数据、站位可行性、失败冷却与线索记忆都绑在旧几何上，
     // 必须跟着新地图一起更新，绝不能继续前往被删除或移动过的旧家具位置。
     this.humanAI.rebindMap(this.humanAiMapSnapshot(), changed);
+    // S7C-2b：DeepSeek AI 的公开藏身点快照同样绑在旧几何上；代次一变就作废
+    // 走位中的藏身计划，绝不继续前往被删除或移动过的旧家具位置。
+    this.rebuildDeepseekHideMap(changed);
     this.syncAllDoors();
     return this.apartment;
+  }
+
+  /** 唯一构造点：把当前已应用地图整理成 DeepSeek AI 可见的公开藏身点快照。 */
+  private rebuildDeepseekHideMap(changed: boolean): void {
+    if (changed) this.deepseekHideRevision++;
+    this.deepseekHideMap = createDeepSeekHideMapSnapshot({
+      hideSpots: this.hideSpots, furniture: this.mapFurniture,
+      revision: this.deepseekHideRevision });
+    this.deepseekAI.rebindMap(this.deepseekHideMap, changed);
+  }
+
+  /**
+   * S7C-2b：交给 DeepSeek AI 的真实几何接缝。全部是公开或自身信息（碰撞可站立、
+   * 导航、墙体与非 OPEN 门叶遮挡），门态每帧现取，因此不会读到过期门态。
+   */
+  private deepseekHideWorld(): DeepSeekHideWorld {
+    return { collision: this.collision, navigation: this.navigation,
+      visionStatus: (from, to, maxRange) => this.perceptionGeometry
+        .inspectVision(from, to, maxRange).status };
   }
 
   private mapSignature(map: CommittedMap): string {
@@ -674,8 +716,10 @@ export class ThreeGame {
     this.deepseekLockCooldown.advance(deltaMs);
     this.hideSearchView.advance(deltaMs);
     // 藏身事件无论 DeepSeek AI 是否在跑都要进日志时间线；冷却与特效都只随正式
-    // 玩法时间推进（上面的 advance 调用）。
-    this.aiLogCollector.recordHideEvents(this.hide.drainEvents());
+    // 玩法时间推进（上面的 advance 调用）。S7C-2b 起 AI 自主藏身的请求 / 进入 /
+    // 拒绝 / 退出 / 中止事件也追加到同一条时间线（不新建第二套数组）。
+    this.aiLogCollector.recordHideEvents([
+      ...this.hide.drainEvents(), ...this.deepseekAI.drainHideEvents()]);
     // S7C-2：Human AI 的循迹 / 搜查事件同样进 AI JSON，且与 DeepSeek AI 是否在跑无关。
     this.aiLogCollector.recordHumanSearchEvents(this.humanAI.drainHumanSearchEvents());
     if (this.hideNoticeRemainingMs > 0) {
@@ -699,8 +743,9 @@ export class ThreeGame {
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
     const doorInteraction = this.handleDoorInteractions();
     // 藏身状态可能在本帧刚刚切换（E 进入/退出、Q 搜查命中），因此门交互之后立刻
-    // 同步感知与表现，再让移动、进食与抓捕读取同一个状态。
-    const concealedDeepseek = this.hide.isConcealed('DEEPSEEK');
+    // 同步感知与表现，再让移动、进食与抓捕读取同一个状态。S7C-2b 起 AI 自主进入 /
+    // 退出藏身也会在同一帧刷新这个局部变量（见下方 hide 命令处理）。
+    let concealedDeepseek = this.hide.isConcealed('DEEPSEEK');
     this.vision.setConcealed('DEEPSEEK', concealedDeepseek);
     this.player.visible = !concealedDeepseek;
     if (this.control.isControlling('HUMAN') &&
@@ -721,6 +766,11 @@ export class ThreeGame {
       const heardHumanDanger = this.sound.heardBy(this.player.position, 'DEEPSEEK',
         this.camera, this.perceptionGeometry,
         event => isHumanPursuitSound(event.type));
+      // S7C-2b：本帧的一次性 AI 进入令牌。只有本帧签发的值才可能通过
+      // `HideSystem.enterAsAI()`，因此 AI 无法用一个旧令牌自行开启藏身。
+      this.deepseekHideTokenCounter++;
+      const hideToken = this.deepseekHideTokenCounter;
+      this.hide.issueAiEntryToken(hideToken);
       deepseekCommand = this.deepseekAI.update({
         deltaMs,
         deepseek: this.player.position,
@@ -735,6 +785,10 @@ export class ThreeGame {
         riceProgressRatio: ratio,
         sprintState: this.sprint.state,
         captureProgressMs: this.match.captureProgressMs,
+        hideMap: this.deepseekHideMap,
+        hideWorld: this.deepseekHideWorld(),
+        hideRequestToken: hideToken,
+        hideSelf: { hiding: concealedDeepseek, spotId: this.hide.spotId },
         rice: this.rice.states.map(rice => {
           const point = this.riceViews.get(rice.id)!.position;
           return { id: rice.id, x: point.x, z: point.z,
@@ -757,6 +811,17 @@ export class ThreeGame {
         },
         activeLockSlots: C.door.maxActiveLocks - this.doorSystem.activeLockedDoorCount,
       });
+      // S7C-2b：AI 的藏身请求与门 / 进食命令走同一条「AI 只发意图，游戏层裁决」
+      // 通路。进入要过权威几何复核 + 一次性令牌；退出要过出口物理判据。
+      if (deepseekCommand.hideExitRequest) this.runDeepSeekAiHideExit();
+      if (deepseekCommand.hideSpotId)
+        this.runDeepSeekAiHideEnter(deepseekCommand.hideSpotId,
+          deepseekCommand.hideRequestToken);
+      // 藏身状态可能刚刚在本帧被 AI 自己改变：立刻用同一个局部变量刷新，避免
+      // 这一帧的移动 / 进食 / 抓捕仍然按旧状态执行。
+      concealedDeepseek = this.hide.isConcealed('DEEPSEEK');
+      this.vision.setConcealed('DEEPSEEK', concealedDeepseek);
+      this.player.visible = !concealedDeepseek;
       if (deepseekCommand.openDoorId) {
         const result = this.doorSystem.toggle(deepseekCommand.openDoorId, 'DEEPSEEK');
         this.applyDoorResult(deepseekCommand.openDoorId, result, 'DEEPSEEK');
@@ -997,7 +1062,8 @@ export class ThreeGame {
       // 会立即 forceCapture）。局终之后 `updatePlaying` 不再运行，如果不在这里
       // 再冲一次时间线，REQUEST / RESOLVE / HIT 与这次 HIDE_EXIT 就永远不会写进
       // AI JSON——真实日志里就会出现「有 DWELL 却没有结算码」的断点。
-      this.aiLogCollector.recordHideEvents(this.hide.drainEvents());
+      this.aiLogCollector.recordHideEvents([
+        ...this.hide.drainEvents(), ...this.deepseekAI.drainHideEvents()]);
       this.aiLogCollector.recordHumanSearchEvents(this.humanAI.drainHumanSearchEvents());
     }
     // The action layer observes resolved gameplay; it never feeds back into movement or rules.
@@ -1696,8 +1762,7 @@ export class ThreeGame {
   }
 
   private exitHide(): void {
-    const overlap = Math.hypot(this.human.position.x - this.player.position.x,
-      this.human.position.z - this.player.position.z) < C.collision.playerRadius * 2;
+    const overlap = this.exitBlockedByHuman();
     const result = this.hide.exit('PLAYER_E', { humanOverlap: overlap });
     if (result.ok) {
       this.setHideNotice('已退出藏身：普通视觉与抓捕立刻恢复');
@@ -1708,11 +1773,90 @@ export class ThreeGame {
     this.syncHidePresentation();
   }
 
+  /**
+   * 出口是否被 Human 角色圆压住。玩家 E 与 S7C-2b 的 AI 自主退出**共用同一条公式**
+   * （`humanBlocksHideExit`），避免两处各写一遍后静默分叉。
+   */
+  private exitBlockedByHuman(): boolean {
+    return humanBlocksHideExit(
+      { x: this.player.position.x, z: this.player.position.z },
+      { x: this.human.position.x, z: this.human.position.z },
+      C.collision.playerRadius);
+  }
+
+  /**
+   * S7C-2b：AI 自主藏身的**权威进入**。AI 只发了「我想去 spot X + 本帧令牌」，
+   * 这里用本帧真实位置复核「是否真的站在该点的合法藏身位置上」，再交给
+   * `HideSystem.enterAsAI()` 复核状态机条件与一次性令牌。
+   */
+  private runDeepSeekAiHideEnter(spotId: string, token: number | null): void {
+    const entry = resolveDeepSeekAiHideEntry({
+      spotId,
+      position: { x: this.player.position.x, z: this.player.position.z },
+      plannedStancePoint: this.deepseekAI.hideStancePoint,
+      map: this.deepseekHideMap,
+      doors: this.doorSystem.doors,
+      world: this.deepseekHideWorld(),
+      waypointTolerance: C.deepseekAI.waypointTolerance,
+      contactEpsilon: C.collision.contactEpsilon,
+    });
+    this.deepseekHideEntryCode = entry.code;
+    this.deepseekHideEntryDetail = `${DEEPSEEK_HIDE_ENTRY_CODE_TEXT[entry.code]}｜${entry.detail}`;
+    if (!entry.ok) {
+      this.deepseekHideRejectCount++;
+      this.setHideNotice(`AI 藏身被拒：${DEEPSEEK_HIDE_ENTRY_CODE_TEXT[entry.code]}`);
+      this.deepseekAI.onHideResult(spotId, entry.code);
+      return;
+    }
+    const result = this.hide.enterAsAI({
+      phase: this.match.phase,
+      position: { x: this.player.position.x, z: this.player.position.z },
+      spotId,
+      spotCode: entry.positionCode,
+      spotLegal: true,
+      captureProgressMs: this.match.captureProgressMs,
+      sprintState: this.sprint.state,
+      requestToken: token ?? Number.NaN,
+    });
+    if (result.ok) {
+      // 与玩家 E 完全同一套后果：中断进食（保留进度）并把既有抓捕进度归零。
+      this.rice.interrupt();
+      this.match.captureProgressMs = 0;
+      this.deepseekHideEnterCount++;
+      this.setHideNotice(`AI 已自主藏身：${spotId}（Human 搜查仍可把它搜出来）`);
+    } else {
+      this.deepseekHideRejectCount++;
+      this.setHideNotice(`AI 藏身被拒：${result.message}`);
+    }
+    this.syncHidePresentation();
+    this.deepseekAI.onHideResult(spotId, result.ok ? 'ENTERED' : result.code);
+  }
+
+  /**
+   * S7C-2b：AI 自主退出。出口的物理安全（Human 角色圆是否压住出口）由游戏层裁决，
+   * 被挡住时回执 `HUMAN_BLOCKING`，AI 退回藏身等下一次重查——这条判据只是游戏物理
+   * 规则，AI 拿到的仍然只有结果码。
+   */
+  private runDeepSeekAiHideExit(): void {
+    const spotId = this.hide.spotId;
+    if (!spotId) return;
+    const result = this.hide.exit('AI_EXIT', { humanOverlap: this.exitBlockedByHuman() });
+    this.deepseekHideLastExitReason = result.ok ? 'AI_EXIT' : result.code;
+    if (result.ok) {
+      this.deepseekHideExitCount++;
+      this.setHideNotice('AI 已自主退出藏身：继续找米');
+    }
+    this.syncHidePresentation();
+    this.deepseekAI.onHideResult(spotId, result.ok ? 'EXITED' : result.code);
+  }
+
   /** 局终、重开、地图应用等强制清空藏身（不做 Human 重叠检查）。 */
   private releaseHide(reason: HideExitReason): void {
     if (this.hide.forcedExit(reason).ok) {
       this.hideCandidateCode = 'NONE';
       this.hideCandidateSpotId = null;
+      // S7C-2b：AI 侧的藏身计划必须同步作废，否则控制器会以为自己还藏着。
+      this.deepseekAI.onForcedHideExit(reason);
     }
     this.syncHidePresentation();
   }
@@ -1979,6 +2123,14 @@ export class ThreeGame {
     // S7C-1B：藏身状态、两个 Q 冷却与扇形特效都属于本局状态，重开/返回阵营页
     // 必须全部清空，不留下异常抓捕免疫或输入锁定。
     this.hide.reset();
+    // S7C-2b：AI 自主藏身的局内计数与最近结果也属于本局状态，一并清空。
+    this.deepseekHideEntryCode = 'NONE';
+    this.deepseekHideEntryDetail = '无';
+    this.deepseekHideEnterCount = 0;
+    this.deepseekHideRejectCount = 0;
+    this.deepseekHideExitCount = 0;
+    this.deepseekHideLastExitReason = 'NONE';
+    this.deepseekHideTokenCounter = 0;
     this.humanSearchCooldown.reset();
     this.deepseekLockCooldown.reset();
     this.hideSearchView.reset();
@@ -2412,6 +2564,46 @@ export class ThreeGame {
           make('hide-exit', '最近退出原因', this.hide.lastExitReason),
           make('hide-counts', '本局进入 / 退出 / 拒绝次数',
             `${this.hide.enterCount} / ${this.hide.exitCount} / ${this.hide.rejectCount}`),
+          // S7C-2b：AI 自主藏身。刻意与玩家侧字段**显式分开**，并沿用 S7C-2 的
+          // 「AI 已知 / AI 推断 / 开发者真值」三段纪律：这里只放 AI 自己的相位、
+          // 公开理由、公开候选评分与循环抑制计数；对手真值不出现在这一段。
+          make('hide-ai-phase', 'AI 藏身：相位 / 目标点 / 站位',
+            `${this.deepseekAI.hidePhase}（${this.deepseekAI.state}）｜` +
+            `${this.deepseekAI.hideSpotId ?? '无'}｜` +
+            `${pointText(this.deepseekAI.hideStancePoint)}｜` +
+            `路线 ${this.deepseekAI.hideTravelLength === null ? '—'
+              : this.deepseekAI.hideTravelLength.toFixed(2)}`,
+            this.deepseekAI.hidePhase === 'CONCEALED' ? 'curious'
+              : this.deepseekAI.hidePhase === 'NONE' ? 'normal' : 'warning'),
+          make('hide-ai-reason', 'AI 藏身：公开理由 / 被阻止原因',
+            `${this.deepseekAI.hideReason}｜阻止 ${this.deepseekAI.hideBlockedReason}`),
+          make('hide-ai-candidate', 'AI 藏身：公开候选（合法站位 / 评分最高）',
+            `${this.deepseekAI.hideCandidateCount} 个合法站位｜` +
+            `${this.deepseekAI.hideCandidateSummary}`),
+          make('hide-ai-scores', 'AI 藏身：逐点公开评估（点｜结论｜评分｜路线）',
+            this.deepseekAI.hideCandidateScores.map(entry =>
+              `${entry.spotId}:${entry.code}` +
+              `${entry.score === null ? '' : `(${entry.score.toFixed(2)}/${entry.travelLength?.toFixed(2) ?? '—'})`}`)
+              .join('｜') || '还没有评估'),
+          make('hide-ai-loopguard', 'AI 藏身：循环抑制（冷却 / 近期点 / 连续次数上限）',
+            `${this.deepseekAI.hideCooldownSummary}｜近期 ` +
+            `${this.deepseekAI.hideRecentSpotIds.join('、') || '无'}｜连续 ` +
+            `${this.deepseekAI.hideConsecutiveCount} / ${C.deepseekAI.hideMaxConsecutive}｜` +
+            `冷却明细 ${this.deepseekAI.hideCooldowns().map(entry =>
+              `${entry.spotId}:${(entry.remainingMs / 1000).toFixed(1)}s`).join('、') || '无'}`),
+          make('hide-ai-exit-gate', 'AI 藏身：藏身时长 / 退出闸门',
+            `${(this.deepseekAI.hideConcealedMs / 1000).toFixed(2)} 秒｜` +
+            `${this.deepseekAI.hideExitGate}｜最近退出 ${this.deepseekAI.hideLastExitReason}`),
+          make('hide-ai-entry', 'AI 藏身：权威进入结论（开发者真值）',
+            `${this.deepseekAI.hideEnterCount} 次成功 / ${this.deepseekAI.hideRejectCount} 次被拒｜` +
+            `${this.deepseekAI.hideExitCount} 次退出｜${this.deepseekAI.hideAbortCount} 次中止｜` +
+            `点被封锁 ${this.deepseekAI.hideSpotBlockedCount} 次｜令牌 ` +
+            `${this.hide.hasPendingAiEntryToken() ? '已签发未使用' : '无'}`,
+            this.deepseekAI.hideRejectCount > 0 ? 'warning' : 'normal'),
+          make('hide-ai-entry-detail', 'AI 藏身：最近一次权威进入明细',
+            `${this.deepseekHideEntryCode}｜${this.deepseekHideEntryDetail}｜` +
+            `游戏层计数 ${this.deepseekHideEnterCount} / ${this.deepseekHideRejectCount} / ` +
+            `${this.deepseekHideExitCount}｜最近 AI 退出 ${this.deepseekHideLastExitReason}`),
           make('hide-vision', '藏身对普通 Vision 的影响',
             `Human 看到的 DeepSeek：${this.vision.get('HUMAN').status}`,
             this.vision.get('HUMAN').status === 'CONCEALED' ? 'curious' : 'normal'),

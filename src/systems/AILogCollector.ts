@@ -423,9 +423,11 @@ export class AILogCollector {
 
   export(): AILogExport {
     return {
-      // S7C-2 修复轮 二：1.4 → 1.5，只新增 `playerSearchEvents`（玩家 Q 搜查时间线）；
-      // 既有 events / hideEvents / humanSearchEvents 的字段与语义完全不变。
-      formatVersion: '1.5',
+      // S7C-2b：1.5 → 1.6，只在既有 `hideEvents` 时间线里新增 DeepSeek AI 自主藏身
+      // 的事件种类（HIDE_AI_REQUEST / ENTERED / REJECTED / EXIT_REQUEST / EXITED /
+      // ABORT / SPOT_BLOCKED）；既有 events / hideEvents / humanSearchEvents /
+      // playerSearchEvents 的字段与语义完全不变。
+      formatVersion: '1.6',
       exportedAt: new Date().toISOString(),
       matchDurationMs: this.nowMs - this.matchStartMs,
       config: { deepseekAI: GAME_CONFIG.deepseekAI },

@@ -194,6 +194,30 @@ Human AI 的搜查**复用**上表的 `humanSearch.range` / `halfAngleDeg`（1.5
 
 隐藏者在藏身期间的普通视觉为 `CONCEALED`、常规抓捕不累计；正式搜查命中后走 `releaseHide('SEARCHED')` + `GameStateSystem.forceCapture()`，与玩家 Q 命中完全同一条结算。
 
+## S7C-2b DeepSeek AI 自主藏身（用户 2026-09-27 批准值）
+
+DeepSeek 娘 AI 在 `EVADE` 中把「藏身」作为与逃跑并列的一个选项。合法性、进入与退出**全部复用**已有系统：藏身几何用 DEV-A 的 `interactionRegion` + `checkHideRegionPosition`（1.6·55° / 2.0 / 1.2 一个字未改），占用真相仍只在 `HideSystem`，最终位移仍走 `CollisionWorld`，视觉/声音仍走 `PerceptionSystem`。因此只新增下面这一组正式值。
+
+| 变量 | 当前值 | 单位 / 作用 | 修改注意 |
+|---|---:|---|---|
+| `C.deepseekAI.hideThreatDistance` | 3.5 | 世界单位；已知威胁点到 AI 的距离小于此值时才评估藏身 | 必须小于 `visionEvadeDistance`(5)，否则「看见就跑」的门槛失效；它**只**管威胁距离，不额外限制藏身路线长度（那条判据是「藏身路线必须短于当前逃跑路线」）。 |
+| `C.deepseekAI.hideMinConcealMs` | 2,500 | 毫秒；最短藏身时间，防止「一进就出」 | 调小会让 AI 更容易被引出来回抖动；调大会延长 Human 的等待。 |
+| `C.deepseekAI.hideRecheckMs` | 500 | 毫秒；藏身中重新评估退出条件的间隔 | 同时也是退出被 `HUMAN_BLOCKING` 拒绝后的重试间隔；过小会造成多余的 A* 查询。 |
+| `C.deepseekAI.hideReenterCooldownMs` | 8,000 | 毫秒；退出后**同一点**再次进入的冷却 | 防原地反复进出；与 `hideMaxConsecutive` 叠加而不是互相替代。 |
+| `C.deepseekAI.hideCandidateFailCooldownMs` | 6,000 | 毫秒；走位失败或被权威层拒绝后该点的冷却 | 与 Human AI 的 `hideCheckFailureCooldownMs`(6,000) 数值一致，便于对称复核，但两者互不影响。 |
+| `C.deepseekAI.hideRecentSpotCount` | 3 | 个；近期藏身点记忆条数 | 防两个点之间来回横跳；调大只会让惩罚覆盖更多历史。 |
+| `C.deepseekAI.hideRecentSpotPenalty` | 5 | 无量纲；每个近期藏身点扣除的候选分（按 `escapeVisitMemoryMs` 12 秒线性衰减） | 与逃跑房间的 `escapeRecentVisitPenalty` 同值但**独立列出**，便于单独调节。 |
+| `C.deepseekAI.hideMaxConsecutive` | 2 | 次；连续藏身次数上限（有一次真实米进度增长即重置） | 这是「不会无限藏下去」的主要手段；设为 0 会让藏身完全不可用。 |
+| `C.deepseekAI.hideMaxConcealMs` | 0 | 毫秒；可选最大藏身时长，**0 = 不限制** | 只是兜底，且仍须同时满足「出口安全」与「还有可达米堆」；真正防拖死的是「无可达米堆不进入」+ `hideMaxConsecutive`。 |
+
+**复用、不新增同义参数**：退出安全间距复用 `C.deepseekAI.escapeMinSeparation`(3)；退出前的「米堆路线不穿过已知威胁」复用有效抓捕半径（`C.match.captureRadius`，DEV-B 覆盖同样生效）；两处振荡抑制复用 `escapeSwitchScoreMargin` / `visitMemoryMs` / `stuckRepathMs` / `maxStuckRepathsPerTarget` / `escapeCoverBonus` / `escapeRouteThreatPenalty` / `escapeTowardThreatPenalty`。
+
+**一个字都没有改**：DEV-A 的 `interactionRegion`（床/纸箱圆形 2.0 / 1.2，衣柜与柜架扇形 1.6·55°）、`C.humanSearch`(1.5 / 120° / 12,000)、`C.humanAI.hideCheckFailureCooldownMs`(6,000) / `hideCheckMaxPerRound`(1)、`C.perception.lastSeenMs`(8,000) / `traceLifetimeMs`(15,000)。
+
+**AI 藏身的公开评分（不是新参数，系数全部取自上表）**：候选分 = −路线长度 + 遮挡奖励(`escapeCoverBonus`) − 路线威胁风险×`escapeRouteThreatPenalty` − 朝威胁跑惩罚(`escapeTowardThreatPenalty`) − 近期藏身惩罚。刻意**不以「离威胁多远」为主项**——那是逃跑房间的货币；藏身的价值来自尽快躲进去，而「值不值得藏」由 `hideThreatDistance` 与「藏身路线必须短于当前逃跑路线」两条判据在控制器里决定。
+
+**阶段状态（2026-09-27）**：S7C-2b 已通过用户集中浏览器人工验收 **8/8 PASS** 并归档。上表九个数值是用户批准的正式值，实现轮与归档轮**均未做任何调整**（核对方式：`git diff src/config/gameConfig.ts` 只新增这 9 行）；用户人工验收结果与 DPH 的浏览器自测分开记录，见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §4.10.14 与 `docs/DEEPSEEK_HANDOFF.md` §16。
+
 ## Sound 与声音可视化
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |

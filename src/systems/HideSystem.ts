@@ -19,13 +19,16 @@ export type HideState = 'OUTSIDE' | 'CONCEALED';
 /** 进入被拒绝的内部原因码；界面另有通俗中文（`message`）。 */
 export type HideRejectCode = 'NOT_PLAYING' | 'WRONG_FACTION' | 'NOT_PLAYER_CONTROLLED'
   | 'ALREADY_CONCEALED' | 'STUNNED' | 'SPRINT_ACTIVE' | 'CAPTURE_IN_PROGRESS'
-  | 'NO_HIDE_SPOT' | 'POSITION_ILLEGAL';
+  | 'NO_HIDE_SPOT' | 'POSITION_ILLEGAL'
+  // S7C-2b：AI 自主藏身入口专用。它**不改**玩家入口的任何语义，只是多了一条
+  // 「必须带游戏层本帧签发的一次性令牌」的守门条件。
+  | 'TOKEN_REQUIRED' | 'TOKEN_REPLAY';
 
 export type HideEnterCode = HideRejectCode | 'ENTERED';
 
-/** 退出原因：玩家主动、被搜查、被抓捕、局终/重开、地图应用。 */
+/** 退出原因：玩家主动、被搜查、被抓捕、局终/重开、地图应用、AI 自主退出。 */
 export type HideExitReason = 'PLAYER_E' | 'SEARCHED' | 'CAPTURED' | 'ROUND_RESET'
-  | 'ROUND_FINISHED' | 'MAP_APPLIED';
+  | 'ROUND_FINISHED' | 'MAP_APPLIED' | 'AI_EXIT';
 
 export type HideExitCode = 'EXITED' | 'NOT_CONCEALED' | 'HUMAN_BLOCKING';
 
@@ -56,6 +59,24 @@ export interface HideExitOptions {
   humanOverlap?: boolean;
 }
 
+/**
+ * S7C-2b：AI 自主藏身的进入上下文。与玩家 `HideEnterContext` 的唯一区别是
+ * 「没有 `playerControlled`、多一个一次性令牌」——`faction` 恒为 DEEPSEEK。
+ */
+export interface HideAiEnterContext {
+  phase: GamePhase;
+  /** 真实站位；AI 不传送，进入位置就是退出位置。 */
+  position: Point;
+  spotId: string;
+  spotCode: string;
+  /** 权威层（游戏层）用 `checkHideRegionPosition` 复核过的位置结论。 */
+  spotLegal: boolean;
+  captureProgressMs: number;
+  sprintState: SprintState;
+  /** 游戏层本帧签发的一次性令牌；缺失或不匹配一律拒绝。 */
+  requestToken: number;
+}
+
 export interface HideExitResult {
   ok: boolean;
   code: HideExitCode;
@@ -79,6 +100,8 @@ export const HIDE_ENTER_MESSAGES: Record<HideRejectCode, string> = {
   CAPTURE_IN_PROGRESS: '正在被抓捕，无法藏身',
   NO_HIDE_SPOT: '附近没有可藏身的位置',
   POSITION_ILLEGAL: '当前站位不是合法的藏身位置',
+  TOKEN_REQUIRED: 'AI 自主藏身需要游戏层本帧签发的令牌',
+  TOKEN_REPLAY: 'AI 自主藏身的令牌无效或已被使用',
 };
 
 export class HideSystem {
@@ -94,6 +117,13 @@ export class HideSystem {
   lastRejectReason = '无';
   lastExitReason: HideExitReason | '无' = '无';
   private events: HideEvent[] = [];
+  /**
+   * S7C-2b：游戏层每帧为「AI 自主藏身」签发的一次性令牌。玩家 E 路径完全不看它，
+   * 因此玩家入口的语义一字未变；AI 入口则必须在**本帧**拿着同一个令牌才能进入，
+   * 而且令牌一被使用（无论进入成功与否）立刻作废，重放同一令牌必然被拒。
+   */
+  private aiEntryToken: number | null = null;
+  private lastConsumedAiToken: number | null = null;
 
   isConcealed(faction: Faction): boolean {
     return this.state === 'CONCEALED' && this.concealedFaction === faction;
@@ -132,6 +162,68 @@ export class HideSystem {
     this.events.push({ type: 'HIDE_ENTER', reason: context.spotId, spotId: context.spotId });
     return { ok: true, code: 'ENTERED', message: `已藏身：${context.spotId}`, spotId: context.spotId };
   }
+
+  /**
+   * S7C-2b：AI 自主藏身的唯一入口。与玩家 `enter()` 的区别只有两点：
+   *   ① 不看 `playerControlled`（这条校验本来就按设计拒绝 AI），改为要求
+   *      游戏层本帧签发的一次性令牌；
+   *   ② 其余状态条件（PLAYING / 未藏身 / 非眩晕 / 非冲刺 / 无抓捕进度 /
+   *      位置合法）与玩家路径逐条相同。
+   *
+   * 令牌一被消费就立刻作废，所以「拿旧令牌重放」必然得到 `TOKEN_REPLAY`；
+   * 进入成功仍然走同一套占用真相与同一条 `HIDE_ENTER` 事件。
+   */
+  enterAsAI(context: HideAiEnterContext): HideEnterResult {
+    const reject = (code: HideRejectCode, message = HIDE_ENTER_MESSAGES[code],
+      spotId: string | null = context.spotId): HideEnterResult => {
+      this.rejectCount++;
+      this.lastRejectCode = code;
+      this.lastRejectReason = `${code}：${message}`;
+      this.events.push({ type: 'HIDE_REJECT', reason: code, spotId });
+      return { ok: false, code, message, spotId };
+    };
+
+    if (this.aiEntryToken === null) {
+      return reject(this.lastConsumedAiToken !== null &&
+        context.requestToken === this.lastConsumedAiToken ? 'TOKEN_REPLAY' : 'TOKEN_REQUIRED');
+    }
+    if (context.requestToken !== this.aiEntryToken) {
+      return reject('TOKEN_REPLAY',
+        `${HIDE_ENTER_MESSAGES.TOKEN_REPLAY}（期望 ${this.aiEntryToken}，` +
+        `收到 ${context.requestToken}）`);
+    }
+    // 令牌是一次性的：本次调用之后立刻作废，重复使用不可能成功。
+    this.lastConsumedAiToken = context.requestToken;
+    this.aiEntryToken = null;
+    if (context.phase !== 'PLAYING') return reject('NOT_PLAYING');
+    if (this.state === 'CONCEALED') return reject('ALREADY_CONCEALED');
+    if (context.sprintState === 'STUNNED') return reject('STUNNED');
+    if (context.sprintState === 'SPRINT_RUNNING') return reject('SPRINT_ACTIVE');
+    if (context.captureProgressMs > 0) return reject('CAPTURE_IN_PROGRESS');
+    if (!context.spotId) return reject('NO_HIDE_SPOT', HIDE_ENTER_MESSAGES.NO_HIDE_SPOT, null);
+    if (!context.spotLegal) {
+      return reject('POSITION_ILLEGAL',
+        `${HIDE_ENTER_MESSAGES.POSITION_ILLEGAL}（${context.spotCode}）`, context.spotId);
+    }
+
+    this.state = 'CONCEALED';
+    this.spotId = context.spotId;
+    this.concealedFaction = 'DEEPSEEK';
+    this.entryPosition = { x: context.position.x, z: context.position.z };
+    this.enterCount++;
+    this.lastRejectCode = '无';
+    this.lastRejectReason = '无';
+    this.events.push({ type: 'HIDE_ENTER', reason: `${context.spotId}:AI`,
+      spotId: context.spotId });
+    return { ok: true, code: 'ENTERED',
+      message: `AI 已藏身：${context.spotId}`, spotId: context.spotId };
+  }
+
+  /** 游戏层每帧签发 AI 进入令牌；只在 DeepSeek AI 正式运行时调用。 */
+  issueAiEntryToken(token: number): void { this.aiEntryToken = token; }
+
+  /** 只给 DEV 面板：当前 AI 进入令牌是否仍未被使用。 */
+  hasPendingAiEntryToken(): boolean { return this.aiEntryToken !== null; }
 
   exit(reason: HideExitReason, options: HideExitOptions = {}): HideExitResult {
     if (this.state !== 'CONCEALED') {
@@ -172,6 +264,8 @@ export class HideSystem {
     this.lastRejectCode = '无';
     this.lastRejectReason = '无';
     this.lastExitReason = '无';
+    this.aiEntryToken = null;
+    this.lastConsumedAiToken = null;
     this.events.length = 0;
   }
 

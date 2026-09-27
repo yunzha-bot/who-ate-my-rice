@@ -206,9 +206,9 @@ test('export returns correct structure with config snapshot', () => {
   collector.advance(5000, true);
   collector.diffSnapshot(baseSnapshot());
   const data = collector.export();
-  // S7C-2 修复轮 二：1.5 只新增 `playerSearchEvents`（玩家 Q 搜查时间线），
-  // v1.4 的全部字段与语义保持原样。
-  assert.equal(data.formatVersion, '1.5');
+  // S7C-2b：1.5 → 1.6，只在既有 `hideEvents` 时间线里新增 DeepSeek AI 自主藏身的
+  // 事件种类；v1.4 / v1.5 的全部字段与语义保持原样。
+  assert.equal(data.formatVersion, '1.6');
   assert.equal(typeof data.exportedAt, 'string');
   assert.equal(data.matchDurationMs, 5000);
   assert.deepEqual(data.config.deepseekAI, C.deepseekAI);

@@ -1,0 +1,26 @@
+[
+ {
+  "t": 118,
+  "distance": 11.636511504742305,
+  "phase": "NONE（MOVE_TO_RICE）｜无｜无｜路线 —",
+  "threat": null
+ },
+ {
+  "t": 8327,
+  "distance": 5.358292638518355,
+  "phase": "NONE（EAT）｜无｜无｜路线 —",
+  "threat": null
+ },
+ {
+  "t": 16530,
+  "distance": 4.057437615047211,
+  "phase": "NONE（MOVE_TO_RICE）｜无｜无｜路线 —",
+  "threat": null
+ },
+ {
+  "t": 25146,
+  "distance": 7.589321445294039,
+  "phase": "TRAVEL（HIDE）｜hide_living_carton｜(7.0, 3.6)｜路线 6.46",
+  "threat": null
+ }
+]
