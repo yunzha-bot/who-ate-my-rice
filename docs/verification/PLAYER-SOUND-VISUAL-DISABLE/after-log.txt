@@ -1,0 +1,12 @@
+【after】开发服务器当前源码：PLAYER_SOUND_VISUAL_ENABLED = false｜soundVisual.update 出现 2 次
+【after】对局阶段：对局中 / 00:00｜固定种子（URL matchSeed=20260927）｜面板显示种子：20260927 / 20260927
+静止首帧（对局中 / 00:01）：范围圈专属色 359｜蓝色声纹 2884｜暖色声纹 0｜1422x804
+02-idle-burst：6 帧（其中「对局中」6 帧）｜范围圈专属色 0xb5d8e5(±6) max 555 / min 359｜对局中 max 555｜蓝色声纹像素 max 3547 / min 2885｜暖色声纹像素 max 0｜存图：{"waveBlue":3547,"ring":555}
+重开（声纹采样前）：菜单 OPEN｜点击 CLICKED｜阶段 对局中 / 00:00
+临时控制 Human：CLICKED｜范围圈 359｜蓝色声纹 2128（阶段 对局中 / 00:02）
+04-possess-burst：6 帧（其中「对局中」6 帧）｜范围圈专属色 0xb5d8e5(±6) max 359 / min 359｜对局中 max 359｜蓝色声纹像素 max 2143 / min 2143｜暖色声纹像素 max 0｜存图：{"waveBlue":2143,"ring":359}
+归还控制：CLICKED
+重开（移动采样前）：菜单 OPEN｜点击 CLICKED｜阶段 对局中 / 00:00
+移动后首帧（对局中 / 00:01）：范围圈专属色 564｜蓝色声纹 3586
+06-moved-burst：6 帧（其中「对局中」6 帧）｜范围圈专属色 0xb5d8e5(±6) max 673 / min 550｜对局中 max 673｜蓝色声纹像素 max 3861 / min 3537｜暖色声纹像素 max 0｜存图：{"waveBlue":3861,"ring":673}
+收尾：阶段 对局中 / 00:05｜控制台异常 无（既有 THREE.Clock 告警 1 条）

@@ -1312,3 +1312,42 @@
 - 本地保留、未纳入提交的材料：`docs/verification/S7C-2-r2|r3|r4|S7C-2b` 等目录中既有的未跟踪复核产物（截图、导出的 AI JSON、控制台日志）一律原地保留，未删除、未修改；`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未修改、未暂存、未提交。
 - Git 检查点：提交前 `git -c http.sslBackend=openssl ls-remote origin refs/heads/main` 与本地 `HEAD` 均为 `420d8a6`（`git rev-list --left-right --count origin/main...HEAD` = 0 / 0），确认远端无新增提交；只暂存本轮核实过的源码、测试、设计文档、最终日志与精选验证材料，**未使用 `git add -A` / `git add .`**，未 force push、未 reset / clean / stash、未改写已推送历史、未创建 Tag。**完整提交编号与推送结果以 `git log -1` 与实时远端查询核实，不在提交前预填。**
 - 已知限制与下一项任务：① 存档只在**浏览器本地**，清理站点数据即丢失（回落到默认地图，不白屏），本轮刻意不做「删除本地存档」按钮；② 导入只接受**同一张地图**的布局，不能用来换地图或改门 / 出生点 / 米点；③「恢复默认地图」仍要过地图预检（有角色正好站在授权家具位置时会给出原因并拒绝）；④ 无版本迁移，`layoutVersion` 或 `formatVersion` 不匹配即视为无可用存档。S7C-2b 与 S7C-3 均已归档；DEV 场景编辑器后续扩展与 S7B / S7C 的后续工作仍须单独授权，本轮归档后**不自动开始下一阶段**。
+
+---
+
+## 2026-09-27 · 玩家声音探测可视化停用与代码归档（已实现，待用户集中人工验收）
+
+- 任务性质与日期：独立专项任务（不计入 S7C / S7D），2026-09-27。用户**一次性授权**「停用玩家端的声音探测可视化，包括声音范围圈和彩色动态声纹。保留相关实现，未来能够低成本恢复」，并明确「AI 内部听觉、声音事件和现有 PerceptionSystem 判定暂时保留，不允许破坏 Human AI、DeepSeek AI 的既有行为」；**本轮不授权 commit、push 或 Tag**。
+- 开工前核实的冲突（已停下向用户确认）：工作区 `src/three/SoundVisualView.ts`、`src/three/ThreeGame.ts`、`tests/sound-visual.test.mjs` 存在**非本代理产生**的未提交改动（写入时间 22:21，晚于 DEV-B 轮 21:44；本会话记录与 DSH 全部会话存档里都没有对应的工具调用）。用户确认「是我刚才调整声音圈时留下的」，并要求**保留当前工作区版本作为停用前快照、不得回退或覆盖**。因此本轮快照＝工作区版本（含该改动），`SoundVisualView.ts` **一字未动**。
+- 审计结论（A / B / C 分离）：A＝仅服务玩家声音探测的显示（`SoundVisualView` 的距离分带、四个同心范围面、三条彩色声纹；`ThreeGame` 的 5 处接线；`GAME_CONFIG.perception.soundVisual` 视觉数值）；B＝AI 真实听觉与声音事件（`SoundEventSystem` / `PerceptionGeometry` / `heardBy` / `analyzeBy` / Human AI 循声调查 / DeepSeek 威胁感知）；C＝DEV-B 的声音调试与参数持久化（`DevBView` 自己的声音标记，不走 `SoundVisualView`）。**本轮只停用 A**。
+- 实际停用位置（`src/three/ThreeGame.ts`）：新增模块级 `const PLAYER_SOUND_VISUAL_ENABLED: boolean = false;`，用它守住实例化与两处逐帧 `update`；字段改为 `SoundVisualView | null = null`，销毁改为空安全 `?.dispose()`。**没有**注释大段代码、**没有**删除共享声音系统实现；`updatePerceptionHud()` 里 `heard` / `probe` 的计算与喂给 DEV 面板的部分保持原样。
+- 归档：新增 `archive/features/player-sound-visual/`——`SoundVisualView.ts`（停用前快照，SHA-256 `5FDD0F1E2253C00D6762E9DB10854FE9208C821BC451170DEDBB3E2E7BB6032D`，与 `src/three/SoundVisualView.ts` 逐字节一致）、`README.md`（原有功能与文件位置、游戏接线位置、关联配置及依赖、本次为什么停用、将来恢复步骤、恢复时需运行的回归测试、已知限制）、`visual-config.md`（`soundVisual` 全组数值与模块内视觉常量）、`wiring-and-tests.md`（接线逐行对照与测试归属表）。`archive/` 不在 `tsconfig.json` 的 `include` 内，快照不参与编译。
+- 文档同步：`docs/GAME_BALANCE_CONFIG.md` 的 `soundVisual` 表后新增「当前状态」注记（数值一个都没改，只服务于已停用的表现层；`hudMidStrength` / `hudHighStrength` 在停用前就已无读取方）；`AGENTS.md`「视觉表现与玩法逻辑分离」两条就地补注停用状态与「不显示是预期行为、不要当 Bug 修」；`docs/DEEPSEEK_HANDOFF.md` §9 新增停用条目。`GAME_CONFIG` 数值、`tests/sound-visual.test.mjs`、`apartmentMap.ts` 未改动。
+- 自动化门禁（本轮在最终工作树上实测）：
+
+| 检查项目 | 本轮实际结果 |
+|---|---|
+| `npm test` | **727 / 727 通过**，退出码 0（DEV-B 轮基线 725 + 用户 22:21 新增的 2 项声音圈测试） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0；JS **1,008.19 kB**（gzip 272.00 kB）、CSS 14.57 kB；停用前同树为 1,011.62 kB（gzip 273.22 kB） |
+| `git diff --check` | 通过，退出码 0（仅既有 LF→CRLF 提示） |
+| 打包产物静态核对 | 停用前打包内含的 `SoundVisualView` 专属标识（`travelDurationMs` 2 / `ringThickness` 4 / `edgePadding` 2 / `angleLength` 2 / `waveGroup` 7 / `waveMaterials` 3 / `showDebugRings` 3 / `visualRadius` 3）在停用后**全部为 0**，说明构建期已把该表现层移出产物 |
+
+- 浏览器真实复核（`docs/verification/PLAYER-SOUND-VISUAL-DISABLE/`，本机 Chrome headless + CDP，固定 `?matchSeed=20260927`；脚本 + 两轮日志 + 结构化摘要 + 截图）。为做同场景对照，「停用前」一轮把常量**临时**置 `true`、跑完**立即还原**，文件 SHA-256 已核对回原值（脚本输出 `hash matches original: True`）；两轮脚本各自先向开发服务器取一次 `ThreeGame.ts`，日志记录了服务器实际在发哪一版（after 轮＝`false`、before 轮＝`true`）。
+  - **范围圈（决定性证据）**：同一固定种子下，声音圈专属色 `0xb5d8e5`（±14）像素：静止首帧 **13,515 → 359**；静止 6 帧 **13,515–13,729 → 359–555**；临时控制 Human 后 **13,499 → 359**；移动后首帧 **36,448 → 564**；移动 6 帧 **35,930–36,618 → 550–673**。差值 25～60 倍，停用后剩余几百像素是场景地板色。截图对照 `before/after-01-idle`、`before/after-03-possess`：停用前同屏可见半径 18 的大圈与角色身上 2.5 的近圈，停用后两条都消失，而同画面里的 DEV AI 安全路径粉线**照旧存在**。
+  - **彩色声纹（本轮未拿到决定性前后对照，不得记为已实测）**：停用后侧是确定的（对象根本不实例化、截图无任何弧线、打包产物无该代码）；「停用前有彩色声纹」这一侧本轮**未覆盖**——脚本成功点到「临时控制 Human」并让 Human 走了一段（面板显示「当前控制对象：Human」），但该种子下 Human 距观察者太远，采样窗口内没有出现可听声音事件。颜色计数也不能当判据：声纹是半透明混合色，「贴近纯色」的容差测不到它，日志里的「蓝色声纹像素」（辅助值）两轮区间重叠（停用前 3,114–4,798，停用后 2,128–3,861），其中含场景本身就有蓝色元素。这一项目前只由源码与 `tests/sound-visual.test.mjs` 支持（`waveGroup.visible === true`、按 NEAR/MID/FAR 换色、同心带内扩散），**请在人工验收时肉眼确认**。
+  - 两轮控制台异常均为**无**（仅既有 `THREE.Clock` 弃用告警 1 条）；所有 burst 采样帧都落在「对局中」，未把结算后的空画面当证据。
+- 已知限制与下一项任务：① 声纹的停用前对照缺一轮（见上）；② 浏览器证据来自开发服务器，正式构建侧只有「产物不再包含该表现层」的静态核对，没有在生产构建里跑完整对局；③ 未覆盖不同浏览器 / 无痕模式 / 极窄或超宽窗口；④ 恢复该表现层属于**功能变更**，须另行获得用户授权并重走人工验收；⑤ 下一项任务＝等用户按本轮材料做集中人工验收，通过并另行授权后才建立 Git 检查点。
+- Git 检查点：本轮**未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash；未读取 / 修改 / 暂存 `.trae/`、`.dsh-meow/`、`.codex/`；既有未跟踪验证材料未清理。工作区另有 S7D / S7B 整体 Gate 与 DEV-B 常驻功能的未提交改动，与本轮互不覆盖。
+
+---
+
+## 2026-09-27 · 玩家声音探测可视化停用：用户集中人工验收 3/3 PASS 与正式归档
+
+- 用户集中人工验收：**3 / 3 PASS**——① 声音探测完全消失；② 双方 AI 与原有玩法正常；③ DEV 工具与代码归档无误。该结论为**用户人工确认**，与本代理的浏览器复核（`docs/verification/PLAYER-SOUND-VISUAL-DISABLE/`）是两条独立证据，覆盖范围不同，不得互相改写。
+- 本轮归档范围（用户授权：本任务单次正式提交 + 正常推送；**不创建 Tag、不推进新阶段**）：仅「玩家声音探测停用 + 其确认过的停用前快照」——`archive/features/player-sound-visual/` 的四个归档文件、`src/three/ThreeGame.ts` 的停用接线、用户确认的 `src/three/SoundVisualView.ts` 与 `tests/sound-visual.test.mjs` 声音圈快照、`docs/verification/PLAYER-SOUND-VISUAL-DISABLE/` 的精选验证材料、`docs/GAME_BALANCE_CONFIG.md` 中仅关于本次停用的状态注记、`AGENTS.md` 的长期停用保护规则、`docs/DEEPSEEK_HANDOFF.md` 与本日志。
+- 隔离情况（混合文件按实际差异精确暂存，**未整文件暂存**）：`src/three/ThreeGame.ts`、`docs/DEEPSEEK_HANDOFF.md`、`docs/AGENT_LOG.md` 三个文件里同时存在 **DEV-B 参数持久化**与 **S7B overall Gate** 的未提交改动，本轮只暂存属于本任务的差异。**DEV-B 持久化（`src/systems/DevBParamStore.ts`、`src/systems/DevBParamPersistence.ts`、`src/three/DevBPanel.ts`、`src/three/DevBDebug.ts`、`src/style.css`、`tests/dev-b-panel-dom.test.mjs`、`tests/dev-b-param-persistence.test.mjs`、`docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`、`docs/verification/DEV-B-PARAMS/`）与 S7B Gate / S7D 的文档改动一律不进本次提交**，原样留在工作区。提交的 `ThreeGame.ts` 只含停用接线，**不含** DEV-B 持久化的构造、`resetRound()` 恢复与面板接线。
+- 三条边界在文档中保持明确区分：① **玩家端声音可视化已停用**（范围圈与彩色声纹都不再显示）；② **AI 内部听觉与声音事件照常运行**（`SoundEventSystem` / `PerceptionSystem` / 两套 AI 未改）；③ **DEV-B 的独立声音事件调试未停用**（`DevBView` 自己绘制、不经 `SoundVisualView`）；④ 原可视化代码已完整保存在 `archive/features/player-sound-visual/`，未来可恢复（把常量 `PLAYER_SOUND_VISUAL_ENABLED` 改回 `true` 即可）。
+- 本轮门禁（在最终工作树上重跑，真实输出）：`npm test` **727 / 727 通过**（退出码 0）、`npx tsc --noEmit` 退出码 0、`npm run build` 退出码 0、`git diff --check` 退出码 0；构建产物中 `SoundVisualView` 的专属标识仍为 **0**（打包期已把停用表现层移出产物）。开发完成时的 727/727 是当时基线，本条为本次归档轮的重跑结果。
+- 已知限制（保留，不因验收通过而删除）：停用前的彩色声纹**缺少完整的浏览器前后对照**（当轮采样窗口内 Human 距离观察者太远，没有可听声音事件；声纹是半透明混合色，颜色计数不可作判据）；正式生产构建侧只做了「打包产物不再包含该表现层」的**静态核对**，未在生产构建里跑完整对局。用户人工验收已覆盖「声音探测完全消失」，但**人工验收不写成代理实测**，代理实测也不改写人工验收结论。
+- Git 检查点：本轮建立正式归档提交（提交说明 `refactor: disable and archive player sound visualization`）；推送按用户本次授权执行，**实际推送结果以 `git ls-remote origin refs/heads/main` 现场查询为准**，本日志不预填 SHA、不创建 Tag。

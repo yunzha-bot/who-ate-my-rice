@@ -242,6 +242,8 @@ DeepSeek 娘 AI 在 `EVADE` 中把「藏身」作为与逃跑并列的一个选�
 | `C.perception.soundVisual.waveFullStrength` / `waveFadeMs` | 0.45 / 420 | 最终强度 / 毫秒；波纹亮度归一化与临近过期淡出 | 不改变 SoundEvent 的真实可听强度。 |
 | `C.perception.soundVisual.hudMidStrength` / `hudHighStrength` | 0.25 / 0.55 | 最终强度；HUD 文字颜色分界 | 仅显示反馈，需保持前者小于后者。 |
 
+**当前状态（2026-09-27）**：`C.perception.soundVisual` 整组数值**只服务于已停用的玩家声音探测表现层**（声音范围圈 + 彩色动态声纹）。数值本身**一个都没有改动**，停用方式是在 `ThreeGame.ts` 里做表现层接线隔离（`PLAYER_SOUND_VISUAL_ENABLED = false`）；停用前快照、接线记录与恢复步骤见 `archive/features/player-sound-visual/README.md`。恢复该表现层之前，这些数值在正式对局与 DEV 对局中都不再产生可见效果。另外 `hudMidStrength` / `hudHighStrength` 在停用前就已经没有任何模块读取（仅 `gameConfig.ts` 自身定义），属于悬空配置。
+
 每类 `C.perception.sounds.<类型>` 都有 `range`（世界单位）、`strength`（原始强度）和 `lifetimeMs`（毫秒）。`range` 之外不可感知，`strength × 距离系数 × 遮挡倍率` 得到最终可听强度。
 
 | 类型 | range | strength | lifetimeMs |

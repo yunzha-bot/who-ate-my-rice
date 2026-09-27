@@ -45,8 +45,8 @@
 
 - 玩家和 AI 共用 `IDLE / WALK / RUN / EAT / STARTLED / FALL / STUN / INTERACT / CAPTURE` 角色动作接口；动作由既有玩法状态单向驱动，经独立 `CharacterActionView` 表现。正式 Q 版角色与动作资源尚未导入；后续通过独立表现层和预留的 GLB / AnimationMixer 接口替换白模表现，不让动画反向改写速度、碰撞、进食或抓捕规则。
 
-- 声音感知计算由 `PerceptionSystem` 负责；声音场景效果由 `SoundVisualView` 负责，HUD 由 `ThreeGame` / CSS 显示。
-- 后续替换声音提示美术时，优先调整 `SoundVisualView` 的几何体、材质、纹理，以及 HUD 图标与 CSS；声音距离、遮挡、方向等玩法计算保持在感知系统，不随美术替换改动。
+- 声音感知计算由 `PerceptionSystem` 负责；声音场景效果由 `SoundVisualView` 负责，HUD 由 `ThreeGame` / CSS 显示。**玩家端声音探测表现层（声音范围圈 + 彩色动态声纹）自 2026-09-27 起已停用**：实现、测试与 `GAME_CONFIG.perception.soundVisual` 数值全部保留，由 `ThreeGame.ts` 的 `PLAYER_SOUND_VISUAL_ENABLED` 常量关掉实例化与逐帧更新；快照、接线记录与恢复步骤见 `archive/features/player-sound-visual/README.md`。
+- 后续替换声音提示美术时，优先调整 `SoundVisualView` 的几何体、材质、纹理，以及 HUD 图标与 CSS；声音距离、遮挡、方向等玩法计算保持在感知系统，不随美术替换改动。**注意**：该表现层停用期间，正式对局中不显示范围圈与彩色声纹是**预期行为**，不要当作 Bug 修复；AI 真实听觉与 DEV-B 的独立声音可视化不受此影响。
 - 正式声音 UI 资源建议放在 `public/assets/ui/sound/`，场景声音 VFX 建议放在 `public/assets/vfx/sound/`。这些是未来建议目录，本规则不要求现在创建。
 - 新增同类视觉效果时，尽量通过独立 View / UI 模块接入；美术资源路径不要写进 `PerceptionSystem`。
 

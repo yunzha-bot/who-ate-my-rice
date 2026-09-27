@@ -1,0 +1,189 @@
+[
+  {
+    "label": "after",
+    "matchSeed": 20260927,
+    "servedFlag": "false",
+    "servedUpdateCalls": 2,
+    "phase": "对局中 / 00:00",
+    "possessRestart": {
+      "menu": "OPEN",
+      "clicked": "CLICKED",
+      "restartPhase": "对局中 / 00:00"
+    },
+    "movedRestart": {
+      "menu": "OPEN",
+      "clicked": "CLICKED",
+      "restartPhase": "对局中 / 00:00"
+    },
+    "finalPhase": "对局中 / 00:05",
+    "seed": "20260927 / 20260927",
+    "idle": {
+      "width": 1422,
+      "height": 804,
+      "ring": 359,
+      "waveBlue": 2884,
+      "waveWarm": 0,
+      "phase": "对局中 / 00:01"
+    },
+    "idleBurst": {
+      "frames": [
+        {
+          "ring": 359,
+          "waveBlue": 2885,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:01"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2895,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:02"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2894,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:02"
+        },
+        {
+          "ring": 364,
+          "waveBlue": 3152,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:03"
+        },
+        {
+          "ring": 545,
+          "waveBlue": 3547,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:03"
+        },
+        {
+          "ring": 555,
+          "waveBlue": 3502,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:04"
+        }
+      ],
+      "saved": {
+        "waveBlue": 3547,
+        "ring": 555
+      },
+      "inMatchFrames": 6,
+      "inMatchRingMax": 555
+    },
+    "possess": "CLICKED",
+    "possessed": {
+      "width": 1422,
+      "height": 804,
+      "ring": 359,
+      "waveBlue": 2128,
+      "waveWarm": 0,
+      "phase": "对局中 / 00:02"
+    },
+    "possessBurst": {
+      "frames": [
+        {
+          "ring": 359,
+          "waveBlue": 2143,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:02"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2143,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:02"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2143,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:03"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2143,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:03"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2143,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:04"
+        },
+        {
+          "ring": 359,
+          "waveBlue": 2143,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:04"
+        }
+      ],
+      "saved": {
+        "waveBlue": 2143,
+        "ring": 359
+      },
+      "inMatchFrames": 6,
+      "inMatchRingMax": 359
+    },
+    "released": "CLICKED",
+    "moved": {
+      "width": 1422,
+      "height": 804,
+      "ring": 564,
+      "waveBlue": 3586,
+      "waveWarm": 0,
+      "phase": "对局中 / 00:01"
+    },
+    "moveBurst": {
+      "frames": [
+        {
+          "ring": 565,
+          "waveBlue": 3861,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:02"
+        },
+        {
+          "ring": 551,
+          "waveBlue": 3595,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:02"
+        },
+        {
+          "ring": 550,
+          "waveBlue": 3539,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:03"
+        },
+        {
+          "ring": 550,
+          "waveBlue": 3537,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:03"
+        },
+        {
+          "ring": 673,
+          "waveBlue": 3829,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:04"
+        },
+        {
+          "ring": 640,
+          "waveBlue": 3847,
+          "waveWarm": 0,
+          "phase": "对局中 / 00:04"
+        }
+      ],
+      "saved": {
+        "waveBlue": 3861,
+        "ring": 673
+      },
+      "inMatchFrames": 6,
+      "inMatchRingMax": 673
+    },
+    "consoleErrors": [],
+    "knownWarnings": [
+      "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+    ]
+  }
+]

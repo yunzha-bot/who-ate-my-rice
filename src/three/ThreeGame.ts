@@ -83,6 +83,13 @@ const HIDE_NOTICE_MS = 3_600;
 const pointText = (value: { x: number; z: number } | null | undefined) => value
   ? `(${value.x.toFixed(1)}, ${value.z.toFixed(1)})` : '无';
 
+// 玩家声音探测表现层（声音范围圈 + 彩色动态声纹）已于 2026-09-27 停用：
+// `SoundVisualView` 的实现、测试与 `GAME_CONFIG.perception.soundVisual` 数值全部保留，
+// 这里只用这一个常量关掉它的实例化与逐帧更新；恢复时把下面的值改回 `true` 即可。
+// 停用前快照、接线记录、配置说明与恢复步骤见 archive/features/player-sound-visual/README.md。
+// AI 真实听觉（`PerceptionSystem` / `SoundEventSystem`）与 DEV-B 调试完全不受影响。
+const PLAYER_SOUND_VISUAL_ENABLED: boolean = false;
+
 export class ThreeGame {
   private readonly runtime = new RuntimeDebugOverrides();
   private scene = new THREE.Scene();
@@ -112,7 +119,7 @@ export class ThreeGame {
     this.doorSystem, C.pulseLock.rows, C.pulseLock.cols, C.pulseLock.mines);
   private doorViews = new Map<string, DoorView>();
   private sound = new SoundEventSystem(this.runtime);
-  private soundVisual: SoundVisualView;
+  private soundVisual: SoundVisualView | null = null;
   private traces = new RiceTraceSystem();
   private vision = new VisionSystem(this.runtime);
   private perceptionGeometry = new PerceptionGeometry(WALLS, DOOR_NODES,
@@ -229,7 +236,8 @@ export class ThreeGame {
     this.fixedMatchSeed = import.meta.env.DEV
       ? parseMatchSeed(new URLSearchParams(window.location.search).get('matchSeed')) : null;
     this.scene.background = new THREE.Color(C.backgroundColor);
-    this.soundVisual = new SoundVisualView(this.scene);
+    this.soundVisual = PLAYER_SOUND_VISUAL_ENABLED
+      ? new SoundVisualView(this.scene, import.meta.env.DEV) : null;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
     container.append(this.renderer.domElement);
@@ -2330,15 +2338,17 @@ export class ThreeGame {
       this.safetyPaths.update(this.deepseekAI.safetyDebug, this.human.position);
     const faction = this.control.informationObserver;
     if (!faction) {
-      this.soundVisual.update(null, null, false, this.sound.nowMs);
+      if (PLAYER_SOUND_VISUAL_ENABLED)
+        this.soundVisual?.update(null, null, false, this.sound.nowMs);
       return;
     }
     const listener = faction === 'HUMAN' ? this.human.position : this.player.position;
     const heard = this.sound.heardBy(listener, faction, this.camera, this.perceptionGeometry);
     const probe = heard ?? this.sound.analyzeBy(listener, faction, this.camera, this.perceptionGeometry);
     // Development display also exposes heavily occluded events; production stays audible-only.
-    this.soundVisual.update(listener, this.debugPossessionEnabled ? probe : heard,
-      this.match.phase !== 'FINISHED', this.sound.nowMs);
+    if (PLAYER_SOUND_VISUAL_ENABLED)
+      this.soundVisual?.update(listener, this.debugPossessionEnabled ? probe : heard,
+        this.match.phase !== 'FINISHED', this.sound.nowMs);
     if (!this.debugPanel.isExpanded || this.debugPanel.root.hidden) return;
     const sight = this.vision.get(faction);
     this.updateDebugDetailsPanel(faction, heard, probe, sight);
@@ -3102,7 +3112,7 @@ export class ThreeGame {
     this.sceneEditor.dispose();
     this.input.dispose();
     this.captureZone.dispose();
-    this.soundVisual.dispose();
+    this.soundVisual?.dispose();
     this.clearTraceViews();
     for (const view of this.doorViews.values()) view.dispose();
     this.renderer.dispose();
