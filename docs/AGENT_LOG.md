@@ -1141,3 +1141,25 @@
 
 - Git 检查点：本轮只整理和核对文档；没有 commit、push 或 tag。代码、测试及验证证据均保持未提交状态，等待用户另行授权归档。
 - 已知限制与下一项任务：S7C-2 的功能及集中人工验收通过，但 Git 归档尚未授权，故不记为已完成归档。S7C-2b（DeepSeek AI 自主藏身）与 S7C-3（出生点和门状态随机化）尚未授权、未开始；没有获准的新开发任务。
+
+## 2026-09-27 · S7C-2 正式归档 + Codex Windows 客户端权限故障诊断记录
+
+- 任务名称：《谁吃了我的米》S7C-2 归档事实确认与 Codex Windows 桌面客户端权限故障归档。当前阶段：S7C-2 已按前置条件 10 完成 Gate（验收 + 日志 + commit + push）；S7C-2b 与 S7C-3 仍未授权。
+- 本轮性质与边界：**纯文档轮**。只追加本日志并在 `docs/DEEPSEEK_HANDOFF.md` 记录未解决环境问题；不改任何生产代码 / 测试 / `vite.config.ts` / `GAME_CONFIG` / `docs/GAME_BALANCE_CONFIG.md`，不改 `.codex/config.toml`，不读取或改动 `.trae/`、`.dsh-meow/`，不修改 Windows ACL 或 Git 全局配置，不运行新的权限测试，不执行 `git add` / `commit` / `push` / `reset` / `clean` / `stash`。
+- S7C-2 归档事实（本轮本人实测，只读）：`git rev-parse HEAD` 与 `git rev-parse origin/main` 均为 `f24304797ecff97be7d9f43efb9f4ffaa0621f8d`，`git rev-list --left-right --count origin/main...HEAD` = `0 0`；提交标题 `feat: complete s7c-2 hide search and visual targets`，`git show --stat` 为 **67 个文件、+11 635 / −170**，与用户给出的已确认事实 1、2 一致。`.git/MERGE_HEAD` / `REBASE_HEAD` / `CHERRY_PICK_HEAD` / `rebase-merge` / `rebase-apply` 全部不存在。
+- 本轮实测的 Git 网络状态（只读命令，不是新的权限测试）：`git ls-remote origin refs/heads/main` 失败，报 `schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e) - 安全程序包没有可用的凭证`，退出码 1。**失败的是当前 DSH 执行环境的 Git HTTPS 读取，与下述 Codex 沙箱账户的结论是两件独立的事，不得混为一谈。** 本轮未尝试任何 `http.sslBackend` 切换或凭证修复。
+- Codex「帮我批准」模式（受限沙箱）**用户已确认的事实**（来源为用户的当次诊断报告，本轮未复测）：
+  1. 使用 Windows 独立沙箱账户。
+  2. `workspace-write` 能正常读写项目普通文件。
+  3. 原先的离线沙箱无法访问 `github.com:443`；创建项目专用档案 `who-ate-my-rice-git` 后，联网沙箱启动成功。
+  4. 网络 TLS：Git for Windows 系统配置默认使用 Schannel；受限联网沙箱下出现 `SEC_E_NO_CREDENTIALS (0x8009030e)`；临时以 `git -c http.sslBackend=openssl ls-remote origin refs/heads/main` 读取成功。因此 **OpenSSL 是当前已经实际验证过的 HTTPS 读取解决方式，但它只是命令行级临时覆盖，不是持久修复**。
+  5. Git 元数据权限：项目配置已声明当前仓库 `.git` 可写，但执行 `git config --local http.sslBackend openssl` 时创建 `.git/config.lock` 失败并报 `Permission denied`。`.git` 内存在两组未解析 SID 的 DENY ACE，而已检查的当前 `CodexSandboxOnline` 身份与其令牌组均不匹配。
+- **当前无法确定底层拒绝的根因**（本轮结论，不得写成已确定）：拒绝究竟来自 Windows ACL、沙箱文件系统规则，还是其他限制，现有证据不足以判定。`.git` 下 DENY ACE 的 SID 未解析且与已核对身份不匹配，只说明「已检查的身份不是这些 ACE 的命中者」，**不等于** ACL 已被排除，也不等于沙箱规则就是原因。本轮不再做任何新的权限探测。
+- Codex「完全访问权限」模式（**用户已确认的事实**）：以 `bilibili` Windows 用户身份运行；GitHub `ls-remote` 与 `git fetch` 已成功。**但 Codex 自身的自动 commit / push 尚未在该模式下单独测试**，因此该模式不能记为已验证可完成归档。
+- 相关项目配置：`.codex/config.toml`（本轮**未修改**）。它声明 `default_permissions = "who-ate-my-rice-git"`、`approval_policy = "on-request"`、项目专用档案在项目路径上 `.` 与 `.git` 为 `write`、`.codex` 为 `read`、`.trae` 与 `.dsh-meow` 为 `deny`、网络 `github.com` 为 `allow`。**该配置尚未使受限沙箱具备完整自动归档能力**（`git config --local` 写 `.git/config.lock` 仍被拒），因此不能把「配置里写了 `write`」当作权限已修复的证据。
+- 暂定解决方案（**工作流选择，不是缺陷修复**）：保留项目专用沙箱用于日常开发；正式归档时优先评估客户端的「单条 Git 命令审批」能力。若当前客户端不支持，则在用户明确授权具体归档任务后，**暂时**使用完全访问模式做精确暂存、提交与正常推送，完成后恢复受限模式。**这只是暂定工作流，不得宣称 Git 权限问题已修复**，也不得在未获用户当次授权时使用完全访问模式提交。
+- 本轮实际执行的检查：`git rev-parse` / `git rev-list --left-right --count` / `git log --oneline -3` / `git show --stat --oneline` / `git status --porcelain` / `.git` 残留文件探测 / `git check-ignore`，全部为只读。**未运行 `npm test`、`npx tsc --noEmit`、`npm run build`**：本轮源码与测试零改动，属纯文档轮，按前置条件 7 说明未运行游戏测试的原因；`npm test` 基线仍为本工作区最近记录的 642 / 642。
+- 工作区实际状态（本轮核对）：`git status --porcelain` 42 条，全部为未跟踪条目——`?? .codex/`、`?? .dsh-meow/`、`?? .trae/`，以及 `docs/verification/S7C-2-r2/`、`r3/`、`r4/` 下 38 个复核产物（截图 / AI JSON / 控制台日志）。`docs/verification/S7C-2-r2/r4` 的部分 README 与脚本已随 `f243047` 归档，其余重复截图与导出的 AI JSON 仍留在工作区未提交。`.codex/` **既未被 Git 跟踪，也不在 `.gitignore` 中**（`git check-ignore -v .codex` 无输出），因此它会长期出现在未跟踪清单里；本轮未修改 `.gitignore`，也未暂存它。
+- 已知限制与未验证：① 受限沙箱的根因未定；② 完全访问模式下的自动 commit / push 未测试；③ `.git/config.lock` 的拒绝来源未定（ACL / 沙箱规则 / 其他）；④ 本轮未复测任何权限命令，也没有验证 `http.sslBackend` 的持久化方案；⑤ 本轮未做浏览器验证（无游戏代码改动）。
+- 下一步：S7C-2b 的技术设计与任务拆分（本轮已启动，见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` 与交接文档）；**不实现功能代码、不改 `GAME_CONFIG`、不改已验收的 S7C-2 机制、不提前实现 S7C-3**。归档相关结论保持「暂定工作流」措辞，等用户另行授权。
+- Git 检查点：本轮**未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash；未读取、暂存或修改 `.trae/`、`.dsh-meow/`。

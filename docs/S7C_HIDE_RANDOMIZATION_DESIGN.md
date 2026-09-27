@@ -551,6 +551,248 @@ Human AI 只依据公开米痕、Last Seen、声音和有限搜索生成家具�
 
 第三轮曾有一项视觉验收失败（面向家具时没有可见轮廓），该结果保留在历史记录；第四轮修复后，用户确认 Human 白色轮廓通过。自动化检查及构建以 `docs/AGENT_LOG.md` 本轮追加记录为准；详细逐轮证据见既有 `docs/verification/S7C-2-r2/`、`r3/`、`r4/` 产物。本节不代表 Git 提交或推送已经完成。
 
+## 4.10 S7C-2b：AI 自主藏身、逃跑与人类威胁适应（**技术设计与任务拆分；未授权、未开始、无功能代码**）
+
+> **状态（2026-09-27）**：本节**只是设计与任务拆分**，由用户在本轮明确要求「启动 S7C-2b 开发规划」，**不构成开工授权**。本轮没有落任何功能代码、没有改 `GAME_CONFIG`、没有改 S7C-2 已验收机制。按前置条件 2，开工前须由用户逐项批准 §4.10.9 的参数与 §4.10.10 的任务切片，并先确认 §4.10.2 的信息边界。
+>
+> **S7C-3（随机地图）不属于本节**，不得提前实现。
+
+### 4.10.1 目标与最小可交付定义
+
+让 **AI 控制的 DeepSeek 娘**在既有找米主线上具备：
+
+1. 正常状态下继续执行现有寻找大米任务（**不改** GAME_CONFIG、不改选米评分与 `DropSeek` 主流程）；
+2. 根据**合法可感知信息**发现人类威胁（复用现有 `assessThreat` 的 Vision / Sound / Last Seen 与 8 方向声音投影）；
+3. 受到追逐时选择逃跑，**或**前往一个**合法**的家具藏身位置（AI 手里只有一个空手逃跑目标选择器 `selectEscapeGoal`）；
+4. 到达藏身位置并满足**正式交互条件**后进入藏身状态（复用 `HideSystem` + `checkHideRegionPosition`，不新建第二套合法性判定）；
+5. 依据**已批准的公开信息与有限状态条件**决定何时退出藏身；
+6. **避免**原地反复进出、在多个藏身点之间无限循环、以及目标失效后卡住；
+7. 与现有 Human AI 搜查规则**一致**，不读取玩家/人类才有权知道的隐藏信息。
+
+一句话的「最小可交付版本」：**AI 在一次真实追逐中能躲进一件合法家具、停留一段时间、在威胁解除后自己出来继续吃米，且全程可被 DEV 面板与 AI JSON 复核。**
+
+### 4.10.2 信息边界（必须先确认，决定整个设计是否成立）
+
+**AI 可以读取（全部是公开或自身信息）**
+
+| 信息 | 来源 |
+|---|---|
+| 自己真实位置 / 朝向 / 移动与卡路状态 | `DeepSeekAIInput.deepseek` + 现有 `trackPathProgress` |
+| 当前真实目视的 Human 坐标 | `visibleHuman`（仅当前可见帧） |
+| Human 当前连续静止时长与事件 ID | `humanStillMs` / `humanStillEventId`（仅可见帧） |
+| 已听到的 Human 声音（含 8 方向投影） | `heardHuman` / `heardHumanDanger` |
+| Human 的 Last Seen（8,000 ms 内） | `lastSeenHuman` |
+| 门状态、米堆状态与进度、剩余锁位、抓捕进度、冲刺/眩晕状态 | 现有输入字段 |
+| **当前已应用地图**的**公开**藏身点数据（id / 锚点 / `interactionRegion` / 绑定家具 id 与矩形） | 新增 `hideSpots` / `furniture` 字段，与 `HideSearchCandidates` 读的是同一份公开数据 |
+| 自己是否在藏身、藏在哪个点、已藏多久、每点冷却与失败记忆 | `HideSystem` 的**自有**状态 + 控制器内部计数 |
+
+**AI 绝对不能读取**
+
+- **对手（Human/Human AI）的实时位置**，尤其是墙后、关门后的位置；关门外只能靠 `lastSeenHuman` / 声音 / 自己的几何推断（与现有「不透视」红线一致）。
+- **`HideSystem.occupancyOf()`** 或任何「某个藏身点里有没有人」的信息；AI 侧输入结构里**不允许出现** `occupancy` / `concealedSpotId`（照 `tests/rice-trace-clues.test.mjs` 的做法用**源码级断言**把守）。
+- Human AI 的私有决策状态（它怀疑哪件家具、它的候选排序、它是否正在来查自己）。
+- **玩家专用的指向型白色轮廓**：`src/systems/DeepSeekVisualTarget.ts` 与 `HideSearchView` 的白色高亮，是「人工控制 DP 娘时的视觉提示」，**必须保持只读表现层**，不得被 NPC 决策系统引用或复制成「AI 的藏身点高亮」。同理不得把 `resolvePlayerQPlan` / `HideInteractionArbitration` 的**按键仲裁**搬进 AI 决策。
+- Human 玩家的技能冷却、隐藏者真实坐标、以及任何只在 DEV 面板出现的「开发者真值」。
+
+### 4.10.3 可复用系统（不新建第二套）
+
+| 能力 | 复用对象 | 说明 |
+|---|---|---|
+| 藏身占用与状态机 | `src/systems/HideSystem.ts` | 唯一占用真相。**但现有 `enter()` 按设计拒绝非人工控制（`NOT_PLAYER_CONTROLLED`），必须新增一个受明确令牌保护的 AI 入口**，不能放宽玩家入口的校验。 |
+| 藏身几何合法性 | `checkHideRegionPosition()` + `HideSpot.interactionRegion`（`src/three/map/HideInteractionRegion.ts`） | 区域成员（精确几何）+ 真实可站立 + 家具可接近表面无遮挡 + 真实导航格。禁止在 AI 侧重写一份。 |
+| 寻路 | `NavigationSystem.findPath` / `nearestFree` | 仍只是「节点」；最终位移一律走 `CollisionWorld`，AI 不得瞬移（含藏身站位）。 |
+| 感知 | `PerceptionSystem`（Vision / Sound / Last Seen / 米痕） | 不新增感知通道；声音仍只投影 8 方向。 |
+| 抓捕与胜负 | `GameStateSystem.advancePlaying` / `forceCapture`、`isCaptureEligibleXZ` | 不新增胜负与抓捕规则；藏身只把资格门控为 false（现有写法见 `ThreeGame.ts` 的 `captureZoneActive`）。 |
+| 威胁评估与逃跑 | `DeepSeekAIController.assessThreat` / `updateSafety` / `selectEscapeGoal` | 藏身作为逃跑策略的一个**并列选项**接入，不重写逃跑评分。 |
+| 循环抑制先例 | `escapeVisitMemoryMs` / `escapeRecentVisitCount` / `escapeGoalHoldMs` / `escapeSwitchScoreMargin` / `stuckRepathMs` | 已有「近期访问惩罚 + 目标保持 + 切目标阈值 + 卡路重算」，藏身的选择与退出沿用同一套纪律，不新造第二套振荡抑制。 |
+| DEV / 日志 | `DebugDetailsPanel` 的 `hide` 分类、`AILogCollector` 的 `hideEvents` 时间线 | 只加字段与事件种类，不新建第二套日志。 |
+| 测试器械 | `tests/human-ai-walk.mjs` 的真实走图驱动 | 按 `ThreeGame.updatePlaying()` 同口径推进；S7C-2b 需要它的 DeepSeek 版。 |
+
+### 4.10.4 需要新增的状态、转换与事件
+
+**状态**：新增 `HIDE`，并**沿用 Human AI `CHECK_HIDE` 的相位写法**（单一状态 + 相位），避免把「走位 / 藏身 / 退出」拆成三个新的顶层状态：
+
+```ts
+export type DeepSeekAIState = ... | 'HIDE';
+export type DeepSeekHidePhase = 'NONE' | 'TRAVEL' | 'CONCEALED' | 'EXIT';
+```
+
+理由：S7C-2 已经用 `HumanCheckHidePhase = 'NONE' | 'TRAVEL' | 'DWELL' | 'DONE'` 的写法把「一个状态 + 相位」跑通并验收，S7C-2b 沿用同构写法可以少一套状态、DEV 面板与日志也能对称。
+
+**转换（新增部分，其余转移不变）**
+
+| 从 | 到 | 条件（全部公开） |
+|---|---|---|
+| `EVADE` | `HIDE`（TRAVEL） | `selectHideSpot()` 返回合法候选 **且** 候选评分优于当前空手逃跑目标 |
+| `EVADE` | `EVADE`（原逻辑） | 无合法候选 / 候选全在冷却 / 候选评分不占优 |
+| `HIDE`(TRAVEL) | `HIDE`(CONCEALED) | 真实站位落在候选点的到达容差内 → 向游戏层发 `hideRequest` → 游戏层校验通过并回执 `ENTERED` |
+| `HIDE`(TRAVEL) | `EVADE` | 真实危险（抓捕进度 > 0 / 眩晕 / 强危险声 / 安全距离失守）或候选失效（地图重建、家具移动） |
+| `HIDE`(CONCEALED) | `HIDE`(EXIT) | 满足 §4.10.6 的退出条件（最短藏身时间 + 威胁解除 + 出口安全 + 有可达米路线 + 冷却） |
+| `HIDE`(EXIT) | `RECOVER` | 游戏层回执 `EXITED` |
+| `HIDE`(EXIT) | `CONCEALED` | 回执 `HUMAN_BLOCKING` / 出口不安全 → 退回藏身并按重查间隔重试 |
+
+**事件**（写进现有 `hideEvents` 时间线与 DEV，不新建数组）：`HIDE_AI_REQUEST`（请求进入，带 spotId 与公开理由）、`HIDE_AI_ENTERED`、`HIDE_AI_REJECTED`（带拒绝码）、`HIDE_AI_EXIT_REQUEST`、`HIDE_AI_EXITED`（带退出原因）、`HIDE_AI_ABORT`（走位中止，带原因）、`HIDE_AI_SPOT_BLOCKED`（该点加入失败记忆）。事件只在真实变化时写入，不逐帧刷屏（沿用 S7C-2 纪律）。
+
+### 4.10.5 导航与家具站位的合法性保证
+
+**结论（必须先说清）**：藏身点的**锚点本身不保证在导航格上**——已验收的 `hide_main_wardrobe (-16.65, -6.60)` 距衣柜中心 1.33 u、区域半径 1.60 u，而「贴衣柜窄面 (−0.30) + `STANCE_STAND_OFF 0.3` = 衣柜中心 +0.60」这类点落在**家具 AABB 内部**，不可站立。因此 AI **不能**用「朝家具中心走」这种几何最终接近（那是 Human AI 站在家具外侧、有 1.5 u 扇形时才成立的技巧）。
+
+**AI 的合法藏身位置集合** =
+
+1. 落在该藏身点 `interactionRegion` 的**精确几何**内（`pointInHideRegion`）；
+2. 该点**本身可站立**（`CollisionWorld.canOccupyStaticXZ`）。这一步顺带排除「家具内部」与「墙里」；
+3. `navigation.nearestFree(point, doorStates)` 返回的格心距该点 **≤ `REGION_NAV_SNAP_LIMIT`(0.45)** —— 与既有 `checkHideRegionPosition` 同一条判定；
+4. 从当前位置 **A\* 可达**；
+5. 交互线（该点 → `furnitureApproachSurfacePoint`）无墙、无其他家具、无非 OPEN 门叶遮挡。
+
+**关键简化（降低风险与测试成本）**：AI **只在「格心」上藏身**，也就是把候选点直接取成 `nearestFree` 返回的导航格心（再验证它仍在区域内）。这样 A* 终点就是真实可行走点，**完全不需要 `HumanAIController.finalApproach()` 那种容差走位**，也不会出现 S7C-2 修复过的「网格点与原始点最多差 0.45 u → 反复 STANCE_LOST」。代价是 AI 的站位精度被网格（0.4 u）量化，对「藏身」语义无影响。
+
+**进入条件（游戏层权威校验，AI 不能自证）**：AI 只发「请求进入 spot X」，真正的 `enterAsAI()` 由游戏层用**本帧真实位置**复核第 1–5 条后才写入占用；任何一条不成立就回执拒绝码，AI 加失败记忆并回到 `EVADE`。这条**与 S7C-1B 的玩家 E 路径共用同一个几何内核**，区别只有两点：AI 不需要按键、AI 不需要「面向家具」（`resolvePlayerQPlan` 的 `pointed` 只服务玩家高亮，与 AI 无关）。
+
+### 4.10.6 退出条件与「不卡住、不振荡、不无限循环」的具体机制
+
+**退出条件（全部成立才退出；任一条不成立就留在藏身状态，并按 `hideRecheckMs` 重查）**
+
+1. 已藏身时长 ≥ `hideMinConcealMs` —— 防止「一进就出」。
+2. **威胁解除**：当前没有 `visibleHuman`；而且下列任一成立：
+   - 无已知威胁点（`threatEstimate === null`），或
+   - 到已知威胁点的距离 ≥ `hideExitSafeDistance`（建议复用已批准的 `escapeMinSeparation`(3.0) 语义，**不新增第二个语义相同的参数**），或
+   - 已知威胁信息已过期（Last Seen 超过 `lastSeenAlertMs`(2,500) / 声音事件已失效）。
+3. **出口安全**：真实出口点（= 同一锚点区域内的 AI 站位）能容纳角色，且 **Human 角色圆不与它重叠**。注意 `HideSystem.exit({humanOverlap})` 已经提供这条判据，但当前 `ThreeGame.exitHide()` 只在玩家 E 路径计算它；AI 退出路径必须**显式传入**，不能依赖默认值。
+4. **还有事可做**：存在一份未完成米堆，且从出口出发的 A* 路线不穿过已知威胁的抓捕半径。**没有可达米堆就不进入藏身**（进入前就要检查），这样「藏到天荒地老」在功能上不会发生。
+5. 距上次退出 ≥ `hideReenterCooldownMs`（见下）。
+
+**不振荡 / 不无限循环（逐条对应任务要求 6）**
+
+| 风险 | 机制 | 取值归属 |
+|---|---|---|
+| 原地反复进出同一藏身点 | `hideMinConcealMs`（最短藏身）+ `hideReenterCooldownMs`（同点再次进入冷却）。两者都是**时间窗**，不是概率 | 待批准 |
+| 在两个藏身点之间来回 | 复用现有「近期访问惩罚」纪律：记录最近藏身点（spotId + 时间 + 进入时与已知威胁的距离），`hideRecentSpotCount` / `hideRecentSpotPenalty`；并且**切换藏身点要超过 `escapeSwitchScoreMargin` 才允许**（沿用既有阈值纪律） | 待批准（可复用既有惩罚语义） |
+| 候选永远选不出来（无限重选） | 每帧/每次评估失败都写「失败记忆」（点 + 时间 + 原因），`hideCandidateFailCooldownMs` 内不再选它；全部候选都在冷却 → 明确回落到原 `EVADE` 空手逃跑，并记 `HIDE_AI_ABORT: ALL_CANDIDATES_COOLED` | 待批准 |
+| 走位卡住 / 目标失效 | 复用 `stuckRepathMs`(800) + `stuckProgressEpsilon`(0.05) + `maxStuckRepathsPerTarget`(2)：走位阶段卡路即放弃该点（有界），**不退款**到「无限重试」 | 复用现有值 |
+| 地图变化后拿旧计划硬走 | 新增 AI 侧 `rebindMap()`；游戏层地图重建时同样调用（已有 `humanAI.rebindMap` 的同款接缝）。家具被移动/旋转/删除 → 立即作废候选并回 `EVADE` | 新增接口 |
+| Human AI 正好守在门口 | 退出条件 3 与 4 会拦住；不新增「透视知道它在门口」的通道，只按**可观察到的重叠与路线**判断 | — |
+| 被搜出 | `SEARCHED` 强制退出 + `forceCapture`（S7C-2 已实现），AI **不会**从藏身状态里「复活」——本阶段不新增「被发现后逃生」机制 | 已实现 |
+
+### 4.10.7 需要新增的接口（草案，供审查；不是最终签名）
+
+```ts
+// ① HideSystem：只在「AI 自主藏身」这一条路径上开放的入口。
+//    现有的 enter() 语义（拒绝非人工控制）保持不变。
+enterAsAI(context: {
+  phase: GamePhase;               // 必须 PLAYING
+  faction: 'DEEPSEEK';
+  position: Point;                // 本帧真实站位
+  spotId: string;
+  spotCode: string;               // checkHideRegionPosition 的 code
+  spotLegal: boolean;
+  captureProgressMs: number;
+  sprintState: SprintState;
+  /** 由游戏层签发的、本帧有效的一次性令牌；防止控制器绕过权威校验。 */
+  requestToken: number;
+}): HideEnterResult;              // 拒绝码沿用 HideRejectCode（去掉 NOT_PLAYER_CONTROLLED 的语义分支）
+
+// ② 单一地图快照构造点（照 createHumanAiMapSnapshot() 的先例）。
+//    只有它知道真实地图；AI 控制器保持纯逻辑、可在 Node 里直接测。
+export function createDeepSeekHideMapSnapshot(input: {
+  hideSpots: readonly HideSpot[];
+  furniture: readonly Rect[];
+}): DeepSeekHideMapSnapshot;      // { spots: { id, anchor, region, furnitureId, furnitureRect }[] }
+
+// ③ 纯逻辑候选筛选（新模块，例如 src/systems/DeepSeekHideCandidates.ts）。
+export function selectHideSpot(input: DeepSeekHideCandidateInput): DeepSeekHideCandidateResult;
+//    输入只有公开几何 + AI 自身状态；输出 { spotId, stancePoint, pathNodes, score, reason } | { code, reason }
+//    结构上不存在 occupancy / humanPosition 以外的对手真值字段（源码级断言把守）。
+
+// ④ DeepSeekAIController 的输入/输出增量（全部可选，缺省 = 该能力不存在）
+interface DeepSeekAIInput {
+  hideSpots?: readonly DeepSeekHideSpotSnapshot[];   // 公开数据
+  hideMapRevision?: number;                          // 地图代次，变化即作废计划
+  // ...其余不变
+}
+interface DeepSeekAICommand {
+  // ...其余不变
+  hideSpotId?: string | null;        // 请求进入（游戏层权威校验）
+  hideRequestToken?: number | null;  // 一次性令牌
+  hideExitRequest?: boolean;         // 请求退出（游戏层复核 Human 重叠与出口安全）
+}
+onHideResult(spotId: string, result: string): void;  // 回执只给布尔级结果 + 拒绝码
+```
+
+### 4.10.8 DEV 面板、日志与浏览器测试能力
+
+- **DEV 面板**：在现有 `hide` 分类内**新增若干行**（不新增分类、不动 `DebugTopRow`、不覆盖 DEV 入口）：AI 藏身相位、目标藏身点与站位、公开理由、请求 / 进入 / 拒绝 / 退出计数、最近拒绝码、最近退出原因、已藏身时长、同点冷却剩余、失败记忆条数、候选评分与循环抑制原因。字段必须与玩家侧字段**显式区分**（沿用 S7C-2 的「AI 已知 / AI 推断 / 开发者真值」三段纪律）。
+- **AI JSON**：`hideEvents` 时间线新增 §4.10.4 的事件种类；`formatVersion` 由 **1.5 → 1.6**。既有 `events` / `hideEvents` / `humanSearchEvents` / `playerSearchEvents` 的字段与语义**不得改动**。
+- **浏览器测试能力**：沿用现有 `docs/verification/S7C-2-rN/browser-check.mjs`（本机 Chrome headless + CDP）与 `tests/*-walk.mjs` 的真实走图驱动。**本轮不新增验证材料**，S7C-2 的现有产物原地保留（见交接文档 §9）。
+
+### 4.10.9 需要用户批准的参数（**全部尚未写入 `GAME_CONFIG`**）
+
+> 下面只列**建议值**与理由，用于让用户逐项拍板；**在用户批准前不得写进 `src/config/gameConfig.ts`，也不得同步进 `docs/GAME_BALANCE_CONFIG.md`**。凡已有同义参数一律**复用**，不新增第二个语义相同的旋钮。
+
+| # | 参数（建议命名） | 建议值 | 单位 | 用途 / 理由 |
+|---|---|---:|---|---|
+| 1 | `hideThreatDistance` | 3.5 | 世界单位 | 进入 HIDE 评估的目视威胁距离；介于现有 `riskySprintDistance`(2.2) 与 `visionEvadeDistance`(5) 之间，只在「已经贴近」时才考虑藏身 |
+| 2 | `hideMinConcealMs` | 2,500 | 毫秒 | 最短藏身时间，防「一进就出」 |
+| 3 | `hideRecheckMs` | 500 | 毫秒 | 藏身中的退出条件重查间隔，避免逐帧 A* |
+| 4 | `hideExitSafeDistance` | 复用 `escapeMinSeparation`(3.0) | 世界单位 | **不新增参数**，避免两个含义相同的安全距离 |
+| 5 | `hideExitRouteCheck` | 开 | 布尔 | 退出前检查「出口 → 未完成米堆」路线不穿过威胁抓捕半径 |
+| 6 | `hideReenterCooldownMs` | 8,000 | 毫秒 | 同一点退出后的再次进入冷却（防原地振荡） |
+| 7 | `hideCandidateFailCooldownMs` | 6,000 | 毫秒 | 一次走位失败 / 被拒绝后该点的冷却（与 Human AI 的 `hideCheckFailureCooldownMs` 数值一致，便于对称复核） |
+| 8 | `hideRecentSpotCount` / `hideRecentSpotPenalty` | 3 / 复用 `escapeRecentVisitPenalty`(5) | 个 / 无量纲 | 近期藏身点记忆与惩罚（防两点间往返） |
+| 9 | `hideMaxConsecutive` | 2 | 次 | 连续藏身次数上限：超过后必须先完成一次进食或安全米路线才允许再藏（**这是「不用最大藏身时长也能防无限藏」的手段**） |
+| 10 | `hideMaxConcealMs` | `0`（= 不限制） | 毫秒 | 可选同步上限。**建议默认 0 并在参数注释里写明「0 = 不限制」**：因为任务书要求「避免无法结束的行为」，而真正兜底的是第 4/9 条（无可达米堆不进入、连续藏身上限），不是时间上限 |
+
+**不新增的参数**：藏身区域几何（`interactionRegion` 2.0 / 1.6·55° / 1.2）**一个字都不改**；`humanSearch`(1.5 / 120° / 12,000) 与 Human AI 的 `hideCheckFailureCooldownMs`(6,000) / `hideCheckMaxPerRound`(1) **一个字都不改**；`perception.lastSeenMs`(8,000) / `traceLifetimeMs`(15,000) 不改。
+
+### 4.10.10 任务切片（可独立开发、独立验证）
+
+| 切片 | 交付 | 依赖 | 独立验收（自动化） |
+|---|---|---|---|
+| **H1（推荐先做）** | 威胁驱动的藏身**合法性与候选选择**：`DeepSeekHideCandidates` 纯逻辑 + `createDeepSeekHideMapSnapshot` + 控制器只在 `EVADE` 内评估候选并记录「会选哪个点」，**不动 `HideSystem`、不进入藏身、不改移动** | 无（只读公开地图 + 现有威胁评估） | 真实地图上每个藏身点都存在至少一个「在区域内 + 可站立 + 格心吸附 ≤0.45 + A* 可达」的候选；无合法候选时必须落回原 `EVADE`；候选确定性与无占用字段的源码级断言 |
+| **H2** | 走位到候选点：`HIDE`(TRAVEL) 相位 + 复用 `followPath` + 卡路有界放弃 | H1 | 走图驱动：AI 从追逐点真实走到候选点；中途真实危险立即中止并回到 `EVADE`；卡路时在 `maxStuckRepathsPerTarget` 内换点或放弃 |
+| **H3** | 进入藏身：`HideSystem.enterAsAI()` + 游戏层权威校验 + 令牌 + `player.visible` / `VisionSystem.setConcealed` / 抓捕门控 / 进食中断 / 冲刺与移动封锁对 AI 同样生效 | H2 | 真实 `CollisionWorld` 下逐条拒绝路径（站位不合法 / 表面被挡 / 无导航格 / 非 PLAYING / 抓捕进度 > 0 / 眩晕）；进入后 Human 侧 `CONCEALED`、抓捕资格 false、位移 0；令牌重放必须被拒绝 |
+| **H4** | 退出条件与回执：`HIDE`(EXIT) 相位 + 复用 `HideSystem.exit({ humanOverlap })` + `recover` 回到既有 `RECOVER` | H3 | 逐条：最短藏身未到不退出；威胁未解除不退出；Human 压在出口不退出（`HUMAN_BLOCKING`）且退回藏身；无可达米堆不退出；满足全部条件后退出并回到 `RECOVER` |
+| **H5** | 循环抑制 + DEV 字段 + AI JSON 事件 + `formatVersion` 1.6 + 文档 | H4 | 同点冷却、失败记忆、近期藏身点惩罚、`hideMaxConsecutive` 各有用例；连续模拟长时间不得出现「无限进出」或「原地不动」；日志事件不逐帧刷屏 |
+
+**依赖关系**：H1 → H2 → H3 → H4 → H5（严格顺序）。H1 与 H2 之间可以并行做测试器械（`tests/deepseek-ai-walk.mjs`），但 H3 必须在 H2 的走位真实可跑之后才能验证。
+
+### 4.10.11 主要风险
+
+| 风险 | 说明 | 缓解 |
+|---|---|---|
+| **与 Human AI 搜查的耦合** | Human AI 每轮最多正式检查 1 件家具、同家具 6 秒冷却、同一次调查最多 3 件、总预算 15 秒。若 AI 藏身大幅改变局面，这些**已批准**的上限会改变藏身的实际收益 | 明确不动这四个上限；H3/H4 的验收里必须包含「Human AI 搜查链仍然成立」的回归；若要调上限，属**另一次独立的用户批准** |
+| **不透视被顺手破坏** | 退出条件 3/4 很容易写成「知道 Human 就在门口」 | 只允许用「Human 角色圆与出口是否重叠」这一条**几何**判据（本身就要求已知位置，且只有真实可见/最近目击才允许使用）；源码级断言禁止 `occupancy` 字段 |
+| **玩家路径被改坏** | `HideSystem` 是玩家 E 与 AI 共用的唯一状态 | `enter()` 保持原样，AI 只能走 `enterAsAI()`；`tests/hide-integration.test.mjs` 等既有玩家用例必须全绿 |
+| **AI 偶发原地停留（既有待办）** | S7B-2 的已知问题 | 藏身不得引入第二条「原地不动」的路径：`HIDE` 的每个相位都必须有**有界**的推进或放弃条件，DEV 必须能区分 `noMovementReason` |
+| **「关卡结束不了」** | 藏身导致对局无法推进 | 第 4 条（无可达米堆不进入）+ 第 9 条（连续藏身上限）兜底；另外 Human AI 的搜查链本身会主动来找 |
+| **发现即被抓** | 藏身被搜出＝立即抓捕，AI 没有反制 | **本阶段刻意的设计结果**，不新增反制；需在验收说明里写清「藏身不是安全区」 |
+| **测试器械缺失** | 现有 `human-ai-walk.mjs` 只驱动 Human | H2 起需要等价的 DeepSeek 走图驱动；H1 先做纯逻辑用例，把风险前置 |
+
+### 4.10.12 自动化测试与人工验收计划
+
+**自动化（预计新增 20–30 项，只增不减）**
+
+1. `tests/deepseek-hide-candidates.test.mjs`（纯逻辑）：区域成员 / 可站立 / 格心吸附 / A* 可达四条拒绝路径；无合法候选回落；确定性与稳定 ID 排序；**源码级断言**输入结构无 `occupancy` / `concealedSpotId` / `player` 字段。
+2. `tests/deepseek-hide-integration.test.mjs`（真实地图）：8 个藏身点各自至少一个真实合法候选；候选点不在家具 AABB 内；从两个出生点均可达。
+3. `tests/deepseek-hide-lifecycle.test.mjs`（真实 `HideSystem` + 走图驱动）：`EVADE → HIDE(TRAVEL) → CONCEALED → EXIT → RECOVER` 全链路；令牌重放被拒；`HUMAN_BLOCKING` 退回藏身。
+4. `tests/deepseek-hide-loop-guard.test.mjs`：同点冷却、失败记忆、近期藏身点惩罚、`hideMaxConsecutive`；长时间连续模拟的进出次数上限断言。
+5. 回归：`human-ai-check-hide` / `human-ai-search-lifecycle` / `hide-integration` / `hide-target-resolution` / `deepseek-evade` / `deepseek-ai` / `navigation` / `apartment-map` 全部保持通过（**不得删改用例，只允许随语义同步**）。
+6. 变异验证：至少 4 次（把「格心吸附」放宽、关掉同点冷却、允许读取占用、去掉出口安全判据），每次都确认对应用例确实失败后复原。
+
+**人工验收（浏览器，草案；建议 5 项）**
+
+1. 选 Human 阵营（AI 控制 DeepSeek 娘）→ 追到 DeepSeek 娘附近 → 观察它是否**真的走向某件家具**而不是只会直线逃跑；DEV 面板 `Hide` 分类显示 AI 藏身相位、目标藏身点、公开理由。
+2. 进入藏身后：角色可视体消失、**普通抓捕进度停止累计**、Human AI 若来搜查仍能按既有 900 ms 流程把它搜出并抓捕（证明藏身不是无敌区）。
+3. 走近藏身家具后假装离开 / 拉开距离 → 观察 DeepSeek 娘是否在合理时间内**自己出来**并回到吃米；DEV 显示退出原因。
+4. 反复靠近 / 拉开 2–3 次 → 观察**不出现原地进出抖动**，DEV 显示同点冷却与失败记忆在起作用。
+5. 让它藏身期间继续吃米 / 结束对局 / 重开 / 暂停 → 状态、冷却、缓存路径必须干净清理，无残留。
+
+### 4.10.13 与 S7C-3 的边界
+
+S7C-3（出生点与门初始状态随机化）**不在本轮**，不得提前实现：不新增 `MatchRandom`、不改 `DoorSystem` 的初始状态入口、不动 `SPAWNS`、不接入种子。S7C-2b 的候选与走位逻辑**不得假设固定出生点或固定门状态**，但也不需要为随机化预留第二套接口——`rebindMap()` / `hideMapRevision` 已经足够覆盖「地图变了就作废旧计划」。
+
+---
+
 ## 5. S7C-3：出生点与局部门状态随机化（含随机种子复现）
 
 > **本轮（S7C-0 补充轮）不实施**——用户明确「不做随机布局」；本节仅作后续规划，须另行授权后再动 `DoorSystem` 与出生点。
@@ -590,7 +832,7 @@ Human AI 只依据公开米痕、Last Seen、声音和有限搜索生成家具�
 
 | # | 议题 | 建议方案 | 备选 / 影响 |
 |---|---|---|---|
-| 1 | DeepSeek **AI** 主动藏身是否纳入 S7C？ | 纳入，作为 S7C-2b：仅在 EVADE 且藏身点就在逃跑路线上、且无有效目视时考虑 | 不纳入 → 玩家选 Human 时藏身玩法不可见（S7C-2 的玩家检查没有对象） |
+| 1 | DeepSeek **AI** 主动藏身是否纳入 S7C？ | 纳入，作为 S7C-2b：仅在 EVADE 且藏身点就在逃跑路线上、且无有效目视时考虑 | 不纳入 → 玩家选 Human 时藏身玩法不可见（S7C-2 的玩家检查没有对象）。**2026-09-27 更新：已按本轮用户要求完成 S7C-2b 技术设计与任务拆分（§4.10）；建议值改为「威胁驱动的合法候选选择」，比本行的早期描述更完整；仍未授权、无功能代码。** |
 | 2 | 藏身点数据扩展（anchor/kind/furnitureId/朝向） | 按**表 3.1** 的 6 个锚点（+1 备选）落地，并加自动校验（可站立、导航格可用、距门 ≥ 2.0、距米 ≥ 1.2） | 「床底」按第 20 条处理；真正钻床需改床碰撞 |
 | 3 | 交互键与优先级 | 继续用 `E`；优先级：扫雷面板 > 门 > 藏身点 > 进食 | 也可给藏身单独键（如 `Q`），但会与锁门冲突 |
 | 4 | 进入/退出耗时 | 站定 `400 ms`（复用 `rice.prepareMs`），移动即取消；退出立即生效 | 更长进入时间会削弱藏身 |
@@ -616,7 +858,7 @@ Human AI 只依据公开米痕、Last Seen、声音和有限搜索生成家具�
 
 ## 7. 推荐首先开发的最小闭环及验收方法
 
-**历史路线建议：先完成 S7C-1A（藏身点白模与地图配置），再实施 S7C-1B（玩家基础藏身交互）**。S7C-1A、S7C-1B 均已验收归档；**S7C-2 已实现并通过用户集中浏览器人工验收，正式 Git 归档待单独授权**；S7C-2b 与 S7C-3 仍未授权。
+**历史路线建议：先完成 S7C-1A（藏身点白模与地图配置），再实施 S7C-1B（玩家基础藏身交互）**。S7C-1A、S7C-1B 均已验收归档；**S7C-2 已实现、集中人工验收通过并完成归档推送（阶段 Gate = PASS）**；S7C-2b 已有技术设计与任务拆分（§4.10）但**未授权**；S7C-3 仍未授权。
 
 - **S7C-1A 数据与校验**（**已按本行执行完成**）：`HideSpot` 扩展（kind/furnitureId/facing，`x/z` 即锚点）+ 表 3.1 的 6 条数据（`second_cabinet` 未采纳）+ 2 个纸箱白模数据 + 锚点/不变量自动校验测试。**未接入玩法**（与 S7B-3B 的 3B-0/3B-0b「接口与决策分离」做法一致）。
 - **S7C-1B 逻辑与判定**（已完成）：`HideSystem` + `E` 仲裁 + 移动/冲刺/进食/抓捕门控 + `VisionSystem` 隐藏入口 + `HideSearchView` + DEV `Hide` 分类。
@@ -692,3 +934,35 @@ Human AI 只依据公开米痕、Last Seen、声音和有限搜索生成家具�
 5. **S7B 整体与 S7C 整体均仍未完成**；S7C-2 / 2b / 3 均未授权；DEV-A 的后续扩展（JSON 导入器、进入/退出锚点拆分）与 DEV-B 的后续扩展同样未授权（DEV-A 已批准范围已完成、DEV-B 已批准范围已实现待验收，状态见 `docs/DEEPSEEK_HANDOFF.md`）。
 
 > **补记（2026-09-26，DEV-A 第一轮之后）**：上面第 3 条的「圆形／扇形藏身交互区域尚未批准」**已被 DEV-A 第一轮取代**——该区域现为已落地、**不接入玩法**的地图创作数据（`HideSpot.interactionRegion`，见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`）；仍然成立的部分是「现有单一 anchor 数据继续有效、语义不变，是否拆分进入／退出锚点留到未来单独决定」。本节列表保持为**当轮（文档同步轮）结论**，不改写历史。
+
+### 8.4 S7C-2b 设计轮与 Codex 权限归档轮的命令与结果（2026-09-27）
+
+> 本轮为**纯文档轮 + 只读源码审查**：交付 §4.10（S7C-2b 技术设计与任务拆分）、Codex 权限诊断归档与交接状态同步。**未开发任何功能代码、未改 `GAME_CONFIG`、未改 S7C-2 已验收机制、未删改既有浏览器验证材料、未 commit / push / tag。**
+
+| 命令 / 检查 | 结果 |
+|---|---|
+| `git rev-parse HEAD` / `git rev-parse origin/main` | 两者均为 `f24304797ecff97be7d9f43efb9f4ffaa0621f8d` |
+| `git rev-list --left-right --count origin/main...HEAD` | `0 0`（与远端双向同步；S7C-2 已归档） |
+| `git log --oneline -3` | `f243047 feat: complete s7c-2 hide search and visual targets` → `db8dfe6 feat: complete s7c-1b hiding and manual search` → `9b048fb docs: consolidate project logs and stage documentation` |
+| `git show --stat --oneline f243047` | **67 个文件、+11 635 / −170**，与用户确认的 S7C-2 归档事实一致 |
+| `.git/{MERGE_HEAD,REBASE_HEAD,CHERRY_PICK_HEAD,rebase-merge,rebase-apply}` | 全部不存在 |
+| `git status --porcelain` | 42 条，**全部为未跟踪**：`?? .codex/`、`?? .dsh-meow/`、`?? .trae/` + `docs/verification/S7C-2-r2|r3|r4/` 下 38 个复核产物（未删改） |
+| `git check-ignore -v .codex` | **无输出**（`.codex/` 未被忽略也未被跟踪；本轮未改 `.gitignore`，未暂存它） |
+| `git ls-remote origin refs/heads/main` | **失败**：`schannel: AcquireCredentialsHandle failed: SEC_E_NO_CREDENTIALS (0x8009030e)`，退出码 1。这是**当前 DSH 执行环境**的 Git HTTPS 读取问题，与 Codex 沙箱账户的结论相互独立；本轮**未**做任何凭证或 `http.sslBackend` 尝试（不运行新的权限测试） |
+| 只读源码审查范围 | `DeepSeekAIController`（状态、`assessThreat`、`updateSafety`、`selectEscapeGoal`、`followPath`、`reset` / `resumeAfterManualControl` / `rebindNavigation`）、`HideSystem`、`HideInteractionRegion`（`checkHideRegionPosition` / `REGION_NAV_SNAP_LIMIT`）、`NavigationSystem`、`HumanAIController` 的 `CHECK_HIDE` 相位、`HumanHideSearchStance`、`ThreeGame` 的接入点与 DEV 分类、`AILogCollector`（`formatVersion 1.5`）、`tests/human-ai-walk.mjs` |
+| `npm test` / `npx tsc --noEmit` / `npm run build` | **本轮未跑**：纯文档轮 + 只读审查，`src/` 与 `tests/` 零改动（`git status --porcelain` 中不出现 `src/`、`tests/`、`vite.config.ts`）；`npm test` 基线仍为本工作区最近记录的 **642 / 642** |
+| `git diff --check` | 退出码 0（仅已有 LF→CRLF 提示） |
+
+本轮关键设计结论（细节见 §4.10）：
+
+1. **AI 的合法藏身位置必须落在真实导航格上**：藏身点锚点本身不保证在导航格上，且「朝家具中心的几何接近点」会落在家具 AABB 内。因此 AI 只在「`nearestFree` 返回的格心、且仍在精确区域内」的位置藏身——A* 终点即真实可行走点，不需要 `finalApproach()` 式的容差走位。
+2. **`HideSystem.enter()` 必须保持原样**：它按设计拒绝非人工控制（`NOT_PLAYER_CONTROLLED`）。AI 只能走新增的、受一次性令牌保护的 `enterAsAI()`，玩家 E 路径不变。
+3. **玩家专用的指向型白色轮廓（`DeepSeekVisualTarget` / `HideSearchView`）不得移植进 NPC 决策**；AI 侧的按键仲裁与白色高亮都不参与藏身决策。
+4. **「不卡住」的兜底不是最大藏身时长**，而是「无可达米堆就不进入藏身」+「连续藏身上限」+「最短藏身时间」+「同点再次进入冷却」；`hideMaxConcealMs` 建议默认 0（不限制）。
+5. **新增候选数据只能有一个构造点**：照 `createHumanAiMapSnapshot()` 的先例建 `createDeepSeekHideMapSnapshot()`，AI 控制器保持纯逻辑、可在 Node 里直接测。
+
+本轮结论：
+
+- S7C-2b **只有设计，未授权、未开始、无功能代码**；§4.10.9 的参数与 §4.10.10 的切片都必须由用户逐项批准后才能开工。
+- S7C-3 未被触及，不得提前实现。
+- 本文件 §6 第 1 行的早期描述已按 §4.10 更新，仍标注未授权。
