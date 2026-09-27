@@ -59,6 +59,20 @@ test('startMatch clears events and resets clock', () => {
   assert.equal(data.truncated, false);
 });
 
+test('export includes the exact round seed and layout for reproduction', () => {
+  const collector = new AILogCollector();
+  const matchSetup = {
+    deepseek: { id: 'spawn_a', roomId: 'living', x: 1, z: 2 },
+    human: { id: 'spawn_b', roomId: 'study', x: 13, z: 2 },
+    riceIds: ['rice_01'], doorStates: { door_a: 'CLOSED' },
+    attempts: 1, fallback: false, validation: 'PASS',
+  };
+  const data = collector.export({ matchSeed: 123456, matchSetup });
+  assert.equal(data.matchSeed, 123456);
+  assert.deepEqual(data.matchSetup, matchSetup);
+  assert.equal(collector.export().matchSeed, undefined);
+});
+
 test('advance respects running flag; paused frames do not advance clock', () => {
   const collector = new AILogCollector();
   collector.advance(100, true);

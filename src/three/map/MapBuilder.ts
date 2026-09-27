@@ -182,8 +182,9 @@ export function buildApartment(parent: THREE.Object3D,
       box(root, 0.36, 0.03, 0.36, 0x7fd08a, spot.x, 0.025, spot.z);
       markerLines(root, spot.text, '#b7e0a2', spot.x, spot.z, 1.6, 26);
     }
-    marker(root, 'DS SPAWN', '#91caff', SPAWNS.deepseek.x, SPAWNS.deepseek.z, 1.35);
-    marker(root, 'HU SPAWN', '#ffc18e', SPAWNS.human.x, SPAWNS.human.z, 1.35);
+    // Authored reference points; the live per-round spawns are shown in DEV.
+    marker(root, 'DS REF SPAWN', '#91caff', SPAWNS.deepseek.x, SPAWNS.deepseek.z, 1.35);
+    marker(root, 'HU REF SPAWN', '#ffc18e', SPAWNS.human.x, SPAWNS.human.z, 1.35);
   }
 
   return {

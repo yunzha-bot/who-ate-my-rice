@@ -28,10 +28,14 @@ export class DoorSystem {
   readonly doors: DoorState[];
   readonly maxActiveLocks: number;
   private readonly definitions = new Map<string, DoorNode>();
+  private initialStates = new Map<string, 'OPEN' | 'CLOSED'>();
 
   constructor(nodes: readonly DoorNode[], maxActiveLocks: number) {
     this.maxActiveLocks = maxActiveLocks;
-    for (const node of nodes) this.definitions.set(node.id, node);
+    for (const node of nodes) {
+      this.definitions.set(node.id, node);
+      this.initialStates.set(node.id, node.initialState);
+    }
     this.doors = nodes.map(node => ({
       id: node.id,
       nodeId: node.id,
@@ -116,10 +120,21 @@ export class DoorSystem {
     return 'FORCE_OPENED';
   }
 
+  /** Set only this round's initial layout; authored DoorNode data stays unchanged. */
+  applyInitialStates(states: Readonly<Record<string, 'OPEN' | 'CLOSED'>>): void {
+    for (const door of this.doors) {
+      const state = states[door.id];
+      if (state !== 'OPEN' && state !== 'CLOSED') {
+        throw new Error(`Invalid initial state for ${door.id}`);
+      }
+    }
+    this.initialStates = new Map(this.doors.map(door => [door.id, states[door.id]]));
+    this.reset();
+  }
+
   reset(): void {
     for (const door of this.doors) {
-      const definition = this.definitions.get(door.id)!;
-      door.state = definition.initialState;
+      door.state = this.initialStates.get(door.id)!;
       door.locked = false;
       door.lockCoreState = 'ACTIVE';
     }

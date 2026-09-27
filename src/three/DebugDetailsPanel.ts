@@ -77,6 +77,7 @@ interface DebugDetailsPanelOptions {
   onSafetyPaths?: (enabled: boolean) => void;
   onTemporaryControl: (faction: 'HUMAN' | 'DEEPSEEK') => void;
   onExportLog: () => void;
+  onMatchSeed?: (value: string) => string;
   onToggleFreeze?: () => void;
   onExpanded: () => void;
   developerMode: boolean;
@@ -110,6 +111,7 @@ export const DEBUG_CATEGORY_DEFINITIONS = [
   { id: 'curiosity-passage', title: 'Curiosity / Passage' },
   { id: 'animation', title: 'Animation' },
   { id: 'dev-freeze', title: 'DEV Freeze / 场景编辑' },
+  { id: 'match-setup', title: 'Match Setup / 本局随机布局' },
   { id: 'other', title: 'Other' },
 ] as const;
 
@@ -207,6 +209,27 @@ export class DebugDetailsPanel {
     this.exportButton.hidden = !options.developerMode;
     this.exportButton.addEventListener('click', options.onExportLog);
     toolbar.append(this.controls, this.search, this.exportButton);
+    if (options.developerMode && options.onMatchSeed) {
+      const seedRow = document.createElement('div');
+      seedRow.className = 'details-freeze-row';
+      const seedInput = document.createElement('input');
+      seedInput.type = 'text';
+      seedInput.className = 'details-search';
+      seedInput.inputMode = 'numeric';
+      seedInput.placeholder = '下局种子；留空随机';
+      seedInput.setAttribute('aria-label', '下一局随机种子');
+      const seedButton = document.createElement('button');
+      seedButton.type = 'button';
+      seedButton.className = 'details-tool-button';
+      seedButton.textContent = '设置下局种子';
+      const seedResult = document.createElement('span');
+      seedResult.className = 'details-freeze-state';
+      seedButton.addEventListener('click', () => {
+        seedResult.textContent = options.onMatchSeed!(seedInput.value);
+      });
+      seedRow.append(seedInput, seedButton, seedResult);
+      toolbar.append(seedRow);
+    }
     // DEV 双阵营冻结：manual freeze is a debugging instrument, so it lives in
     // the DEV toolbar and reports its own state next to the button.
     this.freezeButton = document.createElement('button');

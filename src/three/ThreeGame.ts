@@ -21,6 +21,8 @@ import { HUMAN_CLUE_DEFER_TEXT, HumanAIController, humanAiMovementSpeed,
 import { DeepSeekAIController, isHumanPursuitSound, shouldRunDeepSeekAI,
   type DeepSeekAICommand } from '../systems/DeepSeekAIController';
 import { AILogCollector } from '../systems/AILogCollector';
+import { createMatchSetup, freshMatchSeed, parseMatchSeed,
+  type MatchSetup } from '../systems/MatchRandom';
 import { HideSystem, type HideExitReason } from '../systems/HideSystem';
 import { SkillCooldown } from '../systems/SkillCooldown';
 import { deepseekLockGate, lockArmsPlayerCooldown, resolveQSkill }
@@ -130,6 +132,8 @@ export class ThreeGame {
   private humanStillness: HumanStillness;
   private deepseekAiWasActive = false;
   private aiLogCollector = new AILogCollector();
+  private matchSetup: MatchSetup | null = null;
+  private fixedMatchSeed: number | null = null;
   // S7C-1B：藏身状态机、两个 Q 技能冷却与扇形表现层。正式数值全部来自
   // GAME_CONFIG（humanSearch / door.playerLockCooldownMs），不新增散落常量。
   private readonly hide = new HideSystem();
@@ -215,6 +219,8 @@ export class ThreeGame {
   private readonly debugPossessionEnabled = import.meta.env.DEV && C.development.factionSwitchEnabled;
 
   constructor(container: HTMLElement) {
+    this.fixedMatchSeed = import.meta.env.DEV
+      ? parseMatchSeed(new URLSearchParams(window.location.search).get('matchSeed')) : null;
     this.scene.background = new THREE.Color(C.backgroundColor);
     this.soundVisual = new SoundVisualView(this.scene);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
@@ -274,6 +280,7 @@ export class ThreeGame {
       developerMode: import.meta.env.DEV,
       onTemporaryControl: faction => this.setTemporaryInputTarget(faction),
       onExportLog: () => this.exportAILog(),
+      onMatchSeed: value => this.setDevMatchSeed(value),
       onToggleFreeze: () => this.toggleDevFreeze(),
       onSafetyPaths: enabled => {
         this.safetyPaths.enabled = enabled;
@@ -395,6 +402,7 @@ export class ThreeGame {
   private chooseFaction(faction: Faction): void {
     if (!this.match.beginFromFactionSelect()) return;
     this.control.choose(faction);
+    this.resetRound();
     this.lastDeepseekVisualHeadingRad = null;
     this.deepseekVisualTarget = { kind: 'NONE' };
     this.menu.hidden = true;
@@ -443,13 +451,12 @@ export class ThreeGame {
     return mesh;
   }
 
-  private resetRice(): void {
+  private resetRice(selected = selectRiceCandidates()): void {
     for (const view of this.riceViews.values()) {
       this.scene.remove(view.object);
       view.dispose();
     }
     this.riceViews.clear();
-    const selected = selectRiceCandidates();
     this.rice = new RiceField(selected.map(point => point.id),
       C.rice.maxProgressMs, C.rice.prepareMs);
     for (const point of selected) {
@@ -2053,7 +2060,17 @@ export class ThreeGame {
   }
 
   private exportAILog(): void {
-    const data = this.aiLogCollector.export();
+    const data = this.aiLogCollector.export(this.matchSetup ? {
+      matchSeed: this.matchSetup.seed,
+      matchSetup: {
+        deepseek: this.matchSetup.deepseek, human: this.matchSetup.human,
+        riceIds: this.matchSetup.rice.map(rice => rice.id),
+        doorStates: this.matchSetup.doorStates,
+        attempts: this.matchSetup.attempts,
+        fallback: this.matchSetup.fallback,
+        validation: this.matchSetup.validation,
+      },
+    } : undefined);
     const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const filename = `who-ate-my-rice-ai-log-${stamp}.json`;
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2065,6 +2082,18 @@ export class ThreeGame {
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
+  }
+
+  private setDevMatchSeed(value: string): string {
+    if (!this.debugPossessionEnabled) return '仅开发模式可设置种子';
+    if (!value.trim()) {
+      this.fixedMatchSeed = null;
+      return '下一局恢复随机种子';
+    }
+    const seed = parseMatchSeed(value.trim());
+    if (seed === null) return '请输入 0～4294967295 的整数';
+    this.fixedMatchSeed = seed;
+    return `下一局固定种子 ${seed}；重开可复现`;
   }
 
   private restart(): void {
@@ -2096,16 +2125,20 @@ export class ThreeGame {
     this.devZoom = 1;
     this.sprint.reset();
     this.control.resetControlled();
-    this.resetRice();
-    this.doorSystem.reset();
+    this.matchSetup = createMatchSetup(this.fixedMatchSeed ?? freshMatchSeed(),
+      this.collision, this.navigation, C.matchRandom.maxAttempts, this.hideSpots);
+    this.resetRice(this.matchSetup.rice);
+    this.doorSystem.applyInitialStates(this.matchSetup.doorStates);
     this.humanDoorSkill.reset();
     this.minesweeper.reset();
     this.renderMinesweeper();
     this.syncAllDoors();
     this.doorStatusMessage = '';
     this.mineFailureRemainingMs = 0;
-    this.player.position.set(SPAWNS.deepseek.x, C.three.actorHeight / 2, SPAWNS.deepseek.z);
-    this.human.position.set(SPAWNS.human.x, C.three.actorHeight / 2, SPAWNS.human.z);
+    this.player.position.set(this.matchSetup.deepseek.x, C.three.actorHeight / 2,
+      this.matchSetup.deepseek.z);
+    this.human.position.set(this.matchSetup.human.x, C.three.actorHeight / 2,
+      this.matchSetup.human.z);
     this.humanStillness.reset(this.human.position);
     this.playerAction.reset();
     this.humanAction.reset();
@@ -2697,6 +2730,23 @@ export class ThreeGame {
           ? this.sceneEditor.statusEntries().map(entry =>
             make(`dev-${entry.label}`, entry.label, entry.value, entry.tone ?? 'normal'))
           : [],
+      },
+      {
+        id: 'match-setup', title: 'Match Setup / 本局随机布局',
+        properties: this.debugPossessionEnabled ? [
+            make('match-seed', '本局种子 / 下局固定种子',
+              `${this.matchSetup?.seed ?? '未开始'} / ${this.fixedMatchSeed ?? '随机'}`),
+            make('match-spawns', '随机出生', this.matchSetup
+              ? `DeepSeek ${this.matchSetup.deepseek.roomId} ${point(this.matchSetup.deepseek)} ｜ Human ${this.matchSetup.human.roomId} ${point(this.matchSetup.human)}` : '未开始'),
+            make('match-doors', '初始门 OPEN / CLOSED', this.matchSetup
+              ? `${Object.values(this.matchSetup.doorStates).filter(state => state === 'OPEN').length} / ${Object.values(this.matchSetup.doorStates).filter(state => state === 'CLOSED').length}` : '未开始',
+              'normal', this.matchSetup ? Object.entries(this.matchSetup.doorStates).map(
+                ([id, state]) => make(id, id, state)) : []),
+            make('match-validation', '布局校验 / 尝试次数', this.matchSetup
+              ? `${this.matchSetup.validation}${this.matchSetup.fallback ? '（安全回退）' : ''} / ${this.matchSetup.attempts}` : '未开始'),
+            make('match-failures', '最近生成失败原因',
+              this.matchSetup?.failures.at(-1) ?? '无'),
+          ] : [],
       },
       {
         id: 'other', title: 'Other', properties: [

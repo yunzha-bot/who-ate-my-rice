@@ -78,6 +78,16 @@ export interface AILogExport {
   exportedAt: string;
   matchDurationMs: number;
   config: { deepseekAI: typeof GAME_CONFIG.deepseekAI };
+  matchSeed?: number;
+  matchSetup?: {
+    deepseek: { id: string; roomId: string; x: number; z: number };
+    human: { id: string; roomId: string; x: number; z: number };
+    riceIds: string[];
+    doorStates: Record<string, 'OPEN' | 'CLOSED'>;
+    attempts: number;
+    fallback: boolean;
+    validation: string;
+  };
   events: AILogEvent[];
   eventCount: number;
   truncated: boolean;
@@ -421,7 +431,7 @@ export class AILogCollector {
     this.events.push(event);
   }
 
-  export(): AILogExport {
+  export(match?: Pick<AILogExport, 'matchSeed' | 'matchSetup'>): AILogExport {
     return {
       // S7C-2b：1.5 → 1.6，只在既有 `hideEvents` 时间线里新增 DeepSeek AI 自主藏身
       // 的事件种类（HIDE_AI_REQUEST / ENTERED / REJECTED / EXIT_REQUEST / EXITED /
@@ -431,6 +441,7 @@ export class AILogCollector {
       exportedAt: new Date().toISOString(),
       matchDurationMs: this.nowMs - this.matchStartMs,
       config: { deepseekAI: GAME_CONFIG.deepseekAI },
+      ...match,
       events: this.events,
       eventCount: this.events.length,
       truncated: this.truncated,

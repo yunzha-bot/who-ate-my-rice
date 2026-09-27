@@ -162,6 +162,11 @@ export const GAME_CONFIG = {
     // 连续有效接触时间：毫秒。
     captureMs: 350,
   },
+  matchRandom: {
+    minSpawnDistance: 10, // 双方出生最小直线间距：XZ 世界单位。
+    doorOpenChance: 0.5, // 每扇门初始为 OPEN 的独立概率：0～1；其余为 CLOSED。
+    maxAttempts: 20, // 无效布局的最多重抽次数；之后验证并使用安全回退。
+  },
   // S7C-1B：Human 玩家 Q「扇形搜查与手动抓捕」。已批准数值，不随 DEV 调试改写。
   humanSearch: {
     // 扇形半径：世界单位。
