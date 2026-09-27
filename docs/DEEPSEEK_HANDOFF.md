@@ -35,7 +35,7 @@
 
 **全项目通用开发规则与执行规范**（`AGENTS.md` 的长期规则章节，含 Git 基线与工作区保护、开发阶段授权、测试与人工验收、开发环境、已验收功能保护、Git 归档与提交报告、文档维护，以及「阶段专属开工要求不保存在 `AGENTS.md`；开始任一阶段前须先读该阶段设计文档并逐项确认其中的待批准项」这一规定）已整节收录在 `AGENTS.md`，**本文件不重复复制整套规则**，只在此引用；两者冲突时以 `AGENTS.md` 为准。
 
-当前状态：DEV-A、DEV-B、S7C-1B、**S7C-2**、**S7C-2b** 与 **S7C-3** 的已批准范围均已通过用户验收并归档；**DEV 场景编辑器 V2**（独立 DEV 工具轮）已通过用户集中人工验收 9/9 并随归档提交进入 `main`。S7B 与 S7C 大阶段仍未整体完成。Human AI `CHECK_HIDE` 与 DeepSeek AI 自主藏身都已是真实运行状态。S7C-2b 的实现结果见 §16。
+当前状态：S7B 已整体通过阶段 Gate；S7C 当前进度以阶段表和正式授权为准。DEV-A、DEV-B、S7C-1B、**S7C-2**、**S7C-2b** 与 **S7C-3** 的已批准范围均已通过用户验收并归档；**DEV 场景编辑器 V2**（独立 DEV 工具轮）已通过用户集中人工验收 9/9 并随归档提交进入 `main`。Human AI `CHECK_HIDE` 与 DeepSeek AI 自主藏身都已是真实运行状态。S7C-2b 的实现结果见 §16。
 
 ## 3. 实际运行架构
 
@@ -66,7 +66,7 @@
 | S7B-2 | 威胁感知、逃跑、脱险恢复及静止 Human 好奇/安全通行专项通过用户人工验收。偶发原地停留仍是优化待办。 |
 | S7B-3A | 主动关门（条件式逃脱关门）：用户 5/5 浏览器人工验收 PASS。 |
 | S7B-3B | 主动锁门与逃脱策略：3B-0b 接口、3B-1 决策核心（含「关门遮挡视线」冲突修复 = 关门侧向证据）、Sprint 30 秒冷却与冲刺期间门交互协调、3B-2 防振荡（用户 5/5 人工验收 PASS）、3B-3 定向回归、3B-4 DEV / 日志 / 文档收尾——**全部完成并已并入检查点 `6a92c5d`**。 |
-| S7B overall | 进行中，未完成（S7B-1 ～ 3B-4 均已通过人工验收）。 |
+| S7B overall | **已完成，阶段 Gate = PASS**：用户已确认全部获批功能整体验收；S7B-1、S7B-2（含静止 Human 好奇／安全通行专项）、S7B-3A、S7B-3B 均有对应日志、测试记录与已推送 Git 检查点。历史遗留的偶发原地停留及 S7D 完整对局稳定性验证仍保留为后续事项，不代表潜在问题已全部清零。 |
 | S7C-1A | 藏身点白模与地图配置：8 条 `HideSpot` 数据 + 2 个纸箱 `FURNITURE`，**未接入任何玩法**。**用户浏览器人工验收 PASS（2026-09-26）、阶段 Gate = PASS**，已并入稳定检查点 `3191bec` 并推送 `origin/main`。 |
 | DEV 场景热编辑器 V1 + 双阵营调试冻结 | 独立 DEV 工具轮（不计入 S7C）：`DevFreezeSystem`、`MapEditModel`、`SceneEditorView / SceneEditorPanel / SceneEditor`。**用户浏览器人工验收 PASS（2026-09-26，五项）、阶段 Gate = PASS**，已并入稳定检查点 `3191bec` 并推送 `origin/main`。 |
 | DEV-A 第一轮 | 藏身交互区域的数据与几何基础：8 条 `HideSpot.interactionRegion`（床与纸箱圆形 2.0 / 1.2，衣柜与柜架扇形 1.6·55°）、圆形／扇形精确几何、合法位置检查（真实 `CollisionWorld` + 真实 `NavigationSystem` + 瞄准家具可接近表面）、离散采样预览接口、`SceneEditor` 字段透传、13 项新测试、`docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`。**用户浏览器人工回归 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，随检查点 `d4462e9` 建立（实际 SHA 以 `git log -1` 查询）。 |
@@ -81,7 +81,7 @@
 | S7C 后续 | S7C-1B、S7C-2、S7C-2b 与 S7C-3 均已归档。下一阶段尚未获得开发授权。 |
 | DEV 场景编辑器 V2（布局持久化） | 独立 DEV 工具轮（不计入 S7C，2026-09-27 用户一次性授权）：`MapLayoutStore.ts` + 编辑器三条入口 + 开机恢复。**用户集中浏览器人工验收 9/9 PASS，阶段 Gate = PASS**，随归档提交进入 `main`。归档轮实测 700/700、tsc 0、build 0（JS 1,001.11 kB）、`git diff --check` 0；规则见 `docs/DEV_SCENE_EDITOR_DESIGN.md` §11，证据见 `docs/verification/DEV_SCENE_EDITOR_V2/`。 |
 
-历史细节与测试结果以 `docs/AGENT_LOG.md` 为准；不要把单项 PASS 扩大解释为 S7B Gate PASS。
+历史细节与各轮测试结果以 `docs/AGENT_LOG.md` 为准。S7B overall 的 Gate 状态依据本次用户整体验收及历史归档核验；此结论不表示所有潜在 AI 问题已清零。
 
 ## 5. DeepSeek AI 当前行为
 
@@ -158,7 +158,7 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - S7C-2 逐轮浏览器脚本与证据位于 `docs/verification/S7C-2-r2/`、`r3/`、`r4/`。`f243047` 只纳入了各目录的 `README.md` / `browser-check.mjs` 与部分关键截图；**其余 38 个复核产物（重复截图、导出的 AI JSON、控制台日志）仍留在工作区未跟踪**，按「不删除、不修改已有浏览器验证材料」保留原地，本轮未改动它们。
 - **Codex Windows 桌面客户端权限问题（未解决的环境问题）**：受限「帮我批准」沙箱使用独立 Windows 沙箱账户，`workspace-write` 读写项目普通文件正常，但写 `.git` 元数据失败——`git config --local http.sslBackend openssl` 创建 `.git/config.lock` 被拒绝（`Permission denied`）。`.git` 内有两组未解析 SID 的 DENY ACE，但与已核对的当前沙箱身份及其令牌组均不匹配。**底层拒绝来自 Windows ACL、沙箱文件系统规则还是其他限制，目前无法确定，不得当作已定根因。** 联网沙箱下 Schannel 报 `SEC_E_NO_CREDENTIALS (0x8009030e)`，临时用 `git -c http.sslBackend=openssl ls-remote` 可成功读取（命令行级临时覆盖，**不是持久修复**）。完全访问模式（`bilibili` 用户身份）下 `ls-remote` / `fetch` 成功，但该模式的自动 commit / push **尚未单独测试**。暂定工作流：日常开发保留项目专用沙箱，归档时优先评估客户端单条 Git 命令审批，其次才在用户当次明确授权下临时使用完全访问模式并事后恢复。**该工作流是暂定方案，Git 权限问题未修复。** 另注：当前 DSH 执行环境自身的 `git ls-remote` 也报同一个 Schannel 错误，那是本机 Git TLS 凭证状态，与 Codex 沙箱账户的结论是两件独立的事。同一仓库在 DSH `workspace-write` 下 `git add` / `git commit` 正常（exit 0），只有 `git push` 需要一次命令级提权——**不得把 Codex 侧的 `.git/config.lock` / DENY ACE 结论套到 DSH 上**。长期协作规则统一见 `AGENTS.md`「Windows 沙箱兼容性与最小权限工作流」，本节只保留现有环境问题摘要。
 - **玩家声音探测表现层已停用（2026-09-27，用户集中人工验收 3/3 PASS；随本次归档提交进入 `main`）**：玩家端的「声音范围圈」与「彩色动态声纹」在正式对局与 DEV 对局中都不再显示。停用方式是 `src/three/ThreeGame.ts` 的表现层接线隔离——`PLAYER_SOUND_VISUAL_ENABLED = false` 一个常量同时关掉实例化与逐帧更新；`SoundVisualView` 实现、`tests/sound-visual.test.mjs` 与 `GAME_CONFIG.perception.soundVisual` 数值**全部保留**，恢复只需把该常量改回 `true`。停用前的表现层快照（含用户 2026-09-27 对声音圈的最后一次未提交调整）保存在 `archive/features/player-sound-visual/`，其 `README.md` 记录原有功能、接线位置、关联配置、停用原因、恢复步骤与回归测试。**AI 真实听觉 / 声音事件 / `PerceptionSystem`、DEV-B、场景编辑器 V2、S7C-3 随机化均未受影响**；浏览器证据见 `docs/verification/PLAYER-SOUND-VISUAL-DISABLE/`。**已知限制**：停用前的彩色声纹缺少完整浏览器前后对照，正式构建侧只做了打包产物静态核对。
-- 当前状态：S7B 与 S7C 大阶段仍未整体完成。S7C-2、S7C-2b 与 S7C-3 均已归档；**DEV 场景编辑器 V2 用户集中人工验收 9/9 通过，随归档提交进入 `main`**。DEV-A、DEV-B、S7C-1A、S7C-1B 已归档。详见 `docs/AGENT_LOG.md` 与本文件 §16。
+- 当前状态：**S7B 已完成阶段 Gate**；S7C 后续阶段状态仍按本文件阶段表及正式授权维护。S7C-2、S7C-2b 与 S7C-3 均已归档；**DEV 场景编辑器 V2 用户集中人工验收 9/9 通过，随归档提交进入 `main`**。DEV-A、DEV-B、S7C-1A、S7C-1B 已归档。偶发原地停留仍是后续 AI 优化项；S7D 仍需完整对局稳定性验证。详见 `docs/AGENT_LOG.md` 与本文件 §16。
 
 ## 10. DEV 场景热编辑器 V1 与双阵营调试冻结（已验收并归档）；V2 布局持久化（已验收 9/9 并归档）
 
