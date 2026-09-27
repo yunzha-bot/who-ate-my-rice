@@ -1,0 +1,217 @@
+{
+  "tag": "after",
+  "target": "bed",
+  "label": "主卧床",
+  "player": {
+    "x": -11.27,
+    "z": -4.79
+  },
+  "dev": {
+    "backwards": "高亮 NONE（无｜家具 无｜合法 否｜指向 否｜暴露目标优先 否）｜最近一次 Q：NONE（NONE）",
+    "facing": "高亮 FURNITURE（hide_main_bed｜家具 main_bed｜合法 是｜指向 是 45.0°｜暴露目标优先 否）｜最近一次 Q：FAN（NO_TARGET）",
+    "hud": "人类：Q 搜查「主卧床」（面向家具即可，不必精确瞄准）｜Q：可用"
+  },
+  "samples": [
+    {
+      "index": 0,
+      "pixels": 176,
+      "meanMin": 204.73,
+      "bright": 148,
+      "peak": 233,
+      "ai": {
+        "x": -7.52,
+        "z": 9.8
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 1,
+      "pixels": 176,
+      "meanMin": 192.79,
+      "bright": 89,
+      "peak": 226,
+      "ai": {
+        "x": -7.39,
+        "z": 9.64
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 2,
+      "pixels": 176,
+      "meanMin": 243.32,
+      "bright": 156,
+      "peak": 255,
+      "ai": {
+        "x": -7.2,
+        "z": 9.43
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 3,
+      "pixels": 176,
+      "meanMin": 202.78,
+      "bright": 139,
+      "peak": 231,
+      "ai": {
+        "x": -7.07,
+        "z": 9.29
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 4,
+      "pixels": 176,
+      "meanMin": 185.89,
+      "bright": 72,
+      "peak": 223,
+      "ai": {
+        "x": -6.88,
+        "z": 9.09
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 5,
+      "pixels": 176,
+      "meanMin": 242.01,
+      "bright": 155,
+      "peak": 254,
+      "ai": {
+        "x": -6.76,
+        "z": 8.94
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 6,
+      "pixels": 176,
+      "meanMin": 207.99,
+      "bright": 149,
+      "peak": 235,
+      "ai": {
+        "x": -6.7,
+        "z": 8.74
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 7,
+      "pixels": 176,
+      "meanMin": 188.21,
+      "bright": 82,
+      "peak": 225,
+      "ai": {
+        "x": -6.65,
+        "z": 8.48
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 8,
+      "pixels": 176,
+      "meanMin": 241.77,
+      "bright": 155,
+      "peak": 254,
+      "ai": {
+        "x": -6.63,
+        "z": 8.27
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 9,
+      "pixels": 176,
+      "meanMin": 214.72,
+      "bright": 149,
+      "peak": 238,
+      "ai": {
+        "x": -6.49,
+        "z": 8.04
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 10,
+      "pixels": 176,
+      "meanMin": 188.32,
+      "bright": 100,
+      "peak": 223,
+      "ai": {
+        "x": -6.38,
+        "z": 7.88
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 11,
+      "pixels": 176,
+      "meanMin": 245.39,
+      "bright": 176,
+      "peak": 252,
+      "ai": {
+        "x": -6.26,
+        "z": 7.71
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 12,
+      "pixels": 176,
+      "meanMin": 227.65,
+      "bright": 176,
+      "peak": 243,
+      "ai": {
+        "x": -6.12,
+        "z": 7.56
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 13,
+      "pixels": 176,
+      "meanMin": 186.02,
+      "bright": 100,
+      "peak": 222,
+      "ai": {
+        "x": -5.94,
+        "z": 7.36
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    }
+  ],
+  "cooldown": {
+    "stats": {
+      "pixels": 176,
+      "meanMin": 163.86,
+      "bright": 70,
+      "peak": 210
+    },
+    "dev": "高亮 FURNITURE（hide_main_bed｜家具 main_bed｜合法 是｜指向 是 45.0°｜暴露目标优先 否）｜最近一次 Q：FURNITURE（FURNITURE）",
+    "hud": "人类：Q 搜查「主卧床」｜冷却中 10.9 秒（家具描边变暗，暂时不能按）"
+  },
+  "verdict": "PASS",
+  "baseline": {
+    "note": "背对家具：DEV 显示高亮 NONE（此时玩家转身靠真实走位，相机随之平移，所以这一帧只作留证，不参与像素比较）"
+  },
+  "mask": {
+    "pixels": 176,
+    "box": {
+      "x0": 479,
+      "y0": 289,
+      "x1": 662,
+      "y1": 404
+    }
+  },
+  "metrics": {
+    "maskPixels": 176,
+    "amplitude": 59.5,
+    "alwaysVisible": true,
+    "dimmerThanMin": true,
+    "breathMin": 185.89,
+    "breathMax": 245.39,
+    "cooldownMean": 163.86,
+    "brightRatioMin": 0.409
+  }
+}

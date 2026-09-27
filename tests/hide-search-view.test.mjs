@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Object3D, Scene, Vector3 } from 'three';
+import { Quaternion, Scene, Vector3 } from 'three';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
-import { headingRadToMeshRotationY } from '../src/systems/HumanSearchSkill.ts';
 import { HIDE_FEEDBACK_MS, HIDE_SEARCH_FADE_IN_MS, HIDE_SEARCH_FADE_OUT_MS,
   HIDE_SEARCH_HOLD_MS, HideSearchView } from '../src/three/HideSearchView.ts';
 
@@ -26,14 +25,19 @@ test('扇形形状与已批准数值一致：半径 1.5、张角 120°', () => {
 test('释放只放置一次扇形：位置与朝向取自快照，rotation.y = -heading', () => {
   const { search } = view();
   search.show({ x: 3, z: -4 }, Math.PI / 2);
-  assert.equal(search.root.position.x, 3);
-  assert.equal(search.root.position.z, -4);
-  assert.equal(search.root.rotation.y, headingRadToMeshRotationY(Math.PI / 2));
-  // 与判定同源：该 rotation.y 让局部 +X 指向 heading。
-  const object = new Object3D();
-  object.rotation.y = search.root.rotation.y;
-  object.updateMatrixWorld(true);
-  const forward = new Vector3(1, 0, 0).applyMatrix4(object.matrixWorld);
+  search.fan.updateMatrixWorld(true);
+  // 修复轮 四：位移与朝向改由扇形自己承载（世界矩阵 = Ry(朝向)·Rx(-90°)，
+  // 与旧实现逐值相同），表现层根节点从此恒为单位变换——否则挂在它下面的
+  // 世界坐标对象（命中反馈 / AI 反馈 / 玩家白色高亮）会被释放点二次平移。
+  assert.equal(search.root.position.x, 0);
+  assert.equal(search.root.position.z, 0);
+  assert.equal(search.root.rotation.y, 0);
+  assert.equal(search.fan.position.x, 3);
+  assert.equal(search.fan.position.z, -4);
+  assert.equal(search.fan.position.y, 0.035);
+  // 与判定同源：该世界朝向让局部 +X 指向 heading。
+  const forward = new Vector3(1, 0, 0).applyQuaternion(
+    search.fan.getWorldQuaternion(new Quaternion()));
   assert.ok(Math.abs(forward.x - Math.cos(Math.PI / 2)) < 1e-9);
   assert.ok(Math.abs(forward.z - Math.sin(Math.PI / 2)) < 1e-9);
   assert.equal(search.releaseCount, 1);

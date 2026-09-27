@@ -67,6 +67,12 @@ export class RiceView {
     return this.object.position;
   }
 
+  /** 只读表现尺寸，供白色轮廓贴合当前进食进度；不参与吃米判定。 */
+  get outlineSize(): { width: number; depth: number; height: number } {
+    return { width: this.body.scale.x, depth: this.body.scale.z,
+      height: this.body.scale.y + (this.bulge.visible ? this.bulge.scale.y / 2 : 0) };
+  }
+
   sync(state: RiceState): RiceVisualMetrics {
     const metrics = riceVisualMetrics(state.progressMs, state.maxProgressMs, this.config);
     const width = this.baseWidth * metrics.widthScale;

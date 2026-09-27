@@ -89,8 +89,26 @@ test('Human AI 不得读取藏身占用信息，DeepSeek AI 不得新增藏身�
   const union = deepseekAi.match(/export type DeepSeekAIState =([^;]+);/);
   assert.ok(union, '找不到 DeepSeekAIState 联合类型');
   assert.doesNotMatch(union[1], /HIDE|CONCEAL/, 'DeepSeek AI 不得新增藏身状态');
-  // Human AI 的 CHECK_HIDE 仍然是保留接口：只有联合类型里出现，从未被赋值。
+  // S7C-2：CHECK_HIDE 已经是真正的运行状态（不再是纯预留），但它的输入与命令
+  // 仍然只能携带公开线索 —— 结构上不允许出现占用或隐藏坐标字段。
   assert.match(humanAi, /CHECK_HIDE/);
-  assert.doesNotMatch(humanAi, /=\s*'CHECK_HIDE'/);
-  assert.doesNotMatch(humanAi, /checkHide/i, '本轮不得实现 Human AI 的 CHECK_HIDE 决策');
+  assert.match(humanAi, /checkHide/);
+  const interfaceBlock = (source, name) => {
+    const match = source.match(new RegExp(`export interface ${name} \\{([\\s\\S]*?)\\n\\}`));
+    assert.ok(match, `找不到 ${name} 接口`);
+    return match[1];
+  };
+  const forbidden = /occupan|conceal|concealed|occupied|hidden|realPosition|truePosition/i;
+  assert.doesNotMatch(interfaceBlock(humanAi, 'HumanAIInput'), forbidden,
+    'Human AI 输入里不得出现占用或隐藏坐标字段');
+  assert.doesNotMatch(interfaceBlock(humanAi, 'HumanAICommand'), forbidden,
+    'Human AI 命令里不得出现占用或隐藏坐标字段');
+  assert.doesNotMatch(interfaceBlock(humanAi, 'HumanAIMapSnapshot'), forbidden,
+    'Human AI 地图快照里不得出现占用或隐藏坐标字段');
+  // 候选排序是反作弊最关键的一层：它的输入结构同样不许带占用信息。
+  const candidates = read('HideSearchCandidates.ts');
+  assert.doesNotMatch(interfaceBlock(candidates, 'HideSearchCandidateInput'), forbidden,
+    '公开候选排序的输入里不得出现占用或隐藏坐标字段');
+  assert.match(candidates, /pointInHideRegion|rectSurfacePoint/,
+    '候选排序必须复用已批准的公开几何判定');
 });

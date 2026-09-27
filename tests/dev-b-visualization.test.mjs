@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { RuntimeDebugOverrides, RUNTIME_PARAM_SPECS }
   from '../src/systems/RuntimeDebugOverrides.ts';
 import { buildDevBObservation } from '../src/systems/DevBObserver.ts';
-import { DevBView, DEV_B_DEFAULT_OPTIONS, DEV_B_MAX_SOUND_MARKERS }
+import { DevBView, DEV_B_DEFAULT_OPTIONS, DEV_B_MAX_CLUE_MARKERS,
+  DEV_B_MAX_SOUND_MARKERS, DEV_B_MAX_SUSPECT_MARKERS }
   from '../src/three/DevBView.ts';
 import { DEV_B_KNOWN_LIMITS, DEV_B_VISUAL_LABELS, devBParamStatusText }
   from '../src/three/DevBPanel.ts';
@@ -21,6 +22,11 @@ function frame(overrides = {}) {
     humanPath: [{ x: 0, z: 0 }, { x: 1, z: 0 }, { x: 2, z: 0 }],
     deepseekPath: [{ x: 2, z: 0 }, { x: 3, z: 1 }],
     sounds: [],
+    // S7C-2：AI 已知线索 / AI 推断方向 / AI 推断怀疑家具（全部是公开信息）。
+    clues: [{ x: 1, z: 2 }],
+    inferenceAnchor: { x: 1, z: 2 },
+    inferenceDirection: { x: 1, z: 0 },
+    suspects: [{ x: 7.9, z: 3.9 }],
     ...overrides,
   };
 }
@@ -110,14 +116,99 @@ test('sound markers mirror the real events and hide the unused slots', () => {
   view.dispose();
 });
 
-test('disposing the DEV-B view leaves no draw object behind', () => {
+test('S7C-2 clue, inference and suspect markers draw only public information', () => {
   const scene = new THREE.Scene();
+  const view = new DevBView(scene);
+  const children = view.group.children;
+  const clueStart = children.length - DEV_B_MAX_SOUND_MARKERS -
+    (DEV_B_MAX_SUSPECT_MARKERS + 2) - DEV_B_MAX_CLUE_MARKERS;
+  assert.ok(clueStart > 0, '线索标记必须排在声音标记之前，既有片尾断言才成立');
+  view.update(frame({ clues: [{ x: 5, z: 6 }, { x: 5.7, z: 6.4 }],
+    suspects: [{ x: 7.9, z: 3.9 }], inferenceAnchor: { x: 5.7, z: 6.4 },
+    inferenceDirection: { x: 0, z: 1 } }));
+  const clues = children.slice(clueStart, clueStart + DEV_B_MAX_CLUE_MARKERS);
+  assert.equal(clues[0].visible, true);
+  assert.deepEqual([clues[0].position.x, clues[0].position.z], [5, 6]);
+  assert.equal(clues[0].material.color.getHex(), 0x7dff8f, '绿色 = AI 已知线索');
+  assert.equal(clues[2].visible, false, '未使用的线索槽必须隐藏');
+
+  const suspects = children.slice(clueStart + DEV_B_MAX_CLUE_MARKERS,
+    clueStart + DEV_B_MAX_CLUE_MARKERS + DEV_B_MAX_SUSPECT_MARKERS);
+  assert.equal(suspects[0].visible, true);
+  assert.deepEqual([suspects[0].position.x, suspects[0].position.z], [7.9, 3.9]);
+  assert.equal(suspects[0].material.color.getHex(), 0xff5fd0, '洋红 = AI 推断的怀疑家具');
+  assert.equal(suspects[1].visible, false);
+
+  const arrow = children[clueStart + DEV_B_MAX_CLUE_MARKERS + DEV_B_MAX_SUSPECT_MARKERS];
+  assert.equal(arrow.visible, true);
+  const positions = arrow.geometry.getAttribute('position');
+  // Float32 缓冲，用容差比较（几何体存的是单精度）。
+  const near = (value, wanted) => assert.ok(Math.abs(value - wanted) < 1e-4,
+    `期望 ${wanted}，实际 ${value}`);
+  near(positions.getX(0), 5.7);
+  near(positions.getZ(0), 6.4);
+  near(positions.getX(1), 5.7);
+  near(positions.getZ(1), 8.4);
+
+  // 关闭 clues 图层后，三类标记都必须消失，且不影响其它图层。
+  view.setOptions({ clues: false });
+  view.update(frame({ sounds: [{ type: 'FOOTSTEP', x: 1, z: 2, range: 17, heard: true }] }));
+  assert.equal(clues[0].visible, false);
+  assert.equal(suspects[0].visible, false);
+  assert.equal(arrow.visible, false);
+  assert.equal(children[0].visible, true, '抓捕圈不受 clues 开关影响');
+  assert.equal(children.slice(-DEV_B_MAX_SOUND_MARKERS)[0].visible, true);
+  view.dispose();
+});
+
+test('disposing the DEV-B view leaves no draw object behind', () => {  const scene = new THREE.Scene();
   const view = new DevBView(scene);
   view.update(frame({ sounds: [{ type: 'FALL', x: 0, z: 0, range: 10, heard: true }] }));
   view.dispose();
   assert.equal(scene.children.length, 0);
   assert.equal(view.group.children.length, 0);
 });
+
+// S7C-2：DEV-B 观察里的 Human AI 循迹 / 搜查字段（AI 已知 + AI 推断 + 公开计数）。
+function hideSearch(overrides = {}) {
+  return {
+    clueCount: 2, expiredClueCount: 0,
+    latestCluePosition: { x: 3, z: 4 }, latestClueAgeMs: 1_200,
+    inferenceCode: 'CHAIN', inferenceConfidence: 'HIGH',
+    inferenceHeadingDeg: 32, inferenceAnchor: { x: 3, z: 4 },
+    inferenceBasis: '连续 3 粒米构成一条路径',
+    candidateRanking: 'hide_living_carton(12.4) > hide_storage_carton(9.1)',
+    suspectedSpotId: 'hide_living_carton', suspectedBasis: '距线索锚点最近',
+    candidateSkipped: 'hide_storage_carton=COOLDOWN',
+    pendingClueCount: 0, pendingClueRemainingMs: 0, pendingClueDeferReason: 'NONE',
+    pendingClueDeferCount: 0, pendingClueReevalCount: 0,
+    lastSeenPresent: true, lastSeenValid: true, lastSeenPosition: { x: 3, z: 4 },
+    lastSeenRoomId: 'living', lastSeenAgeMs: 1_200,
+    lastSeenRoomGateCode: 'OK', lastSeenRoomGateDetail: '最后目击房间 living 里有公开藏身点',
+    roundAttempts: 1, attemptedSpotId: 'hide_living_carton',
+    investigationEndReason: 'CHECK_HIDE_MISS',
+    interruptSoundType: 'SPRINT', interruptSoundStrength: 0.28,
+    interruptSoundRemainingMs: 1_150, interruptSoundIsNew: true,
+    checkResult: 'MISS', checkDetailText: '这件家具里没有人（搜空）',
+    plannedSurfacePoint: { x: 7.6, z: 3.6 }, finalAimPoint: { x: 7.6, z: 3.6 },
+    aimPointDelta: 0, aimAngleDeltaDeg: 0, aimBlocked: false,
+    authoritativeCode: 'MISS_EMPTY', authoritativeDetail: '检查 hide_living_carton：搜空',
+    phase: 'DWELL', source: 'TRACE', spotId: 'hide_living_carton',
+    stancePoint: { x: 7.3, z: 3.6 }, surfacePoint: { x: 7.6, z: 3.6 },
+    // S7C-2 修复轮 二：导航终点 / 正式站位 / REQUEST 位置 / 计数与「是否计入正式检查」。
+    navGoal: { x: 7.0, z: 3.6 }, stanceDistance: 0.174,
+    requestPosition: { x: 7.3, z: 3.6 },
+    approachSteps: 0, requestCount: 1, staleCancels: 0, countsAsFormalCheck: true,
+    dwellRemainingMs: 400, dwellMs: 900,
+    roundChecks: 1, roundBudget: 1, investigationChecks: 1,
+    checkedSpotIds: ['hide_living_carton'],
+    cooldowns: [{ spotId: 'hide_living_carton', remainingMs: 4_200 }],
+    lastResult: 'MISS', lastResultSpotId: 'hide_living_carton',
+    giveUpCode: 'CHECK_DONE', giveUpDetail: 'hide_living_carton 搜空',
+    startCount: 2, hitCount: 0, missCount: 1, interruptCount: 1,
+    ...overrides,
+  };
+}
 
 function observation(overrides = {}) {
   return {
@@ -141,6 +232,7 @@ function observation(overrides = {}) {
       targetDoorId: null, decisionReason: 'NO_LOCK_ROUTE', unlockProgressMs: 0,
       searchTargetRoomId: null, navigationReason: 'NONE', transitionReason: 'ROUND_START',
       pathIndex: 0, pathTotal: 3, pathWaypoint: { x: 0, z: 0 },
+      hideSearch: hideSearch(),
     },
     deepseekAi: {
       state: 'SEEK_RICE', targetRiceId: 'rice_01', selectionReason: 'SHORTEST',
@@ -229,7 +321,7 @@ test('the panel helpers describe base and overridden values and the known limits
   assert.match(devBParamStatusText(spec, runtime.captureRadius, true), /已覆盖：1.25/);
 
   assert.deepEqual(DEV_B_VISUAL_LABELS.map(entry => entry.key),
-    ['captureRing', 'visionCircle', 'lineOfSight', 'paths', 'sounds']);
+    ['captureRing', 'visionCircle', 'lineOfSight', 'paths', 'sounds', 'clues']);
   const limits = DEV_B_KNOWN_LIMITS.join('\n');
   assert.match(limits, /家具/);
   assert.match(limits, /视锥角/);

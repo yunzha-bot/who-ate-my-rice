@@ -277,7 +277,8 @@ export class HideSystem {
   6. **表现**：藏身时隐藏角色可视体（根节点不动，碰撞与抓捕锚点不变，判定与表现分离），另有 `HideSearchView` 扇形特效与命中家具的临时高亮；**未新增藏身音效**（既不新增 `SoundType`，也不在藏身期间产生新声音）。
   7. **DEV / 日志**：DEV 新增 `Hide / 藏身` 分类（状态、藏身点、真实进入位置、当前区域检查码、最近拒绝/退出原因、本局次数、视觉与抓捕影响、两个 Q 的冷却与最近命中）；AI JSON 新增独立 `hideEvents` 时间线（`formatVersion` 升为 `1.2`），人工控制 DeepSeek 时同样可导出。
   8. **地图应用预检**：编辑器在 `session.apply()` 之前先验证「两个角色站位 + 藏身出口」在新地图上仍可站立，失败则拒绝应用并保留旧地图与旧藏身状态。
-- **历史前置（已被本轮 S7C-1B 授权取代）**：原说明为「**S7C-1B 未获授权**」，开工前需用户对第 6 节第 3–14 行的建议值逐条确认（进入耗时、与 Human 的安全距离、交互距离、表现方案 V1/V2/V3、是否新增 `HIDE_ENTER/EXIT` 事件与 DEV `Hide` 分类）。**该逐条确认已被 2026-09-26 的 S7C-1B 完整授权与本节的实现状态取代**；第 3–14 行的逐项去向见第 6 节状态说明。另：DEV-A 的圆形／扇形藏身交互区域已在 DEV-A 第一轮按用户指定参数落地为地图创作数据（`HideSpot.interactionRegion`，见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`），**本轮正式接入玩法**（作为藏身合法性判定）；**是否把进入锚点与退出锚点拆成两个独立点，留到未来单独决定**（DEV-A 的专属开工要求见 `docs/DEEPSEEK_HANDOFF.md`「待批准提案与专属开工要求」节）。床底的表现与感知规则见下方第 8 条。
+ 9. **Human AI 的 `CHECK_HIDE` 与米痕循迹**：已由 S7C-2 一次性完整实现（见 §4），`CHECK_HIDE` 不再是预留接口。
+- **历史前置（已被 S7C-1B 授权取代）**：原说明为「**S7C-1B 未获授权**」，开工前需用户对第 6 节第 3–14 行的建议值逐条确认（进入耗时、与 Human 的安全距离、交互距离、表现方案 V1/V2/V3、是否新增 `HIDE_ENTER/EXIT` 事件与 DEV `Hide` 分类）。**该逐条确认已被 2026-09-26 的 S7C-1B 完整授权与本节的实现状态取代**；第 3–14 行的逐项去向见第 6 节状态说明。另：DEV-A 的圆形／扇形藏身交互区域已在 DEV-A 第一轮按用户指定参数落地为地图创作数据（`HideSpot.interactionRegion`，见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md`），**本轮正式接入玩法**（作为藏身合法性判定）；**是否把进入锚点与退出锚点拆成两个独立点，留到未来单独决定**（DEV-A 的专属开工要求见 `docs/DEEPSEEK_HANDOFF.md`「待批准提案与专属开工要求」节）。床底的表现与感知规则见下方第 8 条。
 - **目标**：固定地图上跑通「进入/退出藏身点、占用、移动限制、视觉反馈」的最小闭环（玩家主控 DeepSeek 时可用）。
 - 交付内容：
   1. `src/systems/HideSystem.ts`（纯逻辑：占用、进入前置条件、退出原因、事件）。
@@ -303,25 +304,252 @@ export class HideSystem {
   9. Esc 暂停/重开、返回阵营选择后占用清空，无残留状态。
 
 
-## 4. S7C-2：Human AI 检查藏身点与 `CHECK_HIDE`
+## 4. S7C-2：Human AI 米痕循迹与家具搜查（`CHECK_HIDE`）
 
-> **状态：尚未授权、未实施。** S7C-1B 已包含 Human 玩家 Q 扇形搜查；本节仅规划 Human AI 自主检查，须另行授权。
+> **状态（2026-09-26）：用户已一次性批准完整方案，本轮已实现，等待用户集中做一次浏览器人工验收；尚未 commit / push / tag，Gate 未建立。**
+>
+> **实现红线（全部遵守）**：不新增第二套交互 / 感知 / 导航系统；`CHECK_HIDE` 只使用公开线索；不读取 `HideSystem.occupancyOf()`、真实藏身点 ID、隐藏时实时坐标或占用状态；不新增米痕实体或永久脚印系统；不改 Human 玩家 Q 的 1.5 / 120° / 12 秒，也不改 DeepSeek 玩家 Q 的 20 秒锁门冷却；不改已验收的巡逻 / 调查 / 追逐 / 抓捕 / 门决策 / DeepSeek AI；不新增藏身音效。
 
-**目标**：给藏身玩法加上对称的反制，且线索完全来自既有感知。
+### 4.1 交付内容（按用户 2026-09-26 简报逐条）
 
-- 交付内容：
-  1. **Human 玩家 Q 搜查已在 S7C-1B 实现**：半径 1.5、张角 120°、冷却 12 秒；命中藏身者即走正式抓捕结算。S7C-2 不重复实现玩家搜查。
-  2. **Human AI `CHECK_HIDE`**：真正接入 `HumanAIState`，触发源只允许三类合法线索：
-     - **目击进入**：AI 在藏身者进入的瞬间确实看得见它（复用现有可见性判定），把该 `spotId` 记入一个**有寿命的记忆**（复用 `perception.lastSeenMs` 语义）；
-     - **有限搜索**：`SEARCH` 到达的搜索房间内若有藏身点，最多检查 `checkHideMaxPerSearch` 处；
-     - **藏身相关声音**：听到进入/退出/检查声音后，转入 `INVESTIGATE` 并在到达后检查。
-     **禁止**把 `HideSystem.occupancyOf()` 传给 AI；AI 输入只提供「几何上附近的藏身点 id」与「自己目击过的 id」。
-  3. 被检查命中：藏身者被强制退出（`HIDE_FLUSHED`），随后交由既有 CHASE/CAPTURE 规则处理；是否附加眩晕/额外信息见第 6 节。
-  4. DEV：`human-ai` 分类新增 `check-hide` 字段（目标点、进度、触发来源）；可选 AI JSON 事件。
-- 涉及系统/文件：`src/systems/HumanAIController.ts`、`src/systems/HideSystem.ts`、`src/three/ThreeGame.ts`、`src/three/DebugDetailsPanel.ts`(若需)、`tests/human-ai.test.mjs`、`tests/hide-system.test.mjs`、`docs/AI_HUMAN_STATE_TREE.md`、`docs/AI_STATE_OVERVIEW.md`。
-- 不应改动：Human AI 的巡逻/调查/追逐/搜索/门决策主体、抓捕与胜负、感知距离与遮挡、DeepSeek AI 的找米/逃跑/关门/锁门。
-- 自动化测试（预计 ≥ 12 项）：三条触发源各自可进入 `CHECK_HIDE` 并正确结束；无线索时**不会**检查（防透视回归）；`occupancyOf` 不出现在 AI 输入结构里（类型/结构断言）；每次搜索检查次数上限；命中时强制退出且位置不变；空检查不产生状态变化；检查期间 AI 不移动；`SEARCH` 结束后回到 PATROL；DEV/AI 事件计数一致。
-- 人工验收：选 Human → 在实验室般场景中观察 AI 分别因「目击进入 / 搜索 / 听到声音」来查柜子；DeepSeek 提前离开则检查落空；玩家自己检查命中时能立刻进入抓捕。
+1. **米痕感知适配与三层数据分离**（`src/systems/RiceTraceClues.ts`，新增，纯逻辑）
+   - 图层 A＝世界中全部有效米痕；图层 B＝`selectVisibleTraces()` 用**现有正式视觉几何**（`PerceptionGeometry.inspectVision`：视觉距离 + 墙体 + 非 OPEN 门叶）过滤出的「真正看得见」；图层 C＝`RiceTraceClueMemory` 保存的**有限线索快照**。
+   - **只有 C 进入循迹决策**。线索快照只含 `traceId / position / heading / createdAt / discoveredAt / validUntil`，其中 `validUntil = createdAt + 实体自己的 lifetimeMs`，**记忆寿命绝不长于原实体**，过期即失效并从推断中消失。
+   - 家具目前不参与正式视觉遮挡，因此这里也**不做**家具遮挡，也没有修改全局视觉规则。
+   - 结构上不存在对手坐标：`TracePerceptionInput` 只有「观察者自己的位置 + 世界米痕 + 视觉几何」，无 `player` / `opponent` / `occupancy` 字段（`tests/rice-trace-clues.test.mjs` 做源码级断言）。
+2. **规则型循迹与方向推断**（`src/systems/HumanTraceTracking.ts`，新增，纯逻辑）
+   - 用真实 `createdAt` 定新旧、用真实空间连续性连接相邻脚印、再用脚印自带朝向修正方向；**无机器学习、无随机数**，同输入同输出。
+   - 状态码 `NO_CLUE / SINGLE_TRACE / CHAIN / TRACE_JUMP / CHAIN_CONTRADICTORY` 与置信度 `NONE / LOW / MEDIUM / HIGH` 全部可解释：单粒米只给「低」并只说「只能调查附近」；更早的米痕跳跃过远降为 `TRACE_JUMP`；朝向与路径相差超过 90° 判 `CHAIN_CONTRADICTORY` 并降为「低」。
+   - **轴向换算**：米痕实体的 `heading` 用 `atan2(dx, dz)`，搜查扇形用 `atan2(dz, dx)`，模块内用 `traceHeadingToDirectionRad()` 显式换算（`θ = π/2 − heading`），否则一条直线路径会被误判成「方向矛盾」。
+3. **公开家具候选与反作弊排序**（`src/systems/HideSearchCandidates.ts`，新增，纯逻辑）
+   - 候选只来自：当前已应用地图的公开藏身点 ID 与绑定家具（位置 / 朝向 / 尺寸）、已知 Last Seen、自己发现的米痕、实际收到的声音、自己的搜查失败历史。**输入结构里没有占用信息**，所以「某件家具真的有人」不可能提高它的排序。
+   - 排序＝`−1×距 AI 距离 −2×距线索锚点距离 + 终止加分 + 方向对齐加分 + Last Seen 加分 + 声音加分`，同分比距离、再比稳定 ID，完全确定。
+   - 「痕迹在家具附近终止」直接复用 DEV-A 已批准的 `pointInHideRegion` 公开交互区域判定，不新建第二套「附近」规则。
+   - `gateHideSearchByClues()`：**一粒米不足以锁定家具**——`SINGLE_TRACE` 必须再有一条独立公开线索（Last Seen 或实际听到的声音）落进某件家具的公开交互区域才允许正式搜查；`CHAIN_CONTRADICTORY` 直接拒绝。
+4. **Human 搜查站位规划**（`src/systems/HumanHideSearchStance.ts`，新增，纯逻辑）
+   - 复用 `rectSurfacePoint` / `localToWorld` / `REGION_NAV_SNAP_LIMIT`，但判定是 Human 自己的：① 角色圆碰撞合法；② 落在真实导航格上（吸附 ≤ 0.45）且 A* 可达；③ 与**家具可搜查表面**（不是家具中心）的距离 ≤ 1.5；④ 朝向落在前方 120° 扇形内；⑤ 墙与非 OPEN 门叶不遮挡这条交互线。旋转家具使用真实旋转轮廓。
+   - 站位间距 `STANCE_STAND_OFF = 0.3`，按周长每 0.4（＝寻路格边长）采样候选，按直线距离从近到远最多跑 4 次 A*。
+5. **正式搜查的公开几何核心**（`src/systems/HumanSearchSkill.ts`，扩展）
+   - 抽出 `evaluateHumanSearchGeometry()`（距离 / 张角 / 遮挡）与状态码；`evaluateHumanSearch()` 改为走同一条核心，**玩家 Q 与 AI 搜查共用同一套几何**，不存在两份实现。玩家 Q 的瞬时命中、12 秒冷却与扇形特效**未改动**。
+6. **`HumanAIController` 增量扩展**（不重建状态机）
+   - 公开优先级：① 当前真实目视目标（并立即中止搜查）② 新 Last Seen ③ 新**强危险声音**（复用现有 `isHumanPursuitSound` 分类，可立即中止搜查）④ 新发现且仍有效的米痕 ⑤ 普通声音与旧调查 ⑥ 家具搜查与既有有限搜索 ⑦ 巡逻。
+   - `CHECK_HIDE` 成为真实状态：`TRAVEL → DWELL（900 ms，AI 不移动，只由 `faceHeadingRad` 保持朝向）→ DONE`，停留满之后**只请求一次**正式判定，等外部回执。
+   - 计数上限：每轮最多正式检查 **1** 件家具（`hideCheckMaxPerRound`）；同一件家具搜空后 **6 秒**（`hideCheckFailureCooldownMs`）内不再检查；同一次调查最多检查 `searchRoomCount`（3）件，且整次调查的搜查动作共享既有的 `searchMaxMs`（15 秒）预算；**同一批米痕的签名只能触发一次**（防止反复重启同一轮）。
+   - 有限搜索联动：`SEARCH` 到达的搜索房间里若有公开藏身点，这一轮可以转去检查它；搜空后回到同一次搜索的剩余房间，**不会在同一轮连查第二件**。
+   - 明确的结束路径：`NO_CLUE / NO_CANDIDATE / ALL_CANDIDATES_COOLED / NO_LEGAL_STANCE / CANDIDATES_UNREACHABLE / ROUND_BUDGET_USED / CLUE_TOO_WEAK / TARGET_VISIBLE / DANGER_SOUND / CHECK_TIMEOUT / NO_ROUTE / MANUAL_CONTROL / MAP_REBUILT / CHECK_DONE`，最终都回到既有 `SEARCH` / `PATROL`。
+   - 生命周期：`reset()` 清空线索、推断、候选、失败冷却与计数；`resumeAfterManualControl()` 中止半途搜查；`rebindMap()` 换地图后作废旧家具候选并在真正换图时清空线索；冻结 / 暂停期间 `update()` 不被调用，因此停留、冷却与线索有效期都不推进。
+7. **正式搜查结算的分层接缝**（`ThreeGame.runHumanAiHideCheck()`）
+   - 只有在「到达合法站位 + 朝向正确 + 900 ms 停留」之后才读取权威占用：`concealed && 真实藏身家具 === 正在检查的家具` 时，用 S7C-1B 的 `evaluateHumanSearch()` 判定，命中即 `releaseHide('SEARCHED')` + `GameStateSystem.forceCapture()`（同一条结算路径）。
+   - 回执给 AI 的**只有一个布尔值**（`onCheckHideResult(spotId, hit)`，函数 arity 为 2）；搜空不修改藏身状态、不泄露真实坐标；开发者真值只显示在 DEV 面板。
+   - Human AI 的搜查**不继承**玩家 Q 的 12 秒冷却。
+8. **DEV-B 只读观察 + DEV 可视化 + AI JSON**
+   - `DevBHumanHideSearch` 明确分三段：`clue*`＝AI 已知、`inference*` / `candidate*`＝AI 推断、其余为开发者真值；`human-ai` 分区新增 17 条观察项（线索数量与过期、推断方向与依据、怀疑家具与公开排序、搜查站位 / 表面、停留进度、本轮与本次调查已检查数量、失败记忆与剩余冷却、最近结果、放弃原因、次数统计、信息归属说明与 DEV 图例）。
+   - DEV 新增可视化开关 `clues`：绿＝AI 已知米痕线索、青＝AI 推断方向与锚点、洋红＝AI 推断的怀疑家具；绘制对象只创建一次，且排在声音标记之前（既有「最后 N 个子对象＝声音标记」的断言仍成立）。
+   - AI JSON 新增独立 `humanSearchEvents` 时间线，`formatVersion` 升为 **1.3**（`HIDE_*` 事件与旧字段全部保留）；事件只在真实变化时写入，不逐帧刷屏。
+   - 普通 Human HUD **不显示**隐藏者真实位置、真实藏身家具或占用数据：人类 AI 的搜查结果只写 DEV 字段，绝不写玩家可见的 `hideNotice`。
+9. **内部技术阈值集中定义**（`src/systems/HumanSearchTuning.ts`，新增）
+   - 只放实现细节、不放玩法平衡值；每一条都由现有源码真实数值推导并在注释里写明依据，`S7C2_INTERNAL_THRESHOLDS` 汇总供报告与复核。
+
+### 4.2 实际新增 / 修改的数值（全部来自用户本轮批准或从既有值推导）
+
+| 来源 | 项 | 值 | 说明 |
+|---|---|---:|---|
+| 用户批准 | `humanAI.hideCheckFailureCooldownMs` | 6,000 ms | 同一家具搜空后的再次检查冷却 |
+| 用户批准 | `humanAI.hideCheckMaxPerRound` | 1 件 | 每轮最多正式检查的家具数 |
+| 用户批准（复用） | `humanSearch.range` / `halfAngleDeg` | 1.5 u / 60° | 与玩家 Q 完全相同的扇形 |
+| 用户批准（复用） | `humanAI.searchDwellMs` | 900 ms | 正式搜查停留 |
+| 用户批准（复用） | `perception.lastSeenMs` / `traceLifetimeMs` | 8,000 / 15,000 ms | 未改动 |
+| 推导 | `TRACE_LINK_DISTANCE` | 3.9 u | `traceStepDistance 0.65 × 6`，小于 `searchRadius` 的三分之一 |
+| 推导 | `TRACE_CHAIN_MAX_CLUES` / `TRACE_DIRECTION_CONTRADICTION_DEG` | 8 条 / 90° | 推断只用最近 8 粒；超过直角判矛盾 |
+| 推导 | `CLUE_MEMORY_MAX` | 160 条 | 覆盖 15 秒寿命内极速移动的理论最大脚印数（约 142） |
+| 推导 | `STANCE_SURFACE_STEP` / `STANCE_STAND_OFF` / `STANCE_MAX_PATH_PROBES` | 0.4 u / 0.3 u / **8 次** | 采样步长复用寻路格；间距大于角色半径且小于 1.2 最小区域半径；A* 调用上限（现行源码为 8；早期草稿写的 4 已在 2026-09-26 修复轮按源码更正） |
+| 推导 | `CANDIDATE_TRY_LIMIT` 与 6 个评分权重 | 3 与 1/2/6/4/3/2 | 候选尝试数复用 `searchRoomCount`；权重见模块注释 |
+
+### 4.3 未实现 / 已知限制（本轮明确不做）
+
+- **不做** DeepSeek AI 自主藏身（S7C-2b）、地图出生点与门状态随机化（S7C-3）、JSON 导入器、正式家具开门 / 掀箱动画、新增藏身音效、永久脚印系统。
+- 家具仍不参与视觉与搜查遮挡（沿用既有全局规则）；`Last Seen` 仍按 8 秒自然过期。
+- Human AI 的候选排序只保证「只用公开线索、可复算、确定」；它不是最优搜索策略，也没有跨局学习。
+
+### 4.4 自动化与浏览器复核（2026-09-26 本轮实测）
+
+- `npm test` **565 / 565 PASS**（基线 518 + 新增 47：`rice-trace-clues` 7、`human-trace-tracking` 9、`hide-search-candidates` 7、`human-hide-search-stance` 5、`human-search-tuning` 4、`human-ai-check-hide` 14，以及 DEV-B 可视化新增 1）；`npx tsc --noEmit` 退出码 0；`npm run build` 退出码 0（JS 898.20 kB / gzip 241.55 kB、CSS 13.68 kB，仅既知 >500 kB 提示）；`git diff --check` 退出码 0。
+- 变异验证：临时把「900 ms 停留」与「线索强度门槛」改回缺陷版本，对应用例确实失败，复原后全绿。
+- 真实浏览器复核（本机 Chrome headless + CDP，复用 `http://127.0.0.1:5173/`）：控制台除既知 favicon 404 外 0 错误；可进入 PLAYING；DEV-B 面板 5 个分区 74 条观察项、7 个可视化开关（含新增 `clues`）；新增的 S7C-2 字段在开局全部显示通俗的「没有数据」文案；DEV `Hide / 藏身` 分类的 S7C-2 字段与「开发者真值」字段都正常渲染；Human AI 仍按既有逻辑 `PATROL → CHASE → CAPTURE` 正常运行。**浏览器里未能脚本化复现「吃到米 → 留下米痕 → AI 亲自看见 → 产生家具怀疑」的完整链路**：脚本控制的 DeepSeek 在全部门初始关闭时需要手动开门，4 次尝试都在约 6 秒内被抓捕，属于玩法过程限制而非实现缺陷；该链路由上面 14 项真实地图控制器集成测试与 33 项纯逻辑测试覆盖，仍需用户人工验收。
+
+## 4.5 S7C-2 修复轮（2026-09-26，基于真实 AI 日志与 Codex 二次审计，**待用户集中人工复验**）
+
+> 本轮不重新规划 S7C-2，也不新增任何正式数值（`GAME_CONFIG` 与已验收平衡值零改动）；只修复真实日志暴露的判定与执行问题、补齐真实游戏层桥接测试、可见反馈与结构化日志。用户要求一次性交付、验收前不 commit / push / tag。
+
+### 4.5.1 修复的问题与现行行为
+
+| # | 真实日志暴露的问题 | 现行行为（修复后） |
+|---|---|---|
+| 1 | 米痕已被记住，但当帧被追逐 / 正式搜查占用时，该批线索**永不重评**（`considerTraceClue()` 依赖「本帧是否发现新米痕」） | `considerPublicClues()` + `actOnPublicClues()`：触发条件是「存在已知但尚未用于发起任务的公开线索」（`actedTraceIds` 整集替换，规模受 `CLUE_MEMORY_MAX` 约束）。被高优先级状态延后的批次以公开摘要保留数量与**原实体有效期**（`createdAt + lifetimeMs`，进队列不续期）；目标不再可见、无紧急危险、不处于 `CHECK_HIDE` 时重评；全部过期给 `CLUE_EXPIRED`。已处理的同一批线索不再重复触发任务或导航 |
+| 2 | 有限 SEARCH 刻意排除 Last Seen 所在房间，**从不考虑最后目击房间自己的藏身家具** | 新增公开门槛 `gateLastSeenRoomSearch()`（Last Seen 有效 + 落在真实房间内 + 该房间确有公开藏身点），在相邻房间搜索**之前**先考虑同房间候选；不成立时按原规则退回。来源码 `LAST_SEEN_ROOM`、转移原因 `LAST_SEEN_ROOM_HIDE_SUSPECT`。**每轮仍最多正式检查 1 件家具**：同房间与相邻房间共用同一轮配额（`beginSearch(input, continueRound = true)`），两条分支不能绕过上限 |
+| 3 | TRACE 来源搜空后只转 `PATROL`，没有完整收尾，留下僵尸调查状态 | 新增 `finishCheckHideAction()`：清相位 / 目标家具 / 站位 / 停留 / 回执等待 / 有限搜索房间队列，并记 `checkHideInvestigationEndReason`。**刻意保留本次调查**（否则「同一次调查最多 3 件」会被一串新米痕绕过）；计数语义拆为 `checkHideRoundAttempts`（已开始的尝试，配额守卫）与 `checkHideRoundChecks` / `checkHideInvestigationChecks`（**正式执行**才消耗） |
+| 4 | 规划保存的表面点与正式判定重新计算的「最近表面点」不一致，家具边角 / 旋转家具旁会出现「计划合法却判定 MISS」 | 正式判定改用规划保存的 `stance.surfacePoint`（`noteCheckHideResolution()` 单向登记计划瞄点与最终判定点）；执行前用 `pointOnRectSurface()` 复核该点仍属于**当前已应用地图**的目标家具，家具被移动 / 旋转 / 删除时 `cancelStaleCheckHide()` 取消（不记搜空、不进冷却、配额归还）并合法重规划。1.5 u / 120° / 墙门遮挡一项未放宽，玩家 Q 未改动 |
+| 5 | 玩家分不清「在附近调查」与「真的在检查某件家具」 | `HideSearchView` 新增独立的 AI 扇形 + 家具轮廓（暖橙），`CHECK_HIDE.DWELL` 期间点亮、离开时中性收尾脉冲；Human 角色走既有 `INTERACT` 动作。**纯表现**：不参与判定、不触发玩家 Q 冷却、只画 AI 自己公开的目标家具 |
+| 6 | 日志缺少判断失败所需的状态信息 | `DevBHumanHideSearch` 新增 20 余项公开字段；DEV `human-ai` 新增 8 条属性；AI JSON `humanSearchEvents` 每个事件新增结构化 `data`（状态 / 前一状态 / 调查来源 / Last Seen 公开信息 / 待处理线索 / 候选与排序 / 站位与瞄点 / 结果 / 打断声音 / 计数），`formatVersion` 升为 **1.4** |
+
+### 4.5.2 分层与反作弊边界（修复轮加强）
+
+- 两段过去直接写在 `ThreeGame` 里的接线抽成 `src/systems/HumanHideSearchResolution.ts`：`createHumanAiMapSnapshot()` 是公开世界快照的**唯一构造点**（三条几何接缝必须真的接线，缺省即拒绝），`resolveHumanAiHideCheck()` 是正式判定的**权威层**（先复核计划仍属于当前地图 → 再算公开几何 → 最后才读权威占用）。
+- 回执给 AI 的仍然只有 `hit: boolean`（`onCheckHideResult` arity = 2）；权威层的细粒度原因（例如「这件家具里确实有人但扇形被门挡住」）只进 `ThreeGame` 的 DEV 字段，**不进入 AI 控制器字段、不进入玩家可见 `hideNotice`**。
+- AI 侧的结构化日志只收公开安全字段；延后与重评机制只使用公开线索记忆与其公开有效期，不读占用、不读隐藏坐标、不新建第二套脚印系统。
+
+### 4.5.3 自动化与浏览器复核（本轮实测）
+
+- `npm test` **587 / 587 PASS**（基线 565 + 新增 22：`human-hide-search-resolution` 8、`human-ai-search-lifecycle` 10、`hide-search-view-ai` 3，以及 `human-ai-check-hide` 拆分新增 1）；`npx tsc --noEmit` 0；`npm run build` 0（JS 924.60 kB / gzip 248.34 kB、CSS 13.68 kB）；`git diff --check` 0。
+- 变异验证 4 次（每次都确认对应用例确实失败后复原）：关闭延后重评 / 禁用同房间分支 / 正式判定改用最近表面点 / 去掉搜空收尾，分别命中 1、5、2、1 项测试。
+- 真实浏览器复核：脚本用真实按键让 DeepSeek 娘在客厅纸箱成功藏身 → Human AI 失去视线产生 Last Seen（`living`）→ **`HUMAN_LAST_SEEN_ROOM` 门槛 `OK`** → 来源 `LAST_SEEN_ROOM` → `TRAVEL → DWELL(900 ms)` → 正式判定 `HIT_CONCEALED`（计划瞄点 = 最终判定点），本轮计数 `1 / 1（上限 1）/ 1`；导出的 AI JSON `formatVersion = 1.4`。复核期间用 DEV-B 内存覆盖降低 AI 移速与抓捕圈以便观察（不改正式配置）。
+
+## 4.6 S7C-2 第二轮修复轮（2026-09-26，Human 玩家 Q 家具交互 + Human AI 正式站位与结算，**待用户集中人工复验**）
+
+> 本轮不重新规划 S7C-2、不新增任何正式数值（`GAME_CONFIG` 与已验收平衡值零改动）；只修用户本轮批准的 A–E 五项：玩家 Q 的家具交互规则、Human AI 导航终点与正式站位统一、类型化解析与计数、公开几何先于权威占用、以及真实执行链测试 / 浏览器复核 / 文档。验收前不 commit / push / tag。
+
+### 4.6.1 Human 玩家 Q 的两种互斥用途（现行规则）
+
+| 情形 | 行为 |
+|---|---|
+| 玩家站在某件公开藏身家具的**合法交互区域内** | 该家具出现**白色呼吸描边**（本条自 §4.7 起被取代：现在还需要「玩家朝向对着该家具」且「当帧没有合法暴露目标」；描边的**几何与透明度区间**又由 §4.8 更新为「真实家具棱线轮廓 + 0.35–1.0」，见 §4.7.1 / §4.8.2） |
+| 在该区域内按 Q（且 Q 可用） | 本次 Q **只搜查这件家具**：① 当帧唯一「合法 + 被指向」家具 → ② 该藏身点与家具仍属于当前已应用地图 → ③ 玩家确实位于合法交互区域 → ④ 与家具之间没有墙或非 OPEN 门叶 → ⑤ 上述全部通过才**惰性读取一次**权威占用。命中即 `releaseHide('SEARCHED')` + `forceCapture()`；合法搜空进入既有 12 秒冷却 |
+| Q 在 12 秒冷却中 | 直接拒绝：不搜查、不抓捕、**不产生新的冷却**；仍显示家具但描边压暗到 0.14 且不呼吸，HUD 写「冷却中 X 秒（家具描边变暗，暂时不能按）」 |
+| 不在任何家具交互区域内（或没有「合法 + 被指向」的家具） | 沿用原有普通扇形角色抓捕（半径 1.5、张角 120°、墙门遮挡、瞬时抓捕、薄荷色扇形特效；命中与否都消耗同一份冷却）；**当帧存在合法暴露目标时也走这一支，且优先于家具搜查**（§4.7.1） |
+| 区域成员成立但站位不合法（隔墙 / 站不住 / 无导航格） | **不亮高亮**、不作为家具目标；按 Q 回退普通扇形 |
+
+- 公开目标解析的唯一实现是 `src/systems/HideTargetResolution.ts` 的 `resolveHideInteractionTarget()`：真实交互区域 + 真实碰撞可站立 + 家具表面无墙门遮挡 + 真实导航格；按藏身点数组顺序取「到锚点距离最小」（严格 `<`，距离相同保留先出现者），**只用公开数据、确定性、不按占用排序**。DeepSeek 玩家按 E 藏身与 Human 玩家按 Q 搜查共用它，但**不共享**阵营状态、技能消耗或占用信息。**Human 玩家 Q 一侧另传 `pointing`（§4.7.1）；DeepSeek 玩家 E 不传，因此 E 的藏身选择仍然不需要面向家具。**
+- 输入优先级由 `resolvePlayerQPlan()` 单点定义（**§4.7 起为 `REJECT_COOLDOWN / FAN(EXPOSED_TARGET) / FURNITURE / FAN(NO_TARGET)` 四分支**）；`ThreeGame.useSkillQ()` 的 Human 分支只按它的结果分流，且目标来自**按键当帧**重新解析，绝不复用上一帧的高亮。
+- `HideSearchView.setPlayerTarget()` 与 Human AI 的暖橙搜查反馈是两套独立网格与独立状态；高亮只表示「这件家具现在可以交互」，**与里面有没有人无关**，也不读、不推断、不暴露占用。
+
+### 4.6.2 Human AI 的导航终点与正式站位（本次修复的核心）
+
+| # | 真实日志暴露的问题 | 现行行为（修复后） |
+|---|---|---|
+| 1 | 规划给出原始 `stancePoint`，A* 吸附到导航网格点，控制器**按吸附点判到站**，权威层**按原始点判站位**——两个中心最多差 `REGION_NAV_SNAP_LIMIT`（0.45 u），于是「DWELL 满 900 ms → REQUEST → STANCE_LOST」反复出现 | 导航网格点**仍只作寻路节点**；到达导航终点后进入新增的**最终接近**（`HumanAIController.finalApproach()`），在真实 `CollisionWorld` 下继续合法走向原始 `stancePoint`（不穿墙 / 不穿家具 / 不穿关闭的门，不重跑 A*，不瞬移）。「能否进入 `DWELL`」改由 `resolveHumanAiHideCheck` 同款谓词 `evaluateHideStance()` 判定，容差仍是既有 `humanAI.waypointTolerance + collision.contactEpsilon`，**未放宽任何容差**。卡住时沿用既有 `stuckRepathMs` / `stuckProgressEpsilon` 有界收尾（`CHECK_HIDE_STANCE_UNREACHABLE`），且**不退还**本轮家具配额 |
+| 2 | `STANCE_LOST` / `PLAN_STALE` / `OUT_OF_RANGE` / `OUTSIDE_FAN` / `BLOCKED` 被当作普通 `MISS` 记进公开失败记忆与 6 秒冷却 | `HumanHideCheckCode` 新增 `HEADING_LOST`；以上六码统一为**未完成合法检查**（导出常量 `HUMAN_HIDE_CHECK_INCOMPLETE_CODES`），`executable = false`、`cancelKind = 'INCOMPLETE'`：不记搜空、不进 6 秒冷却、不写公开失败记忆；只有 `MISS_EMPTY` / `HIT_CONCEALED` 才 `countsAsFormalCheck = true` |
+| 3 | 「真正完成的正式检查」计数在发出 REQUEST 时就消耗，等于把未完成的检查算成正式检查 | 计数改由游戏层回执消耗（`noteCheckHideResolution({ countsAsFormalCheck })`）；REQUEST 只记 `checkHideRequestCount`（每动作只允许 1 次）。新增 `cancelIncompleteCheckHide()`（保留尝试配额，防反复取消绕过「每轮最多 1 件」）与有界的 `cancelStaleCheckHide()`（只有地图变化才退还配额，上限 `STANCE_MAX_STALE_CANCELS = 2`） |
+| 4 | 权威占用在公开几何之前就被读取（先判断「这件家具里是不是藏着对方」再看几何） | `resolveHumanAiHideCheck()` 的输入改为惰性 `readOccupancy()`，顺序固定为「计划仍属于当前地图 → 站位 → 朝向 → 1.5 u / 120° / 墙门遮挡 → 才读一次权威占用」；公开几何任何一条不成立时**权威占用查询次数为零** |
+| 5 | 家具搜查命中会在同一帧结束对局，导致该帧的 REQUEST / RESOLVE / HIT 与 `HIDE_EXIT` 永远不写进 AI JSON | `match.result` 置位处补一次 `recordHideEvents()` + `recordHumanSearchEvents()` 冲写；修复后同一场景的 JSON 含完整 12 条事件链 |
+
+### 4.6.3 测试与浏览器复核（本轮实测）
+
+- `npm test` **613 / 613 PASS**（基线 587 + 新增 26：`hide-target-resolution` 5、`human-furniture-search` 10、`human-ai-stance-approach` 7、`hide-search-view-player-target` 3、`ai-log-collector` 1）；`npx tsc --noEmit` 0；`npm run build` 0（JS 942.50 kB / gzip 252.78 kB、CSS 13.68 kB）；`git diff --check` 0。
+- 走图测试器械：新增 `tests/human-ai-walk.mjs`，按 `ThreeGame.updatePlaying()` 同口径推进（AI 出方向 → 真实 `CollisionWorld.move()` 位移 → 门 / 解锁指令交给真实 `DoorSystem`），因此「走完一次搜查」不再靠瞬移到吸附点冒充真实导航。
+- 变异验证 5 次（每次都确认对应用例确实失败后复原）：① 「到导航吸附点即算到站」→ 7 项失败；② 未完成检查重新 `executable` → 2 项失败；③ 权威占用读取放回公开几何之前 → 1 项失败（`occupancyReads === 0`）；④ 正式检查计数搬回 REQUEST → 4 项失败；⑤ 玩家家具搜查改成「瞄家具中心 + 1.5 u 距离门槛」→ 4 项失败。
+- **真实浏览器复核（次卧床，用户此前三次失败的场景）**：DeepSeek 玩家真实走图（玄关 → 书房 → 次卧，两个门用 E 真实开启）→ 在 `hide_second_bed` 合法位置藏身 → Human AI 失去视线产生 Last Seen（房间 `second_bedroom`）→ `HUMAN_LAST_SEEN_ROOM` 门槛 `OK` → `LAST_SEEN_ROOM` → `TRAVEL → DWELL（到达规划站位偏差 0.234）→ REQUEST（只一次）→ HIT_CONCEALED`（计划瞄点 = 最终判定点 = (−14.1, 9.8)，距离 0.53、偏差 −1.1°，站位 / 朝向均成立，权威层读取真实藏身点、计入正式检查）→ `CAPTURE`，对局 00:41 结束。该次 `navGoal = (−14.6, 9.6)` 与规划站位相距 **0.308 u > waypointTolerance 0.25**，正是旧实现会判 `STANCE_LOST` 的错位。**玩家 Q 家具交互**：进入储物间纸箱的合法交互区域 → 白色呼吸描边 + 「Q 搜查「储物间纸箱」」→ 转身背对后按 Q 仍搜空成功（`MISS_EMPTY`、权威占用读取：是）→ 12 秒冷却且描边压暗 → 冷却中再按被拒绝。证据见 `docs/verification/S7C-2-r2/`。
+- **明确 BLOCKED（不得记为 PASS）**：① 「玩家 Q 从藏有 DeepSeek 娘的家具里搜出对方」无法在浏览器复现（本局只有人工控制的 DeepSeek 娘会藏身，玩家不能同时控制两个阵营；AI 自主藏身属未授权的 S7C-2b），只有真实地图自动化证据；② 「两个交互区域重叠」在真实地图上不存在（8 个区域两两不重叠，0.1 网格全图扫描确认），重叠行为用「真实几何 + 移动家具构造的重叠」验证。
+
+## 4.7 S7C-2 第三轮修复轮（2026-09-26，Human 玩家 Q 改为「暴露目标优先，其次指向家具」，**待用户集中人工复验**）
+
+> 起因（用户本轮简报原话要点）：Human 玩家在追逐暴露的 DeepSeek 娘时**可能路过某件家具的交互区域**，上一版「附近有家具就优先搜查」会抢占本来要用的普通扇形抓捕。本轮只做最小增量修复：改 Human **玩家** Q 的目标解析、白色高亮与对应提示；**不重新实施 S7C-2**、不重写 Human AI 搜查 / 米痕 / Last Seen，**不新增任何正式数值**（`GAME_CONFIG` 零改动），验收前不 commit / push / tag。
+
+### 4.7.1 Human 玩家 Q 的输入优先级（现行唯一规则）
+
+| 顺序 | 条件 | 行为 |
+|---|---|---|
+| ① | Q 在 12 秒冷却中 | 直接拒绝：不搜查、不抓捕、不产生新冷却 |
+| ② | Q 可用，且**当帧存在合法暴露目标**（**未藏身**的 DeepSeek 娘位于 1.5 世界单位、120° 扇形内，且无墙 / 非 OPEN 门叶遮挡） | 执行**原有普通扇形角色抓捕**。即使玩家同时站在某件家具的合法交互区域内、并正对着它，也**不得**转为家具搜查 |
+| ③ | 没有暴露目标，且当帧存在**合法 + 被指向**的家具 | 本次 Q **只搜查这一件家具**：当帧唯一目标 → 仍在当前地图 → 合法交互区域 → 无墙门遮挡 → 才惰性读取一次权威占用。命中即 `releaseHide('SEARCHED')` + `forceCapture()`；搜空也消耗同一份 12 秒冷却 |
+| ④ | 都没有 | 原有普通扇形空挥，同样消耗冷却 |
+
+- **指向条件**：`pointsAtFurniture()` 只比较**角度**——玩家朝向 vs「家具可接近表面点」方向（`furnitureApproachSurfacePoint()`，与 AI 站位、家具搜查同一个公开几何助手），容差**直接复用已批准的普通扇形半角** `GAME_CONFIG.humanSearch.halfAngleDeg`（±60°），**不新增数值**。它只用于**选中家具**，不做距离判定、不做遮挡判定、不参与命中几何；家具搜查本身仍然不做 1.5 u / 120° 判定（`resolveHumanFurnitureSearch()` 的输入里没有任何朝向 / 距离 / 张角参数，测试以源码断言把守）。
+- **暴露目标预检测**：`HumanSearchSkill.probeExposedFanTarget()` 直接调用**正式的** `evaluateHumanSearch()`，因此「预检测说能抓到」与「真正执行抓到」用的是同一帧同一套几何；它**绝对无副作用**（不显示特效、不消耗冷却、不写日志、不释放藏身、不产生抓捕事件）。**藏身目标即使几何命中也不算暴露目标**（`available = false`），因此它不会抢占家具搜查——藏身者只能通过「指向它所在家具 + 按 Q」被搜出。
+- **高亮与提示同源**：白色呼吸描边、HUD 文案与 Q 的实际目标全部来自**同一次** `playerQTargetResolution()` 结果里的 `pointedLegalTarget`（高亮与技能层都禁止退回 `legalTarget`，测试以源码断言把守）。当帧存在合法暴露目标时，家具**仍画出但压暗、不呼吸**，HUD 改回普通扇形文案——**绝不给出「可以搜家具」的误导性提示**。冷却中同样不给「Q 可用」暗示。
+- **DEV 与日志**：`hide/hide-search-target` 增列「合法 / 指向 / 指向偏差 / 暴露目标优先」；AI JSON 的 `playerSearchEvents`（`formatVersion` 仍为 **1.5**，只扩字段不换结构）新增：`reason`（`COOLDOWN / EXPOSED_TARGET / FURNITURE / NO_TARGET`）、`pointed`、`pointingDeltaDeg`、`exposedTargetAvailable / exposedCode / exposedDistance / exposedAngleDeltaDeg / exposedBlocked`；普通扇形分支现在也记 `PLAYER_Q_FAN_HIT` / `PLAYER_Q_FAN_MISS`（此前只有家具分支有事件），因此「这一按抓了人还是搜了家具」在日志里是可直接核对的一行。
+- **未改动**：Human AI 的正式搜查链（公开线索 → 导航 → 合法站位 → 900 ms 停留 → 权威结算）、E 藏身交互、普通扇形抓捕的 1.5 / 120° / 墙门遮挡、DeepSeek 玩家 Q 锁门、S7C-1B 与两轮既有修复。
+
+### 4.7.2 测试与浏览器复核（本轮实测）
+
+- `npm test` **622 / 622 PASS**（基线 613 + 新增 9：`tests/player-q-priority.test.mjs` 逐条覆盖用户简报 §四 的 1–9 项；`hide-target-resolution` 与 `human-furniture-search` 同步到新语义，属于**同步**而非削弱）；`npx tsc --noEmit` 0；`npm run build` 0（JS 945.67 kB / gzip 253.60 kB、CSS 13.68 kB）；`git diff --check` 0。
+- 变异验证 6 次（每次确认对应用例确实失败后复原）：① 把家具分支改回优先于暴露目标 → 4 项失败；② 去掉指向过滤（`pointed` 恒真）→ 5 项失败；③ 把藏身目标也算作「暴露目标」→ 1 项失败；④ 高亮退回 `legalTarget`（不再要求指向）→ 1 项失败；⑤ 高亮「可用」不再排除暴露目标优先 → 1 项失败；⑥ HUD 不再排除暴露目标优先 → 1 项失败。
+- **真实浏览器复核（`docs/verification/S7C-2-r3/`，本机 Chrome headless + CDP）**：
+  - **主卧床（用户本轮点名的场景）通过**：控制 Human 从厨房经 `door_living_kitchen(9,-6)` → `door_hall_living(-3,1)` → `door_hall_master(-8,-1.5)` 真实走到床边（DEV `hide/hide-search-region = LEGAL`）；**背对床** → `高亮 NONE（合法 否｜指向 否）`、HUD 回落到普通扇形文案、按 Q **家具搜查 0 次**（普通扇形未命中，冷却已起）；等 12 秒后**面向床** → `高亮 FURNITURE（hide_main_bed｜合法 是｜指向 是 45.0°）`、HUD「人类：Q 搜查「主卧床」（面向家具即可，不必精确瞄准）｜Q：可用」、白色呼吸描边可见（截图 `playerQBed-player-q-facing.png`）→ 按 Q 得到 `MISS_EMPTY`（家具 `main_bed`、瞄点 (−11.9,−5.2)、**权威占用读取：是**、家具搜查 1 次）→ 12 秒冷却 + 描边压暗 → 冷却中再按被拒绝（`搜查冷却中：剩 10.5 秒`，搜查次数仍为 1、AI JSON 无新事件）。
+  - **储物间纸箱（同一套规则的第二个样本）通过**：同一脚本 `playerQ` 场景复现「背对不搜 / 面向只搜这一件 / 12 秒冷却 / 冷却中拒绝」，`pointingDeltaDeg = 29.4°`、`playerSearchEvents` 两条（`PLAYER_Q_FAN_MISS` + `PLAYER_Q_FURNITURE_MISS`）。
+  - 复核期间只用 DEV-B **内存覆盖** `capture.radius = 0.05`（避免脚本走图时被普通抓捕提前结束对局）；不改正式配置、结束即弃。
+  - **明确 BLOCKED（不得记为 PASS）**：**「玩家在区域内指向家具、同时有一个暴露的 DeepSeek 娘落在普通扇形里 → Q 抓人而不是搜家具」这一帧未能在真实浏览器里摆出。** 本轮共尝试 4 次真实复现，证据与原因全部留档：① 在客厅纸箱区域等 AI 自己走进交互区域（AI 的米堆路线全程停在西侧，最近 12.9 u，对局 01:52 由 AI 吃米获胜结束）；② 追赶到次卧床（脚本的直线走图器在门框角落反复卡住，且对局 02:24 结束）；③ 用真实 `FOOTSTEP`（半径 17 u）脚步声诱导 + 把 AI 减速到 40 px/s（AI 始终停留在西侧 12.9–25 u，从未靠近）；④ 在主卧床区域等 AI 巡视进来（两轮分别等了约 2 分钟，AI 最近只到 6.6 u 并转去衣帽间 `rice_10` / 卫生间 `rice_11` 吃米，对局分别在 01:57、02:20 由 AI 获胜结束）。该分支在**真实地图 + 真实扇形几何 + 真实交互区域**的自动化测试（`tests/player-q-priority.test.mjs` §四.1）里覆盖，并由用户人工验收确认。
+  - 另需说明：真实地图上「玩家 Q 搜出藏在家具里的 DeepSeek 娘」仍然**只能**在人工控制 DeepSeek 娘藏身的局面里出现，而本场景两个阵营只由一方控制；该分支继续由真实地图自动化测试覆盖（与第二轮同因）。
+
+## 4.8 S7C-2 第四轮修复轮（2026-09-26，白色家具轮廓「看不见」的可见性修复，**待用户视觉复验**）
+
+> 起因（用户本轮人工验收结果原话）：六项里只有第 3 项「面向家具正常搜查」是 **FAIL**，并补充「玩法实际上都可以，唯一观察到的问题是**没有白色轮廓呼吸**」。用户明确要求：**不得因为第 3 项 FAIL 就擅自重写已经正常的玩家 Q 家具搜查逻辑**；本轮唯一目标是让「Q 可用 + 无合法暴露目标 + 玩家在合法交互区域内且正指向该家具」时，屏幕上出现**清晰可见的白色呼吸式家具外轮廓**，并在离开条件时立即消失；不新增玩法参数、不改 `GAME_CONFIG` 任何数值、不改 Human AI 的站位 / 900 ms 停留 / 类型化结算。
+
+### 4.8.1 根因（只读定位 + 可复现证据）
+
+| # | 根因 | 证据 |
+|---|---|---|
+| ①（主因） | `HideSearchView` 的根节点 `root` 被 `show()`（**普通扇形释放**）搬到玩家释放点并带上朝向（`root.position.set(origin.x, 0, origin.z)` + `root.rotation.y = …`），而挂在它下面的玩家高亮 / AI 扇形 / AI 轮廓 / 命中反馈传进来的都是**世界坐标** → 这些对象被**二次平移**。 | 真实 `three` + 真实 `HideSearchView` 探针（`node --experimental-strip-types`）：在 (-11.4,-5) 按过一次 Q 之后，`hide_main_bed` 中心 (-13,10) 的轮廓世界坐标变成 **(-25.43, 0.23, -13.49)**（期望 (-13, 0.225, 10)），偏差约 28 世界单位——已经跑到公寓之外；同时 DEV 行仍然显示「高亮 FURNITURE…合法 是｜指向 是」。 |
+| ②（次因） | 旧实现画的是 `BoxGeometry` + `wireframe` 的**三角形线框盒**（每个面还带对角线），而且 `scale.y = height` 让顶面与家具顶面**完全共面**，产生深度冲突。 | 真机像素统计：修复前在正确位置也从未出现过「呼吸峰值接近纯白」的像素；修复后同一位置出现 116–176 个（床）/ 88 个（纸箱）这样的像素。 |
+| ③（可见性余量） | 呼吸透明度下限 0.25 在浅灰地面上对比偏弱。 | 修复后统计：呼吸最暗相位轮廓区平均亮度 162.6–185.9（底色约 116），最亮 243–245，振幅 59.5–80.4。 |
+
+### 4.8.2 修复内容（`src/three/HideSearchView.ts`，纯表现层）
+
+1. **根节点恒为单位变换**：扇形自己携带位移与朝向——`fan.position` 取释放点、`fan.quaternion = Ry(headingRadToMeshRotationY(朝向)) · Rx(−90°)`，与旧实现的**世界矩阵逐值相同**（矩阵对比最大误差 `2.2e-16`，测试对 3×3 旋转元素逐一断言），但不再污染同级的世界坐标对象。AI 扇形 / AI 轮廓 / 命中反馈因此一并回到正确位置（同一个根因）。
+2. **白色高亮改为真实家具棱线轮廓**：`EdgesGeometry(单位立方体)` 的 12 条棱（24 个顶点）+ `LineBasicMaterial`，用**与家具网格相同的中心 / 朝向**、三轴各外扩 `HIDE_PLAYER_TARGET_MARGIN = 0.08` 的缩放贴合家具外缘。既不是「家具中心悬浮的白色圆圈」，也不涂白家具本体、不遮挡家具材质。
+3. **呼吸透明度区间 0.25–0.8 → 0.35–1.0**（周期仍 1,400 ms），冷却期仍压到 `0.14`，「可交互 / 冷却中」一眼可分。全部是**表现层常量**，不新增玩法数值、`GAME_CONFIG` 零改动。
+4. **无每帧分配**：几何与材质构造时创建一次并长期复用，每帧只改 `scale / position / rotation / opacity`（测试断言连续 120 帧后 `geometry.uuid` 与 `material.uuid` 不变），切家具 / 重开 / 换图只清理可见性与透明度，场景里始终只有一个白色高亮对象。
+
+### 4.8.3 测试与浏览器复核（本轮实测）
+
+- `npm test` **625 / 625 PASS**（基线 622 + 新增 3：`tests/hide-search-view-player-target.test.mjs` 新增「Q 释放之后高亮仍在世界坐标上」与「棱线轮廓 + 几何复用 + 单实例」两项，`tests/hide-search-view-ai.test.mjs` 新增「AI 轮廓同样落在真实家具世界坐标上」）；`npx tsc --noEmit` 0；`npm run build` 0（JS 947.26 kB / gzip 254.15 kB、CSS 13.68 kB）；`git diff --check` 0。
+- `tests/hide-search-view.test.mjs` 的「扇形放置」断言由 `root.position/rotation` 同步到 `fan.position` + 世界朝向（**同步**：世界矩阵已被证明与旧实现等价，断言强度未降低、测试未删除）。
+- **真实浏览器复核（`docs/verification/S7C-2-r4/`，本机 Chrome headless + CDP，脚本 `browser-check.mjs`）**：同一脚本先按「走图 → 背对按一次 Q（旧缺陷正是在这一步搬走根节点）→ 等 12 秒冷却 → 面向家具」复现整条链路，再**在同一相机、同一站位**下每 ≈250 ms 截一帧共 14 帧，在 Node 里解码 PNG，用「呼吸峰值接近纯白 + 明暗振幅 ≥40 + 中性」筛出轮廓像素并统计：
+
+| 场景 | 轮廓像素 | 屏幕区域 | 呼吸最暗 → 最亮（轮廓区平均亮度） | 冷却中 | 判定 |
+|---|---|---|---|---|---|
+| 主卧床（修复后） | 176 | 184×116 px | 185.9 → 245.4（振幅 59.5） | 163.9（明显更暗） | **PASS** |
+| 储物间纸箱（修复后） | 88 | 81×50 px | 162.6 → 243.0（振幅 80.4） | 129.5（明显更暗） | **PASS** |
+| 主卧床（**把根节点位移缺陷临时改回去**的对照） | **0** | — | — | — | **FAIL**（DEV 仍显示「高亮 FURNITURE｜合法 是｜指向 是」、HUD 仍显示「Q：可用」，但屏幕上没有任何呼吸轮廓） |
+
+  - 留证：`after-bed-zoom-breath-min/max/cooldown.png`、`after-carton-zoom-*.png`（6 倍放大裁剪，肉眼可直接对比呼吸相位与冷却压暗）、`after-*-summary.json`（全部采样数值）、`before-bed-no-outline-facing.png`（对照组「有提示、无轮廓」的整帧）、`after-*-log.txt`（含控制台）。
+  - 复核期间只用 DEV-B **内存覆盖** `capture.radius = 0.05` 与 `movement.playerSpeed = 30`（避免脚本走图被抓、避免 AI 在测量期间吃满米结束对局）；不改正式配置、结束即弃。
+  - 控制台只有既有的 `THREE.Clock` 弃用告警与 favicon 404，0 页面异常。
+
+### 4.8.4 本轮局限（不得写成 PASS）
+
+- 「背对家具 → 无轮廓」**没有**做像素级对照：背对是靠真实走位转身，相机随之平移，整屏都会变化，用同一相机像素差无法成立。该状态仍以 DEV 读数（`高亮 NONE（合法 否｜指向 否）`）+ 真实地图自动化测试为证据（§4.7.2 已留档）。
+- 「玩家指向家具 + 未藏身暴露目标同帧」仍然 BLOCKED（原因与 4 次尝试见 §4.7.2），本轮未触及该分支的判定逻辑。
+- 修复只覆盖 Human **玩家** Q 的白色高亮；Human AI 的暖橙轮廓保持原实现（只随根节点修复回到正确位置，其颜色 / 透明度 / 触发时机未改）。
+
+## 4.9 S7C-2 最终规则与集中人工验收（2026-09-27）
+
+本节补记 S7C-2 后续集中验收，不改写 §4.6–§4.8 的逐轮历史。第三轮面向家具时缺少可见白色轮廓的失败记录仍保留；第四轮修复了轮廓可见性。用户随后确认最终集中人工验收全部通过，当前工作区源码已实现，Git 归档仍待单独授权。
+
+### Human 玩家 Q：抓捕与单件家具搜查
+
+1. Q 可用时，先按原规则检查未藏身的 DeepSeek 娘：距离不超过 `GAME_CONFIG.humanSearch.range`（1.5 世界单位）、在 120° 扇形内且未被墙或非 OPEN 门遮挡；若命中则执行普通抓捕。
+2. 没有合法暴露目标时，只有当 Human 位于一件家具的公开合法交互区域内并面向该家具，才可用 Q 搜查该唯一家具。此家具分支不再对家具或隐藏者套用普通抓捕扇形，也不读取隐藏者位置。
+3. 其余可用 Q 输入执行普通扇形空挥。有效 Q 的命中与未命中均进入既有 12 秒冷却；冷却中拒绝新输入。白色轮廓和提示只指向与当帧 Q 目标一致的家具。
+
+### DP 娘：指向反馈与 E 交互
+
+人工控制 DP 娘只保留最近一次有效世界 XZ 移动朝向；停步不改变朝向。面向合法家具时显示单一白色轮廓，家具视觉半角复用 `GAME_CONFIG.humanSearch.halfAngleDeg`（±60°）；面向 RiceField 当前最近未完成目标且处于合法进食范围内时显示米堆轮廓，纯视觉半角为 `DEEPSEEK_RICE_VISUAL_HALF_ANGLE_DEG`（±45°）。家具与米堆同时满足几何时，先遵守既有 E 仲裁，再显示唯一可执行目标。门或退出藏身拥有 E 时不显示其他目标。
+
+E 的玩法判定未因指向提示改变：扫雷面板开启时 E 归扫雷；藏身中 E 只用于退出；否则在门与米堆同时存在时，距离不大于米堆距离的门优先，其后依次是合法藏身和进食。面向要求仅影响轮廓，不是家具藏身条件。进食仍要求在 1.0 世界单位范围内静止并持续按住 E；白色轮廓不改进食速度、米痕或胜负规则。轮廓只读公开家具 / RiceView 表现数据，不读取家具占用或 AI 私有状态。
+
+### Human AI 正式搜查边界
+
+Human AI 只依据公开米痕、Last Seen、声音和有限搜索生成家具候选，导航至合法站位、朝向家具表面并停留 900 ms 后才申请正式判定。`PLAN_STALE`、`STANCE_LOST`、`HEADING_LOST` 及其他非法几何拒绝不算搜空、不触发同家具 6 秒失败冷却，也不消耗正式检查额度；只有几何合法的 `MISS_EMPTY` 会记录搜空和冷却。公开几何通过后才惰性读取指定家具的权威占用；AI 不可提前读取真实藏身家具。
+
+米痕寿命为 15 秒、Last Seen 为 8 秒；延后线索与最后目击房间优先搜索规则继续有效。家具轮廓与 Human AI 暖橙色搜查反馈使用独立表现状态；本次玩家白色轮廓不会影响 Human AI 决策。
+
+### 用户集中人工验收与本轮自动检查
+
+| 验收项目 | 用户确认结果 |
+|---|---|
+| 第三轮：追逐时 Q 优先抓人 | 通过 |
+| 第三轮：背对家具不误搜 | 通过 |
+| 第三轮：面向家具时的白色轮廓 | 当轮未通过；第四轮修复后由用户复验通过 |
+| 第三轮：家具内藏身者被搜出 | 通过 |
+| 第三轮：Human AI 次卧床回归 | 通过 |
+| 第三轮：其他机制回归 | 通过 |
+| 集中视觉验收：Human 白色家具轮廓 | 通过 |
+| 集中视觉验收：DP 娘家具轮廓 | 通过 |
+| 集中视觉验收：DP 娘米堆轮廓 | 通过 |
+| 集中视觉验收：家具 / 米堆交互重叠仲裁 | 通过 |
+| 集中视觉验收：目标生命周期 | 通过 |
+
+第三轮曾有一项视觉验收失败（面向家具时没有可见轮廓），该结果保留在历史记录；第四轮修复后，用户确认 Human 白色轮廓通过。自动化检查及构建以 `docs/AGENT_LOG.md` 本轮追加记录为准；详细逐轮证据见既有 `docs/verification/S7C-2-r2/`、`r3/`、`r4/` 产物。本节不代表 Git 提交或推送已经完成。
 
 ## 5. S7C-3：出生点与局部门状态随机化（含随机种子复现）
 
@@ -356,7 +584,9 @@ export class HideSystem {
 
 ## 6. 需要用户确认的机制与参数（**本阶段未写入任何数值**）
 
-> **状态（2026-09-26 S7C-1B 归档更新）**：第 2 行已由 S7C-1A 落地并随 `3191bec` 通过阶段 Gate；第 19–21 行已定案。**第 3–14 行由用户当轮 S7C-1B 完整授权取代，已实现并通过浏览器人工验收 6/6，随本轮提交归档**：第 3 行＝批准并实现（E 键；扫雷 > 门 > 藏身 > 进食；藏身中 E 专用于退出）；第 4 行＝**取消**（不再有进入耗时，改为点按立即切换）；第 5 行＝批准但**去掉独立 Human 距离门槛**（只保留 `captureProgressMs === 0` 与「非冲刺/眩晕」）；第 6 行＝**改为按 DEV-A 的精确交互区域判定**（不再是「到 anchor ≤ 1.0」，单一 anchor 语义不变）；第 7 行＝实现（禁止移动/冲刺/进食/门与锁门）；第 8 行＝实现（藏身中完全不累计抓捕，退出立即恢复）；第 9 行＝由「Human Q 搜查命中」承担，命中即立即抓捕且不附加眩晕；第 10 行＝改为 **Human 玩家 Q 扇形搜查**（1.5 / 120° / 12 秒冷却），原「按住 E 检查 900 ms」方案不再适用；第 11 行＝**未实现**，归入 S7C-2 的 Human AI 搜查；第 12 行＝本轮未新增藏身音效；第 13 行＝采用最省事的表现（藏身时隐藏角色可视体，根节点不动）；第 14 行＝实现（DEV `Hide / 藏身` 分类 + AI JSON `hideEvents`）。第 1 行属 S7C-2b、第 15–18 行属 S7C-3，仍**未授权**。DEV-A 的圆形／扇形藏身交互区域已正式接入玩法；是否拆分进入／退出锚点仍留到未来单独决定。
+> **状态（2026-09-26 S7C-2 实施后更新）**：第 2 行已由 S7C-1A 落地并随 `3191bec` 通过阶段 Gate；第 19–21 行已定案。**第 3–14 行由 S7C-1B 完整授权取代并已实现、验收、归档**（去向见原说明保留在下方）。**第 11 行「Human AI 检查参数」（900 ms 停留 / 每次 SEARCH 最多 1 处 / 单点冷却 6,000 ms / 目击记忆复用 `lastSeenMs`）已由 S7C-2 按用户批准实现**（见 §4）：停留复用 `humanAI.searchDwellMs`、每轮 1 件家具、同家具 6 秒失败冷却；**目击进入记忆**改由「亲自看见的米痕线索 + Last Seen」承担，没有单独新增藏身目击记忆。第 1 行属 S7C-2b、第 15–18 行属 S7C-3，仍**未授权**。DEV-A 的圆形／扇形藏身交互区域已正式接入玩法；是否拆分进入／退出锚点仍留到未来单独决定。
+>
+> 第 3–14 行的 S7C-1B 去向：第 3 行＝批准并实现（E 键；扫雷 > 门 > 藏身 > 进食；藏身中 E 专用于退出）；第 4 行＝**取消**（点按立即切换）；第 5 行＝批准但**去掉独立 Human 距离门槛**；第 6 行＝改为按 DEV-A 的精确交互区域判定；第 7 行＝实现（禁止移动/冲刺/进食/门与锁门）；第 8 行＝实现（藏身中完全不累计抓捕）；第 9 行＝由「搜查命中」承担（命中即立即抓捕，不附加眩晕）；第 10 行＝改为 **Human 玩家 Q 扇形搜查**（1.5 / 120° / 12 秒冷却）；第 11 行＝见上；第 12 行＝未新增藏身音效；第 13 行＝采用隐藏角色可视体的表现（根节点不动）；第 14 行＝实现（DEV `Hide / 藏身` 分类 + AI JSON `hideEvents`，S7C-2 再增 `humanSearchEvents`）。
 
 | # | 议题 | 建议方案 | 备选 / 影响 |
 |---|---|---|---|
@@ -386,14 +616,15 @@ export class HideSystem {
 
 ## 7. 推荐首先开发的最小闭环及验收方法
 
-**历史路线建议：先完成 S7C-1A（藏身点白模与地图配置），再实施 S7C-1B（玩家基础藏身交互）**。S7C-1A 与 S7C-1B 均已验收归档；S7C-2 / S7C-2b / S7C-3 仍需单独授权。
+**历史路线建议：先完成 S7C-1A（藏身点白模与地图配置），再实施 S7C-1B（玩家基础藏身交互）**。S7C-1A、S7C-1B 均已验收归档；**S7C-2 已实现并通过用户集中浏览器人工验收，正式 Git 归档待单独授权**；S7C-2b 与 S7C-3 仍未授权。
 
 - **S7C-1A 数据与校验**（**已按本行执行完成**）：`HideSpot` 扩展（kind/furnitureId/facing，`x/z` 即锚点）+ 表 3.1 的 6 条数据（`second_cabinet` 未采纳）+ 2 个纸箱白模数据 + 锚点/不变量自动校验测试。**未接入玩法**（与 S7B-3B 的 3B-0/3B-0b「接口与决策分离」做法一致）。
-- **S7C-1B 逻辑与判定**：`HideSystem` + `E` 仲裁 + 移动/冲刺/进食/抓捕门控 + `VisionSystem` 隐藏入口 + `HideSpotView`（V1/V2/V3 之一）+ DEV `Hide` 分类。
-- S7C-2 / 2b / 3：不属于 S7C-1B 范围，且尚未授权。S7C-2 保留 Human AI 自主搜查；S7C-2b 保留 DeepSeek AI 自主藏身、安全判断及自主现身；S7C-3 保留出生点与门状态随机化。
+- **S7C-1B 逻辑与判定**（已完成）：`HideSystem` + `E` 仲裁 + 移动/冲刺/进食/抓捕门控 + `VisionSystem` 隐藏入口 + `HideSearchView` + DEV `Hide` 分类。
+- **S7C-2 Human AI 循迹与家具搜查**（已实现并通过集中人工验收，Git 归档待单独授权）：见 §4；公开线索 → 公开家具怀疑 → 合法站位 → 900 ms 停留 → 正式搜查结算。
+- S7C-2b / 3：不属于已实现范围，且尚未授权。S7C-2b 保留 DeepSeek AI 自主藏身、安全判断及自主现身；S7C-3 保留出生点与门状态随机化。
 
-**验收方法（自动化）**：`npm test`（基线 333，只增不减）+ `npx tsc --noEmit`（或 `npm run build`）+ `git diff --check`；新增测试覆盖 §3.4 / §3.5 的清单。
-**验收方法（人工）**：1A 用 §3.4 的调试标记与跑图检查；1B 用 §3.5 的 9 条浏览器步骤，重点确认「隐藏中不可被抓捕」「人类 AI 不再追来且不刷新 Last Seen」「退出后一切恢复正常」三项。
+**验收方法（自动化）**：`npm test`（基线 518，只增不减）+ `npx tsc --noEmit`（或 `npm run build`）+ `git diff --check`；新增测试覆盖 §3.4 / §3.5 / §4 的清单。
+**验收方法（人工）**：1A 用 §3.4 的调试标记与跑图检查；1B 用 §3.5 的 9 条浏览器步骤；S7C-2 用 §4.1 的链路 + DEV-B 的「AI 已知 / AI 推断 / 开发者真值」三段对照。
 
 ---
 

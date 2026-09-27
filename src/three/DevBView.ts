@@ -15,10 +15,13 @@ export interface DevBViewOptions {
   lineOfSight: boolean;
   paths: boolean;
   sounds: boolean;
+  /** S7C-2：Human AI 的公开线索 / 推断 / 怀疑家具标记。 */
+  clues: boolean;
 }
 
 export const DEV_B_DEFAULT_OPTIONS: DevBViewOptions = {
   captureRing: true, visionCircle: false, lineOfSight: true, paths: true, sounds: true,
+  clues: true,
 };
 
 export const DEV_B_COLORS = {
@@ -33,6 +36,11 @@ export const DEV_B_COLORS = {
   deepseekTarget: 0xff8bf3,
   sound: 0xffa3d1,
   soundHeard: 0xffe066,
+  // S7C-2：绿 = AI 已知（它亲自看到的米痕线索）；青 = AI 推断（方向与锚点）；
+  // 洋红 = AI 推断出的怀疑家具。三者都不是隐藏者的真实位置。
+  clue: 0x7dff8f,
+  inference: 0x4ff0e0,
+  suspect: 0xff5fd0,
 } as const;
 
 export interface DevBSoundVisual {
@@ -54,10 +62,19 @@ export interface DevBViewFrame {
   humanPath: readonly Point[];
   deepseekPath: readonly Point[];
   sounds: readonly DevBSoundVisual[];
+  /** S7C-2：AI 已知的米痕线索点（公开）。 */
+  clues: readonly Point[];
+  /** S7C-2：AI 推断的调查锚点与方向（公开推断）。 */
+  inferenceAnchor: Point | null;
+  inferenceDirection: Point | null;
+  /** S7C-2：AI 推断出的怀疑家具中心（公开排序结果）。 */
+  suspects: readonly Point[];
 }
 
 export const DEV_B_MAX_PATH_POINTS = 256;
 export const DEV_B_MAX_SOUND_MARKERS = 24;
+export const DEV_B_MAX_CLUE_MARKERS = 24;
+export const DEV_B_MAX_SUSPECT_MARKERS = 8;
 export const DEV_B_RING_SEGMENTS = 64;
 
 /** Unit-circle outline used by every ring; scaling a shared shape is enough. */
@@ -86,6 +103,10 @@ export class DevBView {
   private readonly targets: Record<'human' | 'deepseek',
     THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>>;
   private readonly soundMarkers: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>[] = [];
+  private readonly clueMarkers: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>[] = [];
+  private readonly suspectMarkers: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>[] = [];
+  private readonly inferenceLine: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  private readonly inferenceAnchorMarker: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
 
   constructor(scene: THREE.Object3D) {
     this.group.name = 'dev-b-visualization';
@@ -103,11 +124,19 @@ export class DevBView {
       deepseek: this.polyline(DEV_B_COLORS.deepseekPath) };
     this.targets = { human: this.outline(DEV_B_COLORS.humanTarget, 0.9),
       deepseek: this.outline(DEV_B_COLORS.deepseekTarget, 0.9) };
+    // S7C-2 的标记必须排在声音标记之前：既有测试用「最后 N 个子对象」定位声音标记。
+    for (let index = 0; index < DEV_B_MAX_CLUE_MARKERS; index++)
+      this.clueMarkers.push(this.outline(DEV_B_COLORS.clue, 0.7));
+    for (let index = 0; index < DEV_B_MAX_SUSPECT_MARKERS; index++)
+      this.suspectMarkers.push(this.outline(DEV_B_COLORS.suspect, 0.95));
+    this.inferenceLine = this.segment(DEV_B_COLORS.inference);
+    this.inferenceAnchorMarker = this.outline(DEV_B_COLORS.inference, 0.95);
     for (let index = 0; index < DEV_B_MAX_SOUND_MARKERS; index++)
       this.soundMarkers.push(this.outline(DEV_B_COLORS.sound, 0.85));
     this.group.add(this.captureMesh, this.visionRing, this.sightLine,
       this.paths.human, this.paths.deepseek, this.targets.human, this.targets.deepseek,
-      ...this.soundMarkers);
+      ...this.clueMarkers, ...this.suspectMarkers, this.inferenceLine,
+      this.inferenceAnchorMarker, ...this.soundMarkers);
     this.group.visible = false;
     scene.add(this.group);
   }
@@ -152,8 +181,46 @@ export class DevBView {
       marker.scale.set(sound.range, 1, sound.range);
       marker.position.set(sound.x, 0.05, sound.z);
     });
+    // S7C-2：AI 已知线索（绿）与 AI 推断（青 / 洋红）。三者都只画公开信息。
+    const clues = this.options.clues ? frame.clues.slice(0, DEV_B_MAX_CLUE_MARKERS) : [];
+    this.clueMarkers.forEach((marker, index) => {
+      const clue = clues[index];
+      marker.visible = !!clue;
+      if (!clue) return;
+      marker.scale.set(0.14, 1, 0.14);
+      marker.position.set(clue.x, 0.045, clue.z);
+    });
+    const suspects = this.options.clues
+      ? frame.suspects.slice(0, DEV_B_MAX_SUSPECT_MARKERS) : [];
+    this.suspectMarkers.forEach((marker, index) => {
+      const suspect = suspects[index];
+      marker.visible = !!suspect;
+      if (!suspect) return;
+      marker.scale.set(index === 0 ? 0.75 : 0.55, 1, index === 0 ? 0.75 : 0.55);
+      marker.position.set(suspect.x, 0.07, suspect.z);
+    });
+    const anchor = this.options.clues ? frame.inferenceAnchor : null;
+    this.inferenceAnchorMarker.visible = !!anchor;
+    if (anchor) {
+      this.inferenceAnchorMarker.scale.set(0.3, 1, 0.3);
+      this.inferenceAnchorMarker.position.set(anchor.x, 0.075, anchor.z);
+    }
+    const direction = frame.inferenceDirection;
+    const drawArrow = this.options.clues && !!anchor && !!direction;
+    this.inferenceLine.visible = drawArrow;
+    if (drawArrow && anchor && direction) {
+      const length = 2;
+      const attribute = this.inferenceLine.geometry
+        .getAttribute('position') as THREE.BufferAttribute;
+      attribute.setXYZ(0, anchor.x, 0.075, anchor.z);
+      attribute.setXYZ(1, anchor.x + direction.x * length, 0.075,
+        anchor.z + direction.z * length);
+      attribute.needsUpdate = true;
+      this.inferenceLine.geometry.computeBoundingSphere();
+    }
     this.group.visible = this.options.captureRing || this.options.visionCircle ||
-      this.options.lineOfSight || this.options.paths || this.options.sounds;
+      this.options.lineOfSight || this.options.paths || this.options.sounds ||
+      this.options.clues;
   }
 
   private updatePath(which: 'human' | 'deepseek', path: readonly Point[],

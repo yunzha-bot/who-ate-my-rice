@@ -52,7 +52,7 @@ export class DevBDebug {
   get visualizationEnabled(): boolean {
     const state = this.view.options;
     return state.captureRing || state.visionCircle || state.lineOfSight || state.paths ||
-      state.sounds;
+      state.sounds || state.clues;
   }
 
   toggle(): void { this.panel.toggle(); }

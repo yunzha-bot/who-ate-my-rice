@@ -78,9 +78,63 @@ export function headingRadToMeshRotationY(headingRad: number): number {
   return -headingRad;
 }
 
+/**
+ * S7C-2：把「公开几何判定」单独抽出来，供 Human AI 复用。
+ *
+ * 只回答纯几何问题：离瞄点多远、在不在前方张角内、中间有没有被墙或非 OPEN 门
+ * 挡住。它**不接触**任何目标身份、藏身状态或占用信息，所以 AI 可以在排序、站位
+ * 规划阶段安全地反复调用它，而不会提前知道谁藏在哪。
+ *
+ * `evaluateHumanSearch()` 自己也走这条路径，保证玩家 Q 与 AI 搜查用的是同一套
+ * 距离/张角/遮挡规则（只是各自的站位与触发条件不同）。
+ */
+export type HumanSearchGeometryCode = 'IN_RANGE' | 'OUT_OF_RANGE' | 'OUTSIDE_FAN' | 'BLOCKED';
+
+export interface HumanSearchGeometryInput {
+  origin: Point;
+  headingRad: number;
+  aimPoint: Point;
+  range: number;
+  halfAngleDeg: number;
+  lineBlocked: (a: Point, b: Point) => boolean;
+}
+
+export interface HumanSearchGeometryResult {
+  code: HumanSearchGeometryCode;
+  ok: boolean;
+  distance: number;
+  angleDeltaDeg: number;
+  blocked: boolean;
+}
+
+export function evaluateHumanSearchGeometry(input: HumanSearchGeometryInput):
+HumanSearchGeometryResult {
+  const halfAngleRad = input.halfAngleDeg * Math.PI / 180;
+  const deltaX = input.aimPoint.x - input.origin.x;
+  const deltaZ = input.aimPoint.z - input.origin.z;
+  const distance = Math.hypot(deltaX, deltaZ);
+  const angleDeltaDeg = wrapToPi(Math.atan2(deltaZ, deltaX) - input.headingRad) * 180 / Math.PI;
+  if (distance > input.range + HUMAN_SEARCH_BOUNDARY_EPSILON) {
+    return { code: 'OUT_OF_RANGE', ok: false, distance, angleDeltaDeg, blocked: false };
+  }
+  if (Math.abs(angleDeltaDeg) * Math.PI / 180 > halfAngleRad + HUMAN_SEARCH_BOUNDARY_EPSILON) {
+    return { code: 'OUTSIDE_FAN', ok: false, distance, angleDeltaDeg, blocked: false };
+  }
+  if (input.lineBlocked(input.origin, input.aimPoint)) {
+    return { code: 'BLOCKED', ok: false, distance, angleDeltaDeg, blocked: true };
+  }
+  return { code: 'IN_RANGE', ok: true, distance, angleDeltaDeg, blocked: false };
+}
+
+export const HUMAN_SEARCH_GEOMETRY_CODE_TEXT: Record<HumanSearchGeometryCode, string> = {
+  IN_RANGE: '在扇形内且无遮挡',
+  OUT_OF_RANGE: '超出扇形半径',
+  OUTSIDE_FAN: '不在扇形张角内',
+  BLOCKED: '被墙或关闭的门挡住',
+};
+
 export function evaluateHumanSearch(input: HumanSearchInput,
   tuning: HumanSearchTuning = DEFAULT_HUMAN_SEARCH_TUNING): HumanSearchResult {
-  const halfAngleRad = tuning.halfAngleDeg * Math.PI / 180;
   const miss = (code: HumanSearchCode, aimPoint: Point | null, distance: number,
     angleDeltaDeg: number, blocked = false, concealed = false,
     spotId: string | null = null): HumanSearchResult => ({
@@ -105,24 +159,20 @@ export function evaluateHumanSearch(input: HumanSearchInput,
     aimPoint = { x: target.position.x, z: target.position.z };
   }
 
-  const deltaX = aimPoint.x - input.origin.x;
-  const deltaZ = aimPoint.z - input.origin.z;
-  const distance = Math.hypot(deltaX, deltaZ);
-  const angleDelta = wrapToPi(Math.atan2(deltaZ, deltaX) - input.headingRad);
-  const angleDeltaDeg = angleDelta * 180 / Math.PI;
-  if (distance > tuning.range + HUMAN_SEARCH_BOUNDARY_EPSILON) {
-    return miss('OUT_OF_RANGE', aimPoint, distance, angleDeltaDeg, false, target.concealed, spotId);
-  }
-  if (Math.abs(angleDelta) > halfAngleRad + HUMAN_SEARCH_BOUNDARY_EPSILON) {
-    return miss('OUTSIDE_FAN', aimPoint, distance, angleDeltaDeg, false, target.concealed, spotId);
-  }
-  if (input.lineBlocked(input.origin, aimPoint)) {
-    return miss('BLOCKED', aimPoint, distance, angleDeltaDeg, true, target.concealed, spotId);
+  // 距离、张角与遮挡三项全部走 S7C-2 抽出的公开几何核心：玩家 Q 与 AI 搜查
+  // 因此共用同一套规则，不存在两份可能走偏的实现。
+  const geometry = evaluateHumanSearchGeometry({ origin: input.origin,
+    headingRad: input.headingRad, aimPoint, range: tuning.range,
+    halfAngleDeg: tuning.halfAngleDeg, lineBlocked: input.lineBlocked });
+  if (!geometry.ok) {
+    return miss(geometry.code as HumanSearchCode, aimPoint, geometry.distance,
+      geometry.angleDeltaDeg, geometry.blocked, target.concealed, spotId);
   }
   return {
     outcome: target.concealed ? 'FLUSH_CONCEALED' : 'CAPTURE_VISIBLE',
     code: target.concealed ? 'HIT_CONCEALED' : 'HIT_VISIBLE',
-    aimPoint, distance, angleDeltaDeg, blocked: false, concealed: target.concealed, spotId,
+    aimPoint, distance: geometry.distance, angleDeltaDeg: geometry.angleDeltaDeg,
+    blocked: false, concealed: target.concealed, spotId,
   };
 }
 
@@ -137,3 +187,43 @@ export const HUMAN_SEARCH_CODE_TEXT: Record<HumanSearchCode, string> = {
   OUTSIDE_FAN: '目标不在扇形张角内',
   BLOCKED: '被墙或关闭的门挡住',
 };
+
+// ---------------------------------------------------------------------------
+// S7C-2 修复轮 三：Human 玩家 Q 的**无副作用**「暴露目标」预检测
+// ---------------------------------------------------------------------------
+
+/**
+ * 普通扇形 Q 在**当前这一帧**会不会真正抓到一个**未藏身**的目标。
+ *
+ * 修复轮 三给玩家 Q 加了分支优先级（暴露目标 > 指向家具 > 扇形空挥），因此按键当帧
+ * 必须先知道「有没有合法暴露目标」，再决定这次 Q 是抓人还是搜家具。这个函数就是那个
+ * 判断，而且它必须**绝对无副作用**：
+ *
+ *   - 它直接调用**正式的** `evaluateHumanSearch()`，不复制第二套距离 / 张角 / 遮挡
+ *     规则——预检测说能抓到的样本，正式执行时必然也抓到（同一帧、同一输入）；
+ *   - 它不显示扇形特效、不消耗冷却、不写日志、不释放藏身、不产生抓捕事件，
+ *     这些全部留在调用方（`ThreeGame.performHumanSearch()`）里；
+ *   - 藏身目标即使几何上命中也不算「暴露目标」（`available` 为 false）：对普通扇形
+ *     而言它只是「被搜出」的对象，不能用来抢占家具搜查分支。
+ */
+export interface ExposedFanProbe {
+  /** true = 存在合法暴露目标，普通扇形这一次会真的抓人。 */
+  available: boolean;
+  /** 与正式执行同源的判定结果码（藏身目标会是 HIT_CONCEALED，但 available 仍为 false）。 */
+  code: HumanSearchCode;
+  distance: number;
+  angleDeltaDeg: number;
+  blocked: boolean;
+}
+
+export function probeExposedFanTarget(input: HumanSearchInput,
+  tuning: HumanSearchTuning = DEFAULT_HUMAN_SEARCH_TUNING): ExposedFanProbe {
+  const result = evaluateHumanSearch(input, tuning);
+  return {
+    available: result.outcome === 'CAPTURE_VISIBLE',
+    code: result.code,
+    distance: result.distance,
+    angleDeltaDeg: result.angleDeltaDeg,
+    blocked: result.blocked,
+  };
+}

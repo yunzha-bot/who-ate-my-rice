@@ -1,0 +1,217 @@
+{
+  "tag": "after",
+  "target": "carton",
+  "label": "储物间纸箱",
+  "player": {
+    "x": 16.01,
+    "z": -5.89
+  },
+  "dev": {
+    "backwards": "高亮 NONE（无｜家具 无｜合法 否｜指向 否｜暴露目标优先 否）｜最近一次 Q：NONE（NONE）",
+    "facing": "高亮 FURNITURE（hide_storage_carton｜家具 storage_carton｜合法 是｜指向 是 45.0°｜暴露目标优先 否）｜最近一次 Q：FAN（NO_TARGET）",
+    "hud": "人类：Q 搜查「储物间纸箱」（面向家具即可，不必精确瞄准）｜Q：可用"
+  },
+  "samples": [
+    {
+      "index": 0,
+      "pixels": 88,
+      "meanMin": 198.77,
+      "bright": 70,
+      "peak": 232,
+      "ai": {
+        "x": 12.13,
+        "z": -2.89
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 1,
+      "pixels": 88,
+      "meanMin": 162.7,
+      "bright": 47,
+      "peak": 212,
+      "ai": {
+        "x": 12.16,
+        "z": -3.09
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 2,
+      "pixels": 88,
+      "meanMin": 226.53,
+      "bright": 70,
+      "peak": 247,
+      "ai": {
+        "x": 12.18,
+        "z": -3.3
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 3,
+      "pixels": 88,
+      "meanMin": 216.88,
+      "bright": 70,
+      "peak": 241,
+      "ai": {
+        "x": 12.19,
+        "z": -3.58
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 4,
+      "pixels": 88,
+      "meanMin": 162.64,
+      "bright": 38,
+      "peak": 212,
+      "ai": {
+        "x": 12.19,
+        "z": -3.79
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 5,
+      "pixels": 88,
+      "meanMin": 234.78,
+      "bright": 75,
+      "peak": 251,
+      "ai": {
+        "x": 12.2,
+        "z": -4.06
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 6,
+      "pixels": 88,
+      "meanMin": 192.33,
+      "bright": 51,
+      "peak": 232,
+      "ai": {
+        "x": 12.2,
+        "z": -4.33
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 7,
+      "pixels": 88,
+      "meanMin": 169.51,
+      "bright": 16,
+      "peak": 218,
+      "ai": {
+        "x": 12.2,
+        "z": -4.53
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 8,
+      "pixels": 88,
+      "meanMin": 235.03,
+      "bright": 60,
+      "peak": 254,
+      "ai": {
+        "x": 12.2,
+        "z": -4.8
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 9,
+      "pixels": 88,
+      "meanMin": 182.73,
+      "bright": 67,
+      "peak": 223,
+      "ai": {
+        "x": 12.2,
+        "z": -5.01
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 10,
+      "pixels": 88,
+      "meanMin": 171.48,
+      "bright": 25,
+      "peak": 217,
+      "ai": {
+        "x": 12.2,
+        "z": -5.28
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 11,
+      "pixels": 88,
+      "meanMin": 243.01,
+      "bright": 77,
+      "peak": 253,
+      "ai": {
+        "x": 12.2,
+        "z": -5.47
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 12,
+      "pixels": 88,
+      "meanMin": 202.23,
+      "bright": 81,
+      "peak": 231,
+      "ai": {
+        "x": 12.2,
+        "z": -5.73
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    },
+    {
+      "index": 13,
+      "pixels": 88,
+      "meanMin": 166.23,
+      "bright": 37,
+      "peak": 213,
+      "ai": {
+        "x": 12.2,
+        "z": -5.94
+      },
+      "state": "可用 / OUT_OF_RANGE"
+    }
+  ],
+  "cooldown": {
+    "stats": {
+      "pixels": 88,
+      "meanMin": 129.52,
+      "bright": 2,
+      "peak": 196
+    },
+    "dev": "高亮 FURNITURE（hide_storage_carton｜家具 storage_carton｜合法 是｜指向 是 45.0°｜暴露目标优先 否）｜最近一次 Q：FURNITURE（FURNITURE）",
+    "hud": "人类：Q 搜查「储物间纸箱」｜冷却中 10.9 秒（家具描边变暗，暂时不能按）"
+  },
+  "verdict": "PASS",
+  "baseline": {
+    "note": "背对家具：DEV 显示高亮 NONE（此时玩家转身靠真实走位，相机随之平移，所以这一帧只作留证，不参与像素比较）"
+  },
+  "mask": {
+    "pixels": 88,
+    "box": {
+      "x0": 534,
+      "y0": 402,
+      "x1": 614,
+      "y1": 451
+    }
+  },
+  "metrics": {
+    "maskPixels": 88,
+    "amplitude": 80.37,
+    "alwaysVisible": true,
+    "dimmerThanMin": true,
+    "breathMin": 162.64,
+    "breathMax": 243.01,
+    "cooldownMean": 129.52,
+    "brightRatioMin": 0.182
+  }
+}

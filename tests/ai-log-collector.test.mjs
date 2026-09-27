@@ -206,13 +206,42 @@ test('export returns correct structure with config snapshot', () => {
   collector.advance(5000, true);
   collector.diffSnapshot(baseSnapshot());
   const data = collector.export();
-  assert.equal(data.formatVersion, '1.2');
+  // S7C-2 修复轮 二：1.5 只新增 `playerSearchEvents`（玩家 Q 搜查时间线），
+  // v1.4 的全部字段与语义保持原样。
+  assert.equal(data.formatVersion, '1.5');
   assert.equal(typeof data.exportedAt, 'string');
   assert.equal(data.matchDurationMs, 5000);
   assert.deepEqual(data.config.deepseekAI, C.deepseekAI);
   assert.equal(Array.isArray(data.events), true);
   assert.equal(data.eventCount, data.events.length);
   assert.equal(data.truncated, false);
+  assert.equal(Array.isArray(data.playerSearchEvents), true);
+  assert.equal(data.playerSearchEvents.length, 0);
+});
+
+test('player Q search events are recorded separately from the Human AI timeline', () => {
+  const collector = new AILogCollector();
+  collector.advance(1_000, true);
+  collector.recordPlayerSearchEvent({ type: 'PLAYER_Q_FURNITURE_MISS',
+    reason: '家具是空的', spotId: 'hide_second_bed',
+    data: { targetKind: 'FURNITURE', legal: true, legalCode: 'LEGAL',
+      authoritativeRead: true, cooldownReady: false, cooldownRemainingMs: 12_000 } });
+  collector.advance(500, true);
+  collector.recordPlayerSearchEvent({ type: 'PLAYER_Q_FAN', reason: '没有家具目标',
+    spotId: null, data: { targetKind: 'FAN', authoritativeRead: false } });
+  const data = collector.export();
+  assert.equal(data.playerSearchEvents.length, 2);
+  assert.equal(data.playerSearchEvents[0].t, 1_000);
+  assert.equal(data.playerSearchEvents[0].spotId, 'hide_second_bed');
+  assert.equal(data.playerSearchEvents[0].data.legalCode, 'LEGAL');
+  assert.equal(data.playerSearchEvents[0].data.cooldownRemainingMs, 12_000);
+  assert.equal(data.playerSearchEvents[1].t, 1_500);
+  assert.equal(data.playerSearchEvents[1].data.targetKind, 'FAN');
+  // 两条时间线互不污染：Human AI 的公开搜查事件里不得出现玩家事件。
+  assert.equal(data.humanSearchEvents.length, 0);
+  // 重开一局必须清空玩家搜查时间线，避免上一局的 Q 事件混进新局日志。
+  collector.startMatch();
+  assert.equal(collector.export().playerSearchEvents.length, 0);
 });
 
 test('state transition keeps the exact heard event and Human observation context', () => {

@@ -203,7 +203,33 @@ const OBSERVATION_HELP: Record<string, ObservationFieldHelp> = {
   'human-ai/锁门决策 / 目标门': { what: '它打算绕行、解锁还是强行破门，目标是哪扇门', field: 'humanAi.lockDecision / targetDoorId' },
   'human-ai/决策原因': { what: '上一次锁门或绕行决策的原因代码', field: 'humanAi.decisionReason' },
   'human-ai/AI 破解锁芯进度': { what: '它破解门锁已经花了多久', field: 'humanAi.unlockProgressMs' },
-  'human-ai/藏身检查（CHECK_HIDE）': { what: '藏身检查功能的占位状态，尚未实现', field: 'humanAi CHECK_HIDE' },
+  'human-ai/藏身检查（CHECK_HIDE）': { what: '它是否正在搜查某件家具，以及线索来自哪里', field: 'humanAi.hideSearch.phase / source' },
+  'human-ai/AI 已知：米痕线索': { what: '它亲自看见过多少米痕、最近一条多久以前', field: 'humanAi.hideSearch.clueCount / latestClue*' },
+  'human-ai/AI 推断：方向 / 置信度': { what: '它用米痕推出的逃跑方向有多可信', field: 'humanAi.hideSearch.inferenceCode / inferenceConfidence' },
+  'human-ai/AI 推断：调查锚点': { what: '它打算去调查的那个点', field: 'humanAi.hideSearch.inferenceAnchor' },
+  'human-ai/AI 推断：公开依据': { what: '它为什么这样推断（只说公开线索）', field: 'humanAi.hideSearch.inferenceBasis' },
+  'human-ai/AI 怀疑家具（公开排序第一）': { what: '它现在最怀疑哪件家具，公开排序如何', field: 'humanAi.hideSearch.suspectedSpotId / candidateRanking' },
+  'human-ai/AI 怀疑依据（只用公开线索）': { what: '候选排序的公开得分依据', field: 'humanAi.hideSearch.suspectedBasis' },
+  'human-ai/搜查目标家具 / 站位 / 表面': { what: '它要去哪件家具、站在哪、面向哪个表面', field: 'humanAi.hideSearch.spotId / stancePoint / surfacePoint' },
+  'human-ai/搜查停留进度': { what: '它在搜查点已经停留了多久（要满 0.9 秒）', field: 'humanAi.hideSearch.dwellRemainingMs / dwellMs' },
+  'human-ai/导航终点 / 正式站位 / 实际偏差': { what: '寻路终点（网格吸附点）与真正要站到的位置是否一致；不一致时角色会继续走过去', field: 'humanAi.hideSearch.navGoal / stancePoint / stanceDistance' },
+  'human-ai/最终接近 / 正式请求次数 / 计划失效退还配额': { what: '到站后又走了几帧、发出过几次正式请求、地图变化退还过几次配额', field: 'humanAi.hideSearch.approachSteps / requestCount / staleCancels' },
+  'human-ai/最近一次判定是否计入正式检查': { what: '只有站位、朝向和几何都成立（合法搜空或搜中）才计入正式检查次数', field: 'humanAi.hideSearch.countsAsFormalCheck' },
+  'human-ai/计划瞄点与最终判定点': { what: '计划要瞄的表面点与真正判定用的点是否同一个', field: 'humanAi.lastCheckDetail.plannedSurfacePoint / finalAimPoint' },
+  'human-ai/本轮已开始 / 已正式执行 / 本次调查已执行': { what: '本轮开始过几次、真正执行过几次、这次调查共几次', field: 'humanAi.hideSearch.roundAttempts / roundChecks / investigationChecks' },
+  'human-ai/本次调查的收尾方式': { what: '上一次搜查是怎么收尾的（搜空 / 超时 / 无路可走等）', field: 'humanAi.hideSearch.investigationEndReason' },
+  'human-ai/本次调查已检查家具（上限复用 searchRoomCount）': { what: '这次调查一共搜过哪些家具', field: 'humanAi.hideSearch.investigationChecks / checkedSpotIds' },
+  'human-ai/搜查失败记忆与剩余冷却': { what: '搜空过的家具在冷却结束前不会被再搜', field: 'humanAi.hideSearch.cooldowns' },
+  'human-ai/最近一次搜查结果': { what: '上一次家具搜查是搜中还是搜空', field: 'humanAi.hideSearch.lastResult / lastResultSpotId' },
+  'human-ai/打断搜查的声音明细': { what: '抢占搜查的那条声音是什么类型、多响、还剩多久', field: 'humanAi.lastInterruptSoundType 等' },
+  'human-ai/放弃搜查原因': { what: '它为什么放弃这次循迹或搜查', field: 'humanAi.hideSearch.giveUpCode / giveUpDetail' },
+  'human-ai/搜查次数：开始 / 命中 / 搜空 / 被抢占': { what: '本轮循迹与搜查的次数统计', field: 'humanAi.hideSearch.startCount 等' },
+  'human-ai/开发者真值：权威层判定码（不参与 AI 决策）': { what: '游戏层真正的判定结果，AI 只看得到搜中或搜空', field: 'HumanHideSearchResolution.code' },
+  'human-ai/AI 待处理的公开线索（被延后 ≠ 丢弃）': { what: '被更高优先级状态压住的线索，之后还会重评', field: 'humanAi.hideSearch.pendingClue*' },
+  'human-ai/Last Seen（公开坐标 / 房间 / 年龄 / 有效性）': { what: '最后一次看到对方的公开位置与是否还有效', field: 'humanAi.lastSeenPublic() / lastSeenRoomGate*' },
+  'human-ai/公开候选被排除的原因': { what: '哪些家具因为冷却、已搜查或数据缺失被排除', field: 'humanAi.hideSearch.candidateSkipped' },
+  'human-ai/信息归属说明': { what: '本分区里哪些是 AI 已知、哪些是 AI 推断', field: 'DevBHumanHideSearch' },
+  'human-ai/DEV 标记图例（信息归属）': { what: '场景里各颜色标记分别代表谁的信息', field: 'DevBView clues 图层' },
 
   'deepseek-ai/DeepSeek AI': { what: 'DeepSeek AI 没有运行时只显示这一条', field: 'deepseekAi = null' },
   'deepseek-ai/AI 状态': { what: 'DeepSeek 娘当前的行为状态', field: 'deepseekAi.state' },
@@ -273,7 +299,7 @@ export const DEV_B_VALUE_GLOSS: Record<string, Record<string, string>> = {
   sprintRisk: { SAFE: '不会摔倒', FALL_ON_END: '冲刺结束会摔倒' },
   humanAiState: {
     PATROL: '巡逻', INVESTIGATE: '去查看声音', CHASE: '追逐',
-    CAPTURE: '抓捕', SEARCH: '搜索追丢的目标', CHECK_HIDE: '检查藏身（预留未实现）',
+    CAPTURE: '抓捕', SEARCH: '搜索追丢的目标', CHECK_HIDE: '检查藏身家具（S7C-2 起为真实运行状态）',
   },
   deepseekAiState: {
     SEEK_RICE: '正在找米堆', MOVE_TO_RICE: '走向米堆', EAT: '正在吃米',
@@ -283,6 +309,39 @@ export const DEV_B_VALUE_GLOSS: Record<string, Record<string, string>> = {
   },
   humanLockDecision: {
     NONE: '没有锁门计划', DETOUR: '绕路', UNLOCK: '破解锁芯', FORCE_BREAK: '强行破门',
+  },
+  // S7C-2：Human AI 循迹与藏身搜查的公开状态码。
+  traceInference: {
+    NO_CLUE: '还没有亲自看到任何米痕', SINGLE_TRACE: '只有一粒米，只能调查附近',
+    CHAIN: '连续米痕构成一条路径', TRACE_JUMP: '更早的米痕跳跃过远',
+    CHAIN_CONTRADICTORY: '脚印朝向与路径矛盾，可信度已降低',
+  },
+  traceConfidence: {
+    NONE: '无线索', LOW: '低', MEDIUM: '中', HIGH: '高',
+  },
+  checkHidePhase: {
+    NONE: '当前没有在执行搜查', TRAVEL: '正在前往搜查站位',
+    DWELL: '正在搜查点停留', DONE: '停留已满，等待正式判定',
+  },
+  checkHideSource: {
+    LAST_SEEN: '来自 Last Seen', SOUND: '来自声音', TRACE: '来自亲自发现的米痕',
+    SEARCH: '来自有限搜索的房间',
+    LAST_SEEN_ROOM: '来自 Last Seen 所在的同一个房间',
+  },
+  checkHideResult: { NONE: '还没有结果', HIT: '搜中（发现藏身者）', MISS: '搜空' },
+  // S7C-2 修复轮：被延后的公开线索与「最后目击房间」门槛。
+  clueDeferReason: {
+    NONE: '没有被延后',
+    CHECK_HIDE: '正在执行正式家具搜查，线索先记下',
+    TARGET_VISIBLE: '当前真实目视目标优先',
+    LAST_SEEN: 'Last Seen 证据优先（含正在进行的调查）',
+    DANGER_SOUND: '新的强危险声音优先',
+    TRACE_INVESTIGATION: '正在执行上一次米痕调查',
+  },
+  lastSeenRoomGate: {
+    NONE: '还没有检查过', OK: '可以用最后目击房间里的公开藏身家具',
+    NO_LAST_SEEN: '当前没有 Last Seen', EXPIRED_LAST_SEEN: 'Last Seen 已过期，不再作为证据',
+    NO_ROOM: 'Last Seen 坐标不在任何房间内', NO_PUBLIC_SPOT: '最后目击房间里没有公开藏身点',
   },
   threatSource: {
     NONE: '没有察觉威胁', VISION: '看见对方', SOUND: '听见声音',

@@ -52,8 +52,10 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.humanAI.aiUnlockSuccessChance` | 0.7 | 概率；AI 单次模拟解锁成功率 | 失败后的尝试上限与暂避机制保持原值。 |
 | `C.humanAI.aiUnlockMaxAttempts` / `aiUnlockFailureAvoidMs` | 2 / 6,000 | 次 / 毫秒；同锁芯尝试上限及失败后暂避时间 | 两次失败后只能绕行或等待强破冷却。 |
 | `C.humanAI.forceBreakReserveMs` / `detourSlackMs` | 1,800 / 600 | 毫秒；路线比较时的技能机会成本与绕行容差 | 仅影响 AI 决策；实际强破冷却仍取 `C.door.humanForceBreakCooldownMs`。 |
-| `C.humanAI.searchRadius` / `searchRoomCount` | 12 / 3 | 世界单位 / 间；追丢后的邻近搜索范围和上限 | 不提供目标实时位置，目标来自 Last Seen。 |
-| `C.humanAI.searchDwellMs` / `searchMaxMs` | 900 / 15,000 | 毫秒；搜索点停留和一次搜索时限 | 超时恢复巡逻，避免反复搜索同处。 |
+| `C.humanAI.searchRadius` / `searchRoomCount` | 12 / 3 | 世界单位 / 间；追丢后的邻近搜索范围和上限 | 不提供目标实时位置，目标来自 Last Seen。S7C-2 也复用 3 作为「同一次调查最多正式检查的家具数」。 |
+| `C.humanAI.searchDwellMs` / `searchMaxMs` | 900 / 15,000 | 毫秒；搜索点停留和一次搜索时限 | 超时恢复巡逻，避免反复搜索同处。S7C-2 的家具搜查停留复用 `searchDwellMs`，一次调查的搜查动作共享 `searchMaxMs`。 |
+| `C.humanAI.hideCheckFailureCooldownMs` | 6,000 | 毫秒；S7C-2 同一件家具搜空后再次检查的冷却 | 只影响 Human AI 的家具搜查；冷却只随 PLAYING 的玩法时间推进。调小＝AI 更快重搜同一件家具，藏身明显变难。 |
+| `C.humanAI.hideCheckMaxPerRound` | 1 | 件；S7C-2 每轮最多正式检查的家具数 | 与「同一次调查最多 `searchRoomCount` 件」「共享 `searchMaxMs` 预算」「同家具 6 秒冷却」共同构成搜查强度上限；调大会同时改变藏身玩法难度，须重新验收。**语义（S7C-2 两轮修复轮）：本轮「已开始的搜查尝试」与「已正式执行的搜查」分开计数（`checkHideRoundAttempts` / `checkHideRoundChecks`）；开始过但被抢占的尝试同样占用本轮配额，以免中断后反复重跑 A\*。第二轮修复轮进一步明确：`checkHideRoundChecks` / `checkHideInvestigationChecks` **不再在发出 REQUEST 时提前消耗**，改由游戏层的正式判定回执在 `MISS_EMPTY` / `HIT_CONCEALED` 时消耗——`PLAN_STALE / STANCE_LOST / HEADING_LOST / OUT_OF_RANGE / OUTSIDE_FAN / BLOCKED` 都是「未完成合法检查」，既不记搜空、也不进家具失败冷却，更不计入正式检查数量。** |
 
 ## DeepSeek AI（S7B 开发参数）
 
@@ -177,6 +179,21 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 
 Q 的**判定**与**冷却**是两条独立路径：`evaluateHumanSearch()`（`src/systems/HumanSearchSkill.ts`）只回答「释放瞬间打到了什么」，`SkillCooldown` + `SkillGates` 负责可用性与冷却；藏身目标必须命中其绑定家具的**可接近表面**且不被墙/非 OPEN 门叶挡住，命中即调用 `GameStateSystem.forceCapture()` 走同一条抓捕结算。扇形特效的淡入/停留/淡出时长是表现层常量（`src/three/HideSearchView.ts`），不是玩法数值。
 
+**玩家 Q 的输入优先级（S7C-2 第三轮修复轮起，见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §4.7）**：① 冷却中 → 直接拒绝；② 当帧存在**未藏身**的合法暴露目标（即上表 `range` 1.5 / `halfAngleDeg` 60 与墙门遮挡全部通过）→ 原有普通扇形抓捕，**即使玩家站在家具交互区域内并正对着家具也不改为家具搜查**；③ 否则若当帧有「合法 + 被玩家指向」的家具 → 只搜查这一件家具（该分支**不做** 1.5 u / 120° 判定，也不对隐藏者本人做二次判定）；④ 都没有 → 普通扇形空挥。**指向容差直接复用上表的 `halfAngleDeg`（±60°），本轮没有新增任何 `GAME_CONFIG` 数值**；它只比较角度、不比较距离，因此若要调整「算不算指向」的松紧，等于同时改动普通扇形的张角，必须连同玩法一起重新验收。
+
+## S7C-2 Human AI 米痕循迹与家具搜查
+
+Human AI 的搜查**复用**上表的 `humanSearch.range` / `halfAngleDeg`（1.5 / 120°）、`humanAI.searchDwellMs`（900 ms 停留）与 `perception.lastSeenMs`（8 秒 Last Seen）与 `perception.traceLifetimeMs`（15 秒米痕寿命），因此只新增下面两个已批准的正式值。
+
+| 变量 | 当前值 | 单位 / 作用 | 修改注意 |
+|---|---:|---|---|
+| `C.humanAI.hideCheckFailureCooldownMs` | 6,000 | 毫秒；同一件家具搜空后的再次检查冷却（见上表） | 只影响 Human AI；不继承玩家 Q 的 12 秒冷却。 |
+| `C.humanAI.hideCheckMaxPerRound` | 1 | 件；每轮最多正式检查的家具数（见上表） | 与「同一次调查最多 3 件」「共享 15 秒搜查预算」叠加。 |
+
+**不在 `GAME_CONFIG` 里的 S7C-2 内部技术阈值**（它们是实现细节，不是玩法平衡杠杆，集中在 `src/systems/HumanSearchTuning.ts`，并由 `tests/human-search-tuning.test.mjs` 核对推导）：米痕链连接距离 `TRACE_LINK_DISTANCE = traceStepDistance × 6 = 3.9 u`、`TRACE_CHAIN_MAX_CLUES = 8`、`TRACE_DIRECTION_CONTRADICTION_DEG = 90`、`TRACE_CHAIN_HIGH_CONFIDENCE_LENGTH = 3`、`CLUE_MEMORY_MAX = 160`、站位采样步长 `STANCE_SURFACE_STEP = navCellSize = 0.4 u`、站位间距 `STANCE_STAND_OFF = 0.3 u`、`STANCE_MAX_PATH_PROBES = 8`（**现行源码为 8；早期草稿写的 4 已在 2026-09-26 修复轮按源码更正**）、候选尝试数 `CANDIDATE_TRY_LIMIT = searchRoomCount = 3`、计划失效时的退还有界常量 `STANCE_MAX_STALE_CANCELS = 2`（一次调查内最多退还几次本轮家具配额，防止「取消 → 重规划 → 再取消」的无限循环），以及 6 个公开评分权重（自身距离 1 / 锚点距离 2 / 终止加分 6 / 方向对齐 4 / Last Seen 3 / 声音 2）。**这些都不是正式平衡值，不得当作可调玩法参数对外承诺。**
+
+隐藏者在藏身期间的普通视觉为 `CONCEALED`、常规抓捕不累计；正式搜查命中后走 `releaseHide('SEARCHED')` + `GameStateSystem.forceCapture()`，与玩家 Q 命中完全同一条结算。
+
 ## Sound 与声音可视化
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
@@ -211,6 +228,19 @@ Q 的**判定**与**冷却**是两条独立路径：`evaluateHumanSearch()`（`s
 |---|---:|---|---|
 | `C.perception.visionRange` | 11 | 世界单位；双方距离超过它时 OUT_OF_RANGE | 墙及 CLOSED/LOCKED 门仍会阻挡范围内视线；OPEN 门不阻挡。 |
 | `C.perception.lastSeenMs` | 8,000 | 毫秒；失去视线后 Last Seen 保留时间 | Last Seen 与当前 VISIBLE/BLOCKED 状态分开。 |
+
+## S7C-2 玩家交互轮廓（表现常量，不属于玩法平衡值）
+
+下列值仅控制白色呼吸轮廓的提示外观，定义在 `src/systems/DeepSeekVisualTarget.ts` 与 `src/three/HideSearchView.ts`，不在 `GAME_CONFIG` 中。它们不改变藏身、搜查、米堆交互或进食判定。
+
+| 源码变量 | 默认值 | 单位 / 作用 |
+|---|---:|---|
+| `DEEPSEEK_RICE_VISUAL_HALF_ANGLE_DEG` | 45 | 度；DP 娘米堆轮廓的视觉指向半角。 |
+| `HIDE_PLAYER_TARGET_BREATH_MS` | 1,400 | 毫秒；唯一白色轮廓的呼吸周期。 |
+| `HIDE_PLAYER_TARGET_OPACITY_MIN` / `HIDE_PLAYER_TARGET_OPACITY_MAX` | 0.35 / 1 | 透明度比例；可用轮廓呼吸的最低 / 最高不透明度。 |
+| `HIDE_PLAYER_TARGET_MARGIN` | 0.08 | 世界单位；家具描边几何的每个尺寸轴总扩大量，即每侧约外扩 0.04。 |
+| `HIDE_PLAYER_TARGET_UNAVAILABLE_OPACITY` | 0.14 | 透明度比例；Human Q 有家具目标但处于冷却或暴露目标优先时的压暗值。 |
+| Rice 描边尺寸 | 现有 RiceView 主体与鼓包实际表现尺寸；每个尺寸轴总共增加 `min(0.04, min(width, depth) × 0.08)` | 世界单位；随米堆进食缩小；实际每侧外扩该值的一半，不改变米堆判定。该计算目前是 `HideSearchView` 内部实现，不是独立配置项。 |
 
 ## 留在源码内的常量
 

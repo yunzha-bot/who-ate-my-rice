@@ -142,6 +142,50 @@ function frame(overrides = {}) {
     humanPath: [{ x: 0, z: 0 }, { x: 1, z: 0 }],
     deepseekPath: [{ x: 2, z: 0 }],
     sounds: [],
+    // S7C-2：DEV-B 的线索 / 推断 / 怀疑家具图层。
+    clues: [],
+    inferenceAnchor: null,
+    inferenceDirection: null,
+    suspects: [],
+    ...overrides,
+  };
+}
+
+// S7C-2：DEV-B 观察里的 Human AI 循迹 / 搜查字段。
+function hideSearch(overrides = {}) {
+  return {
+    clueCount: 1, expiredClueCount: 0,
+    latestCluePosition: { x: 3, z: 4 }, latestClueAgeMs: 900,
+    inferenceCode: 'SINGLE_TRACE', inferenceConfidence: 'LOW',
+    inferenceHeadingDeg: null, inferenceAnchor: { x: 3, z: 4 },
+    inferenceBasis: '只看见 1 粒米',
+    candidateRanking: 'hide_living_carton(6.2)',
+    suspectedSpotId: 'hide_living_carton', suspectedBasis: '距线索锚点最近',
+    candidateSkipped: '无',
+    // S7C-2 修复轮：被延后的公开线索、Last Seen 公开信息、计数与瞄点一致性。
+    pendingClueCount: 0, pendingClueRemainingMs: 0, pendingClueDeferReason: 'NONE',
+    pendingClueDeferCount: 0, pendingClueReevalCount: 0,
+    lastSeenPresent: false, lastSeenValid: false, lastSeenPosition: null,
+    lastSeenRoomId: null, lastSeenAgeMs: null,
+    lastSeenRoomGateCode: 'NONE', lastSeenRoomGateDetail: '',
+    roundAttempts: 0, attemptedSpotId: null, investigationEndReason: 'NONE',
+    interruptSoundType: null, interruptSoundStrength: null,
+    interruptSoundRemainingMs: null, interruptSoundIsNew: false,
+    checkResult: 'NONE', checkDetailText: '还没有执行过正式搜查',
+    plannedSurfacePoint: null, finalAimPoint: null, aimPointDelta: null,
+    aimAngleDeltaDeg: null, aimBlocked: null,
+    authoritativeCode: 'NONE', authoritativeDetail: '无',
+    phase: 'NONE', source: null, spotId: null,
+    stancePoint: null, surfacePoint: null,
+    // S7C-2 修复轮 二：导航终点 / 正式站位 / REQUEST 位置 / 计数与「是否计入正式检查」。
+    navGoal: null, stanceDistance: null, requestPosition: null,
+    approachSteps: 0, requestCount: 0, staleCancels: 0, countsAsFormalCheck: false,
+    dwellRemainingMs: 0, dwellMs: 900,
+    roundChecks: 0, roundBudget: 1, investigationChecks: 0,
+    checkedSpotIds: [], cooldowns: [],
+    lastResult: 'NONE', lastResultSpotId: null,
+    giveUpCode: 'NONE', giveUpDetail: '',
+    startCount: 0, hitCount: 0, missCount: 0, interruptCount: 0,
     ...overrides,
   };
 }
@@ -168,6 +212,7 @@ function observation(overrides = {}) {
       targetDoorId: null, decisionReason: 'NO_LOCK_ROUTE', unlockProgressMs: 0,
       searchTargetRoomId: null, navigationReason: 'NONE', transitionReason: 'ROUND_START',
       pathIndex: 0, pathTotal: 3, pathWaypoint: { x: 0, z: 0 },
+      hideSearch: hideSearch(),
     },
     deepseekAi: {
       state: 'SEEK_RICE', targetRiceId: 'rice_01', selectionReason: 'SHORTEST',

@@ -24,7 +24,8 @@ export interface DevBPanelOptions {
   onVisualOption: (key: DevBVisualKey, enabled: boolean) => void;
 }
 
-export type DevBVisualKey = 'captureRing' | 'visionCircle' | 'lineOfSight' | 'paths' | 'sounds';
+export type DevBVisualKey = 'captureRing' | 'visionCircle' | 'lineOfSight' | 'paths'
+  | 'sounds' | 'clues';
 
 export const DEV_B_VISUAL_LABELS: readonly { key: DevBVisualKey; label: string }[] = [
   { key: 'captureRing', label: '抓捕圈（有效半径）' },
@@ -32,13 +33,14 @@ export const DEV_B_VISUAL_LABELS: readonly { key: DevBVisualKey; label: string }
   { key: 'lineOfSight', label: '真实视线（复用 inspectVision）' },
   { key: 'paths', label: 'AI 路径与目标' },
   { key: 'sounds', label: '声音事件与传播范围' },
+  { key: 'clues', label: 'Human AI 线索 / 推断 / 怀疑家具（绿=已知，青=推断，洋红=怀疑）' },
 ];
 
 export const DEV_B_KNOWN_LIMITS: readonly string[] = [
   '视觉遮挡几何只有墙体与门：家具（含 DEV-A 旋转家具）不参与 PerceptionSystem 的视线判定，因此不绘制家具遮挡。',
   '现有视觉规则只有距离 + 遮挡，没有视锥角：只画圆，不提供也不显示 FOV。',
   'Human AI 的卡住计时（stuckMs）与部分内部计时没有对外暴露，面板标注为「面板暂时看不到」，不做推测。',
-  'Human 的藏身检查（CHECK_HIDE）仍是预留状态，DEV-B 不实现、不模拟藏身检查。',
+  'Human 的藏身检查（CHECK_HIDE）自 S7C-2 起是真实运行状态，由 Human AI 自己按公开线索触发；DEV-B 只做只读观察，不替 AI 决策、也不显示隐藏者的真实位置或藏身点占用。',
   '观察是只读的：不触发额外寻路、不改变 AI 目标，刷新频率约 5–10 Hz（真实 AI 更新频率不变）。',
   'AI 的「原因」类字段保留英文原代码，便于与 AI JSON 日志逐条对照；把鼠标停在字段名上可看到中文解释。',
 ];

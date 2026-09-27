@@ -231,6 +231,26 @@ export function rectSurfacePoint(rect: RotatedRect, from: Point): Point {
     : localToWorld(rect, { x: local.x, z: local.z < 0 ? -halfDepth : halfDepth });
 }
 
+/**
+ * S7C-2：这个点是否仍然落在矩形**真实表面**（边界）上（容差内视为落在表面）。
+ *
+ * 用途：Human AI 在规划搜查站位时记下了「要瞄的那个表面点」，正式搜查**之前**
+ * 必须复核该点仍属于当前已应用地图里的这件家具——否则说明家具被移动 / 旋转 /
+ * 替换过，计划已经失效，必须取消并重新规划，而不是拿旧瞄点硬判一次 MISS。
+ * 内部点（严格在足迹内部）不算表面点：搜查看的是可接近表面，不是家具中心。
+ */
+export function pointOnRectSurface(point: Point, rect: RotatedRect,
+  tolerance = 0.05): boolean {
+  const halfWidth = rect.width / 2;
+  const halfDepth = rect.depth / 2;
+  if (halfWidth <= 0 || halfDepth <= 0) return false;
+  const local = worldToLocal(rect, point);
+  if (Math.abs(local.x) > halfWidth + tolerance ||
+      Math.abs(local.z) > halfDepth + tolerance) return false;
+  return Math.abs(Math.abs(local.x) - halfWidth) <= tolerance ||
+    Math.abs(Math.abs(local.z) - halfDepth) <= tolerance;
+}
+
 // Rotates a point around a centre by `angle` radians, using the same sign
 // convention as THREE.Object3D.rotation.y.
 export function rotatePointAround(centre: Point, point: Point, angle: number): Point {

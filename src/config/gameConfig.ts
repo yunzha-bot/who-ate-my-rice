@@ -44,6 +44,11 @@ export const GAME_CONFIG = {
     searchRoomCount: 3, // 一次追丢最多搜索的相邻房间数。
     searchDwellMs: 900, // 每个搜索点的观察停留：毫秒。
     searchMaxMs: 15_000, // 一次追丢搜索总时限：毫秒。
+    // S7C-2 Human AI 搜查藏身家具（用户本轮批准值，不得擅自调整）。
+    // 正式搜查复用 humanSearch.range / halfAngleDeg（1.5 / 120°）、上面的
+    // searchDwellMs（900 ms 停留）与既有 perception.lastSeenMs（8 秒 Last Seen）。
+    hideCheckFailureCooldownMs: 6_000, // 同一件家具搜空后的再次检查冷却：毫秒。
+    hideCheckMaxPerRound: 1, // 每轮调查最多正式检查的家具数：件。
   },
   deepseekAI: {
     waypointTolerance: 0.25, // 路径节点到达容差：XZ 世界单位。

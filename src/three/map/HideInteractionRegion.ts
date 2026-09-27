@@ -8,10 +8,17 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, WALLS,
   type DoorNode, type HideInteractionRegion, type HideSpot, type Point, type Rect,
 } from './apartmentMap.ts';
 
-// DEV-A round 1: the interaction region foundation only. This module holds the
+// DEV-A round 1: the interaction region geometry foundation. This module holds the
 // authored-region geometry, the base legal-position check and an explicitly
-// discrete preview. It is not wired into gameplay: there is still no HideSystem,
-// no hide key, no Human CHECK_HIDE and no scene-editor UI for these values.
+// discrete preview.
+//
+// Wiring status: the region is **live gameplay data** now. S7C-1B uses it as the
+// concealment legality check (a DeepSeek player may only hide where
+// `checkHideRegionPosition` says LEGAL). S7C-2 additionally reuses the *public*
+// region membership (`pointInHideRegion`) when the Human AI raises suspicion on a
+// piece of furniture whose public interaction area the trace chain ended in — it
+// never reads occupancy here. Raw DEV-A authoring geometry is also editable
+// through the DEV scene editor round 2 (`REGION_AUTHORING_LIMITS`).
 //
 // Three deliberately separated layers:
 //   1. `pointInHideRegion` - exact, continuous membership of the authored shape.

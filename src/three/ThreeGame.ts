@@ -12,24 +12,35 @@ import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
 import { RuntimeDebugOverrides, type RuntimeParamChange }
   from '../systems/RuntimeDebugOverrides';
 import { DevBRuntimeBinding, effectiveSpeeds } from '../systems/DevBRuntimeBinding';
-import type { DevBObservationInput } from '../systems/DevBObserver';
+import type { DevBHumanHideSearch, DevBObservationInput } from '../systems/DevBObserver';
 import { DevBDebug } from './DevBDebug';
 import type { DevBViewFrame } from './DevBView';
-import { HumanAIController, humanAiMovementSpeed, shouldRunHumanAI }
+import { HUMAN_CLUE_DEFER_TEXT, HumanAIController, humanAiMovementSpeed,
+  shouldRunHumanAI, type HumanAIMapSnapshot, type HumanCheckHidePhase }
   from '../systems/HumanAIController';
 import { DeepSeekAIController, isHumanPursuitSound, shouldRunDeepSeekAI,
   type DeepSeekAICommand } from '../systems/DeepSeekAIController';
 import { AILogCollector } from '../systems/AILogCollector';
 import { HideSystem, type HideExitReason } from '../systems/HideSystem';
 import { SkillCooldown } from '../systems/SkillCooldown';
-import { deepseekLockGate, humanSearchGate, lockArmsPlayerCooldown, resolveQSkill }
+import { deepseekLockGate, lockArmsPlayerCooldown, resolveQSkill }
   from '../systems/SkillGates';
 import { resolveInteractionIntent } from '../systems/HideInteractionArbitration';
+import { nextDeepSeekVisualHeading, resolveDeepSeekVisualTarget, type DeepSeekVisualTarget }
+  from '../systems/DeepSeekVisualTarget';
 import { HUMAN_SEARCH_CODE_TEXT, directionToHeadingRad, evaluateHumanSearch,
-  type HumanSearchTarget } from '../systems/HumanSearchSkill';
+  probeExposedFanTarget, wrapToPi, type ExposedFanProbe, type HumanSearchTarget }
+  from '../systems/HumanSearchSkill';
+import { createHumanAiMapSnapshot, resolveHumanAiHideCheck,
+  resolveHumanFurnitureSearch, HUMAN_HIDE_CHECK_CODE_TEXT,
+  HUMAN_FURNITURE_SEARCH_CODE_TEXT, type HumanFurnitureSearchCode }
+  from '../systems/HumanHideSearchResolution';
+import { resolveHideInteractionTarget, resolvePlayerQPlan, HIDE_TARGET_CODE_TEXT,
+  type HideTargetCandidate, type HideTargetPointing, type HideTargetResolution,
+  type PlayerQPlanReason } from '../systems/HideTargetResolution';
+import { selectVisibleTraces } from '../systems/RiceTraceClues';
 import { HideSearchView } from './HideSearchView';
-import { checkHideRegionPosition, hideRegionSetup, pointInHideRegion,
-  type HideRegionWorld } from './map/HideInteractionRegion';
+import { type HideRegionWorld } from './map/HideInteractionRegion';
 import { precheckMapApplication } from './map/MapApplicationPrecheck';
 import { AISafetyPathView } from './AISafetyPathView';
 import { HumanStillness } from '../systems/HumanStillness';
@@ -131,11 +142,43 @@ export class ThreeGame {
   private hideNotice = '';
   private hideNoticeRemainingMs = 0;
   private lastHumanFacing = { x: 0, y: 1 };
+  // 人工 DP 最近一次真实有效位移的世界 XZ 朝向；只用于交互轮廓，不旋转白模、不改 E。
+  private lastDeepseekVisualHeadingRad: number | null = null;
+  private deepseekVisualTarget: DeepSeekVisualTarget = { kind: 'NONE' };
+  // S7C-2 修复轮 五：AI 搜查可见反馈的状态跟随（纯表现，不参与判定）。
+  private humanAiSearchFeedbackPhase: HumanCheckHidePhase = 'NONE';
+  private humanAiSearchFeedbackSpotId: string | null = null;
   private lastSearchCode = 'NONE';
   private lastSearchDetail = '无';
   private lastSearchSpotId: string | null = null;
   private humanSearchCount = 0;
   private humanSearchHitCount = 0;
+  // S7C-2 修复轮 二 / 三：Human 玩家 Q 的公开家具交互目标。全部来自**公开**解析：
+  // 区域成员 + 真实碰撞可站立 + 家具表面无墙门遮挡 + 落在真实导航格上 + 玩家朝向
+  // 对着该家具，绝不读取藏身占用，因此白色高亮不可能泄露「里面有没有人」。
+  // 修复轮 三起，玩家 Q 是否走家具分支还取决于当帧是否存在合法暴露目标（优先抓人）。
+  private humanSearchTargetKind: 'NONE' | 'FAN' | 'FURNITURE' = 'NONE';
+  private hideTargetSpotId: string | null = null;
+  private hideTargetFurnitureId: string | null = null;
+  private hideTargetCode = 'NONE';
+  private hideTargetLegal = false;
+  /** S7C-2 修复轮 三：本帧家具是否**被玩家指向**（合法 + 指向才允许 Q 搜家具）。 */
+  private hideTargetPointed = false;
+  private hideTargetPointingDeltaDeg = Number.NaN;
+  /** 本帧是否存在**合法暴露目标**：为 true 时 Q 抓人，家具描边变暗且 HUD 不再提示可搜。 */
+  private hideTargetExposedPriority = false;
+  private lastPlayerQPlanReason: PlayerQPlanReason | 'NONE' = 'NONE';
+  private hideTargetCandidates = 0;
+  private furnitureSearchSpotId: string | null = null;
+  private furnitureSearchCode: HumanFurnitureSearchCode | 'NONE' = 'NONE';
+  private furnitureSearchDetail = '无';
+  private furnitureSearchCount = 0;
+  private furnitureSearchHitCount = 0;
+  // S7C-2：Human AI 正式搜查的**开发者真值**明细（AI 自己只看得到 HIT / MISS）。
+  private humanAiCheckCode = 'NONE';
+  private humanAiCheckDetail = '无';
+  /** 最近一次判定是否算「真正完成的正式检查」（只有搜空 / 搜中为 true）。 */
+  private humanAiCheckCountsAsFormal = false;
   private skillHud!: HTMLElement;
   private skillHudState!: HTMLElement;
   private skillHudNotice!: HTMLElement;
@@ -174,7 +217,8 @@ export class ThreeGame {
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
     this.navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
-    this.humanAI = new HumanAIController(this.navigation, ROOMS, DOOR_NODES);
+    this.humanAI = new HumanAIController(this.navigation, ROOMS, DOOR_NODES, Math.random,
+      this.humanAiMapSnapshot());
     this.deepseekAI = new DeepSeekAIController(this.navigation, DOOR_NODES, ROOMS);
     // DEV-B: both AI controllers read the same effective values the panel edits.
     this.humanAI.setRuntimeTuning(this.runtime);
@@ -331,6 +375,8 @@ export class ThreeGame {
   private chooseFaction(faction: Faction): void {
     if (!this.match.beginFromFactionSelect()) return;
     this.control.choose(faction);
+    this.lastDeepseekVisualHeadingRad = null;
+    this.deepseekVisualTarget = { kind: 'NONE' };
     this.menu.hidden = true;
     this.input.clear();
     this.resize();
@@ -350,6 +396,9 @@ export class ThreeGame {
         this.minesweeper.isOpen || this.sceneEditor.isOpen ||
         !this.control.setTemporaryInputTarget(faction)) return;
     this.input.clear();
+    this.lastDeepseekVisualHeadingRad = null;
+    this.deepseekVisualTarget = { kind: 'NONE' };
+    this.hideSearchView.clearPlayerTarget();
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
   }
@@ -458,6 +507,9 @@ export class ThreeGame {
             resolveDirectControlSwitch(this.match.phase,
               C.development.directHotkeysEnabled, controlSwitchPressed)) {
           this.control.toggleControlled();
+          this.lastDeepseekVisualHeadingRad = null;
+          this.deepseekVisualTarget = { kind: 'NONE' };
+          this.hideSearchView.clearPlayerTarget();
         }
         if (gameplayMs > 0) {
           this.updatePlaying(gameplayMs);
@@ -492,6 +544,9 @@ export class ThreeGame {
     this.debugPanel.setFreezeState(frozen, this.devFreeze.lastRejection === '无'
       ? this.devFreeze.reasonLabel
       : `${this.devFreeze.reasonLabel}｜最近拒绝：${this.devFreeze.lastRejection}`);
+    // 玩家当前唯一白色交互轮廓：先同步既有 Human Q，再同步人工 DP 的视觉目标。
+    this.syncPlayerFurnitureTarget();
+    this.syncDeepSeekVisualTarget();
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
     this.renderer.render(this.scene, this.camera);
@@ -554,10 +609,16 @@ export class ThreeGame {
     // Only a real map change resets the hide state: closing or discarding the
     // editor rebuilds the same map and must not kick a concealed player out.
     const signature = this.mapSignature(map);
-    if (signature !== this.appliedMapSignature) {
+    const changed = signature !== this.appliedMapSignature;
+    if (changed) {
       this.appliedMapSignature = signature;
       this.releaseHide('MAP_APPLIED');
+      this.deepseekVisualTarget = { kind: 'NONE' };
+      this.hideSearchView.clearPlayerTarget();
     }
+    // S7C-2：AI 的公开地图数据、站位可行性、失败冷却与线索记忆都绑在旧几何上，
+    // 必须跟着新地图一起更新，绝不能继续前往被删除或移动过的旧家具位置。
+    this.humanAI.rebindMap(this.humanAiMapSnapshot(), changed);
     this.syncAllDoors();
     return this.apartment;
   }
@@ -567,6 +628,23 @@ export class ThreeGame {
       `${rect.width},${rect.depth},${rect.height},${rect.rotation ?? 0}`).join('|');
     const spots = map.hideSpots.map(spot => `${spot.id}:${spot.x},${spot.z}`).join('|');
     return `${furniture}#${spots}`;
+  }
+
+  // S7C-2：交给 Human AI 的公开世界快照 = 已应用地图数据 + 三条真实几何接缝。
+  // 只有公开信息；占用状态、隐藏角色实时坐标与任何开发者专用真值都不在这里。
+  // 修复轮：改由 `createHumanAiMapSnapshot()` 统一构造，测试可以用同一段真实源码
+  // 复现这份接线，从而抓住「回调被漏掉、AI 静默失效」这类只在运行时暴露的故障。
+  private humanAiMapSnapshot(): HumanAIMapSnapshot {
+    return createHumanAiMapSnapshot({
+      furniture: this.mapFurniture,
+      hideSpots: this.hideSpots,
+      visionStatus: (from, to, maxRange) => this.perceptionGeometry
+        .inspectVision(from, to, maxRange).status,
+      canOccupyStaticXZ: (x, z, radius, height) =>
+        this.collision.canOccupyStaticXZ(x, z, radius, height),
+      playerRadius: C.collision.playerRadius,
+      actorHeight: C.three.actorHeight,
+    });
   }
 
   // S7C-1B 地图应用预检（只读）：由场景编辑器在真正 apply 之前调用。预检失败时
@@ -598,6 +676,8 @@ export class ThreeGame {
     // 藏身事件无论 DeepSeek AI 是否在跑都要进日志时间线；冷却与特效都只随正式
     // 玩法时间推进（上面的 advance 调用）。
     this.aiLogCollector.recordHideEvents(this.hide.drainEvents());
+    // S7C-2：Human AI 的循迹 / 搜查事件同样进 AI JSON，且与 DeepSeek AI 是否在跑无关。
+    this.aiLogCollector.recordHumanSearchEvents(this.humanAI.drainHumanSearchEvents());
     if (this.hideNoticeRemainingMs > 0) {
       this.hideNoticeRemainingMs = Math.max(0, this.hideNoticeRemainingMs - deltaMs);
       if (this.hideNoticeRemainingMs === 0) this.hideNotice = '';
@@ -788,6 +868,10 @@ export class ThreeGame {
       (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
     const oldDeepseek = this.player.position.clone();
     this.move(this.player, movement.x * speed * deltaMs / 1000, movement.y * speed * deltaMs / 1000);
+    if (this.control.isControlling('DEEPSEEK') && !deepseekCommand) {
+      this.lastDeepseekVisualHeadingRad = nextDeepSeekVisualHeading(
+        this.lastDeepseekVisualHeadingRad, oldDeepseek, this.player.position);
+    }
     this.traces.recordMovement(this.player.position);
     this.emitMovementSound('DEEPSEEK', oldDeepseek, this.player.position,
       this.sprint.state === 'SPRINT_RUNNING');
@@ -812,6 +896,13 @@ export class ThreeGame {
         lastSeen: sight.lastSeen,
         heard: this.sound.heardBy(this.human.position, 'HUMAN', this.camera,
           this.perceptionGeometry),
+        // S7C-2：强危险声沿用现有「追捕型声音」分类，不新造声音类型，也不把
+        // 普通门操作声当成危险。米痕先按正式视觉几何过滤成图层 B 再交给 AI，
+        // 且无论调用方传什么，AI 内部仍会用自己的真实几何再确认一次。
+        heardDanger: this.sound.heardBy(this.human.position, 'HUMAN', this.camera,
+          this.perceptionGeometry, event => isHumanPursuitSound(event.type)),
+        nowMs: this.traces.nowMs,
+        visibleTraces: this.visibleTracesForHumanAi(),
         captureEligible, doors: this.doorSystem.doors,
         forceBreakCooldownMs: this.humanDoorSkill.cooldownRemainingMs,
         canOpenDoor: id => {
@@ -833,9 +924,18 @@ export class ThreeGame {
         if (result !== 'COOLDOWN')
           this.applyDoorResult(command.forceBreakDoorId, result, 'HUMAN');
       }
+      // S7C-2：家具搜查的朝向必须由 AI 显式给出，因此这里直接覆盖人类朝向；
+      // 绝不让「人工控制 Human 时留下的过期朝向」参与搜查判定。
+      if (command.faceHeadingRad !== null) {
+        this.lastHumanFacing = { x: Math.cos(command.faceHeadingRad),
+          y: Math.sin(command.faceHeadingRad) };
+      }
+      if (command.checkHideSpotId) this.runHumanAiHideCheck(command.checkHideSpotId);
       aiHumanDirection = { x: command.direction.x, y: command.direction.z };
     }
     this.humanAiWasActive = aiCanAct;
+    // S7C-2 修复轮 五：AI 搜查的可见反馈跟随 AI 自己公开的搜查状态（不参与判定）。
+    this.syncHumanAiSearchFeedback(aiCanAct);
     const baseHumanSpeed = effectiveSpeeds(this.runtime).human / U;
     const humanSpeed = aiHumanDirection
       ? humanAiMovementSpeed(baseHumanSpeed, this.runtime.humanAIMovementMultiplier)
@@ -893,6 +993,12 @@ export class ThreeGame {
       this.rice.interrupt();
       this.closeMinesweeper();
       this.releaseHide('ROUND_FINISHED');
+      // S7C-2 修复轮 二：本帧的正式搜查很可能就是分出胜负的那一次（家具搜查命中
+      // 会立即 forceCapture）。局终之后 `updatePlaying` 不再运行，如果不在这里
+      // 再冲一次时间线，REQUEST / RESOLVE / HIT 与这次 HIDE_EXIT 就永远不会写进
+      // AI JSON——真实日志里就会出现「有 DWELL 却没有结算码」的断点。
+      this.aiLogCollector.recordHideEvents(this.hide.drainEvents());
+      this.aiLogCollector.recordHumanSearchEvents(this.humanAI.drainHumanSearchEvents());
     }
     // The action layer observes resolved gameplay; it never feeds back into movement or rules.
     const playerMoved = distance(oldDeepseek, this.player.position) > C.collision.contactEpsilon;
@@ -917,7 +1023,11 @@ export class ThreeGame {
       moving: humanMoved,
       running: humanMoved && aiEnabled && this.humanAI.state === 'CHASE',
       capturing: this.captureZoneActive,
+      // S7C-2 修复轮 五：正式搜查停留期间让 Human 走既有的 INTERACT 动作，
+      // 配合橙色扇形与家具轮廓，玩家能辨认「它正在检查这件家具」。纯表现，
+      // 不参与命中判定，也不触发玩家 Q 的冷却。
       interacting: (aiEnabled && this.humanAI.unlockProgressMs > 0) ||
+        (aiEnabled && this.humanAI.checkHidePhase === 'DWELL') ||
         this.minesweeper.isOpen || (this.control.isControlling('HUMAN') &&
         this.input.isHeld('KeyE') && !!this.nearestInteractableDoor(this.human.position)),
     }), deltaMs);
@@ -1001,26 +1111,139 @@ export class ThreeGame {
       return;
     }
     if (skill !== 'FAN_SEARCH') return;
-    const gate = humanSearchGate({
-      ready: this.humanSearchCooldown.ready,
+    // S7C-2 修复轮 三：Human 玩家 Q 的唯一输入优先级（用户本轮批准的 ①→②→③→④）：
+    //   ① 12 秒冷却中 → 直接拒绝（不搜查、不抓捕、不产生新冷却）；
+    //   ② 当帧有**合法暴露目标** → 原有普通扇形抓捕（即使正站在家具交互区域内、
+    //      并正对着家具，也绝不改为家具搜查）；
+    //   ③ 否则当帧有**合法 + 被指向**的家具 → 只搜查这件家具；
+    //   ④ 否则 → 原有普通扇形空挥。
+    // 三条输入全部来自**按键当帧**重新解析，绝不复用上一帧的高亮目标，因此不存在
+    // 「UI 高亮 A 家具、技能层搜 B 家具」，也不会出现「有暴露目标却提示可以搜家具」。
+    const pressResolution = this.playerQTargetResolution(actor.position);
+    const exposed = this.probeExposedTarget();
+    const plan = resolvePlayerQPlan({
+      cooldownReady: this.humanSearchCooldown.ready,
       remainingSeconds: this.humanSearchCooldown.remainingSeconds,
+      exposedTargetAvailable: exposed.available,
+      furnitureTarget: pressResolution.pointedLegalTarget,
     });
-    if (!gate.ok) {
-      this.setHideNotice(gate.message ?? '搜查被拒绝');
+    this.lastPlayerQPlanReason = plan.reason;
+    if (plan.kind === 'REJECT_COOLDOWN') {
+      this.setHideNotice(plan.message ?? '搜查被拒绝');
       return;
     }
-    // 有效释放（对局中且不在冷却）就先开始计时：未命中同样消耗冷却。
-    this.humanSearchCooldown.arm();
-    this.performHumanSearch(actor);
+    // 有效释放（对局中且不在冷却）就先开始计时：扇形命中、家具搜查、合法搜空与
+    // 普通扇形空挥同样消耗这 12 秒冷却。
+    if (plan.armsCooldown) this.humanSearchCooldown.arm();
+    if (plan.kind === 'FURNITURE' && pressResolution.pointedLegalTarget &&
+        this.performFurnitureSearch(actor.position, pressResolution.pointedLegalTarget)) {
+      return;
+    }
+    // ② 与 ④：都是原有普通扇形，只是原因不同（`reason` 只进 DEV / AI 日志）。
+    this.performHumanSearch(actor, plan.reason, exposed);
+  }
+
+  /**
+   * S7C-2 修复轮 二 / 三：Human 玩家 Q 的**家具交互搜查**。
+   *
+   * 与 Human AI 共用「指定家具权威占用」这一个小接口，但上游几何是另一套：
+   * 玩家只要站在合法交互区域内、并且朝向大致对着这件家具（指向条件选完家具之后
+   * 就不再参与判定）即可，家具不必落在 120° 扇形里，也不做 1.5 u 距离判定。
+   *
+   * 判定顺序（用户本轮批准）：按键当帧解析出的唯一「合法 + 被指向」家具 → ① 该藏身点
+   * 与家具仍属于当前已应用地图 → ② 玩家确实位于合法交互区域 → ③ 与家具之间没有墙或
+   * 非 OPEN 门叶 → ④ 才读一次权威占用。返回 true 表示这次 Q 已经由家具搜查消费掉
+   * （搜中或合法搜空），false 表示没有可用的家具目标，调用方应回退到普通扇形。
+   */
+  private performFurnitureSearch(position: THREE.Vector3,
+    target: HideTargetCandidate): boolean {
+    const resolution = resolveHumanFurnitureSearch({
+      spotId: target.spotId,
+      playerPosition: { x: position.x, z: position.z },
+      furniture: this.mapFurniture,
+      hideSpots: this.hideSpots,
+      // 按键当帧**重新解析**出来的公开合法性（不是上一帧的高亮状态）。
+      legal: target.legal,
+      legalCode: target.code,
+      // 正式遮挡规则与视觉同源：墙体与非 OPEN 的门叶都会挡住这次搜查。
+      lineBlocked: (a, b) => this.perceptionGeometry
+        .inspectVision(a, b, Number.POSITIVE_INFINITY).status !== 'VISIBLE',
+      // 惰性权威读取：公开检查全部通过后才会被调用一次。高亮、候选选择与提示阶段
+      // 都走另一条路径，永远不碰这个回调。
+      readOccupancy: () => ({ concealedSpotId: this.hide.isConcealed('DEEPSEEK')
+        ? this.hide.spotId : null }),
+    });
+    const label = this.hideSpots.find(spot => spot.id === target.spotId)?.label ?? target.spotId;
+    this.furnitureSearchCount++;
+    this.furnitureSearchSpotId = target.spotId;
+    this.furnitureSearchCode = resolution.code;
+    this.furnitureSearchDetail = `${HUMAN_FURNITURE_SEARCH_CODE_TEXT[resolution.code]}｜` +
+      `家具 ${resolution.furnitureId ?? '无'}｜瞄点 ${pointText(resolution.aimPoint)}｜` +
+      `权威占用读取：${resolution.readAuthoritativeSpot ? '是' : '否'}`;
+    // DEV 面板「Human Q 搜查：冷却 / 最近判定」也跟上这次家具搜查，避免显示上一次扇形结果。
+    this.lastSearchCode = resolution.code;
+    this.lastSearchDetail = this.furnitureSearchDetail;
+    this.aiLogCollector.recordPlayerSearchEvent({
+      type: resolution.code === 'HIT_CONCEALED' ? 'PLAYER_Q_FURNITURE_HIT'
+        : resolution.code === 'MISS_EMPTY' ? 'PLAYER_Q_FURNITURE_MISS'
+          : 'PLAYER_Q_FURNITURE_REJECTED',
+      reason: this.furnitureSearchDetail,
+      spotId: target.spotId,
+      data: {
+        targetKind: 'FURNITURE',
+        reason: 'FURNITURE',
+        furnitureId: resolution.furnitureId,
+        legal: target.legal,
+        legalCode: target.code,
+        legalText: HIDE_TARGET_CODE_TEXT[target.code] ?? target.code,
+        pointed: target.pointed,
+        pointingDeltaDeg: target.pointingDeltaDeg,
+        candidatesInRegion: this.hideTargetCandidates,
+        cooldownReady: this.humanSearchCooldown.ready,
+        cooldownRemainingMs: this.humanSearchCooldown.remainingMs,
+        playerPosition: { x: position.x, z: position.z },
+        aimPoint: resolution.aimPoint,
+        blocked: resolution.blocked,
+        hit: resolution.hit,
+        authoritativeRead: resolution.readAuthoritativeSpot,
+        executed: resolution.executable,
+      },
+    });
+    if (resolution.code === 'HIT_CONCEALED') {
+      this.humanSearchTargetKind = 'FURNITURE';
+      this.furnitureSearchHitCount++;
+      this.showSearchFurnitureFeedback(target.spotId);
+      this.releaseHide('SEARCHED');
+      this.setHideNotice(`家具搜查命中：已从「${label}」搜出藏身目标并立即抓捕`);
+      // 复用 S7C-1B 的同一套正式结算，不新开胜负系统。
+      this.match.forceCapture();
+      return true;
+    }
+    if (resolution.code === 'MISS_EMPTY') {
+      this.humanSearchTargetKind = 'FURNITURE';
+      this.setHideNotice(`家具搜查完成：「${label}」没有人，` +
+        `Q 进入 ${(C.humanSearch.cooldownMs / 1000).toFixed(0)} 秒冷却`);
+      return true;
+    }
+    // NOT_LEGAL / PLAN_STALE / NO_TARGET：家具目标在按键当帧已不成立，
+    // 按用户规则回退到「原有普通扇形角色抓捕」。
+    this.setHideNotice(`家具搜查未执行：${HUMAN_FURNITURE_SEARCH_CODE_TEXT[resolution.code]}`);
+    return false;
   }
 
   // 释放瞬间只做一次命中判定；扇形表现与真实判定共用同一个朝向快照，之后的淡入
   // 淡出不会产生第二次命中。
-  private performHumanSearch(actor: THREE.Mesh): void {
+  //
+  // S7C-2 修复轮 三：这里就是「原有普通扇形」的唯一执行点——分支②（有合法暴露目标）
+  // 与分支④（无暴露目标也无指向家具，空挥）都走它，因此两条路径的几何完全一致；
+  // `reason` 与预检测结果只用于 DEV / AI 日志，绝不改变判定。
+  private performHumanSearch(actor: THREE.Mesh, reason: PlayerQPlanReason,
+    probe: ExposedFanProbe): void {
     const origin = { x: actor.position.x, z: actor.position.z };
     const headingRad = this.humanSearchHeadingRad();
     this.hideSearchView.show(origin, headingRad);
     this.humanSearchCount++;
+    this.humanSearchTargetKind = 'FAN';
     const result = evaluateHumanSearch({
       origin,
       headingRad,
@@ -1036,6 +1259,32 @@ export class ThreeGame {
       `${Number.isFinite(result.distance) ? result.distance.toFixed(2) : '—'}` +
       `｜偏差 ${Number.isNaN(result.angleDeltaDeg) ? '—' :
         `${result.angleDeltaDeg.toFixed(1)}°`}`;
+    // 玩家 Q 时间线：记下这次是「暴露目标优先」还是「没有目标可搜」的空挥，
+    // 以及预检测与最终判定是否一致（两者同源，不一致即为缺陷信号）。
+    this.aiLogCollector.recordPlayerSearchEvent({
+      type: result.outcome === 'MISS' ? 'PLAYER_Q_FAN_MISS' : 'PLAYER_Q_FAN_HIT',
+      reason: this.lastSearchDetail,
+      spotId: result.spotId,
+      data: {
+        targetKind: 'FAN',
+        reason,
+        furnitureId: this.hideTargetFurnitureId,
+        exposedTargetAvailable: probe.available,
+        exposedCode: probe.code,
+        exposedDistance: probe.distance,
+        exposedAngleDeltaDeg: probe.angleDeltaDeg,
+        exposedBlocked: probe.blocked,
+        cooldownReady: this.humanSearchCooldown.ready,
+        cooldownRemainingMs: this.humanSearchCooldown.remainingMs,
+        playerPosition: origin,
+        aimPoint: result.aimPoint,
+        blocked: result.blocked,
+        hit: result.outcome !== 'MISS',
+        // 普通扇形不读任何家具占用：这两项必须恒为 false。
+        authoritativeRead: false,
+        executed: true,
+      },
+    });
     if (result.outcome === 'MISS') {
       this.setHideNotice(`搜查未命中：${HUMAN_SEARCH_CODE_TEXT[result.code]}`);
       return;
@@ -1088,31 +1337,338 @@ export class ThreeGame {
     return Math.atan2(forward.z, forward.x);
   }
 
-  // 复用既有几何/碰撞/导航接口：区域内 + 可站立 + 家具表面无遮挡 + 落在导航格上。
-  private nearestHideCandidate(position: THREE.Vector3):
-  { spotId: string; distance: number; code: string; legal: boolean } | null {
-    const point = { x: position.x, z: position.z };
-    let best: { spotId: string; distance: number; code: string; legal: boolean } | null = null;
-    let seenCode = 'NONE';
-    for (const spot of this.hideSpots) {
-      const setup = hideRegionSetup(spot, this.mapFurniture);
-      if (!setup) continue;
-      if (!pointInHideRegion(setup.geometry, point)) continue;
-      const check = checkHideRegionPosition(setup, point, this.hideWorld());
-      seenCode = check.code;
-      const distance = Math.hypot(point.x - spot.x, point.z - spot.z);
-      if (!best || distance < best.distance) {
-        best = { spotId: spot.id, distance, code: check.code, legal: check.legal };
+  /**
+   * S7C-2 修复轮 三：Human 玩家 Q 的**无副作用**「合法暴露目标」预检测。
+   *
+   * 按键当帧与每帧高亮各调用一次，只回答一个问题：**现在按 Q，普通扇形会不会真的
+   * 抓到一个未藏身的对手**。它复用正式的 `evaluateHumanSearch()`（同源几何），
+   * 不显示特效、不消耗冷却、不写日志、不释放藏身、不产生抓捕事件——所有副作用都
+   * 留在真正执行分支的 `performHumanSearch()` / `performFurnitureSearch()` 里。
+   */
+  private probeExposedTarget(): ExposedFanProbe {
+    if (this.match.phase !== 'PLAYING' || this.match.result) {
+      return { available: false, code: 'NO_TARGET',
+        distance: Number.POSITIVE_INFINITY, angleDeltaDeg: Number.NaN, blocked: false };
+    }
+    return probeExposedFanTarget({
+      origin: { x: this.human.position.x, z: this.human.position.z },
+      headingRad: this.humanSearchHeadingRad(),
+      target: this.humanSearchTarget(),
+      lineBlocked: (a, b) => this.perceptionGeometry
+        .inspectVision(a, b, Number.POSITIVE_INFINITY).status !== 'VISIBLE',
+    });
+  }
+
+  /**
+   * S7C-2 修复轮 五：把 Human AI 的正式搜查状态同步到**纯表现层**。
+   *
+   * 玩家以前只能看到 AI 停住并转向，分不清「在附近调查」与「真的在检查某件家具」。
+   * 这里在 AI 处于 CHECK_HIDE.DWELL 时点亮它自己的站位扇形与被检查家具的轮廓，
+   * 离开 DWELL（搜空 / 被抢占 / 取消）时给一次中性收尾脉冲。
+   *
+   * 三条约束：不参与判定；不碰 Human 玩家 Q 的 12 秒冷却；只画 AI 自己公开的
+   * 目标家具，因此不会泄露远处隐藏者的真实位置或占用状态。
+   */
+  private syncHumanAiSearchFeedback(active: boolean): void {
+    if (!active) {
+      this.hideSearchView.hideAiInspection();
+      this.humanAiSearchFeedbackPhase = 'NONE';
+      this.humanAiSearchFeedbackSpotId = null;
+      return;
+    }
+    const phase = this.humanAI.checkHidePhase;
+    const spotId = this.humanAI.checkHideSpotId;
+    const stance = this.humanAI.checkHideStance;
+    const furnitureFor = (id: string | null) => {
+      const spot = id ? this.hideSpots.find(item => item.id === id) ?? null : null;
+      return spot
+        ? this.mapFurniture.find(rect => rect.id === spot.furnitureId) ?? null : null;
+    };
+    if (phase === 'DWELL' && spotId && stance) {
+      const furniture = furnitureFor(spotId);
+      if (furniture) {
+        this.hideSearchView.showAiInspection(
+          { x: this.human.position.x, z: this.human.position.z }, stance.headingRad,
+          { x: furniture.x, z: furniture.z },
+          { width: furniture.width, depth: furniture.depth, height: furniture.height },
+          furniture.rotation ?? 0);
+      }
+    } else {
+      this.hideSearchView.hideAiInspection();
+    }
+    // 离开 DWELL 的那一帧：搜空或被取消时给一次中性收尾反馈。
+    // 搜中不做这里的效果——命中已经有 S7C-1B 的家具高亮，且对局随即结束。
+    if (this.humanAiSearchFeedbackPhase === 'DWELL' && phase !== 'DWELL' &&
+        this.humanAI.checkHideLastResult !== 'HIT') {
+      const furniture = furnitureFor(this.humanAiSearchFeedbackSpotId);
+      if (furniture) {
+        this.hideSearchView.showAiInspectionDone(
+          { x: furniture.x, z: furniture.z },
+          { width: furniture.width, depth: furniture.depth, height: furniture.height },
+          furniture.rotation ?? 0);
       }
     }
-    this.hideCandidateCode = best ? best.code : seenCode;
-    this.hideCandidateSpotId = best?.spotId ?? null;
-    return best;
+    this.humanAiSearchFeedbackPhase = phase;
+    this.humanAiSearchFeedbackSpotId = spotId;
+  }
+
+  // 复用既有几何/碰撞/导航接口：区域内 + 可站立 + 家具表面无遮挡 + 落在导航格上。
+  // 具体判定已抽到 `resolveHideInteractionTarget()`，DeepSeek 玩家 E 与 Human 玩家 Q
+  // 共用**同一套**公开目标解析，因此目标选择顺序完全一致。
+  // `pointing` 只在 Human 玩家 Q 一侧传入：DeepSeek 的 E 藏身不需要面向家具，
+  // 行为与 S7C-1B 逐字相同（见 `resolvePlayerQPlan()` 与 `pointsAtFurniture()`）。
+  private hideTargetResolution(position: THREE.Vector3,
+    pointing?: HideTargetPointing): HideTargetResolution {
+    return resolveHideInteractionTarget({
+      position: { x: position.x, z: position.z },
+      spots: this.hideSpots,
+      furniture: this.mapFurniture,
+      world: this.hideWorld(),
+      ...(pointing ? { pointing } : {}),
+    });
+  }
+
+  /**
+   * Human 玩家 Q 的目标解析：把「玩家当前朝向」作为指向条件并入同一条解析流程。
+   *
+   * 指向容差**直接复用已批准的普通扇形半角**（`halfAngleDeg`，即 120° 张角的一半），
+   * 不新增任何数值：玩家已经熟悉「前方 120°」这条直觉，指向选择沿用同一个角度即可。
+   * 复用仅限**角度**——这里不做距离判定、不做遮挡判定、不参与命中；家具搜查本身
+   * 仍然不做 1.5 u / 120° 几何（见 `resolveHumanFurnitureSearch()`）。
+   */
+  private playerQTargetResolution(position: THREE.Vector3): HideTargetResolution {
+    return this.hideTargetResolution(position, {
+      headingRad: this.humanSearchHeadingRad(),
+      halfAngleDeg: C.humanSearch.halfAngleDeg,
+    });
+  }
+
+  private nearestHideCandidate(position: THREE.Vector3): HideTargetCandidate | null {
+    const resolution = this.hideTargetResolution(position);
+    this.hideCandidateCode = resolution.code;
+    this.hideCandidateSpotId = resolution.spotId;
+    return resolution.target;
+  }
+
+  /**
+   * S7C-2 修复轮 二 / 三：Human 玩家的**唯一家具交互高亮**（每帧同步，公开解析）。
+   *
+   * 与按键判定用的是**同一个** `resolveHideInteractionTarget()`：白色高亮目标 =
+   * HUD「Q 搜查」目标 = 实际搜查目标，因此不可能出现「高亮 A 家具、技能层搜 B 家具」。
+   *
+   * 修复轮 三新增两条语义（用户批准的新优先级）：
+   *   - 只有**合法且被指向**的家具才亮（未传朝向过滤的 DeepSeek E 不受影响）；
+   *   - 当帧存在**合法暴露目标**时，家具仍然画出来但**变暗且不再呼吸**（不可用），
+   *     HUD 也不再提示「可以搜家具」——因为这时按 Q 是抓人，不能给出误导性提示。
+   *
+   * 三条约束：
+   *   - 只用公开几何（区域成员 + 真实碰撞可站立 + 家具表面无墙门遮挡 + 真实导航格）
+   *     与玩家自己的朝向，不读、不推断、不暴露任何家具占用；
+   *   - 区域成员成立但站位不合法（例如隔着墙）时**不亮**高亮：不能因为用了同一套
+   *     公开几何就给玩家一个「可以隔墙搜查」的假提示；
+   *   - 非 PLAYING（暂停 / 结算 / 选阵营 / 重开）时立即清除，不残留过期目标。
+   */
+  private syncPlayerFurnitureTarget(): void {
+    const faction = this.control.controlledFaction;
+    const playable = this.match.phase === 'PLAYING' && faction === 'HUMAN' &&
+      this.match.result === null;
+    if (!playable) {
+      if (this.hideTargetSpotId !== null) {
+        this.hideSearchView.clearPlayerTarget();
+        this.hideTargetSpotId = null;
+        this.hideTargetFurnitureId = null;
+      }
+      this.hideTargetLegal = false;
+      this.hideTargetPointed = false;
+      this.hideTargetPointingDeltaDeg = Number.NaN;
+      this.hideTargetExposedPriority = false;
+      this.hideTargetCandidates = 0;
+      this.hideTargetCode = 'NONE';
+      return;
+    }
+    const resolution = this.playerQTargetResolution(this.human.position);
+    const exposed = this.probeExposedTarget();
+    this.hideTargetCode = resolution.code;
+    this.hideTargetCandidates = resolution.candidatesInRegion;
+    this.hideTargetExposedPriority = exposed.available;
+    const target = resolution.pointedLegalTarget;
+    this.hideTargetLegal = !!target;
+    this.hideTargetPointed = target ? target.pointed : false;
+    this.hideTargetPointingDeltaDeg = target ? target.pointingDeltaDeg : Number.NaN;
+    const furniture = target
+      ? this.mapFurniture.find(rect => rect.id === target.furnitureId) ?? null : null;
+    if (!target || !furniture) {
+      if (this.hideTargetSpotId !== null) {
+        this.hideSearchView.clearPlayerTarget();
+        this.hideTargetSpotId = null;
+        this.hideTargetFurnitureId = null;
+      }
+      return;
+    }
+    this.hideTargetSpotId = target.spotId;
+    this.hideTargetFurnitureId = target.furnitureId;
+    this.hideSearchView.setPlayerTarget(target.spotId, {
+      centre: { x: furniture.x, z: furniture.z },
+      size: { width: furniture.width, depth: furniture.depth, height: furniture.height },
+      rotationRad: furniture.rotation ?? 0,
+    }, this.humanSearchCooldown.ready && !exposed.available);
+  }
+
+  /** 人工 DP 的唯一白色指向目标；E 的正式判定仍走 handleDoorInteractions()。 */
+  private syncDeepSeekVisualTarget(): void {
+    const playable = this.match.phase === 'PLAYING' && this.match.result === null &&
+      this.control.isControlling('DEEPSEEK') && !this.sceneEditor.isOpen;
+    if (!playable) {
+      this.deepseekVisualTarget = { kind: 'NONE' };
+      if (!this.control.isControlling('HUMAN')) this.hideSearchView.clearPlayerTarget();
+      return;
+    }
+    const rice = this.nearestRice();
+    const hide = this.hideTargetResolution(this.player.position).target;
+    const door = this.nearestInteractableDoor(this.player.position);
+    // 参数与 E 按键当帧的仲裁完全一致；朝向筛选只发生在其后。
+    const intent = resolveInteractionIntent({
+      minesweeperOpen: this.minesweeper.isOpen,
+      concealed: this.hide.isConcealed('DEEPSEEK'),
+      door: door ? { distance: door.distance } : null,
+      rice: rice ? { distance: rice.range } : null,
+      hide: hide ? { spotId: hide.spotId } : null,
+    });
+    const furniture = hide
+      ? this.mapFurniture.find(rect => rect.id === hide.furnitureId) ?? null : null;
+    const riceView = rice ? this.riceViews.get(rice.id) ?? null : null;
+    const target = resolveDeepSeekVisualTarget({
+      playable: true,
+      position: { x: this.player.position.x, z: this.player.position.z },
+      headingRad: this.lastDeepseekVisualHeadingRad,
+      intent, hide, furniture,
+      rice: rice && riceView ? { id: rice.id,
+        position: { x: riceView.position.x, z: riceView.position.z },
+        range: rice.range } : null,
+      riceInteractionRange: C.rice.interactionRange / U,
+      canHide: this.sprint.state === 'NORMAL' && this.match.captureProgressMs === 0,
+      canEat: this.sprint.state === 'NORMAL',
+      furnitureHalfAngleDeg: C.humanSearch.halfAngleDeg,
+    });
+    this.deepseekVisualTarget = target;
+    if (target.kind === 'FURNITURE' && furniture) {
+      this.hideSearchView.setPlayerTarget(target.spotId, {
+        centre: { x: furniture.x, z: furniture.z },
+        size: { width: furniture.width, depth: furniture.depth, height: furniture.height },
+        rotationRad: furniture.rotation ?? 0,
+      }, true);
+    } else if (target.kind === 'RICE' && riceView) {
+      this.hideSearchView.setRiceTarget(target.riceId, {
+        centre: { x: riceView.position.x, z: riceView.position.z },
+        size: riceView.outlineSize,
+        rotationRad: 0,
+      });
+    } else {
+      this.hideSearchView.clearPlayerTarget();
+    }
   }
 
   private hideWorld(): HideRegionWorld {
     return { collision: this.collision, navigation: this.navigation,
       doorStates: this.doorSystem.doors };
+  }
+
+  // S7C-2：图层 B —— 当前 Human AI 真正看得见的米痕（距离 + 墙 + 非 OPEN 门叶）。
+  // 复用 S7C-2 的适配接口与正式视觉几何，不新建第二套墙门规则。
+  private visibleTracesForHumanAi(): ReturnType<typeof selectVisibleTraces> {
+    return selectVisibleTraces({
+      observer: this.human.position,
+      traces: this.traces.traces,
+      nowMs: this.traces.nowMs,
+      visionRange: this.runtime.visionRange,
+      visible: (from, to, maxRange) => this.perceptionGeometry
+        .inspectVision(from, to, maxRange).status === 'VISIBLE',
+    });
+  }
+
+  /**
+   * S7C-2：Human AI 的正式搜查结算（分层的关键接缝）。
+   *
+   * 公开几何、站位与停留全部在 AI 内部完成；只有「到达合法站位 + 朝向正确 +
+   * 满足 900 ms 停留」之后，这里才查询权威占用状态，并复用 S7C-1B 的
+   * `evaluateHumanSearch()` 的**公共几何核心**、强制退出与
+   * `GameStateSystem.forceCapture()`。
+   *
+   * 修复轮把这段判定抽到 `resolveHumanAiHideCheck()`，并修正两处：
+   *   ① 判断用的是**规划时保存的表面点**（`stance.surfacePoint`），不再用
+   *      「离当前位置最近的表面点」重算——两者在家具边角 / 旋转家具旁会不一致，
+   *      以前会表现为「计划合法但正式判定 MISS」；
+   *   ② 正式判定前复核该点仍属于当前已应用地图的目标家具，家具/地图变了就
+   *      取消本次搜查（不记搜空、不进 6 秒冷却），而不是拿旧计划硬判一次。
+   *
+   * 真实藏身点只在「正在被检查的这件家具恰好就是它的藏身家具」时才被读取，因此
+   * AI 不可能通过搜查别的家具反推对方位置；回给 AI 的仍然只有 `hit: boolean`，
+   * 细粒度的权威原因只进 DEV 字段（`humanAiCheckCode`）。
+   */
+  private runHumanAiHideCheck(spotId: string): void {
+    const stance = this.humanAI.checkHideStance;
+    const resolution = resolveHumanAiHideCheck({
+      spotId,
+      stance: stance ? { stancePoint: stance.stancePoint,
+        surfacePoint: stance.surfacePoint, headingRad: stance.headingRad } : null,
+      humanPosition: { x: this.human.position.x, z: this.human.position.z },
+      humanHeadingRad: this.humanSearchHeadingRad(),
+      waypointTolerance: C.humanAI.waypointTolerance,
+      contactEpsilon: C.collision.contactEpsilon,
+      furniture: this.mapFurniture,
+      hideSpots: this.hideSpots,
+      // 惰性权威读取：公开几何全部通过后才会被调用一次，因此「公开几何失败时
+      // 权威占用查询次数为零」是可断言的事实。
+      readOccupancy: () => ({ concealedSpotId: this.hide.isConcealed('DEEPSEEK')
+        ? this.hide.spotId : null }),
+      lineBlocked: (a, b) => this.perceptionGeometry
+        .inspectVision(a, b, Number.POSITIVE_INFINITY).status !== 'VISIBLE',
+      range: C.humanSearch.range,
+      halfAngleDeg: C.humanSearch.halfAngleDeg,
+    });
+    this.humanAiCheckCode = resolution.code;
+    this.humanAiCheckCountsAsFormal = resolution.countsAsFormalCheck;
+    this.humanAiCheckDetail = `${HUMAN_HIDE_CHECK_CODE_TEXT[resolution.code]}｜` +
+      `计划瞄点 ${pointText(resolution.plannedSurfacePoint)}｜` +
+      `最终判定点 ${pointText(resolution.finalAimPoint)}｜` +
+      `距离 ${resolution.distance === null ? '—' : resolution.distance.toFixed(2)}｜` +
+      `偏差 ${resolution.angleDeltaDeg === null ? '—'
+        : `${resolution.angleDeltaDeg.toFixed(1)}°`}｜` +
+      `站位${resolution.stanceHeld ? '成立' : '失效'}` +
+      `（偏差 ${resolution.stanceDistance === null ? '—'
+        : resolution.stanceDistance.toFixed(3)}）｜` +
+      `朝向${resolution.headingHeld ? '成立' : '失效'}｜` +
+      `权威层读取真实藏身点：${resolution.readAuthoritativeSpot ? '是' : '否'}｜` +
+      `计入正式检查：${resolution.countsAsFormalCheck ? '是' : '否'}`;
+    if (!resolution.executable) {
+      // 未完成合法检查 / 计划失效：不记搜空、不进 6 秒冷却、不写公开失败记忆。
+      // 两条取消路径的配额语义不同：地图变化可以（有界地）退还本轮配额后重规划，
+      // 站位或几何不成立则保留「已经尝试过一次」的配额，防止反复取消绕过上限。
+      if (resolution.cancelKind === 'PLAN_STALE') {
+        this.humanAI.cancelStaleCheckHide(resolution.detail);
+      } else {
+        this.humanAI.cancelIncompleteCheckHide(resolution.code, resolution.detail);
+      }
+      return;
+    }
+    // AI 侧的登记刻意只含公开安全字段（结果 + 计划瞄点 / 最终判定点）。
+    this.humanAI.noteCheckHideResolution({
+      spotId, result: resolution.hit ? 'HIT' : 'MISS', detail: resolution.detail,
+      plannedSurfacePoint: resolution.plannedSurfacePoint,
+      finalAimPoint: resolution.finalAimPoint,
+      aimPointDelta: resolution.aimPointDelta,
+      distance: resolution.distance, angleDeltaDeg: resolution.angleDeltaDeg,
+      blocked: resolution.blocked,
+      countsAsFormalCheck: resolution.countsAsFormalCheck,
+    });
+    if (resolution.hit) {
+      const realSpotId = this.hide.spotId;
+      if (realSpotId) this.showSearchFurnitureFeedback(realSpotId);
+      this.releaseHide('SEARCHED');
+      // 复用 S7C-1B 的正式结算：同一条抓捕路径、同一套胜负与 UI 结果。
+      this.match.forceCapture();
+    }
+    this.humanAI.onCheckHideResult(spotId, resolution.hit);
   }
 
   private enterHide(position: THREE.Vector3,
@@ -1184,13 +1740,30 @@ export class ThreeGame {
     const lockText = this.deepseekLockCooldown.ready
       ? '可用' : `冷却中 ${this.deepseekLockCooldown.remainingSeconds.toFixed(1)} 秒`;
     if (faction === 'DEEPSEEK') {
-      this.skillHudState.textContent = (concealed
-        ? 'DeepSeek 娘：藏身中（按 E 退出）'
-        : 'DeepSeek 娘：走到藏身点附近按 E 藏身') + `｜Q 锁门：${lockText}`;
+      const target = this.deepseekVisualTarget;
+      const targetText = concealed ? '藏身中（按 E 退出）'
+        : target.kind === 'FURNITURE'
+          ? `面向「${this.hideSpots.find(spot => spot.id === target.spotId)?.label ??
+            target.spotId}」｜按 E 藏身（背对仍可 E）`
+          : target.kind === 'RICE'
+            ? `面向米堆 ${target.riceId}｜停下按住 E 进食`
+            : '按 E 藏身 / 停下按住 E 进食（白色轮廓只提示朝向，不限制 E）';
+      this.skillHudState.textContent = `DeepSeek 娘：${targetText}｜Q 锁门：${lockText}`;
     } else {
-      this.skillHudState.textContent =
-        `人类：Q 扇形搜查（半径 ${C.humanSearch.range}、张角 ` +
-        `${C.humanSearch.halfAngleDeg * 2}°）｜Q：${searchText}`;
+      const target = this.hideTargetSpotId
+        ? this.hideSpots.find(spot => spot.id === this.hideTargetSpotId) ?? null : null;
+      // S7C-2 修复轮 三：只有「合法 + 被指向 + 当帧没有暴露目标」时，Q 才会搜这件家具。
+      // 三者缺一都不能给出「可以搜家具」的提示，否则就是误导性提示（用户本轮红线）。
+      if (target && this.hideTargetLegal && !this.hideTargetExposedPriority) {
+        this.skillHudState.textContent = this.humanSearchCooldown.ready
+          ? `人类：Q 搜查「${target.label}」（面向家具即可，不必精确瞄准）｜Q：可用`
+          : `人类：Q 搜查「${target.label}」｜冷却中 ` +
+            `${this.humanSearchCooldown.remainingSeconds.toFixed(1)} 秒（家具描边变暗，暂时不能按）`;
+      } else {
+        this.skillHudState.textContent =
+          `人类：Q 扇形搜查（半径 ${C.humanSearch.range}、张角 ` +
+          `${C.humanSearch.halfAngleDeg * 2}°）｜Q：${searchText}`;
+      }
     }
     this.skillHudNotice.textContent = this.hideNotice;
     this.skillHud.hidden = false;
@@ -1325,6 +1898,8 @@ export class ThreeGame {
     if (this.match.phase !== 'PAUSED' || this.minesweeper.isOpen ||
         !this.debugPossessionEnabled || !this.control.switchPrimaryFaction()) return;
     this.input.clear();
+    this.lastDeepseekVisualHeadingRad = null;
+    this.deepseekVisualTarget = { kind: 'NONE' };
     this.followCamera();
     this.syncTraceViews();
     // 切换阵营时表现层的扇形特效安全清理；藏身状态本身由 HideSystem 持有。
@@ -1407,6 +1982,8 @@ export class ThreeGame {
     this.humanSearchCooldown.reset();
     this.deepseekLockCooldown.reset();
     this.hideSearchView.reset();
+    this.lastDeepseekVisualHeadingRad = null;
+    this.deepseekVisualTarget = { kind: 'NONE' };
     this.hideCandidateCode = 'NONE';
     this.hideCandidateSpotId = null;
     this.hideNotice = '';
@@ -1416,6 +1993,28 @@ export class ThreeGame {
     this.lastSearchDetail = '无';
     this.humanSearchCount = 0;
     this.humanSearchHitCount = 0;
+    // S7C-2 修复轮 二：玩家 Q 的唯一家具交互目标与家具搜查结果也复位。
+    this.humanSearchTargetKind = 'NONE';
+    this.hideTargetSpotId = null;
+    this.hideTargetFurnitureId = null;
+    this.hideTargetCode = 'NONE';
+    this.hideTargetLegal = false;
+    this.hideTargetPointed = false;
+    this.hideTargetPointingDeltaDeg = Number.NaN;
+    this.hideTargetExposedPriority = false;
+    this.lastPlayerQPlanReason = 'NONE';
+    this.hideTargetCandidates = 0;
+    this.furnitureSearchSpotId = null;
+    this.furnitureSearchCode = 'NONE';
+    this.furnitureSearchDetail = '无';
+    this.furnitureSearchCount = 0;
+    this.furnitureSearchHitCount = 0;
+    this.humanAiCheckCode = 'NONE';
+    this.humanAiCheckDetail = '无';
+    this.humanAiCheckCountsAsFormal = false;
+    // S7C-2 修复轮 五：AI 搜查反馈的状态跟随也一起复位，避免重开后残留高亮。
+    this.humanAiSearchFeedbackPhase = 'NONE';
+    this.humanAiSearchFeedbackSpotId = null;
     this.lastHumanFacing = { x: 0, y: 1 };
     this.player.visible = true;
     this.human.visible = true;
@@ -1597,6 +2196,100 @@ export class ThreeGame {
           make('unlock-progress', '解锁进度', `${(this.humanAI.unlockProgressMs / 1000).toFixed(1)} / ${(C.humanAI.aiUnlockDurationMs / 1000).toFixed(1)} 秒`),
           make('force-break-cooldown', '强破 CD', `${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)} 秒`),
           make('search-room', '搜索区域', this.humanAI.searchTargetRoomId ?? '无'),
+          make('hide-clue', 'AI 已知：米痕线索', `${this.humanAI.clueMemory.count()} 条` +
+            `（已过期 ${this.humanAI.clueMemory.expiredCount} 条）｜最近 ` +
+            `${point(this.humanAI.clueList().slice(-1)[0]?.position ?? null)}`,
+            this.humanAI.clueMemory.count() ? 'normal' : 'warning'),
+          make('hide-inference', 'AI 推断：方向 / 置信度',
+            `${this.humanAI.traceInferenceText()}｜方向 ` +
+            `${this.humanAI.traceInference.directionHeadingRad === null ? '未知'
+              : `${(this.humanAI.traceInference.directionHeadingRad * 180 / Math.PI).toFixed(0)}°`}` +
+            `｜锚点 ${point(this.humanAI.traceInference.anchor)}`,
+            this.humanAI.traceInference.confidence === 'HIGH' ? 'curious' : 'normal'),
+          make('hide-inference-basis', 'AI 推断：公开依据',
+            this.humanAI.traceInference.basis.join('；') || '无'),
+          make('hide-candidate', 'AI 怀疑家具（公开排序）',
+            this.humanAI.candidateRanking,
+            this.humanAI.suspectedSpotIds.length ? 'curious' : 'warning'),
+          make('hide-candidate-basis', 'AI 怀疑依据（只用公开线索）',
+            this.humanAI.candidateBasis.join('；') || '无'),
+          make('hide-candidate-skipped', '公开候选被排除的原因',
+            this.humanAI.candidateSkipped),
+          // 修复轮 一 / 二：被延后的公开线索批次与 Last Seen 的公开摘要。
+          make('hide-pending-clues', '待处理的公开线索（被延后 ≠ 丢弃）',
+            this.humanAI.pendingClueCount === 0
+              ? '当前没有被延后的公开线索'
+              : `${this.humanAI.pendingClueCount} 条｜延后原因 ` +
+                `${HUMAN_CLUE_DEFER_TEXT[this.humanAI.pendingClueDeferReason]}｜` +
+                `最后有效期还剩 ${((this.humanAI.pendingClueValidUntilMs -
+                  this.traces.nowMs) / 1000).toFixed(1)} 秒｜延后 ` +
+                `${this.humanAI.pendingClueDeferCount} 次 / 重评 ` +
+                `${this.humanAI.pendingClueReevalCount} 次`,
+            this.humanAI.pendingClueCount > 0 ? 'curious' : 'normal'),
+          make('hide-last-seen', 'Last Seen 公开坐标 / 房间 / 有效性',
+            `${point(this.humanAI.lastSeenPublic(this.traces.nowMs).present === true
+              ? { x: Number(this.humanAI.lastSeenPublic(this.traces.nowMs).x ?? 0),
+                z: Number(this.humanAI.lastSeenPublic(this.traces.nowMs).z ?? 0) } : null)}` +
+            `｜房间 ${this.humanAI.lastSeenRoomId ?? '无'}｜` +
+            `${this.humanAI.lastSeenPublic(this.traces.nowMs).valid === true
+              ? '仍然有效' : '已过期或不存在'}`),
+          make('hide-last-seen-room-gate', '最后目击房间的公开门槛',
+            `${this.humanAI.lastSeenRoomGateCode}：` +
+            `${this.humanAI.lastSeenRoomGateDetail || '无'}`),
+          make('hide-check-phase', '藏身搜查阶段 / 来源',
+            `${this.humanAI.checkHidePhase} / ${this.humanAI.checkHideSource ?? '无'}｜目标 ` +
+            `${this.humanAI.checkHideSpotId ?? '无'}`),
+          make('hide-check-stance', '搜查站位 / 可搜查表面',
+            `${point(this.humanAI.checkHideStance?.stancePoint ?? null)} / ` +
+            `${point(this.humanAI.checkHideStance?.surfacePoint ?? null)}`),
+          make('hide-check-dwell', '搜查停留进度（满 900 ms 才正式判定）',
+            `${(this.humanAI.checkHideDwellRemainingMs / 1000).toFixed(1)} / ` +
+            `${(this.humanAI.checkHideDwellMs / 1000).toFixed(1)} 秒`),
+          // 修复轮 三 / 四：把「开始过几次」与「真正执行过几次」分开显示，并给出
+          // 计划瞄点与最终判定点是否同一个点。
+          make('hide-check-round', '本轮已开始 / 已正式执行（上限）　本次调查已执行',
+            `${this.humanAI.checkHideRoundAttempts} / ${this.humanAI.checkHideRoundChecks}` +
+            `（上限 ${this.humanAI.checkHideRoundBudget}）　` +
+            `${this.humanAI.checkHideInvestigationChecks}（上限 ${C.humanAI.searchRoomCount}）｜` +
+            `本轮开始过的家具 ${this.humanAI.checkHideAttemptedSpotId ?? '无'}｜` +
+            `${this.humanAI.checkHideCheckedSpotIds.join('、') || '还没有检查过家具'}`),
+          make('hide-check-aim', '计划瞄点 / 最终判定点（同一个点才算计划与执行一致）',
+            `${point(this.humanAI.lastCheckDetail.plannedSurfacePoint)} / ` +
+            `${point(this.humanAI.lastCheckDetail.finalAimPoint)}｜与最近表面点相差 ` +
+            `${this.humanAI.lastCheckDetail.aimPointDelta === null ? '—'
+              : this.humanAI.lastCheckDetail.aimPointDelta.toFixed(3)}｜` +
+            `距离 ${this.humanAI.lastCheckDetail.distance === null ? '—'
+              : this.humanAI.lastCheckDetail.distance.toFixed(2)}｜偏差 ` +
+            `${this.humanAI.lastCheckDetail.angleDeltaDeg === null ? '—'
+              : `${this.humanAI.lastCheckDetail.angleDeltaDeg.toFixed(1)}°`}`),
+          make('hide-check-end', '本次调查的收尾方式',
+            this.humanAI.checkHideInvestigationEndReason),
+          make('hide-check-interrupt', '打断搜查的声音明细（真实类型 / 强度 / 剩余寿命）',
+            this.humanAI.lastInterruptSoundType === null
+              ? '当前没有打断搜查的声音记录'
+              : `${this.humanAI.lastInterruptSoundType}｜` +
+                `${(this.humanAI.lastInterruptSoundStrength ?? 0).toFixed(2)}｜` +
+                `${((this.humanAI.lastInterruptSoundRemainingMs ?? 0) / 1000).toFixed(1)} 秒｜` +
+                `${this.humanAI.lastInterruptSoundIsNew ? '新事件' : '旧事件'}`),
+          make('hide-check-cooldown', '搜查失败记忆与剩余冷却',
+            this.humanAI.checkHideCooldowns().map(entry =>
+              `${entry.spotId} 剩余 ${(entry.remainingMs / 1000).toFixed(1)} 秒`).join('；')
+            || '当前没有搜查失败记忆'),
+          make('hide-check-result', '人类 AI 最近一次搜查结果（AI 只知道搜中 / 搜空）',
+            `${this.humanAI.checkHideLastResult}（${this.humanAI.checkHideLastResultSpotId ?? '无'}）`,
+            this.humanAI.checkHideLastResult === 'HIT' ? 'success'
+              : this.humanAI.checkHideLastResult === 'MISS' ? 'warning' : 'normal'),
+          make('hide-check-giveup', '放弃搜查原因',
+            `${this.humanAI.checkHideGiveUpCode}：${this.humanAI.checkHideGiveUpDetail || '无'}`,
+            this.humanAI.checkHideGiveUpCode === 'NONE' ? 'normal' : 'warning'),
+          make('hide-check-counts', '搜查次数：开始 / 命中 / 搜空 / 被抢占',
+            `${this.humanAI.checkHideStartCount} / ${this.humanAI.checkHideHitCount} / ` +
+            `${this.humanAI.checkHideMissCount} / ${this.humanAI.checkHideInterruptCount}`),
+          make('hide-check-truth', '开发者真值：人类 AI 最近一次权威判定',
+            `${this.humanAiCheckCode}｜${this.humanAiCheckDetail}`),
+          make('hide-information-owner', '信息归属',
+            'AI 已知=它亲自看到的公开线索；AI 推断=它由线索算出的结论；' +
+            '开发者真值不参与 AI 决策；隐藏坐标与占用状态从不进入 AI 输入'),
           make('transition-reason', '切换原因', this.humanAI.lastTransitionReason),
           make('navigation-reason', '路径事件', this.humanAI.lastNavigationReason),
         ] : [],
@@ -1707,6 +2400,14 @@ export class ThreeGame {
             `${this.hideCandidateCode} / ${this.hideCandidateSpotId ?? '无'}`,
             this.hideCandidateCode === 'LEGAL' ? 'success'
               : this.hideCandidateCode === 'NONE' ? 'normal' : 'warning'),
+          make('deepseek-visual-target', 'DP 当前白色指向 / 最后人工朝向',
+            `${this.deepseekVisualTarget.kind}${this.deepseekVisualTarget.kind === 'FURNITURE'
+              ? `（${this.deepseekVisualTarget.spotId}）`
+              : this.deepseekVisualTarget.kind === 'RICE'
+                ? `（${this.deepseekVisualTarget.riceId}）` : ''}｜` +
+            `${this.lastDeepseekVisualHeadingRad === null ? '未移动'
+              : `${(this.lastDeepseekVisualHeadingRad * 180 / Math.PI).toFixed(1)}°`}`,
+            this.deepseekVisualTarget.kind === 'NONE' ? 'normal' : 'success'),
           make('hide-reject', '最近拒绝原因', this.hide.lastRejectReason),
           make('hide-exit', '最近退出原因', this.hide.lastExitReason),
           make('hide-counts', '本局进入 / 退出 / 拒绝次数',
@@ -1720,6 +2421,26 @@ export class ThreeGame {
           make('hide-search', 'Human Q 搜查：冷却 / 最近判定',
             `${this.humanSearchCooldown.ready ? '可用'
               : `${this.humanSearchCooldown.remainingSeconds.toFixed(1)} 秒`} / ${this.lastSearchCode}`),
+          // S7C-2 修复轮 二 / 三：玩家 Q 的唯一家具交互目标（公开解析结果）与家具搜查结果。
+          // 「当前高亮」是**本帧**的公开解析结果，「最近一次 Q」是上一次真正执行的用途。
+          make('hide-search-target', 'Human Q 当前高亮 / 最近一次执行',
+            `高亮 ${this.hideTargetSpotId ? 'FURNITURE' : 'NONE'}` +
+            `（${this.hideTargetSpotId ?? '无'}｜家具 ${this.hideTargetFurnitureId ?? '无'}｜` +
+            `合法 ${this.hideTargetLegal ? '是' : '否'}｜指向 ` +
+            `${this.hideTargetPointed ? '是' : '否'}` +
+            `${Number.isNaN(this.hideTargetPointingDeltaDeg) ? '' :
+              ` ${this.hideTargetPointingDeltaDeg.toFixed(1)}°`}` +
+            `｜暴露目标优先 ${this.hideTargetExposedPriority ? '是' : '否'}）｜` +
+            `最近一次 Q：${this.humanSearchTargetKind}（${this.lastPlayerQPlanReason}）`,
+            this.hideTargetSpotId && this.hideTargetLegal &&
+              !this.hideTargetExposedPriority ? 'success' : 'normal'),
+          make('hide-search-region', '家具交互区域合法性（公开解析）',
+            `${this.hideTargetCode}｜${HIDE_TARGET_CODE_TEXT[this.hideTargetCode] ?? '—'}` +
+            `｜区域内候选 ${this.hideTargetCandidates} 件`,
+            this.hideTargetLegal ? 'success' : 'normal'),
+          make('hide-search-furniture', 'Human Q 家具搜查最近结果',
+            `${this.furnitureSearchCode}｜${this.furnitureSearchDetail}｜` +
+            `家具搜查 ${this.furnitureSearchCount} 次 / 命中 ${this.furnitureSearchHitCount} 次`),
           make('hide-search-detail', 'Human Q 最近结果', this.lastSearchDetail),
           make('hide-search-counts', 'Human Q 释放 / 命中次数',
             `${this.humanSearchCount} / ${this.humanSearchHitCount}`),
@@ -1876,13 +2597,118 @@ export class ThreeGame {
         remainingMs: event.lifetimeMs - (this.sound.nowMs - event.timestamp),
         heard: heard?.event === event,
       })),
+      // S7C-2：DEV 只画公开信息 —— AI 已知的米痕线索、AI 推断的方向与锚点、
+      // AI 推断出的怀疑家具中心。隐藏者的真实位置与占用状态从不进入这里。
+      clues: this.humanAI.clueList().map(clue => ({ ...clue.position })),
+      inferenceAnchor: this.humanAI.traceInference.anchor
+        ? { ...this.humanAI.traceInference.anchor } : null,
+      inferenceDirection: this.humanAI.traceInference.direction
+        ? { ...this.humanAI.traceInference.direction } : null,
+      suspects: this.humanAI.suspectedSpotIds
+        .map(spotId => this.hideSpots.find(spot => spot.id === spotId) ?? null)
+        .filter((spot): spot is NonNullable<typeof spot> => !!spot)
+        .map(spot => {
+          const furniture = this.mapFurniture.find(rect => rect.id === spot.furnitureId);
+          return { x: furniture?.x ?? spot.x, z: furniture?.z ?? spot.z };
+        }),
+    };
+  }
+
+  // S7C-2：DEV 只读的「AI 已知 / AI 推断」快照。读它不会推进任何计时，也不会
+  // 改变 AI 的目标或路径；这里没有任何隐藏者的真实坐标或藏身占用状态。
+  private humanAiHideSearchObservation(): DevBHumanHideSearch {
+    const latestClue = this.humanAI.clueList().slice(-1)[0] ?? null;
+    const inference = this.humanAI.traceInference;
+    const stance = this.humanAI.checkHideStance;
+    const nowMs = this.traces.nowMs;
+    const lastSeen = this.humanAI.lastSeenPublic(nowMs);
+    const lastSeenPublic = lastSeen as { present?: boolean; valid?: boolean;
+      x?: number; z?: number; roomId?: string | null; ageMs?: number };
+    const detail = this.humanAI.lastCheckDetail;
+    return {
+      clueCount: this.humanAI.clueMemory.count(),
+      expiredClueCount: this.humanAI.clueMemory.expiredCount,
+      latestCluePosition: latestClue ? { ...latestClue.position } : null,
+      latestClueAgeMs: latestClue ? nowMs - latestClue.discoveredAt : null,
+      inferenceCode: inference.code,
+      inferenceConfidence: inference.confidence,
+      inferenceHeadingDeg: inference.directionHeadingRad === null ? null
+        : inference.directionHeadingRad * 180 / Math.PI,
+      inferenceAnchor: inference.anchor ? { ...inference.anchor } : null,
+      inferenceBasis: inference.basis.join('；'),
+      candidateRanking: this.humanAI.candidateRanking,
+      suspectedSpotId: this.humanAI.suspectedSpotIds[0] ?? null,
+      suspectedBasis: this.humanAI.candidateBasis.join('；'),
+      candidateSkipped: this.humanAI.candidateSkipped,
+      // 修复轮 一 / 二：待处理线索与 Last Seen 的公开摘要。
+      pendingClueCount: this.humanAI.pendingClueCount,
+      pendingClueRemainingMs: Math.max(0,
+        this.humanAI.pendingClueValidUntilMs - nowMs),
+      pendingClueDeferReason: this.humanAI.pendingClueDeferReason,
+      pendingClueDeferCount: this.humanAI.pendingClueDeferCount,
+      pendingClueReevalCount: this.humanAI.pendingClueReevalCount,
+      lastSeenPresent: lastSeenPublic.present === true,
+      lastSeenValid: lastSeenPublic.valid === true,
+      lastSeenPosition: lastSeenPublic.present
+        ? { x: lastSeenPublic.x ?? 0, z: lastSeenPublic.z ?? 0 } : null,
+      lastSeenRoomId: this.humanAI.lastSeenRoomId,
+      lastSeenAgeMs: lastSeenPublic.ageMs ?? null,
+      lastSeenRoomGateCode: this.humanAI.lastSeenRoomGateCode,
+      lastSeenRoomGateDetail: this.humanAI.lastSeenRoomGateDetail,
+      // 修复轮 三 / 四 / 六：计数、收尾方式、声音明细与瞄点一致性。
+      roundAttempts: this.humanAI.checkHideRoundAttempts,
+      attemptedSpotId: this.humanAI.checkHideAttemptedSpotId,
+      investigationEndReason: this.humanAI.checkHideInvestigationEndReason,
+      interruptSoundType: this.humanAI.lastInterruptSoundType,
+      interruptSoundStrength: this.humanAI.lastInterruptSoundStrength,
+      interruptSoundRemainingMs: this.humanAI.lastInterruptSoundRemainingMs,
+      interruptSoundIsNew: this.humanAI.lastInterruptSoundIsNew,
+      checkResult: detail.result,
+      checkDetailText: detail.detail,
+      plannedSurfacePoint: detail.plannedSurfacePoint,
+      finalAimPoint: detail.finalAimPoint,
+      aimPointDelta: detail.aimPointDelta,
+      aimAngleDeltaDeg: detail.angleDeltaDeg,
+      aimBlocked: detail.blocked,
+      authoritativeCode: this.humanAiCheckCode,
+      authoritativeDetail: this.humanAiCheckDetail,
+      phase: this.humanAI.checkHidePhase,
+      source: this.humanAI.checkHideSource,
+      spotId: this.humanAI.checkHideSpotId,
+      stancePoint: stance ? { ...stance.stancePoint } : null,
+      surfacePoint: stance ? { ...stance.surfacePoint } : null,
+      // 修复轮 二：导航终点 / 正式站位 / REQUEST 实际位置三处一起看，
+      // 「为什么判成 STANCE_LOST」不再需要靠猜。
+      navGoal: this.humanAI.checkHideNavGoal
+        ? { ...this.humanAI.checkHideNavGoal } : null,
+      stanceDistance: this.humanAI.checkHideStanceDistance,
+      requestPosition: this.humanAI.checkHideRequestPosition
+        ? { ...this.humanAI.checkHideRequestPosition } : null,
+      approachSteps: this.humanAI.checkHideApproachSteps,
+      requestCount: this.humanAI.checkHideRequestCount,
+      staleCancels: this.humanAI.checkHideStaleCancels,
+      countsAsFormalCheck: this.humanAiCheckCountsAsFormal,
+      dwellRemainingMs: this.humanAI.checkHideDwellRemainingMs,
+      dwellMs: this.humanAI.checkHideDwellMs,
+      roundChecks: this.humanAI.checkHideRoundChecks,
+      roundBudget: this.humanAI.checkHideRoundBudget,
+      investigationChecks: this.humanAI.checkHideInvestigationChecks,
+      checkedSpotIds: [...this.humanAI.checkHideCheckedSpotIds],
+      cooldowns: this.humanAI.checkHideCooldowns(),
+      lastResult: this.humanAI.checkHideLastResult,
+      lastResultSpotId: this.humanAI.checkHideLastResultSpotId,
+      giveUpCode: this.humanAI.checkHideGiveUpCode,
+      giveUpDetail: this.humanAI.checkHideGiveUpDetail,
+      startCount: this.humanAI.checkHideStartCount,
+      hitCount: this.humanAI.checkHideHitCount,
+      missCount: this.humanAI.checkHideMissCount,
+      interruptCount: this.humanAI.checkHideInterruptCount,
     };
   }
 
   // Read-only observation: every value below already exists in a system; nothing
   // here advances a timer, repaths an AI or invents a field.
-  private collectDevBObservation(): DevBObservationInput {
-    const observer = this.control.informationObserver ?? 'HUMAN';
+  private collectDevBObservation(): DevBObservationInput {    const observer = this.control.informationObserver ?? 'HUMAN';
     const sight = this.vision.get(observer);
     const lastSeen = sight.lastSeen;
     const humanProgress = this.humanAI.getPathProgress();
@@ -1942,6 +2768,8 @@ export class ThreeGame {
         pathIndex: humanProgress?.index ?? null,
         pathTotal: humanProgress?.total ?? null,
         pathWaypoint: humanProgress?.waypoint ?? null,
+        // S7C-2：只读呈现 AI 已知（公开线索）与 AI 推断（由线索算出的结论）。
+        hideSearch: this.humanAiHideSearchObservation(),
       },
       deepseekAi: {
         state: this.deepseekAI.state,
