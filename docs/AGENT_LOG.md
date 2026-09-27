@@ -1214,3 +1214,10 @@
 - Git 检查点：本轮以用户 2026-09-27 的明确授权**创建一个归档提交并正常推送**，提交标题 `feat: add autonomous deepseek npc hiding`；本地 HEAD 与远端 `origin/main` 的实际 SHA 一律以 `git log -1` / `git ls-remote origin refs/heads/main` 现场查询，**不在本文写死会自我过期的 SHA**。未创建 Tag（用户未要求）、未 force push、未 reset / clean / stash、未改写历史。
 - 已知限制与下一项任务：① S7C-2b 的九个参数与「值得藏身」判据已冻结，任何改动需用户单独批准；② **S7C-3（出生点与门状态随机化）未授权、未开始**，开工前须逐项确认 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §5 / §6；③ DEV-A 的 JSON 导入器与进入 / 退出锚点拆分仍未决定；④ DEV-B 的 38 项运行时白名单未加入 `hide*`；⑤ 藏身音效与「被发现后反制」按设计刻意不做；⑥ 长期待办：S7B-2 偶发原地停留、正式 GLB 待机（S10）、Human AI 自动解锁 8,750 ms（S16）、矮窗口下的编辑器布局。
 - 环境记录（本轮实测）：当前沙箱在普通模式下禁止子进程创建，`npm test` 与 `npm run build` 需要一次命令级提权重试（本会话已多次记录同一限制）；本轮归档的**全部门禁只用 1 次提权**完成。人工验收用的 dev server（我起的后台作业）已在归档开始时停止，避免文件监听在批量改文档时抛 `EBUSY`。`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未暂存、未修改。
+
+---
+
+## 2026-09-27 · Windows 沙箱与最小权限长期规则维护
+
+- 本轮仅维护项目文档：`AGENTS.md` 新增「Windows 沙箱兼容性与最小权限工作流」，区分已验证的 DSH 命名管道 `stdio=pipe` 限制与 Codex 独立的 Git 元数据 / TLS 问题；统一日常最小权限、正式门禁、集中审批、临时脚本、命令级 OpenSSL 和 Git 归档边界。
+- `docs/DEEPSEEK_HANDOFF.md` 仅增加该章节索引；既有故障细节与 S7C-2 / S7C-2b 验收历史均未回改。本轮不开发游戏功能，不执行 `npm test`、`npx tsc --noEmit` 或 `npm run build`；不修改权限、TLS 或 Git 配置，不清理验证材料，不 commit / push / tag。文档待用户确认后再另行归档。
