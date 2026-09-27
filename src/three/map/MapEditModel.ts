@@ -566,8 +566,17 @@ function rotateAnchorAroundFurniture(spot: HideSpotDraft, oldFurniture: Furnitur
     facing: normalizeRadians(spot.facing - delta) };
 }
 
+// One hide-spot draft as a map anchor. Shared by the editor's committed-map
+// conversion and the layout store, so an imported/saved layout and a live
+// editor apply can never describe the anchor differently.
+export function spotDraftToAnchor(draft: HideSpotDraft): HideSpot {
+  return { id: draft.id, roomId: draft.roomId, kind: draft.kind,
+    furnitureId: draft.furnitureId, label: draft.label, x: draft.x, z: draft.z,
+    facing: draft.facing, interactionRegion: { ...draft.interactionRegion } };
+}
+
 export class MapEditSession {
-  private readonly source: MapSource;
+  private source: MapSource;
   private committedFurniture: FurnitureDraft[];
   private committedSpots: HideSpotDraft[];
   private draftFurniture: FurnitureDraft[];
@@ -596,6 +605,21 @@ export class MapEditSession {
   get rotationSnapEnabled(): boolean { return this.rotationSnap; }
 
   setRotationSnap(enabled: boolean): void { this.rotationSnap = enabled; }
+
+  // Re-seeds the whole session from an already-validated map source: used at
+  // boot (a restored local layout), on JSON import and on "restore default map".
+  // Committed and draft data both follow the new source; unapplied drafts are
+  // dropped because they described the previous map. The applied-edit counter
+  // and the event log are kept so the DEV readout stays honest.
+  replaceSource(source: MapSource): void {
+    this.source = source;
+    this.committedFurniture = source.furniture.map(sourceFurnitureDraft);
+    this.committedSpots = source.hideSpots.map(sourceSpotDraft);
+    this.draftFurniture = this.committedFurniture.map(cloneFurniture);
+    this.draftSpots = this.committedSpots.map(cloneSpot);
+    this.lastRejection = null;
+    this.invalidateValidation();
+  }
 
   get appliedEditCount(): number { return this.appliedCount; }
 

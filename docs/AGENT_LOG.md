@@ -1260,3 +1260,55 @@
 
 - Git 检查点：本轮授权的正式提交说明为 `feat: randomize match spawns and initial door states`；完整提交编号及远端同步结果必须以 `git log -1` 与实时远端查询核实，不在提交前预填。没有创建 Tag，也没有改写已推送历史。此前长期规范文档已在既有 `docs: establish Windows sandbox and minimal permission workflow` 提交中，`AGENTS.md` 本轮无未提交改动，故不与 S7C-3 混交。
 - 已知限制与下一项任务：场景编辑器布局持久化尚未实现，属于独立 DEV 增强，不阻断 S7C-3。S7B 与 S7C 大阶段的后续工作仍须单独授权；本轮归档后不自动开始下一阶段。
+
+---
+
+## 2026-09-27 · DEV 场景编辑器 V2：布局保存 / 恢复 / JSON 导入（已实现，待用户集中人工验收）
+
+- 任务性质与日期：独立 DEV 工具轮（不计入 S7C），2026-09-27。用户**一次性授权**「场景编辑器布局保存与恢复」作为一个完整独立任务实施，不拆分为需要逐个审批的子阶段；**本阶段只授权开发，不授权 Git 提交、推送或 Tag**，等待用户集中人工验收后再归档。
+- 用户授权的范围（原话要点）：「玩家在 DEV 场景编辑器中调整家具位置、旋转和交互区域后，可以保留修改。重开对局不恢复默认家具布局；刷新或重新打开网页后，可加载已保存的自定义布局。」并逐条要求：应用布局后当前浏览器会话内重开对局 / 返回阵营菜单 / 开新局都必须保留；新增「保存布局」（localStorage，显示保存成功、失败与是否存在未保存修改）；刷新或重开后自动检查本地存档，**通过版本和完整地图校验后恢复**，无记录则用原始默认地图；新增「导入 JSON」兼容当前 V3 导出格式并严格校验结构、稳定 ID、房间边界、家具重叠、门、出生点、藏身交互区域与导航合法性，**校验失败时不得破坏当前地图**；保留导出并保证**导入导出往返一致**；新增带确认的「恢复默认地图」，**不得静默删除已有本地保存和导出的 JSON 备份**；增加清晰的当前布局状态（默认 / 自定义 / 未保存 / 已保存 / 导入失败）。
+- **保存范围**（用户明确划定）：家具坐标、旋转、现有可编辑属性、关联藏身点及交互区域等**地图创作数据**；**禁止**把当前局随机出生结果、18 扇门的随机初态、角色当前位置、AI 路径、当前大米进度、技能冷却或对局时间写入地图布局存档。S7C-3 继续以当前合法地图为基础，每局独立随机出生点和初始门状态。
+- 完成内容：
+  1. 新增 `src/three/map/MapLayoutStore.ts`（纯逻辑，可直接在 Node 里测）：key `who-ate-my-rice/scene-editor-layout`；信封 `{format:'who-ate-my-rice/scene-layout', layoutVersion:1, savedAt, document}`，其中 `document` 就是既有 V3 导出文档；导入同时接受**裸 V3 文档**与**完整信封**。
+  2. 校验只有一条权威链路：结构、稳定 ID、只读字段（家具 `roomId`、藏身点 `roomId`/`kind`/`label`/`furnitureId`）与「是否同一张地图」（`rooms`/`doors`/`spawns`/`riceCandidates` 必须与授权地图逐字段一致）由 `parseLayoutDocument()` 负责；房间边界、家具重叠（真实 SAT）、门洞、米点、出生点、锚点可站立与可接近、区域合法性与采样、连通性**直接复用 `validateEditedMap()`**，没有第二套校验代码。
+  3. 五态判定（`layoutStatus()` / `layoutStateLabel()`）：`DEFAULT`＝授权地图且无存档；`CUSTOM`＝自定义且从未保存；`SAVED`＝与存档逐字段一致；`UNSAVED`＝已有存档但当前布局与它不同；`IMPORT_FAILED`＝最近一次导入或恢复失败（优先显示）。`layoutSignature()` 只覆盖可编辑字段并做 4 位小数归一，避免浮点尾差与 `appliedEditCount` 干扰判定。
+  4. `MapEditModel` 新增 `replaceSource()`（换源后已应用数据与草稿一起跟随、旧草稿不残留）与 `spotDraftToAnchor()`（编辑器与存档共用同一个锚点转换）；`SceneEditor` 新增保存 / 导入 / 恢复默认三条链路，全部复用 `commitLayoutSource()`：先跑 S7C-1B 地图预检，再换源，再走既有 `rebuildApartment()` 重建碰撞 / 导航 / 两套 AI 绑定。
+  5. 面板在既有工具栏内追加「保存布局 / 导入 JSON / 恢复默认地图」与隐藏的 `input[type=file]`（不新增覆盖入口的绝对定位元素）；工具栏下方新增 `.scene-editor-layout` 状态行（`data-layout-state` / `data-layout-unsaved`）；DEV 面板编辑器状态块新增「布局状态 / 本地布局存档 / 未保存修改 / 最近导入·恢复失败」四行。
+  6. `ThreeGame` 开机先读本地存档，**全部校验通过才**用它 `buildApartment(..., {furniture, hideSpots})`；失败或没有存档即回落到授权地图并把原因留给 DEV 面板（不白屏）。`resetRound()` 不重建公寓、不重置 `mapFurniture` / `hideSpots`，因此会话内重开 / 返回阵营 / 开新局都保留已应用布局（测试用源码不变量守住）。
+  7. 保存的是**已应用**布局：有未应用草稿时先拒绝并提示「先点应用编辑」；`writeSavedLayout()` 只在 `setItem` 真正成功后报成功。「恢复默认地图」只换地图，不删除本地存档与已导出的 JSON。
+- 新增文件：`src/three/map/MapLayoutStore.ts`、`tests/scene-editor-layout.test.mjs`、`docs/verification/DEV_SCENE_EDITOR_V2/`（`browser-check.mjs` + 日志 + 摘要 + 9 张关键截图 + `README.md`）。修改文件：`src/three/map/MapEditModel.ts`、`src/three/SceneEditor.ts`、`src/three/SceneEditorPanel.ts`、`src/three/ThreeGame.ts`、`src/style.css`、`docs/DEV_SCENE_EDITOR_DESIGN.md`（新增 §11 与文件顶部 V2 状态行）、`docs/DEEPSEEK_HANDOFF.md`、本条日志。**未改**：`src/config/gameConfig.ts`（零新参数）、S7C-3 的 `MatchRandom` / `DoorSystem` 随机化、S7C-1B / S7C-2 / S7C-2b 的任何已验收机制、`apartmentMap.ts` 的授权地图数据。依赖变化：无。`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未暂存、未修改。
+- 自动化测试与浏览器复核（本轮实测）：
+
+| 检查项目 | 本轮实际结果 |
+|---|---|
+| `npm test` | **700 / 700 通过**，退出码 0（基线 679 + 新增 21 项，全部在 `tests/scene-editor-layout.test.mjs`） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0；JS **1,001.11 kB**（gzip 269.61 kB）、CSS 14.10 kB；仍有 Vite >500 kB 非阻断提示 |
+| `git diff --check` | 通过，退出码 0（仅既有 LF→CRLF 提示；过程中修掉 `docs/DEV_SCENE_EDITOR_DESIGN.md` 一处新增文件末尾空行） |
+| 浏览器真实复核 | `docs/verification/DEV_SCENE_EDITOR_V2/`：默认 → 应用（`CUSTOM`）→ 保存（`SAVED`，localStorage v1 / `sofaWidth` 1.4 / `savedAt`）→ **刷新后自动恢复（宽度 1.4）** → 非法 JSON（`IMPORT_FAILED`，地图不变）→ 来自另一张地图的文档（`IMPORT_FAILED`：房间 / 门 / 出生点 / 米点不一致）→ 合法 V3 导入（`UNSAVED`，1.6）→ 恢复默认（确认框 1 次，宽度回授权值 2.2，**本地存档保留**）→ **Esc「重新开始」后仍保留自定义 1.55** → 清掉存档刷新回 `DEFAULT`；控制台无异常（仅既有 `THREE.Clock` 弃用告警与 `/favicon.ico` 404） |
+| 未覆盖 / 待人工验收 | 不同浏览器与无痕模式的隔离、`localStorage` 被浏览器策略禁用时的真实表现、极矮窗口下面板新增按钮的可达性、导入超大 / 畸形文件；这些交给用户集中人工验收，不记为已通过 |
+
+- 已知限制与下一项任务：① 存档只在浏览器本地，清理站点数据即丢失（回落默认地图，不白屏）；本轮刻意不做「删除本地存档」按钮。② 导入只接受**同一张地图**的布局，不能用来换地图或改门 / 出生点 / 米点。③「恢复默认地图」仍要过地图预检（有角色正好站在授权家具位置时会被拒绝并给出原因）。④ 无版本迁移：`layoutVersion` 或 `formatVersion` 不匹配即视为无可用存档。⑤ 待用户按 `docs/DEV_SCENE_EDITOR_DESIGN.md` §11.10 的 9 条浏览器清单做集中人工验收；验收通过并另行授权后才建立 Git 检查点。
+- Git 检查点：本轮**未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash；只删除了本轮自己迭代过程中产生的 3 张重复截图（用户既有未跟踪验证材料一律保留）。
+- 环境记录（本轮实测）：① 会话后期用户把当前沙箱切到 `danger-full-access` 并关闭审批提示，因此门禁与浏览器复核不再逐次审批；此前 `workspace-write` 下 `npm test` / `npm run build` / 无头 Chrome 各需一次命令级审批。② **受限 shell 在 `workspace-write` 下能创建 / 写入工作区文件，但删除被拒**（`Remove-Item` 报 `Access to the path ... is denied`；同一条命令提权后删除成功）——「写文件」与「删文件」不是同一类权限，归档轮清理材料时要注意。③ 浏览器复核脚本踩到两处**工程性**陷阱并已修好：编辑器只能在 `PLAYING` 打开（重开后要先等 READY 结束），以及面板关闭时会保留上一次渲染的 DOM（读状态前必须确认面板可见，否则会把"打开失败"误读成旧状态）。
+
+---
+
+## 2026-09-27 · DEV 场景编辑器 V2 集中人工验收与正式归档
+
+- 阶段与日期：独立 DEV 工具轮（不计入 S7C），2026-09-27。用户已明确授权对已验收的「场景编辑器布局保存与恢复」建立正式 Git 检查点，授权的提交说明为 `feat: add persistent scene editor layouts and JSON import`。本次只做最终归档，不开发新功能、不创建 Tag；此前实施轮记录原样保留，历史条目不改写。
+- 用户集中浏览器人工验收：**9 / 9 PASS** —— ① 应用编辑；② 保存布局；③ 刷新后恢复；④ JSON 导出与导入；⑤ 错误文件保护；⑥ 恢复默认地图；⑦ 重开与返回菜单；⑧ S7C-3 随机化及旧功能回归；⑨ 存档丢失安全回退。用户确认全部通过，本轮无待修复的已知问题。**该结果为用户实机确认，不得改写为代理自己完成的浏览器测试**；代理侧浏览器证据（`docs/verification/DEV_SCENE_EDITOR_V2/`）与用户人工验收是两条独立证据，覆盖范围不同。
+- 本次完成内容：核对 `src/three/map/MapLayoutStore.ts`（存档信封与 key、结构 / 稳定 ID / 只读字段 /「是否同一张地图」四项本地核对，几何与玩法校验**复用 `validateEditedMap()`**）、`SceneEditor` 保存 / 导入 / 恢复默认三条链路共用的 `commitLayoutSource()`（先 S7C-1B 地图预检 → 换源 → 既有 `rebuildApartment()`）、`ThreeGame` 开机「全部校验通过才 `buildApartment(..., {furniture, hideSpots})`」与 `resetRound()` 不重建公寓、面板工具栏内三个新按钮与 `.scene-editor-layout` 状态行；确认 `src/config/gameConfig.ts` 零新增参数、`apartmentMap.ts` 授权地图数据与 S7C-3 的 `MatchRandom` / `DoorSystem` 随机化一字未改，S7C-1B / S7C-2 / S7C-2b 已验收机制未被触碰。
+- 自动化门禁（归档轮在本轮最终工作树上重新执行）：
+
+| 检查项目 | 本轮实际结果 |
+|---|---|
+| `npm test` | **700 / 700 通过**，退出码 0（基线 679 + 新增 21 项，全部在 `tests/scene-editor-layout.test.mjs`） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0；JS **1,001.11 kB**（gzip 269.61 kB）、CSS 14.10 kB、`index.html` 0.41 kB；仍有 Vite >500 kB 非阻断提示 |
+| `git diff --check` | 通过，退出码 0（仅既有 LF→CRLF 提示） |
+
+- 本轮纳入提交的验证材料（长期复核价值）：`docs/verification/DEV_SCENE_EDITOR_V2/` 的 `README.md`、`browser-check.mjs`（可复现脚本）、`browser-check-log.txt`、`browser-check-summary.json` 与 9 张关键状态截图（默认 / 应用并保存 / 刷新恢复 / 非法 JSON / 另一张地图 / 合法导入 / 恢复默认 / 重开后保留 / 清档回落），每张对应一条验收状态；**未纳入**重复截图、临时调试文件或大型导出数据。
+- 本地保留、未纳入提交的材料：`docs/verification/S7C-2-r2|r3|r4|S7C-2b` 等目录中既有的未跟踪复核产物（截图、导出的 AI JSON、控制台日志）一律原地保留，未删除、未修改；`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未修改、未暂存、未提交。
+- Git 检查点：提交前 `git -c http.sslBackend=openssl ls-remote origin refs/heads/main` 与本地 `HEAD` 均为 `420d8a6`（`git rev-list --left-right --count origin/main...HEAD` = 0 / 0），确认远端无新增提交；只暂存本轮核实过的源码、测试、设计文档、最终日志与精选验证材料，**未使用 `git add -A` / `git add .`**，未 force push、未 reset / clean / stash、未改写已推送历史、未创建 Tag。**完整提交编号与推送结果以 `git log -1` 与实时远端查询核实，不在提交前预填。**
+- 已知限制与下一项任务：① 存档只在**浏览器本地**，清理站点数据即丢失（回落到默认地图，不白屏），本轮刻意不做「删除本地存档」按钮；② 导入只接受**同一张地图**的布局，不能用来换地图或改门 / 出生点 / 米点；③「恢复默认地图」仍要过地图预检（有角色正好站在授权家具位置时会给出原因并拒绝）；④ 无版本迁移，`layoutVersion` 或 `formatVersion` 不匹配即视为无可用存档。S7C-2b 与 S7C-3 均已归档；DEV 场景编辑器后续扩展与 S7B / S7C 的后续工作仍须单独授权，本轮归档后**不自动开始下一阶段**。

@@ -1,6 +1,10 @@
 import * as THREE from 'three';
-import { MapEditSession, furnitureRect, sceneEditorEnabled,
-  type FurnitureDraft, type HideSpotDraft } from './map/MapEditModel.ts';
+import { MapEditSession, authoredMapSource, furnitureRect, sceneEditorEnabled,
+  spotDraftToAnchor, type FurnitureDraft, type HideSpotDraft, type MapSource,
+  type MapExportDocument } from './map/MapEditModel.ts';
+import { authoredLayoutDocument, importLayoutText, layoutSignature, layoutSource,
+  layoutStatus, writeSavedLayout, type LayoutStatus, type LayoutStorage }
+  from './map/MapLayoutStore.ts';
 import { degreesToRadians } from './map/RotatedRect.ts';
 import { SceneEditorView } from './SceneEditorView.ts';
 import { SceneEditorPanel } from './SceneEditorPanel.ts';
@@ -34,6 +38,15 @@ export interface SceneEditorHooks {
   onFocus: (point: { x: number; z: number }) => void;
   onZoom: (direction: number) => void;
   onPan: (deltaX: number, deltaY: number) => void;
+  // V2 布局持久化：编辑会话的起点（开机时可能已经是恢复出来的本地布局）、
+  // 存档接口、当前存档签名，以及「恢复默认地图」的确认回调（测试可注入）。
+  mapSource?: MapSource;
+  layoutStorage?: LayoutStorage | null;
+  savedLayoutSignature?: string | null;
+  savedLayoutAt?: string | null;
+  // 开机恢复失败的原因（没有存档时由调用方传 null）；只用于 DEV 读数与面板。
+  savedLayoutError?: string | null;
+  confirm?: (message: string) => boolean;
 }
 
 export interface SceneEditorStatusEntry {
@@ -47,9 +60,7 @@ export function draftFurnitureToRects(drafts: readonly FurnitureDraft[]): Rect[]
 }
 
 export function draftSpotsToAnchors(drafts: readonly HideSpotDraft[]): HideSpot[] {
-  return drafts.map(draft => ({ id: draft.id, roomId: draft.roomId, kind: draft.kind,
-      furnitureId: draft.furnitureId, label: draft.label, x: draft.x, z: draft.z,
-      facing: draft.facing, interactionRegion: { ...draft.interactionRegion } }));
+  return drafts.map(spotDraftToAnchor);
 }
 
 export function committedMap(session: MapEditSession): CommittedMap {
@@ -67,11 +78,14 @@ export function sceneEditorRefusalNotice(phase: GamePhase, rejection: string): s
     : `场景编辑需要先进入对局（当前 ${phase}）`;
 }
 
+export const RESTORE_DEFAULT_CONFIRM =
+  '恢复默认地图将丢弃当前已应用的编辑（浏览器本地存档与已导出的 JSON 不会被删除）。确认继续？';
+
 // DEV scene-editor orchestration: draft model + Three.js picking/preview view +
 // DOM panel. It never writes the authored map file and never mutates gameplay
 // data directly; every applied change goes through the game-side rebuild hook.
 export class SceneEditor {
-  readonly session = new MapEditSession();
+  readonly session: MapEditSession;
   private readonly hooks: SceneEditorHooks;
   private readonly view: SceneEditorView;
   private readonly panel: SceneEditorPanel;
@@ -79,11 +93,20 @@ export class SceneEditor {
   private regionPreviewVisible = true;
   private draggingId: string | null = null;
   private build: ApartmentBuild | null = null;
+  // V2：本地存档的签名与时间，以及最近一次导入 / 恢复的失败原因。存档签名只在
+  // 「开机恢复」与「保存成功」时更新，因此「未保存修改」是应用数据与存档的真实差异。
+  private savedLayoutSignature: string | null;
+  private savedLayoutAt: string | null;
+  private lastLayoutError: string | null = null;
   message = '';
   lastRejection = '无';
 
   constructor(hooks: SceneEditorHooks) {
     this.hooks = hooks;
+    this.session = new MapEditSession(hooks.mapSource ?? authoredMapSource());
+    this.savedLayoutSignature = hooks.savedLayoutSignature ?? null;
+    this.savedLayoutAt = hooks.savedLayoutAt ?? null;
+    this.lastLayoutError = hooks.savedLayoutError ?? null;
     const enabled = sceneEditorEnabled(hooks.developerMode, hooks.factionSwitchEnabled);
     this.view = new SceneEditorView({
       camera: hooks.camera,
@@ -108,6 +131,9 @@ export class SceneEditor {
       onDiscard: () => this.discardDraft(),
       onResetTarget: id => this.resetTarget(id),
       onExport: () => this.exportMap(),
+      onSave: () => this.saveLayout(),
+      onImportFile: file => { void this.importLayoutFile(file); },
+      onRestoreDefault: () => this.restoreDefaultLayout(),
       onAnchorsVisible: visible => this.view.setAnchorsVisible(visible),
       onRegionPreviewVisible: visible => {
         this.regionPreviewVisible = visible;
@@ -235,6 +261,105 @@ export class SceneEditor {
     this.message = '已导出当前已应用地图 JSON（含藏身锚点与朝向）。';
   }
 
+  // ---- V2：布局状态 / 保存 / 导入 / 恢复默认地图 ----------------------------
+
+  // 布局状态只看「已应用数据」：草稿是否有未应用修改由 `draftStatus` 单独报告。
+  layoutStatus(): LayoutStatus {
+    return layoutStatus({
+      appliedSignature: layoutSignature(this.session.exportJson()),
+      savedSignature: this.savedLayoutSignature,
+      authoredSignature: layoutSignature(authoredLayoutDocument()),
+      lastError: this.lastLayoutError,
+    });
+  }
+
+  get layoutSavedAt(): string | null { return this.savedLayoutAt; }
+
+  get layoutError(): string | null { return this.lastLayoutError; }
+
+  // 保存的是「已应用」布局：有未应用草稿时先拒绝，绝不把半成品写进本地存档；
+  // `writeSavedLayout` 只在 setItem 真正成功后返回 ok，因此不会虚报保存成功。
+  saveLayout(): boolean {
+    if (this.session.isDirty) {
+      this.message = '保存被拒绝：还有未应用的草稿，请先点「应用编辑」再保存布局。';
+      this.panel.showNotice(this.message);
+      return false;
+    }
+    const result = writeSavedLayout(this.hooks.layoutStorage ?? null, this.session.exportJson());
+    if (!result.ok) {
+      this.lastLayoutError = `${result.code}：${result.message}`;
+      this.message = `保存布局失败（${result.code}）：${result.message}`;
+      this.panel.showNotice(this.message);
+      return false;
+    }
+    this.savedLayoutSignature = layoutSignature(result.envelope.document);
+    this.savedLayoutAt = result.envelope.savedAt;
+    this.lastLayoutError = null;
+    this.message = `已保存布局到浏览器本地存档：${result.envelope.savedAt}。`;
+    this.panel.showNotice(this.message);
+    return true;
+  }
+
+  // 文件读取失败（包括用户选了非文本文件）也只报告，不改变当前地图。
+  async importLayoutFile(file: File): Promise<boolean> {
+    let text: string;
+    try {
+      text = await file.text();
+    } catch (error) {
+      this.lastLayoutError = `READ_FAILED：读取文件失败（${String(error)}）`;
+      this.message = `导入失败：${this.lastLayoutError}`;
+      this.panel.showNotice(this.message);
+      return false;
+    }
+    return this.importLayout(text);
+  }
+
+  importLayout(text: string): boolean {
+    const result = importLayoutText(text);
+    if (!result.ok) {
+      this.lastLayoutError = `${result.code}：${result.message}`;
+      this.message = `导入失败（${result.code}）：${result.message}`;
+      this.panel.showNotice(this.message);
+      return false;
+    }
+    if (!this.commitLayoutSource(layoutSource(result.document), '导入')) return false;
+    this.message = `已导入布局：家具 ${result.document.furniture.length} 件 / ` +
+      `藏身点 ${result.document.hideSpots.length} 个；尚未写入本地存档。`;
+    this.panel.showNotice(this.message);
+    return true;
+  }
+
+  restoreDefaultLayout(): boolean {
+    const confirm = this.hooks.confirm ?? (message => window.confirm(message));
+    if (!confirm(RESTORE_DEFAULT_CONFIRM)) {
+      this.message = '已取消恢复默认地图（本地存档与已导出的 JSON 备份都未改动）。';
+      this.panel.showNotice(this.message);
+      return false;
+    }
+    if (!this.commitLayoutSource(authoredMapSource(), '恢复默认地图')) return false;
+    this.message = '已恢复默认地图；本地存档与已导出的 JSON 备份保留，可再次保存覆盖。';
+    this.panel.showNotice(this.message);
+    return true;
+  }
+
+  // 导入与恢复默认共用同一条安全链路：先跑 S7C-1B 地图预检，再换源，再走既有的
+  // 碰撞 / 导航 / AI 重绑定重建。预检失败时旧地图、角色站位与藏身状态原样保留。
+  private commitLayoutSource(source: MapSource, label: string): boolean {
+    const candidate: CommittedMap = { furniture: source.furniture,
+      hideSpots: source.hideSpots };
+    const precheckRejection = this.hooks.onPrecheck?.(candidate) ?? null;
+    if (precheckRejection) {
+      this.lastLayoutError = precheckRejection;
+      this.message = `${label}被拒绝（地图预检失败）：${precheckRejection}`;
+      this.panel.showNotice(this.message);
+      return false;
+    }
+    this.session.replaceSource(source);
+    this.rebuildFromCommitted();
+    this.lastLayoutError = null;
+    return true;
+  }
+
   onFrame(): void {
     if (!this.opened) return;
     this.panel.render(this.session, {
@@ -248,6 +373,10 @@ export class SceneEditor {
       anchorsVisible: this.view.anchorsAreVisible,
       rotationSnap: this.session.rotationSnapEnabled,
       events: this.eventList(),
+      layout: this.layoutStatus(),
+      layoutSavedAt: this.savedLayoutAt,
+      layoutError: this.lastLayoutError,
+      layoutStorageAvailable: !!this.hooks.layoutStorage,
     });
   }
 
@@ -256,6 +385,7 @@ export class SceneEditor {
     // One cached read for all three rows: the full map validation must not run
     // once per row per frame.
     const draftStatus = this.session.draftStatus;
+    const layout = this.layoutStatus();
     return [
       { label: '双阵营状态', value: freezeState,
         tone: freezeState === 'FROZEN' ? 'warning' : 'success' },
@@ -274,6 +404,17 @@ export class SceneEditor {
       { label: '最近拒绝编辑原因', value: this.lastRejection,
         tone: this.lastRejection === '无' ? 'normal' : 'danger' },
       { label: '已应用编辑次数', value: String(this.session.appliedEditCount) },
+      { label: '布局状态', value: `${layout.label}｜${layout.text}`,
+        tone: layout.label === 'IMPORT_FAILED' ? 'danger'
+          : layout.label === 'UNSAVED' ? 'warning'
+            : layout.label === 'SAVED' ? 'success' : 'normal' },
+      { label: '本地布局存档', value: this.savedLayoutAt
+        ? `已保存（${this.savedLayoutAt}）`
+        : (this.hooks.layoutStorage ? '无（尚未保存过）' : 'localStorage 不可用') },
+      { label: '未保存修改', value: layout.pending ? '是' : '否',
+        tone: layout.pending ? 'warning' : 'success' },
+      { label: '最近导入 / 恢复失败', value: this.lastLayoutError ?? '无',
+        tone: this.lastLayoutError ? 'danger' : 'normal' },
       { label: '事件计数',
         value: `冻结 ON/OFF ${this.hooks.freeze.eventCounts.on}/${this.hooks.freeze.eventCounts.off}、` +
           `编辑器开/关 ${this.hooks.freeze.eventCounts.editorOpen}/${this.hooks.freeze.eventCounts.editorClose}、` +

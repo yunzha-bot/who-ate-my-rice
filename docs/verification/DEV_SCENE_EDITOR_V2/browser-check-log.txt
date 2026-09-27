@@ -1,0 +1,15 @@
+对局阶段：对局中 / 00:00
+场景编辑入口：CLICKED，面板打开：true
+初始布局状态：DEFAULT｜布局：默认布局｜未保存修改：否｜存档：无
+living_sofa 授权宽度：2.2
+应用编辑：CLICKED；布局状态：CUSTOM｜未保存=true
+保存布局：CLICKED；布局状态：SAVED；localStorage：v1 sofaWidth=1.4 2026-09-27T12:10:50.123Z
+刷新后：对局中 / 00:00｜面板打开 true｜布局 SAVED｜living_sofa 宽度 1.4
+非法 JSON 导入后：IMPORT_FAILED｜未保存=false｜living_sofa 宽度 1.4
+来自另一张地图的文档：IMPORT_FAILED｜宽度仍为 1.4
+合法 V3 文档导入后：UNSAVED｜未保存=true｜living_sofa 宽度 1.6
+恢复默认地图：CLICKED｜确认框：1 次｜状态 UNSAVED｜宽度回到 2.2（授权值 2.2）｜localStorage 仍在：yes
+重开前：应用编辑 CLICKED｜存储 CLICKED｜布局 UNSAVED｜宽度 1.55
+重开：CLICKED｜阶段 对局中 / 00:00｜面板打开 true｜布局 SAVED｜重新选中 true｜living_sofa 宽度 1.55（重开前 1.55）｜localStorage 宽度 1.55
+清掉本地存档后刷新：面板打开 true｜布局 DEFAULT｜localStorage 已清空
+控制台异常：[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | [warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | [warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. | [warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.

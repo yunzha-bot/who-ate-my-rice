@@ -1,0 +1,109 @@
+{
+  "steps": [
+    {
+      "step": "1-default",
+      "launcher": "CLICKED",
+      "open": true,
+      "layout": "DEFAULT",
+      "text": "布局：默认布局｜未保存修改：否｜存档：无",
+      "authoredWidth": 2.2
+    },
+    {
+      "step": "2-apply-save",
+      "apply": "CLICKED",
+      "afterApply": "CUSTOM",
+      "unsavedAfterApply": "true",
+      "save": "CLICKED",
+      "afterSave": "SAVED",
+      "stored": {
+        "layoutVersion": 1,
+        "savedAt": "2026-09-27T12:10:50.123Z",
+        "sofaWidth": 1.4
+      }
+    },
+    {
+      "step": "3-after-reload",
+      "phase": "对局中 / 00:00",
+      "launcher": "CLICKED",
+      "open": true,
+      "layout": "SAVED",
+      "width": 1.4
+    },
+    {
+      "step": "4-import-broken",
+      "layout": "IMPORT_FAILED",
+      "unsaved": "false",
+      "width": 1.4,
+      "text": "布局：导入失败｜未保存修改：否｜存档：2026-09-27T12:10:50.123Z｜最近失败：NOT_JSON：不是合法 JSON：Expected ',' or '}' after property value in JSON at position 43 (line 1 column 44)"
+    },
+    {
+      "step": "5-import-wrong-map",
+      "layout": "IMPORT_FAILED",
+      "width": 1.4,
+      "text": "布局：导入失败｜未保存修改：否｜存档：2026-09-27T12:10:50.123Z｜最近失败：READ_ONLY_MISMATCH：布局文档的房间 / 门 / 出生点 / 米点与当前地图不一致：可能来自另一张地图或另一个版本"
+    },
+    {
+      "step": "6-import-good",
+      "layout": "UNSAVED",
+      "unsaved": "true",
+      "width": 1.6,
+      "text": "布局：未保存修改（与本地存档不同）｜未保存修改：是｜存档：2026-09-27T12:10:50.123Z"
+    },
+    {
+      "step": "7-restore-default",
+      "click": "CLICKED",
+      "dialogs": 1,
+      "layout": "UNSAVED",
+      "unsaved": "true",
+      "width": 2.2,
+      "authoredWidth": 2.2,
+      "stored": {
+        "layoutVersion": 1,
+        "savedAt": "2026-09-27T12:10:50.123Z",
+        "sofaWidth": 1.4
+      }
+    },
+    {
+      "step": "8-after-restart",
+      "restart": "CLICKED",
+      "phase": "对局中 / 00:00",
+      "open": true,
+      "applyBeforeRestart": "CLICKED",
+      "layoutBeforeRestart": "UNSAVED",
+      "layout": "SAVED",
+      "reselected": true,
+      "width": 1.55,
+      "stored": {
+        "layoutVersion": 1,
+        "savedAt": "2026-09-27T12:11:02.046Z",
+        "sofaWidth": 1.55
+      }
+    },
+    {
+      "step": "9-cleared",
+      "open": true,
+      "layout": "DEFAULT",
+      "stored": null,
+      "text": "布局：默认布局｜未保存修改：否｜存档：无"
+    },
+    {
+      "step": "console",
+      "errors": [
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      ],
+      "favicon404": true
+    }
+  ],
+  "dialogs": [
+    "恢复默认地图将丢弃当前已应用的编辑（浏览器本地存档与已导出的 JSON 不会被删除）。确认继续？"
+  ],
+  "consoleErrors": [
+    "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+    "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+  ]
+}

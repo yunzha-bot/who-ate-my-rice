@@ -133,6 +133,13 @@ canvas { display: block; }
 .scene-editor-button { border: 1px solid #4d535b; border-radius: 3px; padding: 4px 7px;
   color: #d3d6da; background: #30343a; cursor: pointer; font: inherit; }
 .scene-editor-button:hover { background: #3a4048; }
+.scene-editor-file { display: none; }
+.scene-editor-layout { padding: 6px 10px; border-bottom: 1px solid #3f444a;
+  color: #cfd6dd; background: #23272c; font: 11px/1.5 ui-monospace, monospace; }
+.scene-editor-layout[data-layout-state="SAVED"] { color: #9fd7a2; }
+.scene-editor-layout[data-layout-state="UNSAVED"] { color: #e5c56f; }
+.scene-editor-layout[data-layout-state="CUSTOM"] { color: #9fc5e8; }
+.scene-editor-layout[data-layout-state="IMPORT_FAILED"] { color: #f0a0a0; }
 .scene-editor-search { margin: 8px; border: 1px solid #4d535b; border-radius: 3px;
   padding: 6px 8px; color: #e4e6e9; background: #191c20; font: inherit; }
 .scene-editor-list { flex: 0 1 auto; min-height: 72px; max-height: 34vh; overflow: auto;

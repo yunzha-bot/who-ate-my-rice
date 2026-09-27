@@ -2,6 +2,7 @@ import { EDIT_LIMITS, ROTATION_STEP_DEGREES, type EditTarget, type MapEditSessio
   from './map/MapEditModel.ts';
 import { DEFAULT_REGION_SAMPLE_STEP, REGION_AUTHORING_LIMITS } from './map/HideInteractionRegion.ts';
 import { ROTATION_SNAP_DEGREES } from './map/MapEditModel.ts';
+import type { LayoutStatus } from './map/MapLayoutStore.ts';
 
 export interface SceneEditorPanelOptions {
   container: HTMLElement;
@@ -19,6 +20,10 @@ export interface SceneEditorPanelOptions {
   onDiscard: () => void;
   onResetTarget: (id: string) => void;
   onExport: () => void;
+  // V2 布局持久化：保存到本地存档、从文件导入 V3 文档、恢复默认地图。
+  onSave: () => void;
+  onImportFile: (file: File) => void;
+  onRestoreDefault: () => void;
   onAnchorsVisible: (visible: boolean) => void;
   onRegionPreviewVisible: (visible: boolean) => void;
   onRotationSnapChange: (enabled: boolean) => void;
@@ -37,6 +42,10 @@ export interface SceneEditorPanelState {
   anchorsVisible: boolean;
   rotationSnap: boolean;
   events: readonly string[];
+  layout: LayoutStatus;
+  layoutSavedAt: string | null;
+  layoutError: string | null;
+  layoutStorageAvailable: boolean;
 }
 
 const FURNITURE_NUMERIC_FIELDS: readonly { field: string; label: string; step: number }[] = [
@@ -92,6 +101,8 @@ export class SceneEditorPanel {
   private readonly list: HTMLElement;
   private readonly detail: HTMLElement;
   private readonly status: HTMLElement;
+  private readonly layoutState: HTMLElement;
+  private readonly importInput: HTMLInputElement;
   private readonly options: SceneEditorPanelOptions;
   private readonly inputs = new Map<string, HTMLInputElement>();
   private listSignature = '';
@@ -161,11 +172,30 @@ export class SceneEditorPanel {
     rotationSnapLabel.className = 'scene-editor-anchors';
     rotationSnapLabel.append(this.rotationSnapToggle,
       document.createTextNode(`旋转吸附 ${ROTATION_SNAP_DEGREES}°`));
+    // 「导入 JSON」读的是场景编辑器自己导出的 V3 文档：选择文件后交给编辑器解析，
+    // 任何失败都只写进提示与 DEV 读数，当前地图不受影响。
+    this.importInput = document.createElement('input');
+    this.importInput.type = 'file';
+    this.importInput.accept = '.json,application/json';
+    this.importInput.className = 'scene-editor-file';
+    this.importInput.hidden = true;
+    this.importInput.addEventListener('change', () => {
+      const file = this.importInput.files?.[0];
+      this.importInput.value = '';
+      if (file) options.onImportFile(file);
+    });
     toolbar.append(anchorsLabel, regionPreviewLabel, rotationSnapLabel,
       this.button('应用编辑', () => options.onApply()),
       this.button('放弃草稿', () => options.onDiscard()),
-      this.button('导出地图 JSON', () => options.onExport()));
-    this.panel.append(toolbar);
+      this.button('导出地图 JSON', () => options.onExport()),
+      this.button('保存布局', () => options.onSave()),
+      this.button('导入 JSON', () => this.importInput.click()),
+      this.button('恢复默认地图', () => options.onRestoreDefault()));
+    this.panel.append(toolbar, this.importInput);
+
+    this.layoutState = document.createElement('div');
+    this.layoutState.className = 'scene-editor-layout';
+    this.panel.append(this.layoutState);
 
     this.search = document.createElement('input');
     this.search.type = 'search';
@@ -217,6 +247,7 @@ export class SceneEditorPanel {
   render(session: MapEditSession, state: SceneEditorPanelState): void {
     if (this.panel.hidden) return;
     this.freezeLabel.textContent = `${state.freezeState}｜${state.freezeReason}`;
+    this.renderLayoutState(state);
     const selected = state.selection;
     if (selected !== this.selected) {
       this.selected = selected;
@@ -454,13 +485,30 @@ export class SceneEditorPanel {
     const lines = [
       `双阵营：${state.freezeState}（${state.freezeReason}）`,
       `草稿状态：${state.draftStatus}｜已应用编辑：${state.appliedCount}`,
+      `布局：${state.layout.label}｜${state.layout.text}｜` +
+        (state.layoutSavedAt ? `存档时间 ${state.layoutSavedAt}` : '无本地存档'),
+      `未保存修改：${state.layout.pending ? '是' : '否'}` +
+        (state.layoutStorageAvailable ? '' : '｜localStorage 不可用'),
       `当前选中：${state.selection ?? '无'}`,
       `最近拒绝：${state.lastRejection}`,
+      `最近导入 / 恢复失败：${state.layoutError ?? '无'}`,
       `事件：${state.events.join('；') || '无'}`,
     ];
     this.status.textContent = lines.join('\n');
     this.anchorsToggle.checked = state.anchorsVisible;
     this.rotationSnapToggle.checked = state.rotationSnap;
+  }
+
+  // 布局状态单独一行并带 `data-layout-state`：浏览器复核与人工验收可以直接读它，
+  // 不必从多行状态文本里猜。
+  private renderLayoutState(state: SceneEditorPanelState): void {
+    const parts = [`布局：${state.layout.text}`, `未保存修改：${state.layout.pending ? '是' : '否'}`,
+      state.layoutSavedAt ? `存档：${state.layoutSavedAt}` : '存档：无'];
+    if (!state.layoutStorageAvailable) parts.push('localStorage 不可用');
+    if (state.layoutError) parts.push(`最近失败：${state.layoutError}`);
+    this.layoutState.dataset.layoutState = state.layout.label;
+    this.layoutState.dataset.layoutUnsaved = state.layout.pending ? 'true' : 'false';
+    this.layoutState.textContent = parts.join('｜');
   }
 
   private hint(text: string): HTMLElement {

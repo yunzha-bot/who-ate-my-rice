@@ -68,6 +68,9 @@ import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativ
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { buildApartment, type ApartmentBuild } from './map/MapBuilder';
 import { SceneEditor, type CommittedMap } from './SceneEditor';
+import { authoredMapSource, type MapSource } from './map/MapEditModel';
+import { browserLayoutStorage, layoutSignature, layoutSource, readSavedLayout,
+  type LayoutResult, type LayoutStorage } from './map/MapLayoutStore';
 import { DevFreezeSystem } from '../systems/DevFreezeSystem';
 import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_WIDTH, MAP_DEPTH,
   ROOMS, SPAWNS, WALLS, roomAt, selectRiceCandidates,
@@ -146,6 +149,10 @@ export class ThreeGame {
   private mapFurniture: readonly Rect[] = FURNITURE;
   private hideSpots: readonly HideSpot[] = HIDE_SPOTS;
   private appliedMapSignature = '';
+  // DEV 场景编辑器 V2：本地布局存档的接口、开机恢复结果与已保存布局的签名。
+  // 恢复失败时保留原因（给 DEV 面板），地图一律回退到授权数据。
+  private layoutStorage: LayoutStorage | null = null;
+  private bootLayoutResult: LayoutResult | null = null;
   // S7C-2b：交给 DeepSeek AI 的**公开**藏身点快照 + 地图代次。快照只在
   // `rebuildApartment` 与构造时各建一次，AI 一见代次变化就作废手头的藏身计划。
   private deepseekHideMap: DeepSeekHideMapSnapshot | null = null;
@@ -237,7 +244,18 @@ export class ThreeGame {
     light.shadow.camera.top = MAP_DEPTH / 2;
     this.scene.add(light);
 
-    this.apartment = buildApartment(this.scene);
+    // DEV 场景编辑器 V2：开机先尝试恢复浏览器本地存档。只有通过结构、稳定 ID 与
+    // 完整几何 / 玩法校验（`validateEditedMap`）的存档才会生效；损坏、版本不符或
+    // 校验失败一律回退到授权地图，并把原因留给 DEV 面板 —— 绝不白屏。
+    this.layoutStorage = browserLayoutStorage();
+    this.bootLayoutResult = readSavedLayout(this.layoutStorage);
+    if (this.bootLayoutResult.ok) {
+      const restored = layoutSource(this.bootLayoutResult.document);
+      this.mapFurniture = restored.furniture;
+      this.hideSpots = restored.hideSpots;
+    }
+    this.apartment = buildApartment(this.scene, {
+      furniture: this.mapFurniture, hideSpots: this.hideSpots });
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
     this.navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
@@ -297,6 +315,13 @@ export class ThreeGame {
       developerMode: import.meta.env.DEV,
       factionSwitchEnabled: C.development.factionSwitchEnabled,
       getPhase: () => this.match.phase,
+      // V2 布局持久化：会话从当前已应用地图开始，保存/导入走同一个存档接口。
+      mapSource: this.appliedMapSource(),
+      layoutStorage: this.layoutStorage,
+      savedLayoutSignature: this.bootLayoutResult.ok
+        ? layoutSignature(this.bootLayoutResult.document) : null,
+      savedLayoutAt: this.bootLayoutResult.ok ? (this.bootLayoutResult.savedAt ?? null) : null,
+      savedLayoutError: this.bootLayoutMessage(),
       onRebuild: map => this.rebuildApartment(map),
       // S7C-1B：新地图必须先通过「两个角色站位 + 藏身出口仍可站立」的预检，
       // 预检失败时编辑器直接拒绝应用，旧地图与旧藏身状态原样保留。
@@ -670,6 +695,19 @@ export class ThreeGame {
     return { collision: this.collision, navigation: this.navigation,
       visionStatus: (from, to, maxRange) => this.perceptionGeometry
         .inspectVision(from, to, maxRange).status };
+  }
+
+  // 当前已应用地图（含开机恢复出来的布局）作为编辑器会话与布局比较的起点。
+  private appliedMapSource(): MapSource {
+    return { ...authoredMapSource(), furniture: this.mapFurniture,
+      hideSpots: this.hideSpots };
+  }
+
+  // 开机恢复失败的原因；「没有本地存档」不是失败。
+  private bootLayoutMessage(): string | null {
+    const result = this.bootLayoutResult;
+    if (!result || result.ok || result.code === 'EMPTY') return null;
+    return `${result.code}：${result.message}`;
   }
 
   private mapSignature(map: CommittedMap): string {
