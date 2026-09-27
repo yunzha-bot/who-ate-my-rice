@@ -1315,6 +1315,35 @@
 
 ---
 
+## 2026-09-27 · DEV-B 本地预设：运行时调试参数持久化（已实现，待用户集中人工验收）
+
+- 任务性质与日期：独立 DEV 工具轮（不计入 S7C / S7D），2026-09-27。用户**一次性授权**「DEV-B 运行时调试数值的常驻保存」，并明确「不涉及蓝色声音圆圈、任何可视化效果或游戏玩法调整」；**本轮不授权 commit、push 或 Tag**，等集中人工验收后再单独归档。开工前已确认工作区存在 S7D / S7B 整体 Gate 的未提交文档改动（非本轮产生），故只在其后追加本条、并且只修改 DEV-B 相关段落。
+- 用户授权范围（原话要点）：保留全部 38 项参数能力与各自含义 / 范围 / 生效时机；新增「保存调试参数」写入带版本号的**独立存档键**（不与场景编辑器 V2 的地图存档混用）；重开对局、返回阵营后开新局、刷新网页都恢复已保存参数，且**即使没有打开调试面板也按明确的 DEV 专用恢复规则生效**；面板显示「未保存修改 / 已保存 / 正式默认值」，保存失败不得虚报；「恢复默认」不得悄悄删除已保存预设，删除要走**独立操作 + 确认**；读取存档严格校验版本、白名单、类型、范围与非有限值，损坏或版本不符不得白屏，必须安全回退正式默认值并显示原因；恢复必须复用 `DevBRuntimeBinding` 的正式生效路径（含改抓捕范围后清除旧抓捕进度的副作用），不直接改 `GAME_CONFIG`、不绕过原绑定；保存与恢复**仅在开发环境启用**，生产构建不读取也不应用。
+- 完成内容：
+  1. 新增 `src/systems/DevBParamStore.ts`（纯逻辑，可直接在 Node 里测）：key `who-ate-my-rice/dev-b-runtime-params`；信封 `{format:'who-ate-my-rice/dev-b-params', version:1, savedAt, params}`；严格校验（信封 / 版本 / 参数白名单 / 类型 / 有限性 / 范围 / 非空）并给出失败码；读、写（**写入后回读一致才报成功**）、删除；三态判定与 `savedAt` 显示；`browserDevBStorage()` 与生产隔离入口 `devBPersistenceStorage(devEnvironment)`。
+  2. 新增 `src/systems/DevBParamPersistence.ts`：把本地预设接到内存覆盖层。应用**只**经 `RuntimeDebugOverrides.restore()`，因此 `DevBRuntimeBinding` 的既有副作用（`capture.radius` 变化 → 立即清空抓捕累计进度 + 同步抓捕圈）照常触发，没有第二套应用逻辑。
+  3. `src/three/DevBPanel.ts`：参数区内新增 `.dev-b-storage` 行——三态状态行（`data-storage-state` / `data-storage-error`）与「保存调试参数 / 加载已保存预设 / 删除本地预设（需确认）」三个按钮，节点只在构造时创建一次；未启用持久化时整行 `hidden`；参数区标题改为「覆盖仅本页内存，可另存为本地预设」；确认逻辑不放面板。
+  4. `src/three/DevBDebug.ts`：接入持久化与 `confirm`（缺省用浏览器 `confirm`；**拿不到确认实现时默认拒绝删除**，绝不静默删除），删除前必确认；三个按钮的中文结果写进顶部提示条；「恢复正式默认值」的提示明确写出本地预设保留。
+  5. `src/three/ThreeGame.ts`：构造 `DevBParamPersistence`，`storage` 由 `devBPersistenceStorage(import.meta.env.DEV)` 决定（生产构建恒为 `null`）；`devBBinding.start()` 之后立即按预设恢复（刷新即生效）；`resetRound()` 改为「先 `resetForNewRound()` 清本局覆盖，再 `applySaved('新局开始')`」，因此重开 / 返回阵营后开新局仍保留已保存的调试参数。
+  6. `src/style.css`：`.dev-b-storage*` 三态配色（已保存绿 / 未保存修改琥珀 / 不可用红）。
+- **未改**：`src/config/gameConfig.ts`（零新增参数）、`RuntimeDebugOverrides` 的白名单与 typed getter、`DevBRuntimeBinding` 的绑定与副作用、`DevBObserver` / `DevBView` / `DevBHelpText`、S7C-1B / S7C-2 / S7C-2b / S7C-3 的任何已验收机制、场景编辑器 V2 的地图存档逻辑与键名。依赖变化：无。`.trae/`、`.dsh-meow/`、`.codex/` 未读取、未修改、未暂存。
+- 新增与扩展测试：`tests/dev-b-param-persistence.test.mjs`（19 项：保存→读取往返；刷新（新覆盖层 + 同一 storage）恢复；重开（`resetForNewRound()` 后再应用）恢复；恢复正式值**不删预设**且可再加载；三态文案；12 类非法 / 损坏存档（非 JSON / 非对象 / format 不符 / 版本不符 / 缺 params / params 非对象 / 空 params / 未知参数 / 非数字 / 越界 / 空文本）；损坏存档安全回落并给出原因；保存失败不虚报（写入抛错与回读不一致）；删除成功与失败；空覆盖不生成预设；**恢复预设时走真实 `DevBRuntimeBinding`（清空旧抓捕进度 + 同步抓捕圈到新半径）**；38 项白名单全部可保存并原样恢复；生产隔离（`devBPersistenceStorage(false)` 为 null、storage 为 null 时全部入口安全失败）；与场景编辑器 V2 存档键互不干扰；无 `localStorage` 时返回 null；源码不变量（DEV 门控、`resetRound` 先清后恢复、面板三按钮、确认逻辑只在编排层）。`tests/dev-b-panel-dom.test.mjs` 追加 6 项（三个按钮各一个且状态随覆盖值变化 `BASE → UNSAVED → SAVED`；「恢复正式默认值」不删预设且可再加载；删除**必须先确认**，取消不动预设、确认才删且不动内存覆盖值；损坏预设在面板上显示原因并回落；该行不随刷新增长节点与监听器；未启用持久化时整行隐藏）。
+- 自动化门禁（本轮在最终工作树上实测）：
+
+| 检查项目 | 本轮实际结果 |
+|---|---|
+| `npm test` | **725 / 725 通过**，退出码 0（基线 700 + 新增 25 项） |
+| `npx tsc --noEmit` | 通过，退出码 0 |
+| `npm run build` | 通过，退出码 0；JS **1,010.66 kB**（gzip 272.79 kB）、CSS 14.57 kB、`index.html` 0.41 kB；仍有 Vite >500 kB 非阻断提示 |
+| `git diff --check` | 通过，退出码 0（仅既有 LF→CRLF 提示） |
+
+- 浏览器真实复核（`docs/verification/DEV-B-PARAMS/`，本机 Chrome headless + CDP，脚本 + 日志 + 结构化摘要 + 8 张关键截图）：`FOOTSTEP 有效传播范围` 17 → 13（状态「未保存修改」）→「保存调试参数」（`SAVED`，`localStorage` `version 1` / FOOTSTEP 13）→ **F5 刷新后仍为 13** → **Esc「重新开始」后仍为 13** → 「恢复正式默认值」回到 **17**（状态「正式默认值」，**本地预设保留**）→ 「加载已保存预设」回到 **13** → 「删除本地预设（需确认）」确认框 1 次、键已删除而内存覆盖值仍为 13 → 场景编辑器 V2 地图存档键哨兵**原样保留**；控制台无异常（仅既有 `THREE.Clock` 弃用告警 3 条，脚本单独计数）。
+- 本轮脚本侧踩到的两个坑（产品行为正确，脚本已修好后才跑通）：① `.dev-b-launcher` 的点击是**切换**——面板已经开着时再点一次会把它关掉，之后所有读数都变空；② `.dev-b-panel` 由 `.dev-b-body` 内部滚动，长面板下按钮 / 参数行的 `getBoundingClientRect()` 会落在视口之外，点击、命中测试与截图前必须先 `scrollIntoView`。
+- 已知限制与下一项任务：① 本地预设只存在**当前浏览器**，清理站点数据即丢失（开机回落到正式默认值并显示原因，不白屏）；② 无版本迁移，`version` 不匹配即视为不可用；③ 未覆盖（不得记 PASS）：不同浏览器 / 无痕模式隔离、浏览器策略禁用 `localStorage` 的真实表现、配额写满、超大畸形存档、极矮窗口下新增按钮的可达性。**待用户按 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §12.7 的 10 条清单做集中人工验收**；验收通过并另行授权后才建立 Git 检查点。S7D 与 S7B 整体 Gate 的未提交工作**不得与本轮改动混在一起**提交。
+- Git 检查点：本轮**未 commit、未 push、未创建 Tag**；未 force push、未 reset / clean / stash。工作区中 `docs/AGENT_LOG.md` 与 `docs/DEEPSEEK_HANDOFF.md` 原本就带有 S7D / S7B 整体 Gate 的未提交改动，本次只在文件末尾追加本条目，并只修改 DEV-B 相关段落。
+
+---
+
 ## 2026-09-27 · 玩家声音探测可视化停用与代码归档（已实现，待用户集中人工验收）
 
 - 任务性质与日期：独立专项任务（不计入 S7C / S7D），2026-09-27。用户**一次性授权**「停用玩家端的声音探测可视化，包括声音范围圈和彩色动态声纹。保留相关实现，未来能够低成本恢复」，并明确「AI 内部听觉、声音事件和现有 PerceptionSystem 判定暂时保留，不允许破坏 Human AI、DeepSeek AI 的既有行为」；**本轮不授权 commit、push 或 Tag**。
@@ -1351,3 +1380,22 @@
 - 本轮门禁（在最终工作树上重跑，真实输出）：`npm test` **727 / 727 通过**（退出码 0）、`npx tsc --noEmit` 退出码 0、`npm run build` 退出码 0、`git diff --check` 退出码 0；构建产物中 `SoundVisualView` 的专属标识仍为 **0**（打包期已把停用表现层移出产物）。开发完成时的 727/727 是当时基线，本条为本次归档轮的重跑结果。
 - 已知限制（保留，不因验收通过而删除）：停用前的彩色声纹**缺少完整的浏览器前后对照**（当轮采样窗口内 Human 距离观察者太远，没有可听声音事件；声纹是半透明混合色，颜色计数不可作判据）；正式生产构建侧只做了「打包产物不再包含该表现层」的**静态核对**，未在生产构建里跑完整对局。用户人工验收已覆盖「声音探测完全消失」，但**人工验收不写成代理实测**，代理实测也不改写人工验收结论。
 - Git 检查点：本轮建立正式归档提交（提交说明 `refactor: disable and archive player sound visualization`）；推送按用户本次授权执行，**实际推送结果以 `git ls-remote origin refs/heads/main` 现场查询为准**，本日志不预填 SHA、不创建 Tag。
+
+---
+
+## 2026-09-27 · DEV-B 本地预设：用户集中验收与独立归档
+
+- 阶段与日期：DEV-B 运行时调试参数持久化，2026-09-27。用户确认集中浏览器人工验收 **10/10 通过**，授权本轮单独提交并正常推送；原 DEV-B 的 38 项运行时覆盖能力和正式 `GAME_CONFIG` 数值保持不变。
+- 完成内容：独立 `localStorage` 预设支持保存、手动加载、确认后删除；刷新、重开及返回阵营后开新局时恢复。保存值通过既有 `RuntimeDebugOverrides.restore()` 与 `DevBRuntimeBinding` 生效；损坏或不兼容存档安全回退并显示原因。预设仅在开发构建读取和应用，与场景编辑器 V2 的布局存档使用不同键，互不影响。详细参数与历史实现见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §12 及本日志此前的实施记录。
+- 自动化测试与人工验收：
+
+| 检查项目 | 本次结果 |
+|---|---|
+| `npm test` | **727 / 727 通过**，退出码 0；此前实施轮的 725/725 是当时基线。 |
+| `npx tsc --noEmit` | 通过，退出码 0。 |
+| `npm run build` | 通过，退出码 0；Vite 大于 500 kB 的资源提示不阻断。 |
+| `git diff --check` | 通过，退出码 0；仅有既有 LF→CRLF 提示。 |
+| 用户集中浏览器人工验收 | **10 / 10 通过**：预设入口、参数修改与保存、刷新恢复、重开与阵营重选、恢复正式值、重新加载、确认删除、DEV-B 原功能及场景编辑器存档独立。 |
+
+- Git 检查点：本次授权的独立提交说明为 `feat: persist DEV-B runtime debug presets`；完整 SHA 与推送结果以提交后 Git 及实时远端查询为准，不预填尚未发生的结果。S7B overall Gate 与 S7D 的未提交内容不得混入本次归档。
+- 已知限制与下一项任务：本地预设不跨浏览器或设备同步；清理站点数据后预设消失。不同浏览器／无痕、浏览器禁用本地存储、配额写满、超大畸形存档及极矮窗口按钮可达性仍未全部做真实浏览器覆盖，不将 10/10 人工验收扩写为这些边界已验证。本次归档后不自动开始其他开发任务。

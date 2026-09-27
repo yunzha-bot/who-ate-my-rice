@@ -49,7 +49,7 @@
 8. `src/systems/RiceField.ts` 与 `RiceSystem.ts` 持有大米进度、准备和进食规则；两个阵营的 AI 都不能私建第二套进食计时或直接判胜。`GameStateSystem.ts` 按既有 5/5 米完成及 Human 连续有效抓捕规则裁决胜负；`SprintSystem.ts` 持有冲刺、摔倒和眩晕规则。
 9. `src/config/gameConfig.ts` 导出 `GAME_CONFIG`；所有可调玩法参数由此定义，改动时同步 `docs/GAME_BALANCE_CONFIG.md`。地图坐标和状态枚举仍属于相应地图/系统。
 10. `src/three/DebugDetailsPanel.ts` 和 `ThreeGame.ts` 展示可收纳 UE Details 风格 DEV 面板。`src/systems/AILogCollector.ts` 以状态快照差异和显式事件记录 AI JSON；面板提供当前局导出。
-11. **DEV-B 实时 AI 调试工具**（开发环境专用，接入 DEV 面板，不替换场景编辑器）：`src/systems/RuntimeDebugOverrides.ts`（仅内存的参数覆盖层，38 项白名单）、`src/systems/DevBRuntimeBinding.ts`（半径变化清空抓捕进度、新局清覆盖、有效速度）、`src/systems/DevBObserver.ts`（只读状态整理）、`src/three/DevBView.ts`（抓捕圈 / 视觉距离圆 / 真实视线 / AI 路径 / 声音事件）、`src/three/DevBPanel.ts` + `src/three/DevBDebug.ts`（面板与编排）。感知与两套 AI 通过可选 `SoundTuning` / `OcclusionTuning` / `VisionTuning` / `setRuntimeTuning()` 读取有效值；正式 `GAME_CONFIG` 始终只读。
+11. **DEV-B 实时 AI 调试工具**（开发环境专用，接入 DEV 面板，不替换场景编辑器）：`src/systems/RuntimeDebugOverrides.ts`（仅内存的参数覆盖层，38 项白名单）、`src/systems/DevBRuntimeBinding.ts`（半径变化清空抓捕进度、新局清覆盖、有效速度）、`src/systems/DevBParamStore.ts` + `src/systems/DevBParamPersistence.ts`（2026-09-27 持久化轮新增：本地预设的存档格式 / 严格校验 / 三态，以及只经 `RuntimeDebugOverrides.restore()` 的应用路径）、`src/systems/DevBObserver.ts`（只读状态整理）、`src/three/DevBView.ts`（抓捕圈 / 视觉距离圆 / 真实视线 / AI 路径 / 声音事件）、`src/three/DevBPanel.ts` + `src/three/DevBDebug.ts`（面板与编排）。感知与两套 AI 通过可选 `SoundTuning` / `OcclusionTuning` / `VisionTuning` / `setRuntimeTuning()` 读取有效值；正式 `GAME_CONFIG` 始终只读。
 12. **S7C-1B 藏身与 Q 技能**（用户浏览器人工验收 6/6 通过，已归档）：`src/systems/HideSystem.ts`（纯逻辑藏身状态机：E 点按立即切换、每条拒绝路径、退出原因与事件）、`src/systems/HumanSearchSkill.ts`（Human Q 扇形判定核心，与按键、冷却、特效分离）、`src/systems/HideInteractionArbitration.ts`（E 键唯一仲裁：扫雷 > 门 > 藏身 > 进食）、`src/systems/SkillCooldown.ts` + `src/systems/SkillGates.ts`（两个 Q 的冷却与门禁）、`src/three/HideSearchView.ts`（扇形特效与命中家具临时高亮，几何体只创建一次）、`src/three/map/MapApplicationPrecheck.ts`（地图应用前只读预检）。`ThreeGame` 负责接线：`VisionSystem.setConcealed()`、抓捕资格门控、`GameStateSystem.forceCapture()`（复用同一条抓捕结算）、藏身期间位移/冲刺/进食/锁门封锁、普通 HUD 技能提示与 DEV `Hide / 藏身` 分类。
 13. **S7C-2：Human AI 搜查与玩家交互提示**（功能实现及集中人工验收通过，已随检查点 `f243047` 归档推送）：Human AI 仅以公开线索搜查家具；Human 玩家 Q 优先抓捕暴露目标，否则只搜查指向的一件家具；DP 娘白色轮廓提示 E 仲裁下唯一可用家具或米堆。非法站位、朝向和过期计划不计为搜空；公开几何通过后才读取权威占用。逐轮细节见阶段设计文档与 docs/AGENT_LOG.md。
 14. **S7C-2b：DeepSeek AI 自主藏身**（用户集中浏览器人工验收 8/8 PASS，已归档）：`src/systems/DeepSeekHideCandidates.ts`（公开候选层：区域内的真实空闲导航格心 + A* + 公开评分）、`src/systems/DeepSeekHideResolution.ts`（权威进入层与出口物理判据，玩家 E 与 AI 退出共用同一条公式）、`HideSystem.enterAsAI()` + 游戏层每帧签发的一次性令牌、`DeepSeekAIController` 的 `HIDE` 状态 + `DeepSeekHidePhase`、`NavigationSystem.freeCellsWithin()`（只读）、DEV `Hide` 分类 8 行 AI 字段与 AI JSON `formatVersion` **1.6**。AI 只读公开信息，不读藏身点占用、不读 Human 实时位置、不引用玩家专用的白色轮廓与按键仲裁。
@@ -73,6 +73,7 @@
 | DEV-A 第二轮 + DEV-A-FIX-1 | 区域编辑器：可编辑区域半径／扇形半角（`REGION_AUTHORING_LIMITS` 半径 0.5–3、半角 10–150°）、家具移动或旋转时锚点跟随、区域类校验拒绝码、JSON 导出升为 **V2**、DEV 面板「交互区域预览」开关 + 按 `code` 着色的离散采样点与图例（精确轮廓与离散采样分开呈现）；以及**流畅拖动**（延迟校验窗口 `beginDeferredValidation` + 释放时校验一次、预览对象长期复用）。**用户浏览器人工验收：第二轮区域编辑／预览／校验／JSON V2 及旧功能回归全部通过；FIX-1 流畅拖动 5/5 PASS；阶段 Gate = PASS**，随本轮提交建立检查点。**阶段 Gate = PASS**，随本轮提交建立检查点。 |
 | DEV-A-FIX-2 | 家具任意角度旋转与 JSON **V3** 导出：`Rect.rotation` + `RotatedRect.ts` 统一旋转几何（约定同 `THREE.Object3D.rotation.y`）、`CollisionWorld` 的 `OrientedObstacle` 真实旋转碰撞（包围 AABB 仅粗筛、轴对齐路径数学逐字未改）、`rotationQuarter`→`rotationDeg`（0°–359.9°）与可关闭的 15° 吸附（默认关闭、不进 JSON）、房间边界改为四角点均在房间内、家具重叠改为真实 SAT、门洞改为与膨胀门叶真实重叠、关联锚点与 `facing` 同步旋转、编辑器/导航/遮挡全部改用真实旋转轮廓。**用户浏览器人工验收 5/5 PASS（2026-09-26）、阶段 Gate = PASS**，随本轮提交建立检查点。**DEV-A 已批准范围至此全部完成**；未完成的 DEV-A 相关项只有 JSON 导入器（刻意未开发）与进入/退出锚点拆分（未决定）。 |
 | DEV-B（实时 AI 调试工具） | 已完成批准范围并经用户浏览器人工验收 6/6 通过。最终验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。38 项临时参数仅在内存中生效，正式 `GAME_CONFIG` 不变；完整功能、限制与测试清单见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`，历史见 `docs/AGENT_LOG.md`。|
+| DEV-B 本地预设（运行时调试参数持久化） | 独立 DEV 工具轮：`DevBParamStore.ts` + `DevBParamPersistence.ts` + 面板三个按钮与三态状态行。**用户集中人工验收 10/10 通过**；本次归档前复测 `npm test` **727/727**、TypeScript、构建及差异检查通过。仅开发构建读取独立本地预设，刷新与新局可恢复；恢复正式值不删除预设。Git 归档结果以提交与远端记录为准；规则见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §12，浏览器复核见 `docs/verification/DEV-B-PARAMS/`。 |
 | S7C-1B | 玩家基础藏身交互 + Human 玩家 Q 扇形搜查/手动抓捕 + DeepSeek 玩家 Q 锁门冷却：**浏览器人工验收 6/6 通过，并由提交 `db8dfe6` 归档**。数值来源：`GAME_CONFIG.humanSearch`（半径 1.5、半角 60°＝张角 120°、冷却 12 秒）与 `GAME_CONFIG.door.playerLockCooldownMs`（20 秒，只有 `lock()` 返回 `LOCKED` 才开始计时）。未新增藏身音效；未实现 Human AI 的 `CHECK_HIDE`、DeepSeek AI 自主藏身与地图随机化。 |
 | S7C-2 | **已实现并完成 Gate = PASS**：Human AI 公开线索循迹与家具搜查、Human 玩家 Q 暴露目标优先和单件家具搜查、DP 娘家具与米堆唯一指向轮廓。非法站位、朝向或过期计划与合法搜空分开；只有公开几何通过后才读取权威占用。用户已确认集中人工验收通过；Git 归档已建立并推送（67 个文件）。详细规则及各轮历史见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §4 与 `docs/AGENT_LOG.md`。本轮实测自动化测试 642 项通过，TypeScript、构建及差异检查通过。 |
 | S7C-2b | **已完成集中浏览器人工验收 8/8 PASS 并归档**：DeepSeek AI 自主候选选点、真实导航格心走位、一次性令牌 + 真实位置复核的权威进入、按公开条件的自主退出，以及同点冷却 / 失败记忆 / 近期点惩罚 / 连续上限等循环抑制。用户要求人工验收与 DPH 的浏览器复核分别如实记录，不得互相改写。规则见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §4.10（实现结果 §4.10.14）。本轮归档轮实测自动化测试 670 项通过，TypeScript、构建及差异检查通过。 |
@@ -150,7 +151,7 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - 正式 GLB 角色及 IDLE 特殊待机片段未导入；无动画片段时白模保持普通 IDLE，动画视觉验收后续处理。
 - Human AI 自动解锁耗时 8,750 ms 按用户决定留作 S16 平衡复评。
 - **S7B-3B 的实机日志缺口**：用户验收已通过，但缺少侧向证据修复后的完整 AI JSON；锁门频率等仍应由新日志复核。
-- 最近一次已记录的 DEV-B 验证：`npm test` 472/472、`npx tsc --noEmit`、`npm run build`、`git diff --check` 均通过。此为历史基线，不代表本轮重跑。
+- DEV-B 原批准范围的历史基线为 472/472；本地预设实施轮为 725/725。本次归档前复测 **727/727**，TypeScript、构建及差异检查通过；用户已确认本地预设 **10/10** 人工验收。各次结果所属轮次见 `docs/AGENT_LOG.md`。
 - 第三轮浏览器脚本里的 BLOCKED 项只描述当轮尝试；其后的集中人工验收已由用户确认通过。具体当轮证据与最终验收结果分别见 docs/verification/S7C-2-r3/、阶段设计文档 §4.7–§4.9 和 docs/AGENT_LOG.md。
 - **S7C-2b 的浏览器复核只用脚本驱动玩家追逐**（`docs/verification/S7C-2b/`）：进入 / 藏身 / 自主退出 / 同点冷却 / 日志事件都已实跑观察到；「Human AI 把藏身中的 DP 搜出来」「反复逼近拉开的抖动」「暂停 / 重开 / 地图热应用的状态清理」这三类**没有由 DPH 在浏览器里覆盖**，它们由 `tests/deepseek-hide-loop-guard.test.mjs`、`tests/deepseek-hide-lifecycle.test.mjs`、`tests/human-ai-check-hide.test.mjs` 与既有 `dev-freeze` / `hide-integration` 用例覆盖。这三项已由**用户集中人工验收（8/8 PASS，含搜出 NPC、无抖动、状态清理）**覆盖；**人工验收不得被改写为 DPH 自己完成的浏览器测试**。
 - 第四轮为 Human 家具轮廓修复留下了像素证据；当轮测量值与限制保留在历史日志。用户随后确认 Human 白色轮廓以及 DP 娘家具、米堆、目标重叠和生命周期验收通过。
@@ -183,13 +184,14 @@ DEV 分类显示候选门、距离、通过标记、Human 是否在另一侧（�
 - 未完成/未授权：JSON 导入器作为**编辑器 V2 的一部分已实现并通过用户人工验收**（2026-09-27，接受 V3 文档与本地存档信封，严格校验后走与「应用编辑」同一条重建链路）；是否拆分进入/退出锚点尚未决定。S7C-3 已通过人工验收并归档（Human AI `CHECK_HIDE` 与 DeepSeek AI 自主藏身已分别由 S7C-2 / S7C-2b 实现）。
 - 实现、参数与验收历史见 `docs/DEV_A_HIDE_INTERACTION_REGION_DESIGN.md` 和 `docs/AGENT_LOG.md`。
 
-### DEV-B：运行时 AI 调试工具（已完成并通过用户人工验收）
+### DEV-B：运行时 AI 调试工具（原批准范围与本地预设轮均已通过用户人工验收）
 
-- 功能：只读状态观察、38 项白名单临时参数、场景可视化、中文说明与紧凑面板；临时值只存于内存，不写正式 `GAME_CONFIG` 或地图 JSON V3，重开清除，并支持两种恢复。
-- 人工验收：6/6 通过。归档验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。
+- 功能：只读状态观察、38 项白名单临时参数、场景可视化、中文说明与紧凑面板；临时值只存于内存，不写正式 `GAME_CONFIG` 或地图 JSON V3，并支持两种恢复。
+- 人工验收：原批准范围 6/6 通过。归档验证：`npm test` 472/472、`npx tsc --noEmit` 通过、`npm run build` 通过、`git diff --check` 通过。
+- **本地预设（2026-09-27，用户人工验收 10/10 通过）**：新增「保存调试参数 / 加载已保存预设 / 删除本地预设（需确认）」与三态显示（正式默认值 / 已保存 / 未保存修改），已保存参数在刷新、重开、返回阵营后开新局时恢复；存档键 `who-ate-my-rice/dev-b-runtime-params`（与场景编辑器 V2 地图存档键**完全独立**），读取严格校验版本 / 白名单 / 类型 / 范围 / 有限性，损坏或版本不符时**安全回退正式默认值并显示原因**；恢复复用 `DevBRuntimeBinding` 的正式生效路径（含改抓捕半径清空旧抓捕进度）；**仅开发构建**读取与应用，「恢复正式默认值」不删除本地预设。规则与人工验收清单见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §12，浏览器证据见 `docs/verification/DEV-B-PARAMS/`。
 - 参数、生效时机、已知限制、测试和人工验收细节见 `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md`；历史步骤见 `docs/AGENT_LOG.md`。正式视觉/听觉仍不使用家具遮挡，视觉规则没有视锥角。
 
-**其他阶段的专属开工要求位置**：S7C-3 → `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§4 已完成的 S7C-2、**§4.10 S7C-2b 技术设计与实现结果（已实现、已验收归档）**、§5 S7C-3、§6 未决参数）；DEV 场景热编辑器（已完成 V1，后续扩展）→ `docs/DEV_SCENE_EDITOR_DESIGN.md`。
+**其他阶段的专属开工要求位置**：S7C-3 → `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md`（§4 已完成的 S7C-2、**§4.10 S7C-2b 技术设计与实现结果（已实现、已验收归档）**、§5 S7C-3、§6 未决参数）；DEV 场景热编辑器（已完成 V1，后续扩展）→ `docs/DEV_SCENE_EDITOR_DESIGN.md`；**DEV-B 本地预设（用户人工验收已通过）→ `docs/DEV_B_RUNTIME_DEBUG_DESIGN.md` §12**。
 
 ## 13. 当前受保护功能清单（已通过 Gate，改动时不得破坏）
 

@@ -1,4 +1,5 @@
 import type { RuntimeParamResult, RuntimeParamSpec } from '../systems/RuntimeDebugOverrides';
+import type { DevBPersistenceStatus } from '../systems/DevBParamPersistence';
 import type { DevBObservationSection } from '../systems/DevBObserver';
 import { DEV_B_GROUP_HELP, DEV_B_SECTION_HELP, devBParamTimingText, devBParamTooltip,
   observationHelp, paramHelp } from '../systems/DevBHelpText.ts';
@@ -22,6 +23,12 @@ export interface DevBPanelOptions {
   onRestoreOpenSnapshot: () => string;
   onRestoreDefaults: () => string;
   onVisualOption: (key: DevBVisualKey, enabled: boolean) => void;
+  /** DEV 本地预设入口；生产构建或存储不可用时为 false（整行隐藏且不可点）。 */
+  storageEnabled?: boolean;
+  onSaveParams?: () => string;
+  onLoadSavedParams?: () => string;
+  /** 删除本身需要确认，确认逻辑由编排层负责（面板只负责发起）。 */
+  onDeleteSavedParams?: () => string;
 }
 
 export type DevBVisualKey = 'captureRing' | 'visionCircle' | 'lineOfSight' | 'paths'
@@ -43,6 +50,7 @@ export const DEV_B_KNOWN_LIMITS: readonly string[] = [
   'Human 的藏身检查（CHECK_HIDE）自 S7C-2 起是真实运行状态，由 Human AI 自己按公开线索触发；DEV-B 只做只读观察，不替 AI 决策、也不显示隐藏者的真实位置或藏身点占用。',
   '观察是只读的：不触发额外寻路、不改变 AI 目标，刷新频率约 5–10 Hz（真实 AI 更新频率不变）。',
   'AI 的「原因」类字段保留英文原代码，便于与 AI JSON 日志逐条对照；把鼠标停在字段名上可看到中文解释。',
+  '「保存调试参数」只把覆盖值写进浏览器本地预设（仅 DEV 构建显示该入口）；生产构建不读取也不应用本地预设，正式数值仍以 src/config/gameConfig.ts 为唯一来源。',
 ];
 
 /** 面板顶部的一行使用说明。 */
@@ -88,6 +96,8 @@ export class DevBPanel {
   private readonly paramsHost: HTMLElement;
   private readonly observationHost: HTMLElement;
   private readonly overrideStatus: HTMLElement;
+  private readonly storageRow: HTMLElement;
+  private readonly storageStatus: HTMLElement;
   private readonly visualInputs = new Map<DevBVisualKey, HTMLInputElement>();
   private readonly rows = new Map<string, ParamRow>();
   /** Group containers, created once per group label and reused on refresh. */
@@ -141,13 +151,34 @@ export class DevBPanel {
     const paramsSection = document.createElement('section');
     paramsSection.className = 'dev-b-section';
     const paramsTitle = document.createElement('h4');
-    paramsTitle.textContent = '真实运行时参数（仅本页内存）';
+    paramsTitle.textContent = '真实运行时参数（覆盖仅本页内存，可另存为本地预设）';
     const paramsHelp = document.createElement('p');
     paramsHelp.className = 'dev-b-help-note';
     paramsHelp.textContent = DEV_B_PANEL_HINT;
     this.paramsHost = document.createElement('div');
     this.paramsHost.className = 'dev-b-params';
     paramsSection.append(paramsTitle, paramsHelp, this.paramsHost);
+
+    // DEV 本地预设：状态行 + 保存 / 加载 / 删除。节点只在构造时创建一次，
+    // 因此面板刷新数十秒也不会增长（回归测试会数节点与监听器）。
+    this.storageRow = document.createElement('div');
+    this.storageRow.className = 'dev-b-storage';
+    this.storageRow.hidden = !options.storageEnabled;
+    this.storageStatus = document.createElement('span');
+    this.storageStatus.className = 'dev-b-storage-status';
+    this.storageStatus.dataset.storageState = 'BASE';
+    this.storageStatus.textContent = options.storageEnabled
+      ? '本地预设：尚未读取' : '本地预设：当前构建不启用（仅开发环境可用）';
+    const storageActions = document.createElement('div');
+    storageActions.className = 'dev-b-storage-actions';
+    storageActions.append(
+      this.button('保存调试参数', 'dev-b-save-params', () => this.options.onSaveParams?.()),
+      this.button('加载已保存预设', 'dev-b-load-params', () => this.options.onLoadSavedParams?.()),
+      this.button('删除本地预设（需确认）', 'dev-b-delete-params',
+        () => this.options.onDeleteSavedParams?.()),
+    );
+    this.storageRow.append(this.storageStatus, storageActions);
+    paramsSection.append(this.storageRow);
 
     const actions = document.createElement('div');
     actions.className = 'dev-b-actions';
@@ -252,7 +283,8 @@ export class DevBPanel {
   }
 
   renderParams(specs: readonly RuntimeParamSpec[], effective: (id: string) => number,
-    overridden: (id: string) => boolean, overrideCount: number): void {
+    overridden: (id: string) => boolean, overrideCount: number,
+    storage?: DevBPersistenceStatus): void {
     // Group containers are created exactly once per group label and reused by
     // every later refresh. The panel refreshes ~8 times per second, so creating a
     // container per call would append a duplicate heading (with no rows inside)
@@ -300,6 +332,31 @@ export class DevBPanel {
     if (!alreadyOrdered) for (const host of ordered) this.paramsHost.append(host);
     this.overrideStatus.textContent = overrideCount > 0
       ? `当前覆盖 ${overrideCount} 项（仅在内存中）` : '当前无覆盖';
+    if (storage) this.renderStorageStatus(storage);
+  }
+
+  /** 本地预设三态：正式默认值 / 已保存 / 未保存修改（外加最近一次失败原因）。 */
+  private renderStorageStatus(storage: DevBPersistenceStatus): void {
+    const text = storage.error
+      ? `本地预设：${storage.text}｜本地预设不可用：${storage.error}`
+      : `本地预设：${storage.text}｜${storage.detail}`;
+    if (this.storageStatus.textContent !== text) this.storageStatus.textContent = text;
+    this.storageStatus.dataset.storageState = storage.state;
+    this.storageStatus.dataset.storageError = storage.error ? 'true' : 'false';
+  }
+
+  /** 面板按钮统一走这里：点击后的中文结果写进顶部提示条。 */
+  private button(label: string, className: string,
+    handler: () => string | undefined): HTMLButtonElement {
+    const element = document.createElement('button');
+    element.type = 'button';
+    element.className = `dev-b-button ${className}`;
+    element.textContent = label;
+    element.addEventListener('click', () => {
+      const message = handler();
+      if (message) this.showNotice(message);
+    });
+    return element;
   }
 
   private ensureGroup(label: string): HTMLElement {

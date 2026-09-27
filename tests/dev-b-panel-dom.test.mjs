@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
+import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { RuntimeDebugOverrides, RUNTIME_PARAM_SPECS }
   from '../src/systems/RuntimeDebugOverrides.ts';
 import { buildDevBObservation } from '../src/systems/DevBObserver.ts';
+import { DevBParamPersistence } from '../src/systems/DevBParamPersistence.ts';
+import { DEV_B_STORAGE_KEY } from '../src/systems/DevBParamStore.ts';
 import { DevBDebug, DEV_B_REFRESH_MS } from '../src/three/DevBDebug.ts';
 
 // Regression tests for the DEV-B panel DOM.
@@ -516,4 +519,175 @@ test('disposing the panel removes its nodes and cached listeners', () => {
   assert.equal(fixture.container.querySelectorAll('.dev-b-panel').length, 0);
   assert.equal(fixture.topRow.querySelectorAll('.dev-b-launcher').length, 0);
   assert.equal(fixture.scene.children.length, 0, '可视化绘制对象一并释放');
+});
+
+// ── DEV 本地预设（2026-09-27 持久化轮）────────────────────────────────────────
+
+/** 带本地预设的 DEV-B 面板：真实持久化层 + 注入的确认实现。 */
+function storageFixture() {
+  const document = createFakeDom();
+  const container = document.createElement('div');
+  const topRow = document.createElement('div');
+  const runtime = new RuntimeDebugOverrides();
+  const scene = new THREE.Scene();
+  const map = new Map();
+  const storage = {
+    getItem: key => (map.has(key) ? map.get(key) : null),
+    setItem: (key, value) => { map.set(key, String(value)); },
+    removeItem: key => { map.delete(key); },
+  };
+  const persistence = new DevBParamPersistence({
+    runtime, storage, now: () => new Date('2026-09-27T12:10:50.123Z'),
+  });
+  const confirmCalls = [];
+  let confirmAnswer = true;
+  const debug = new DevBDebug({
+    container,
+    topRow,
+    scene,
+    runtime,
+    developerMode: true,
+    persistence,
+    confirm: message => { confirmCalls.push(message); return confirmAnswer; },
+    collectObservation: () => observation(),
+    collectFrame: () => frame({ captureRadius: runtime.captureRadius }),
+  });
+  return {
+    container,
+    topRow,
+    runtime,
+    persistence,
+    debug,
+    map,
+    confirmCalls,
+    answerConfirm: value => { confirmAnswer = value; },
+    open() {
+      debug.toggle();
+      debug.onFrame(DEV_B_REFRESH_MS);
+    },
+    refresh(times = 1) {
+      for (let index = 0; index < times; index++) debug.onFrame(DEV_B_REFRESH_MS);
+    },
+  };
+}
+
+function storageStatus(container) {
+  return container.querySelector('.dev-b-storage-status');
+}
+
+function clickButton(root, className) {
+  const button = root.querySelector(`.${className}`);
+  assert.ok(button, `面板缺少按钮：${className}`);
+  for (const listener of button.listeners.get('click')) listener();
+}
+
+test('本地预设行：保存 / 加载 / 删除各一个按钮，状态随覆盖值变化', () => {
+  const fixture = storageFixture();
+  fixture.open();
+  assert.equal(fixture.container.querySelectorAll('.dev-b-save-params').length, 1);
+  assert.equal(fixture.container.querySelectorAll('.dev-b-load-params').length, 1);
+  assert.equal(fixture.container.querySelectorAll('.dev-b-delete-params').length, 1);
+
+  const status = storageStatus(fixture.container);
+  assert.equal(status.dataset.storageState, 'BASE');
+  assert.match(status.textContent, /正式默认值/);
+
+  fixture.runtime.set('vision.range', 12);
+  fixture.refresh();
+  assert.equal(status.dataset.storageState, 'UNSAVED');
+  assert.match(status.textContent, /未保存修改/);
+
+  clickButton(fixture.container, 'dev-b-save-params');
+  assert.equal(status.dataset.storageState, 'SAVED');
+  assert.match(status.textContent, /已保存/);
+  assert.equal(fixture.map.has(DEV_B_STORAGE_KEY), true);
+
+  // 保存之后再动一个值 → 又变成未保存修改。
+  fixture.runtime.set('vision.range', 13);
+  fixture.refresh();
+  assert.equal(status.dataset.storageState, 'UNSAVED');
+  fixture.debug.dispose();
+});
+
+test('恢复正式默认值不删除本地预设，加载按钮能把预设装回来', () => {
+  const fixture = storageFixture();
+  fixture.open();
+  fixture.runtime.set('hearing.range.FOOTSTEP', 13);
+  clickButton(fixture.container, 'dev-b-save-params');
+  assert.equal(fixture.map.has(DEV_B_STORAGE_KEY), true);
+
+  clickButton(fixture.container, 'dev-b-restore-defaults');
+  assert.equal(fixture.runtime.overrideCount, 0);
+  assert.equal(fixture.runtime.get('hearing.range.FOOTSTEP'),
+    GAME_CONFIG.perception.sounds.FOOTSTEP.range);
+  assert.equal(fixture.map.has(DEV_B_STORAGE_KEY), true, '恢复正式值不得删掉本地预设');
+  assert.match(storageStatus(fixture.container).textContent, /正式默认值/);
+  assert.match(fixture.container.querySelector('.dev-b-notice').textContent, /本地预设保留/);
+
+  clickButton(fixture.container, 'dev-b-load-params');
+  assert.equal(fixture.runtime.get('hearing.range.FOOTSTEP'), 13);
+  assert.equal(storageStatus(fixture.container).dataset.storageState, 'SAVED');
+  fixture.debug.dispose();
+});
+
+test('删除本地预设必须先确认，取消时不动预设', () => {
+  const fixture = storageFixture();
+  fixture.open();
+  fixture.runtime.set('vision.range', 20);
+  clickButton(fixture.container, 'dev-b-save-params');
+
+  fixture.answerConfirm(false);
+  clickButton(fixture.container, 'dev-b-delete-params');
+  assert.equal(fixture.confirmCalls.length, 1);
+  assert.match(fixture.confirmCalls[0], /删除本地保存的 DEV-B 调试预设/);
+  assert.equal(fixture.map.has(DEV_B_STORAGE_KEY), true, '取消后预设必须还在');
+  assert.match(fixture.container.querySelector('.dev-b-notice').textContent, /已取消删除/);
+
+  fixture.answerConfirm(true);
+  clickButton(fixture.container, 'dev-b-delete-params');
+  assert.equal(fixture.confirmCalls.length, 2);
+  assert.equal(fixture.map.has(DEV_B_STORAGE_KEY), false);
+  assert.equal(fixture.runtime.get('vision.range'), 20, '删除预设不动当前内存覆盖值');
+  fixture.debug.dispose();
+});
+
+test('损坏的本地预设在面板上显示原因并回落到正式默认值', () => {
+  const fixture = storageFixture();
+  fixture.map.set(DEV_B_STORAGE_KEY, '{ broken');
+  fixture.open();
+  clickButton(fixture.container, 'dev-b-load-params');
+  const status = storageStatus(fixture.container);
+  assert.equal(status.dataset.storageState, 'BASE');
+  assert.match(status.textContent, /正式默认值/);
+  assert.match(status.textContent, /NOT_JSON/);
+  assert.equal(status.dataset.storageError, 'true');
+  assert.equal(fixture.runtime.overrideCount, 0);
+  fixture.debug.dispose();
+});
+
+test('本地预设行不随刷新增长，也不新增监听器', () => {
+  const fixture = storageFixture();
+  fixture.open();
+  fixture.refresh(5);
+  const nodes = countElements(fixture.container);
+  const listeners = countListeners(fixture.container);
+  assert.equal(fixture.container.querySelectorAll('.dev-b-storage').length, 1);
+  fixture.refresh(30);
+  assert.equal(countElements(fixture.container), nodes);
+  assert.equal(countListeners(fixture.container), listeners);
+  fixture.debug.dispose();
+});
+
+test('未启用持久化（生产构建）时本地预设行整行隐藏', () => {
+  const fixture = setup();
+  fixture.open();
+  const row = fixture.container.querySelector('.dev-b-storage');
+  assert.ok(row);
+  assert.equal(row.hidden, true);
+  assert.equal(fixture.container.querySelectorAll('.dev-b-save-params').length, 1,
+    '按钮节点可以存在，但整行隐藏且不可点');
+  // 没有持久化时不渲染状态：保持构造时的中性初值，不谎报「已保存」。
+  assert.equal(storageStatus(fixture.container).dataset.storageState, 'BASE');
+  assert.match(storageStatus(fixture.container).textContent, /当前构建不启用/);
+  fixture.debug.dispose();
 });

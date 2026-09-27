@@ -1,0 +1,195 @@
+{
+  "steps": [
+    {
+      "step": "1-baseline",
+      "open": {
+        "clicked": "CLICKED",
+        "open": true
+      },
+      "param": {
+        "value": 17,
+        "status": "正式基准：17 世界单位"
+      },
+      "storage": {
+        "state": "BASE",
+        "error": "false",
+        "text": "本地预设：正式默认值｜当前没有临时覆盖，也没有已保存的本地预设",
+        "notice": ""
+      },
+      "stored": null
+    },
+    {
+      "step": "2-unsaved",
+      "set": true,
+      "param": {
+        "value": 13,
+        "status": "已覆盖：13.0 世界单位（正式基准 17）"
+      },
+      "storage": {
+        "state": "UNSAVED",
+        "error": "false",
+        "text": "本地预设：未保存修改｜当前 1 项覆盖尚未保存到本地",
+        "notice": "FOOTSTEP 有效传播范围 → 13 世界单位"
+      }
+    },
+    {
+      "step": "3-saved",
+      "click": "CLICKED",
+      "storage": {
+        "state": "SAVED",
+        "error": "false",
+        "text": "本地预设：已保存｜当前 1 项覆盖与本地预设一致（2026-09-27 13:41:02）",
+        "notice": "已保存 1 项调试参数到本地预设（2026-09-27 13:41:02）"
+      },
+      "stored": {
+        "format": "who-ate-my-rice/dev-b-params",
+        "version": 1,
+        "savedAt": "2026-09-27T13:41:02.733Z",
+        "params": {
+          "hearing.range.FOOTSTEP": 13
+        },
+        "keys": 1
+      }
+    },
+    {
+      "step": "4-after-reload",
+      "phase": "对局中 / 00:00",
+      "open": {
+        "clicked": "CLICKED",
+        "open": true
+      },
+      "param": {
+        "value": 13,
+        "status": "已覆盖：13.0 世界单位（正式基准 17）"
+      },
+      "storage": {
+        "state": "SAVED",
+        "error": "false",
+        "text": "本地预设：已保存｜当前 1 项覆盖与本地预设一致（2026-09-27 13:41:02）",
+        "notice": ""
+      },
+      "stored": {
+        "format": "who-ate-my-rice/dev-b-params",
+        "version": 1,
+        "savedAt": "2026-09-27T13:41:02.733Z",
+        "params": {
+          "hearing.range.FOOTSTEP": 13
+        },
+        "keys": 1
+      }
+    },
+    {
+      "step": "5-after-restart",
+      "restart": "CLICKED",
+      "phase": "对局中 / 00:00",
+      "open": {
+        "clicked": "ALREADY_OPEN",
+        "open": true
+      },
+      "param": {
+        "value": 13,
+        "status": "已覆盖：13.0 世界单位（正式基准 17）"
+      },
+      "storage": {
+        "state": "SAVED",
+        "error": "false",
+        "text": "本地预设：已保存｜当前 1 项覆盖与本地预设一致（2026-09-27 13:41:02）",
+        "notice": ""
+      }
+    },
+    {
+      "step": "6-restored-formal",
+      "click": "CLICKED",
+      "param": {
+        "value": 17,
+        "status": "正式基准：17 世界单位"
+      },
+      "storage": {
+        "state": "BASE",
+        "error": "false",
+        "text": "本地预设：正式默认值｜当前没有临时覆盖；本地仍有已保存预设 1 项，可点「加载已保存预设」恢复",
+        "notice": "已清除 1 项临时覆盖，回到正式 GAME_CONFIG 值；本地预设保留，可点「加载已保存预设」恢复"
+      },
+      "stored": {
+        "format": "who-ate-my-rice/dev-b-params",
+        "version": 1,
+        "savedAt": "2026-09-27T13:41:02.733Z",
+        "params": {
+          "hearing.range.FOOTSTEP": 13
+        },
+        "keys": 1
+      }
+    },
+    {
+      "step": "7-loaded-preset",
+      "click": "CLICKED",
+      "param": {
+        "value": 13,
+        "status": "已覆盖：13.0 世界单位（正式基准 17）"
+      },
+      "storage": {
+        "state": "SAVED",
+        "error": "false",
+        "text": "本地预设：已保存｜当前 1 项覆盖与本地预设一致（2026-09-27 13:41:02）",
+        "notice": "已恢复本地预设的 1 项覆盖（手动加载，保存于 2026-09-27 13:41:02）"
+      }
+    },
+    {
+      "step": "8-editor-key-intact",
+      "sentinel": "dev-b-non-interference-sentinel",
+      "devBStored": {
+        "format": "who-ate-my-rice/dev-b-params",
+        "version": 1,
+        "savedAt": "2026-09-27T13:41:02.733Z",
+        "params": {
+          "hearing.range.FOOTSTEP": 13
+        },
+        "keys": 1
+      }
+    },
+    {
+      "step": "9-delete-confirm",
+      "resave": "CLICKED",
+      "beforeDelete": {
+        "format": "who-ate-my-rice/dev-b-params",
+        "version": 1,
+        "savedAt": "2026-09-27T13:41:14.917Z",
+        "params": {
+          "hearing.range.FOOTSTEP": 13
+        },
+        "keys": 1
+      },
+      "click": "CLICKED",
+      "dialogs": 1,
+      "confirmText": "删除本地保存的 DEV-B 调试预设？当前页面内存里的覆盖值不会被清除；若要回到正式值，请点「恢复正式默认值」。",
+      "stored": null,
+      "param": {
+        "value": 13,
+        "status": "已覆盖：13.0 世界单位（正式基准 17）"
+      },
+      "storage": {
+        "state": "UNSAVED",
+        "error": "false",
+        "text": "本地预设：未保存修改｜当前 1 项覆盖尚未保存到本地",
+        "notice": "已删除本地保存的 DEV-B 调试预设（内存中的当前覆盖值保持不变）"
+      }
+    },
+    {
+      "step": "console",
+      "errors": [],
+      "knownWarnings": [
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.",
+        "[warning] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      ],
+      "favicon404": true
+    }
+  ],
+  "dialogs": [
+    "删除本地保存的 DEV-B 调试预设？当前页面内存里的覆盖值不会被清除；若要回到正式值，请点「恢复正式默认值」。"
+  ],
+  "consoleErrors": [],
+  "param": "hearing.range.FOOTSTEP",
+  "storageKey": "who-ate-my-rice/dev-b-runtime-params",
+  "editorStorageKey": "who-ate-my-rice/scene-editor-layout"
+}

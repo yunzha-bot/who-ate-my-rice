@@ -244,6 +244,15 @@ body.scene-editor-open .debug-panel { right: 366px; }
 .dev-b-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
   border-top: 1px solid #3f444a; padding: 7px 8px; }
 .dev-b-override-status { color: #e5c56f; }
+/* DEV-B 本地预设：三态状态行 + 保存 / 加载 / 删除（仅开发构建显示）。 */
+.dev-b-storage { display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  border-top: 1px solid #3f444a; padding: 7px 8px; }
+.dev-b-storage[hidden] { display: none; }
+.dev-b-storage-status { color: #cfd4da; overflow-wrap: anywhere; }
+.dev-b-storage-status[data-storage-state="SAVED"] { color: #8ed3a2; }
+.dev-b-storage-status[data-storage-state="UNSAVED"] { color: #e5c56f; }
+.dev-b-storage-status[data-storage-error="true"] { color: #ed9292; }
+.dev-b-storage-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
 .dev-b-visual { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: pointer; }
 .dev-b-observation { padding: 4px 8px 8px; }
 .dev-b-observation-section { border-top: 1px solid #2b2f34; padding: 4px 0; }

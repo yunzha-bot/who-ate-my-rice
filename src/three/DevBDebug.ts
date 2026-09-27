@@ -1,5 +1,6 @@
 import type * as THREE from 'three';
 import type { RuntimeDebugOverrides, RuntimeParamResult } from '../systems/RuntimeDebugOverrides';
+import type { DevBParamPersistence } from '../systems/DevBParamPersistence';
 import { buildDevBObservation, type DevBObservationInput } from '../systems/DevBObserver.ts';
 import { DevBPanel, type DevBVisualKey } from './DevBPanel.ts';
 import { DevBView, DEV_B_DEFAULT_OPTIONS, type DevBViewFrame } from './DevBView.ts';
@@ -15,7 +16,15 @@ export interface DevBDebugOptions {
   developerMode: boolean;
   collectObservation: () => DevBObservationInput;
   collectFrame: () => DevBViewFrame;
+  /** DEV 本地预设（仅开发环境提供；缺省＝不启用持久化）。 */
+  persistence?: DevBParamPersistence | null;
+  /** 删除本地预设前的确认；缺省用浏览器 confirm，测试可注入。 */
+  confirm?: (message: string) => boolean;
 }
+
+/** 删除本地预设前必须确认：只删预设，不动当前页面内存里的覆盖值。 */
+export const DEV_B_DELETE_CONFIRM =
+  '删除本地保存的 DEV-B 调试预设？当前页面内存里的覆盖值不会被清除；若要回到正式值，请点「恢复正式默认值」。';
 
 // The observer refreshes inside the requested 5-10 Hz window; the scene view is
 // cheap and follows the same tick.
@@ -38,17 +47,25 @@ export class DevBDebug {
       container: options.container,
       topRow: options.topRow,
       developerMode: options.developerMode,
+      storageEnabled: this.persistence?.enabled ?? false,
       onOpen: () => this.handleOpen(),
       onClose: () => this.handleClose(),
       onParamChange: (id, value) => this.handleParamChange(id, value),
       onRestoreOpenSnapshot: () => this.handleRestoreOpenSnapshot(),
       onRestoreDefaults: () => this.handleRestoreDefaults(),
       onVisualOption: (key, enabled) => this.handleVisualOption(key, enabled),
+      onSaveParams: () => this.handleSaveParams(),
+      onLoadSavedParams: () => this.handleLoadSavedParams(),
+      onDeleteSavedParams: () => this.handleDeleteSavedParams(),
     });
     this.panel.setVisualOptions(DEV_B_DEFAULT_OPTIONS);
   }
 
   get isOpen(): boolean { return this.panel.isOpen; }
+
+  private get persistence(): DevBParamPersistence | null {
+    return this.options.persistence ?? null;
+  }
   get visualizationEnabled(): boolean {
     const state = this.view.options;
     return state.captureRing || state.visionCircle || state.lineOfSight || state.paths ||
@@ -95,9 +112,37 @@ export class DevBDebug {
   private handleRestoreDefaults(): string {
     const cleared = this.runtime.clearAll();
     this.renderPanel();
+    // 恢复正式值**不删除**已保存的本地预设（需求明确要求二者分开）。
+    const kept = this.persistence?.hasPreset ? '；本地预设保留，可点「加载已保存预设」恢复' : '';
     return cleared > 0
-      ? `已清除 ${cleared} 项临时覆盖，回到正式 GAME_CONFIG 值`
-      : '当前没有临时覆盖，已是正式 GAME_CONFIG 值';
+      ? `已清除 ${cleared} 项临时覆盖，回到正式 GAME_CONFIG 值${kept}`
+      : `当前没有临时覆盖，已是正式 GAME_CONFIG 值${kept}`;
+  }
+
+  private handleSaveParams(): string {
+    const persistence = this.persistence;
+    if (!persistence) return '当前构建不启用 DEV-B 本地预设（仅开发环境可用）';
+    const result = persistence.save();
+    this.renderPanel();
+    return result.message;
+  }
+
+  private handleLoadSavedParams(): string {
+    const persistence = this.persistence;
+    if (!persistence) return '当前构建不启用 DEV-B 本地预设（仅开发环境可用）';
+    const result = persistence.applySaved('手动加载');
+    this.renderPanel();
+    return result.message;
+  }
+
+  private handleDeleteSavedParams(): string {
+    const persistence = this.persistence;
+    if (!persistence) return '当前构建不启用 DEV-B 本地预设（仅开发环境可用）';
+    const ask = this.options.confirm ?? defaultDevBConfirm;
+    if (!ask(DEV_B_DELETE_CONFIRM)) return '已取消删除本地预设';
+    const result = persistence.remove();
+    this.renderPanel();
+    return result.message;
   }
 
   private handleVisualOption(key: DevBVisualKey, enabled: boolean): void {
@@ -111,7 +156,8 @@ export class DevBDebug {
 
   private renderPanel(): void {
     this.panel.renderParams(this.runtime.list(), id => this.runtime.get(id),
-      id => this.runtime.isOverridden(id), this.runtime.overrideCount);
+      id => this.runtime.isOverridden(id), this.runtime.overrideCount,
+      this.persistence?.status());
     this.panel.renderObservation(buildDevBObservation(this.options.collectObservation()));
     this.panel.setContext(this.runtime.overrideCount > 0
       ? `IN-MEMORY · 覆盖 ${this.runtime.overrideCount} 项` : 'IN-MEMORY · 正式基准');
@@ -121,4 +167,13 @@ export class DevBDebug {
     this.panel.dispose();
     this.view.dispose();
   }
+}
+
+/**
+ * 默认确认实现。拿不到真实的 `confirm`（例如无 DOM 的测试环境）时返回 false：
+ * 宁可拒绝删除，也不静默删掉用户保存的预设。
+ */
+function defaultDevBConfirm(message: string): boolean {
+  const ask = (globalThis as { confirm?: (text: string) => boolean }).confirm;
+  return typeof ask === 'function' ? ask.call(globalThis, message) : false;
 }

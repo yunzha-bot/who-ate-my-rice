@@ -12,6 +12,8 @@ import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
 import { RuntimeDebugOverrides, type RuntimeParamChange }
   from '../systems/RuntimeDebugOverrides';
 import { DevBRuntimeBinding, effectiveSpeeds } from '../systems/DevBRuntimeBinding';
+import { DevBParamPersistence } from '../systems/DevBParamPersistence';
+import { devBPersistenceStorage } from '../systems/DevBParamStore';
 import type { DevBHumanHideSearch, DevBObservationInput } from '../systems/DevBObserver';
 import { DevBDebug } from './DevBDebug';
 import type { DevBViewFrame } from './DevBView';
@@ -221,6 +223,7 @@ export class ThreeGame {
   private debugPanel: DebugDetailsPanel;
   private devBDebug: DevBDebug;
   private devBBinding: DevBRuntimeBinding;
+  private devBPersistence: DevBParamPersistence;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
   private pauseActions: HTMLElement;
@@ -296,6 +299,14 @@ export class ThreeGame {
       onCaptureRadius: radius => this.captureZone.setRadius(radius),
     });
     this.devBBinding.start();
+    // DEV-B 本地预设：**只有开发构建**才会拿到 storage（生产构建恒为 null，
+    // 既不显示入口也不读取/应用本地值）。恢复走 RuntimeDebugOverrides.restore()，
+    // 因此 DevBRuntimeBinding 的既有副作用（清空旧抓捕进度、同步抓捕圈）照常生效。
+    this.devBPersistence = new DevBParamPersistence({
+      runtime: this.runtime,
+      storage: devBPersistenceStorage(import.meta.env.DEV),
+    });
+    if (this.devBPersistence.enabled) this.devBPersistence.applySaved('刷新页面后恢复');
     this.resetRice();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
@@ -345,6 +356,7 @@ export class ThreeGame {
       scene: this.scene,
       runtime: this.runtime,
       developerMode: this.debugPossessionEnabled,
+      persistence: this.devBPersistence,
       collectObservation: () => this.collectDevBObservation(),
       collectFrame: () => this.collectDevBFrame(),
     });
@@ -2165,8 +2177,10 @@ export class ThreeGame {
   private resetRound(): void {
     if (this.sceneEditor.isOpen) this.sceneEditor.close();
     this.devFreeze.reset();
-    // A new round/restart clears every temporary DEV-B override.
+    // A new round/restart clears every temporary DEV-B override, then re-applies
+    // the saved DEV preset (if any) so a saved tuning session survives 重开 / 返回阵营.
     this.devBBinding.resetForNewRound();
+    if (this.devBPersistence.enabled) this.devBPersistence.applySaved('新局开始');
     this.editorOpenLast = false;
     this.devZoom = 1;
     this.sprint.reset();
