@@ -67,8 +67,11 @@ import { SoundVisualView } from './SoundVisualView';
 import { resolveDirectControlSwitch, resolveRoundShortcut } from './RoundShortcuts';
 import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './CaptureZone';
 import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
+import { GentleCameraFollow, HOME_PALETTE, homeFrustum } from './AlphaPresentation.ts';
+import { AlphaHudView } from './AlphaHudView.ts';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { buildApartment, type ApartmentBuild } from './map/MapBuilder';
+import { fitOrthographicSceneDepth } from './SceneCameraDepth';
 import { SceneEditor, type CommittedMap } from './SceneEditor';
 import { authoredMapSource, type MapSource } from './map/MapEditModel';
 import { browserLayoutStorage, layoutSignature, layoutSource, readSavedLayout,
@@ -84,7 +87,6 @@ const distance = (a: THREE.Vector3, b: THREE.Vector3) => Math.hypot(a.x - b.x, a
 const HIDE_NOTICE_MS = 3_600;
 const pointText = (value: { x: number; z: number } | null | undefined) => value
   ? `(${value.x.toFixed(1)}, ${value.z.toFixed(1)})` : '无';
-
 // 玩家声音探测表现层（声音范围圈 + 彩色动态声纹）已于 2026-09-27 停用：
 // `SoundVisualView` 的实现、测试与 `GAME_CONFIG.perception.soundVisual` 数值全部保留，
 // 这里只用这一个常量关掉它的实例化与逐帧更新；恢复时把下面的值改回 `true` 即可。
@@ -102,6 +104,9 @@ export class ThreeGame {
   private input = new InputManager();
   private control = new LocalControl();
   private readonly cameraOffset = new THREE.Vector3(12, 14, 12);
+  private readonly sceneVisualBounds = new THREE.Box3();
+  private readonly gentleCamera = new GentleCameraFollow();
+  private readonly alphaHud: AlphaHudView;
   private match = new GameStateSystem(C.match.readyMs, C.match.captureMs, 'FACTION_SELECT');
   private rice = new RiceField([], C.rice.maxProgressMs, C.rice.prepareMs);
   private sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold, C.sprint.stunMs,
@@ -226,6 +231,9 @@ export class ThreeGame {
   private devBPersistence: DevBParamPersistence;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
+  private overlayHeading: HTMLElement;
+  private overlaySummary: HTMLElement;
+  private overlayStats: HTMLElement;
   private pauseActions: HTMLElement;
   private resultActions: HTMLElement;
   private menu: HTMLElement;
@@ -238,17 +246,19 @@ export class ThreeGame {
   constructor(container: HTMLElement) {
     this.fixedMatchSeed = import.meta.env.DEV
       ? parseMatchSeed(new URLSearchParams(window.location.search).get('matchSeed')) : null;
-    this.scene.background = new THREE.Color(C.backgroundColor);
+    this.scene.background = new THREE.Color(HOME_PALETTE.background);
     this.soundVisual = PLAYER_SOUND_VISUAL_ENABLED
       ? new SoundVisualView(this.scene, import.meta.env.DEV) : null;
     this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.append(this.renderer.domElement);
-    this.scene.add(new THREE.AmbientLight(0xffffff, 2));
-    const light = new THREE.DirectionalLight(0xffffff, 3);
-    light.position.set(4, 9, 6);
+    this.scene.add(new THREE.HemisphereLight(0xfff5e4, 0x9c9988, 2.0));
+    const light = new THREE.DirectionalLight(0xffefd8, 2.4);
+    light.position.set(-8, 24, 12);
     light.castShadow = true;
-    light.shadow.mapSize.set(1024, 1024);
+    light.shadow.mapSize.set(2048, 2048);
+    light.shadow.normalBias = .035;
     light.shadow.camera.left = -MAP_WIDTH / 2;
     light.shadow.camera.right = MAP_WIDTH / 2;
     light.shadow.camera.bottom = -MAP_DEPTH / 2;
@@ -267,6 +277,7 @@ export class ThreeGame {
     }
     this.apartment = buildApartment(this.scene, {
       furniture: this.mapFurniture, hideSpots: this.hideSpots });
+    this.sceneVisualBounds.setFromObject(this.apartment.root);
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
     this.navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
@@ -368,8 +379,14 @@ export class ThreeGame {
     this.skillHud.hidden = true;
     this.skillHudState = this.label(this.skillHud, 'skill-hud-state');
     this.skillHudNotice = this.label(this.skillHud, 'skill-hud-notice');
+    this.alphaHud = new AlphaHudView(container);
     this.overlay = this.label(container, 'game-overlay');
     this.overlayText = this.label(this.overlay, 'overlay-text');
+    this.overlayText.innerHTML = '<span class="overlay-kicker">家里的小小追逐</span>' +
+      '<h1></h1><p></p><div class="overlay-stats"></div>';
+    this.overlayHeading = this.overlayText.querySelector('h1')!;
+    this.overlaySummary = this.overlayText.querySelector('p')!;
+    this.overlayStats = this.overlayText.querySelector('.overlay-stats')!;
     this.pauseActions = this.label(this.overlay, 'pause-actions');
     const continueButton = document.createElement('button');
     continueButton.type = 'button';
@@ -402,10 +419,15 @@ export class ThreeGame {
     this.resultActions.append(restartButton, menuButton);
     this.menu = this.label(container, 'faction-menu');
     this.menu.innerHTML =
-      '<h1>选择阵营</h1>' +
-      '<label><input type="radio" name="faction" value="DEEPSEEK" checked> DeepSeek 娘</label>' +
-      '<label><input type="radio" name="faction" value="HUMAN"> 人类</label>' +
-      '<button type="button">确认阵营</button>';
+      '<header class="menu-story"><span class="menu-eyebrow">THE LITTLE RICE CHASE / ALPHA</span>' +
+      '<h1>谁吃了<br><em>我的米？</em></h1><p class="menu-intro">一间暖暖的屋子。<br>五份米，两个各怀心思的人。</p></header>' +
+      '<fieldset class="faction-dock"><legend>今天，你站在哪一边？</legend>' +
+      '<label><input type="radio" name="faction" value="DEEPSEEK" checked>' +
+      '<span class="faction-number">01</span><span><strong>偷偷开饭</strong><small>DeepSeek 娘 · 吃完五份米</small></span></label>' +
+      '<label><input type="radio" name="faction" value="HUMAN">' +
+      '<span class="faction-number">02</span><span><strong>守住晚饭</strong><small>Human · 找到家里的小馋猫</small></span></label>' +
+      '<button type="button">确认阵营 <span aria-hidden="true">→</span></button></fieldset>' +
+      '<p class="menu-controls">WASD 移动 / E 交互 / Q 技能 / Esc 暂停</p>';
     this.menu.querySelector('button')!.addEventListener('click', () => {
       const selected = this.menu.querySelector<HTMLInputElement>('input[name="faction"]:checked');
       if (selected) this.chooseFaction(selected.value as Faction);
@@ -457,11 +479,11 @@ export class ThreeGame {
     this.updateHud(this.nearestRice());
   }
 
-  private followCamera(): void {
+  private followCamera(deltaMs = 0): void {
     const target = this.control.cameraTarget === 'DEEPSEEK' ? this.player
       : this.control.cameraTarget === 'HUMAN' ? this.human : null;
     if (!target) return;
-    positionCameraOnTarget(this.camera, target.position, this.cameraOffset);
+    positionCameraOnTarget(this.camera, this.gentleCamera.update(target.position, deltaMs), this.cameraOffset);
   }
 
   private setTemporaryInputTarget(faction: Faction): void {
@@ -528,13 +550,8 @@ export class ThreeGame {
 
   private resize = (): void => {
     const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
-    const viewHeight = this.match.phase === 'FACTION_SELECT'
-      ? MAP_DEPTH + 5 : C.three.viewHeight * this.devZoom;
-    const viewWidth = viewHeight * width / height;
-    this.camera.left = -viewWidth / 2;
-    this.camera.right = viewWidth / 2;
-    this.camera.top = viewHeight / 2;
-    this.camera.bottom = -viewHeight / 2;
+    Object.assign(this.camera, homeFrustum(width / height, this.match.phase === 'FACTION_SELECT',
+      C.three.viewHeight * this.devZoom, MAP_DEPTH, MAP_WIDTH));
     this.camera.near = 0.1;
     this.camera.far = 100;
     this.camera.updateProjectionMatrix();
@@ -605,12 +622,19 @@ export class ThreeGame {
     this.editorOpenLast = editorOpen;
     if (this.control.selectedFaction !== null) {
       if (editorOpen) this.followEditorCamera();
-      else this.followCamera();
+      else this.followCamera(this.match.phase === 'PLAYING' && !frozen ? deltaMs : 0);
     }
     if (editorOpen) this.sceneEditor.onFrame();
+    const showMapDebug = import.meta.env.DEV && (this.debugPanel.isExpanded || editorOpen);
+    this.apartment.debugRoot.visible = showMapDebug;
+    for (const view of this.doorViews.values()) view.setDebugVisible(showMapDebug);
     // DEV-B refresh uses the real frame delta so the debug view keeps working
     // while the gameplay freeze is active; it never advances gameplay itself.
     this.devBDebug.onFrame(deltaMs);
+    // Keep diagnostic overlays out of the formal composition; settings and
+    // runtime overrides remain intact and reappear when either DEV panel opens.
+    this.devBDebug.view.group.visible = import.meta.env.DEV &&
+      this.match.phase !== 'FACTION_SELECT' && (this.devBDebug.isOpen || this.debugPanel.isExpanded);
     // The toolbar shows the live freeze state plus the most recent rejected
     // freeze action (for example resuming while the scene editor is open).
     this.debugPanel.setFreezeState(frozen, this.devFreeze.lastRejection === '无'
@@ -621,6 +645,7 @@ export class ThreeGame {
     this.syncDeepSeekVisualTarget();
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
+    fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
   };
@@ -671,6 +696,7 @@ export class ThreeGame {
     this.apartment.dispose();
     this.apartment = buildApartment(this.scene, {
       furniture: map.furniture, hideSpots: map.hideSpots });
+    this.sceneVisualBounds.setFromObject(this.apartment.root);
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
     this.navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
@@ -1972,11 +1998,12 @@ export class ThreeGame {
       const targetText = concealed ? '藏身中（按 E 退出）'
         : target.kind === 'FURNITURE'
           ? `面向「${this.hideSpots.find(spot => spot.id === target.spotId)?.label ??
-            target.spotId}」｜按 E 藏身（背对仍可 E）`
+            target.spotId}」 · E 藏身`
           : target.kind === 'RICE'
-            ? `面向米堆 ${target.riceId}｜停下按住 E 进食`
-            : '按 E 藏身 / 停下按住 E 进食（白色轮廓只提示朝向，不限制 E）';
-      this.skillHudState.textContent = `DeepSeek 娘：${targetText}｜Q 锁门：${lockText}`;
+            ? '停下，按住 E 吃米'
+            : '靠近家具按 E 藏身 · 靠近米堆停下按住 E';
+      this.skillHudState.textContent = targetText;
+      this.skillHudState.title = `E 藏身不要求朝向；轮廓仅提示目标。Q 锁门：${lockText}`;
     } else {
       const target = this.hideTargetSpotId
         ? this.hideSpots.find(spot => spot.id === this.hideTargetSpotId) ?? null : null;
@@ -1984,14 +2011,22 @@ export class ThreeGame {
       // 三者缺一都不能给出「可以搜家具」的提示，否则就是误导性提示（用户本轮红线）。
       if (target && this.hideTargetLegal && !this.hideTargetExposedPriority) {
         this.skillHudState.textContent = this.humanSearchCooldown.ready
-          ? `人类：Q 搜查「${target.label}」（面向家具即可，不必精确瞄准）｜Q：可用`
-          : `人类：Q 搜查「${target.label}」｜冷却中 ` +
-            `${this.humanSearchCooldown.remainingSeconds.toFixed(1)} 秒（家具描边变暗，暂时不能按）`;
+          ? `Q 搜查「${target.label}」`
+          : `「${target.label}」可搜查 · 等待 Q 冷却`;
       } else {
         this.skillHudState.textContent =
-          `人类：Q 扇形搜查（半径 ${C.humanSearch.range}、张角 ` +
-          `${C.humanSearch.halfAngleDeg * 2}°）｜Q：${searchText}`;
+          '靠近她按 Q 抓捕 · 面向白色轮廓家具按 Q 搜查';
       }
+      this.skillHudState.title = `Q：${searchText}；普通抓捕半径 ${C.humanSearch.range}、张角 ${C.humanSearch.halfAngleDeg * 2}°`;
+    }
+    const actor = this.control.controlled(this.player, this.human);
+    const door = actor ? this.nearestInteractableDoor(actor.position) : null;
+    const rice = faction === 'DEEPSEEK' ? this.nearestRice() : null;
+    if ((faction === 'HUMAN' || !concealed) && door && (!rice || door.distance <= rice.range)) {
+      const state = door.door.state;
+      this.skillHudState.textContent = state === 'OPEN' ? 'E 关门'
+        : state === 'LOCKED' ? faction === 'HUMAN' ? 'E 解锁 · Space 强破' : '门已锁定'
+          : 'E 开门';
     }
     this.skillHudNotice.textContent = this.hideNotice;
     this.skillHud.hidden = false;
@@ -2305,14 +2340,31 @@ export class ThreeGame {
       : phase === 'PLAYING' ? '对局中' : phase === 'PAUSED' ? '已暂停' : '已结束';
     const seconds = Math.floor(this.match.elapsedMs / 1000);
     const time = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-    if (phase === 'PAUSED') this.overlayText.textContent = '游戏已暂停\n按 Esc 或点击按钮继续';
+    const hudFaction = this.control.controlledFaction;
+    this.alphaHud.update({ phase, faction: hudFaction, time,
+      completed: this.rice.completedCount, total: ACTIVE_RICE_COUNT,
+      readySeconds: Math.ceil(this.match.readyRemainingMs / 1000),
+      qRemainingMs: (hudFaction === 'HUMAN' ? this.humanSearchCooldown : this.deepseekLockCooldown).remainingSeconds * 1000,
+      qDurationMs: hudFaction === 'HUMAN' ? C.humanSearch.cooldownMs : C.door.playerLockCooldownMs,
+      sprintRemainingMs: this.sprint.cooldownRemainingMs, sprintDurationMs: C.sprint.cooldownMs,
+      sprintState: this.sprint.state,
+      concealed: hudFaction === 'DEEPSEEK' && this.hide.isConcealed('DEEPSEEK'),
+      captureRatio: this.match.captureProgressMs / C.match.captureMs,
+      riceRatio: hudFaction === 'DEEPSEEK' && this.deepseekVisualTarget.kind === 'RICE' && nearest
+        ? nearest.portion.rice.progressMs / nearest.portion.rice.maxProgressMs : null });
+    this.overlay.dataset.phase = phase;
+    if (phase === 'PAUSED') {
+      this.overlayHeading.textContent = '歇一会儿。';
+      this.overlaySummary.textContent = '游戏已暂停。饭还热着，准备好了就继续。';
+      this.overlayStats.textContent = `${time} / 已吃完 ${this.rice.completedCount} 份米`;
+    }
     else if (phase === 'FINISHED') {
       const result = this.match.result!;
-      this.overlayText.textContent =
-        `${result.winner === 'DEEPSEEK' ? 'DeepSeek 娘' : '人类'}获胜\n` +
-        `原因：${result.reason === 'RICE_COMPLETED' ? `${ACTIVE_RICE_COUNT} 份大米完成` : '抓捕完成'}\n` +
-        `对局时间：${time}\n大米：${this.rice.completedCount}/${ACTIVE_RICE_COUNT}`;
-    } else this.overlayText.textContent = '';
+      this.overlayHeading.textContent = result.winner === 'DEEPSEEK' ? '吃饱，收工！' : '逮到小馋猫了。';
+      this.overlaySummary.textContent = `${result.winner === 'DEEPSEEK' ? 'DeepSeek 娘' : '人类'}获胜 · ` +
+        (result.reason === 'RICE_COMPLETED' ? '五份米都吃完了。' : '抓捕完成，晚饭保住了。');
+      this.overlayStats.textContent = `${time} / 大米 ${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}`;
+    }
     this.pauseActions.hidden = phase !== 'PAUSED';
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
@@ -3147,6 +3199,9 @@ export class ThreeGame {
   }
 
   dispose(): void {
+    this.alphaHud.dispose();
+    this.playerAction.dispose();
+    this.humanAction.dispose();
     cancelAnimationFrame(this.frame);
     this.devBDebug.dispose();
     this.hideSearchView.dispose();

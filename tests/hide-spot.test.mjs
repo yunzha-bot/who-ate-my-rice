@@ -133,7 +133,8 @@ test('every anchor is reachable from both faction spawns through the shared navi
 });
 
 test('the two cartons are plain white-box furniture inside their own room', () => {
-  assert.equal(FURNITURE.length, 20);
+  // 2026-10-04 区域级放大：家具 32 → 40（都是普通家具），藏身点总数仍是 8 个不变。
+  assert.equal(FURNITURE.length, 40);
   assert.deepEqual(FURNITURE.filter(rect => rect.id.includes('carton'))
     .map(rect => rect.id), CARTON_IDS);
   for (const id of CARTON_IDS) {

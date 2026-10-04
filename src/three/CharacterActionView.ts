@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GAME_CONFIG as C } from '../config/gameConfig.ts';
 import type { CharacterAction } from '../systems/CharacterAction.ts';
 import type { Faction } from './LocalControl.ts';
+import { HomeAvatar } from './AlphaPresentation.ts';
 
 /** Visual-only bridge. A future GLB loader may supply its mixer and named clips. */
 export class CharacterActionView {
@@ -21,6 +22,7 @@ export class CharacterActionView {
   private readonly mesh: THREE.Mesh;
   private readonly faction: Faction;
   private readonly random: () => number;
+  private readonly avatar: HomeAvatar;
   private readonly onMixerFinished = (event: { action: THREE.AnimationAction }): void => {
     if (event.action !== this.specialIdleAction) return;
     this.currentIdleSlot = null;
@@ -34,6 +36,7 @@ export class CharacterActionView {
     this.mesh = mesh;
     this.faction = faction;
     this.random = random;
+    this.avatar = new HomeAvatar(mesh, faction === 'DEEPSEEK');
     this.paint();
   }
 
@@ -75,9 +78,12 @@ export class CharacterActionView {
     }
     this.mixer?.update(elapsed / 1000);
     this.tryPlaySpecialIdle();
+    this.avatar.root.visible = !this.mixer;
+    if (!this.mixer) this.avatar.update(this.action, elapsed);
   }
 
   reset(): void {
+    this.avatar.reset();
     this.fallRemainingMs = 0;
     this.action = 'IDLE';
     this.idleElapsedMs = 0;
@@ -96,6 +102,12 @@ export class CharacterActionView {
 
   get idleSeconds(): number {
     return this.idleElapsedMs / 1000;
+  }
+
+  dispose(): void {
+    this.mixer?.removeEventListener('finished', this.onMixerFinished);
+    this.activeClip?.stop();
+    this.avatar.dispose();
   }
 
   private paint(): void {

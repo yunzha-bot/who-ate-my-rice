@@ -82,8 +82,11 @@ test('furniture overlap is judged by the real rotated footprint, not the boundin
   const session = new MapEditSession();
   assert.equal(session.setField('living_sofa', 'rotationDeg', 45), null);
   // The sofa is a 45-degree diamond; this table sits in the bounding-box corner
-  // where the true diamond is absent.
-  assert.equal(session.moveTarget('living_coffee_table', 1.15, -2.05), null);
+  // where the true diamond is absent. (Offset is relative to the authored sofa
+  // centre so it survives map changes.)
+  const sofaCentre = FURNITURE.find(rect => rect.id === 'living_sofa');
+  assert.equal(session.moveTarget('living_coffee_table',
+    sofaCentre.x + 1.15, sofaCentre.z + 0.95), null);
   const sofa = furnitureRect(session.get('living_sofa'));
   const table = furnitureRect(session.get('living_coffee_table'));
   assert.equal(rectsOverlap(rectBoundingAabb(sofa), rectBoundingAabb(table)), true,
@@ -96,14 +99,17 @@ test('furniture overlap is judged by the real rotated footprint, not the boundin
 
 test('door blocking follows the rotated corner, not the unrotated box', () => {
   const straight = new MapEditSession();
-  // door_living_dining sits on the living/dining wall at x = 9; its approach
-  // points sit one actor diameter away on the living side.
-  assert.equal(straight.moveTarget('living_coffee_table', 7.55, 1.5), null);
+  // door_living_dining sits on the living/dining wall at x = 8; its approach
+  // points sit one actor diameter away on the living side. The probe is placed
+  // 1.45 west of the wall so the unrotated table just clears that clearance.
+  const door = DOOR_NODES.find(item => item.id === 'door_living_dining');
+  const probeX = door.x - 1.45, probeZ = door.z;
+  assert.equal(straight.moveTarget('living_coffee_table', probeX, probeZ), null);
   assert.equal(straight.validateDraft().some(item => item.code === 'BLOCKS_DOOR'), false,
     'the unrotated table stays clear of the door and its approach');
   const rotated = new MapEditSession();
   assert.equal(rotated.setField('living_coffee_table', 'rotationDeg', 45), null);
-  assert.equal(rotated.moveTarget('living_coffee_table', 7.55, 1.5), null);
+  assert.equal(rotated.moveTarget('living_coffee_table', probeX, probeZ), null);
   assert.ok(rotated.validateDraft().some(item => item.code === 'BLOCKS_DOOR'),
     'the rotated corner reaches into the door clearance');
 });
@@ -180,8 +186,10 @@ test('a rotated piece blocks a hide route between the position and its surface',
   assert.ok(clearSetup);
   assert.equal(hideRegionSurfaceClear(clearSetup, probe, world), true,
     'the authored anchor has a clear route to its own carton');
-  // A rotated piece crossing that short route has to block it.
-  const blocker = { id: 'test_blocker', kind: 'furniture', x: 7.2, z: 3.6,
+  // A rotated piece crossing that short route has to block it. The anchored
+  // route runs from the anchor along -Z into the carton's near face.
+  const blocker = { id: 'test_blocker', kind: 'furniture',
+    x: near.x, z: near.z + 0.6,
     width: 0.2, depth: 0.6, height: 1, rotation: degreesToRadians(90) };
   const blockedSetup = hideRegionSetup(spot, [near, blocker]);
   assert.ok(blockedSetup);
@@ -248,8 +256,10 @@ test('JSON V3 records the centre, size and true angle and labels the AABB', () =
   assert.equal(piece.kind, 'furniture');
   assert.equal(piece.rotationDeg, 45);
   assert.ok(Math.abs(piece.rotationRad - degreesToRadians(45)) < 1e-12);
-  assert.deepEqual(piece.position, { x: 0, z: -3 });
-  assert.deepEqual(piece.size, { width: 2.2, depth: 1.1, height: 0.65 });
+  const authoredSofa = FURNITURE.find(rect => rect.id === 'living_sofa');
+  assert.deepEqual(piece.position, { x: authoredSofa.x, z: authoredSofa.z });
+  assert.deepEqual(piece.size, { width: authoredSofa.width, depth: authoredSofa.depth,
+    height: authoredSofa.height });
   assert.equal(piece.collisionShape, 'ROTATED_RECT');
   assert.equal(piece.boundingAabbRole, 'broad-phase-approximation');
   const bounds = rectBoundingAabb(furnitureRect(session.get('living_sofa')));

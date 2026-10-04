@@ -2,14 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { HideSystem } from '../src/systems/HideSystem.ts';
+import { HIDE_SPOTS } from '../src/three/map/apartmentMap.ts';
 import { createDeepSeekHideEnv } from './deepseek-ai-walk.mjs';
 
 // S7C-2b H2/H3/H4：真实走图下的完整藏身生命周期。
 // 全部推进都走生产代码的同一段权威层（`resolveDeepSeekAiHideEntry`）与真实
 // `CollisionWorld` / `DoorSystem` / `HideSystem`，没有任何「瞬移到目标点」的捷径。
 
-const CHASE_START = { x: 6.6, z: 3.6 };
-const HUMAN_NEAR = { x: 5.2, z: 3.6 };
+// 2026-10-04 区域级放大：客厅纸箱搬到家具中心 (-5.4, -9.6)，唯一锚点
+// (-5.4, -8.6) 在它的 +Z 一侧，所以要从 +Z 一侧接近。沿用放大前的相对距离：
+// 追逐起点在锚点 +0.4，Human 再沿同一方向 +1.4（合计 1.8）。
+const CARTON_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_living_carton');
+const CHASE_START = { x: CARTON_ANCHOR.x, z: CARTON_ANCHOR.z + 0.4 };
+const HUMAN_NEAR = { x: CARTON_ANCHOR.x, z: CARTON_ANCHOR.z + 1.8 };
 
 function chaseEnv() {
   return createDeepSeekHideEnv({ start: CHASE_START, human: HUMAN_NEAR });

@@ -23,13 +23,21 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, ROOMS, WALLS }
 
 const traceHeading = (dx, dz) => Math.atan2(dx, dz);
 const trace = (id, x, z, createdAt) => ({ id, position: { x, z },
-  heading: traceHeading(1, 0.2), createdAt, lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs,
+  heading: traceHeading(0, -1), createdAt, lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs,
   strength: 1 });
 
-// 客厅里的一小段连续米痕，链尾正好落在客厅纸箱的公开交互区域内。
-const TRACE_A = trace('trace-a', 6.5, 3.5, 100);
-const TRACE_B = trace('trace-b', 7.0, 3.6, 200);
-const LIVING_ORIGIN = { x: 2, z: 3 };
+// 2026-10-04 区域级放大：客厅纸箱搬到 (-5.4, -9.6)，唯一锚点 (-5.4, -8.6) 在它的
+// +Z 一侧，所以 AI 看到的那条连续米痕是沿 -Z 走向纸箱的两粒米（最新一粒落在锚点上，
+// 处在公开交互区域内）。米痕实体朝向沿 -Z 前进即 atan2(0, -1) = π。
+const CARTON = HIDE_SPOTS.find(spot => spot.id === 'hide_living_carton');
+const TRACE_A = trace('trace-a', CARTON.x, CARTON.z + 0.5, 100);
+const TRACE_B = trace('trace-b', CARTON.x, CARTON.z, 200);
+// 放大前 LIVING_ORIGIN 距锚点约 5.0；保持同一相对距离，且仍在客厅内、能看见米痕
+// （perception.visionRange = 11）。
+const LIVING_ORIGIN = { x: CARTON.x, z: CARTON.z + 5 };
+// 次卧的目击点：沿用放大前「次卧锚点 + (3.4, 2.1)」的相对位置。
+const SECOND_BED_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_second_bed');
+const SECOND_BED_SEEN = { x: SECOND_BED_ANCHOR.x + 3.4, z: SECOND_BED_ANCHOR.z + 2.1 };
 
 function harness() {
   const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
@@ -222,7 +230,7 @@ test('the same clue batch can never restart the round, a new batch can', () => {
     env.ai.update(env.input({ visibleTraces: [TRACE_A, TRACE_B], nowMs: 3_000 + index * 50 }));
   assert.equal(env.ai.checkHideStartCount, 1, '同一批线索不得反复启动搜查');
   // 新出现的一粒米构成新的一批线索 → 允许进入下一轮，并换一件家具。
-  const extra = trace('trace-c', 7.4, 3.7, 2_500);
+  const extra = trace('trace-c', CARTON.x + 0.4, CARTON.z + 0.1, 2_500);
   env.ai.update(env.input({ visibleTraces: [TRACE_A, TRACE_B, extra], nowMs: 3_100 }));
   assert.equal(env.ai.checkHideStartCount, 2);
   assert.notEqual(env.ai.checkHideSpotId, 'hide_living_carton',
@@ -238,7 +246,9 @@ test('one investigation checks at most searchRoomCount furniture pieces', () => 
     // 场景布置：让 AI 回到客厅（否则它站在上一件的储物间家具旁，看不见这串米痕，
     // 也就不会发现「新的公开线索」）。本测试检验的是配额，不是走图。
     env.walker.set(LIVING_ORIGIN);
-    const extra = trace(`round-${round}`, 6.9 + round * 0.1, 3.6, 300 + round);
+    // 每一轮补一粒新的米：沿用放大前「锚点 -0.1 + 0.1 × 轮次」的横向错位。
+    const extra = trace(`round-${round}`, CARTON.x - 0.1 + round * 0.1, CARTON.z,
+      300 + round);
     env.ai.update(env.input({ visibleTraces: [TRACE_A, TRACE_B, extra],
       nowMs: 1_000 + round * 100 }));
     if (env.ai.state !== 'CHECK_HIDE') break;
@@ -298,7 +308,7 @@ test('a new trace during a search is only recorded and evaluated afterwards', ()
   startCheckHide(env);
   const clueCountBefore = env.ai.clueMemory.count();
   const spotBefore = env.ai.checkHideSpotId;
-  const extra = trace('late', 7.2, 3.65, 900);
+  const extra = trace('late', CARTON.x + 0.2, CARTON.z + 0.05, 900);
   env.ai.update(env.input({ visibleTraces: [TRACE_A, TRACE_B, extra] }));
   assert.equal(env.ai.clueMemory.count(), clueCountBefore + 1, '新米痕必须先写进线索记忆');
   assert.equal(env.ai.checkHideSpotId, spotBefore, '不得因为新米痕立即重新规划');
@@ -310,10 +320,10 @@ test('the last-seen room is considered first, adjacent rooms still work as fallb
   const env = harness();
   // 修复轮 二：次卧里失视。以前有限搜索刻意排除最后目击房间，只会去邻接的书房；
   // 现在必须先考虑次卧自己的公开藏身家具（hide_second_bed）。
-  env.ai.update(env.input({ human: { x: -12.5, z: 10 }, visibleTarget: { x: -12.5, z: 10 },
-    lastSeen: { position: { x: -12.5, z: 10 }, timeMs: 100 } }));
+  env.ai.update(env.input({ human: SECOND_BED_SEEN, visibleTarget: { ...SECOND_BED_SEEN },
+    lastSeen: { position: { ...SECOND_BED_SEEN }, timeMs: 100 } }));
   assert.equal(env.ai.state, 'CHASE');
-  const lastSeen = { position: { x: -12.5, z: 10 }, timeMs: 100 };
+  const lastSeen = { position: { ...SECOND_BED_SEEN }, timeMs: 100 };
   const seenPoint = env.snap(lastSeen.position);
   env.ai.update(env.input({ human: seenPoint, lastSeen }));
   assert.equal(env.ai.state, 'INVESTIGATE');
@@ -354,7 +364,8 @@ test('a last-seen room without public hide spots falls back to the adjacent sear
   const env = harness();
   // 主走廊里失视：这个房间没有公开藏身点，因此同房间门槛必须拒绝，并回到
   // 既有的相邻房间有限搜索（这与修复前的行为一致，不能被新分支破坏）。
-  const seenAt = { x: -5.5, z: 2 };
+  const HALL = ROOMS.find(room => room.id === 'hall');
+  const seenAt = { x: HALL.x, z: HALL.z };
   env.ai.update(env.input({ human: seenAt, visibleTarget: { ...seenAt },
     lastSeen: { position: { ...seenAt }, timeMs: 100 } }));
   const lastSeen = { position: { ...seenAt }, timeMs: 100 };

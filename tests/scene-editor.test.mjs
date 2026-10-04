@@ -7,12 +7,16 @@ import { degreesToRadians, rectBoundingAabb } from '../src/three/map/RotatedRect
 import { sceneEditorRefusalNotice } from '../src/three/SceneEditor.ts';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
-import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, SPAWNS, WALLS }
-  from '../src/three/map/apartmentMap.ts';
+import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, RICE_CANDIDATES, SPAWNS,
+  WALLS } from '../src/three/map/apartmentMap.ts';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const authoredFurniture = clone(FURNITURE);
+const authoredFurnitureOf = id => authoredFurniture.find(item => item.id === id);
+// The 2026-10-04 region-level enlargement moved every world coordinate, so the
+// probes below are derived from the authored map instead of repeating literals.
+const livingRice = RICE_CANDIDATES.find(item => item.roomId === 'living');
 const radius = GAME_CONFIG.collision.playerRadius;
 const actorHeight = GAME_CONFIG.three.actorHeight;
 
@@ -33,7 +37,7 @@ function worldOf(session) {
 
 test('the editor lists every authored furniture piece and hide spot with read-only identity', () => {
   const session = new MapEditSession();
-  assert.equal(session.furnitureList().length, 20);
+  assert.equal(session.furnitureList().length, 40);
   assert.equal(session.hideSpotList().length, 8);
   assert.deepEqual(new Set(session.furnitureList().map(item => item.id)),
     new Set(FURNITURE.map(item => item.id)));
@@ -42,7 +46,7 @@ test('the editor lists every authored furniture piece and hide spot with read-on
   for (const spot of session.hideSpotList()) {
     assert.ok(spot.kind && spot.roomId && spot.furnitureId && spot.label, spot.id);
   }
-  assert.equal(session.list().length, 28);
+  assert.equal(session.list().length, 48);
   for (const field of ['id', 'kind', 'roomId', 'furnitureId', 'label']) {
     const target = field === 'kind' || field === 'roomId' ? 'living_sofa' : 'hide_main_bed';
     const rejection = session.setField(target, field, 1);
@@ -62,7 +66,7 @@ test('the authored map already satisfies every editor rule', () => {
   const applied = session.apply();
   assert.equal(applied.ok, true);
   assert.equal(session.appliedEditCount, 1);
-  assert.equal(session.cloneCommitted().furniture.length, 20);
+  assert.equal(session.cloneCommitted().furniture.length, 40);
   assert.equal(session.cloneCommitted().hideSpots.length, 8);
 });
 
@@ -74,7 +78,7 @@ test('a legal move is applied and both real collision and navigation follow it',
   assert.ok(beforeCell);
   assert.ok(Math.hypot(beforeCell.x - 13.4, beforeCell.z - 3.6) < 0.001);
 
-  assert.equal(session.moveTarget('dining_table', 13.2, 3.5), null);
+  assert.equal(session.moveTarget('dining_table', 13.2, 3.2), null);
   assert.equal(session.draftStatus, 'VALID');
   assert.deepEqual(session.diff('dining_table').map(entry => entry.field).sort(), ['x', 'z']);
   assert.equal(session.apply().ok, true);
@@ -90,10 +94,16 @@ test('a legal move is applied and both real collision and navigation follow it',
 
 test('a legal resize is applied and the freed space becomes walkable again', () => {
   const session = new MapEditSession();
-  assert.equal(worldOf(session).world.canOccupyStaticXZ(1.0, -3, radius, actorHeight), false);
+  // A point 0.05 inside the authored east edge of the sofa. It is covered while
+  // the sofa is 2.2 wide and freed once the width drops to 1.4 (0.4 per side).
+  const sofa = authoredFurnitureOf('living_sofa');
+  const freedX = sofa.x + sofa.width / 2 - 0.05;
+  assert.equal(worldOf(session).world.canOccupyStaticXZ(freedX, sofa.z, radius, actorHeight),
+    false);
   assert.equal(session.setField('living_sofa', 'width', 1.4), null);
   assert.equal(session.apply().ok, true);
-  assert.equal(worldOf(session).world.canOccupyStaticXZ(1.0, -3, radius, actorHeight), true);
+  assert.equal(worldOf(session).world.canOccupyStaticXZ(freedX, sofa.z, radius, actorHeight),
+    true);
 });
 
 test('a rotated piece keeps its true footprint and records the real angle', () => {
@@ -227,10 +237,12 @@ test('field-level guards reject illegal values without touching the draft', () =
       assert.equal(rejections[0].code, code);
       const blocked = session.apply();
       assert.equal(blocked.ok, false);
-      assert.equal(session.get(id).x, 0);
+      // A rejected apply rolls the draft back to the authored (committed) value.
+      const authoredX = authoredFurnitureOf(id).x;
+      assert.equal(session.get(id).x, authoredX);
       assert.equal(session.lastRejection.code, code);
       assert.deepEqual(session.diff(id), []);
-      assert.equal(session.cloneCommitted().furniture.find(item => item.id === id).x, 0);
+      assert.equal(session.cloneCommitted().furniture.find(item => item.id === id).x, authoredX);
       continue;
     }
     const session = new MapEditSession();
@@ -242,15 +254,17 @@ test('field-level guards reject illegal values without touching the draft', () =
 
 test('a rejected draft rolls the whole session back to the last legal map', () => {
   const session = new MapEditSession();
-  session.moveTarget('dining_table', 13.2, 3.5);
+  session.moveTarget('dining_table', 13.2, 3.2);
   assert.equal(session.apply().ok, true);
-  session.moveTarget('living_carton', 0, -6);
+  // Drop the carton on the living-room rice marker itself: the marker moved with
+  // the enlarged map, so the old hard-coded (0, -6) no longer covers any rice.
+  session.moveTarget('living_carton', livingRice.x, livingRice.z);
   assert.equal(session.isDirty, true);
   const rejected = session.apply();
   assert.equal(rejected.ok, false);
   assert.ok(rejected.rejections.some(item => item.code === 'COVERS_RICE'));
   assert.equal(session.isDirty, false);
-  assert.equal(session.get('living_carton').x, 7.9);
+  assert.equal(session.get('living_carton').x, authoredFurnitureOf('living_carton').x);
   assert.equal(session.get('dining_table').x, 13.2, 'the last legal state must survive a later rejection');
   assert.equal(session.events.at(-1).type, 'SCENE_OBJECT_EDIT_REJECT');
   assert.equal(session.events.filter(event => event.type === 'SCENE_OBJECT_EDIT_APPLY').length, 1);
@@ -258,7 +272,10 @@ test('a rejected draft rolls the whole session back to the last legal map', () =
 
 test('door, rice, spawn and connectivity rules each reject their own violation', () => {
   const doorSession = new MapEditSession();
-  doorSession.moveTarget('living_coffee_table', 8.3, 1.5);
+  // The piece keeps its authored `roomId` (living), so it has to block the
+  // living↔dining doorway from the living side: (7.3, 2.0) sits inside 客厅 while
+  // covering the approach point of `door_living_dining` at (8, 2.5).
+  doorSession.moveTarget('living_coffee_table', 7.3, 2.0);
   const doorRejections = doorSession.validateDraft();
   assert.ok(doorRejections.length > 0);
   assert.ok(doorRejections.every(item => item.code === 'BLOCKS_DOOR'),
@@ -266,21 +283,27 @@ test('door, rice, spawn and connectivity rules each reject their own violation',
   assert.ok(doorRejections.some(item => item.targetId === 'door_living_dining'));
 
   const riceSession = new MapEditSession();
-  riceSession.moveTarget('living_carton', 0, -6);
+  riceSession.moveTarget('living_carton', livingRice.x, livingRice.z);
   assert.ok(riceSession.validateDraft().some(item => item.code === 'COVERS_RICE'));
 
   const spawnSession = new MapEditSession();
   spawnSession.moveTarget('kitchen_island', SPAWNS.human.x, SPAWNS.human.z);
   assert.ok(spawnSession.validateDraft().some(item => item.code === 'SPAWN_BLOCKED'));
 
+  // 2026-10-03：储物间在扩建后有了第三扇门（`door_storage_east_hall`），
+  // 两件家具已经堵不死它；车库仍然只有两扇门，所以改用一件家具堵住一扇门的
+  // 门洞来验证「切断连通性会被拒绝」。
+  const utilityGarageDoor = DOOR_NODES.find(door => door.id === 'door_utility_garage');
+  const eastHallGarageDoor = DOOR_NODES.find(door => door.id === 'door_garage_east_hall');
   const sealSession = new MapEditSession();
-  sealSession.moveTarget('storage_shelf', 15.5, -7);
-  sealSession.moveTarget('storage_carton', 15.5, -1);
+  sealSession.moveTarget('garage_car', utilityGarageDoor.x, utilityGarageDoor.z + 2);
+  sealSession.moveTarget('garage_workbench', eastHallGarageDoor.x + 0.5, eastHallGarageDoor.z);
   const sealRejections = sealSession.validateDraft();
   assert.ok(sealRejections.some(item => item.code === 'ROOM_UNREACHABLE'),
     JSON.stringify(sealRejections.map(item => `${item.code}@${item.targetId}`)));
   assert.equal(sealSession.apply().ok, false);
-  assert.equal(sealSession.cloneCommitted().furniture.find(item => item.id === 'storage_shelf').x, 17.35);
+  assert.equal(sealSession.cloneCommitted().furniture.find(item => item.id === 'garage_car').x,
+    authoredFurnitureOf('garage_car').x);
 });
 
 test('overlapping furniture is rejected', () => {
@@ -291,12 +314,16 @@ test('overlapping furniture is rejected', () => {
 });
 
 test('hide spot anchors must stay standing, clear, inside their room and attached to their furniture', () => {
+  // The anchor is dropped into the middle of the study's own bookshelf, i.e.
+  // inside an obstacle. The old probe sat inside the study of the smaller map.
+  const bookshelf = authoredFurnitureOf('study_bookshelf');
   const insideSession = new MapEditSession();
-  insideSession.moveTarget('hide_study_bookshelf', -0.1, 12.1);
+  insideSession.moveTarget('hide_study_bookshelf', bookshelf.x, bookshelf.z);
   assert.ok(insideSession.validateDraft().some(item => item.code === 'ANCHOR_INSIDE_OBSTACLE'));
 
   const detachedSession = new MapEditSession();
-  detachedSession.moveTarget('hide_main_bed', -10, -3);
+  // Still inside 主卧 but more than `maxAnchorFurnitureGap` (0.9) from the bed.
+  detachedSession.moveTarget('hide_main_bed', -19.5, -10);
   assert.ok(detachedSession.validateDraft().some(item => item.code === 'ANCHOR_DETACHED'));
 
   const roomSession = new MapEditSession();
@@ -311,9 +338,11 @@ test('hide spot anchors must stay standing, clear, inside their room and attache
   assert.equal(facingSession.exportJson().hideSpots
     .find(item => item.id === 'hide_living_carton').facing, 1.25);
 
+  const carton = authoredFurnitureOf('living_carton');
   const furnitureSession = new MapEditSession();
   const cartonAnchor = furnitureSession.get('hide_living_carton');
-  assert.equal(furnitureSession.moveTarget('living_carton', 7.95, 3.95), null);
+  assert.equal(furnitureSession.moveTarget('living_carton', carton.x + 0.05, carton.z + 0.05),
+    null);
   const movedAnchor = furnitureSession.get('hide_living_carton');
   assert.ok(Math.abs(movedAnchor.x - cartonAnchor.x - 0.05) < 1e-9);
   assert.ok(Math.abs(movedAnchor.z - cartonAnchor.z - 0.05) < 1e-9);
@@ -323,14 +352,16 @@ test('hide spot anchors must stay standing, clear, inside their room and attache
 
 test('resetTarget restores authored values and resetAll drops a whole draft', () => {
   const session = new MapEditSession();
-  session.moveTarget('living_carton', 7.9, 3.4);
+  // A single-axis move, so exactly one field can be reported as changed.
+  const carton = authoredFurnitureOf('living_carton');
+  session.moveTarget('living_carton', carton.x + 1, carton.z);
   assert.equal(session.diff('living_carton').length, 1);
   assert.equal(session.resetTarget('living_carton'), true);
   assert.deepEqual(session.diff('living_carton'), []);
   assert.equal(session.isDirty, false);
 
-  session.moveTarget('dining_table', 13.2, 3.5);
-  session.moveTarget('living_carton', 7.9, 3.4);
+  session.moveTarget('dining_table', 13.2, 4.6);
+  session.moveTarget('living_carton', carton.x + 1, carton.z + 1);
   assert.equal(session.isDirty, true);
   session.resetAll();
   assert.equal(session.isDirty, false);
@@ -350,20 +381,22 @@ test('export carries the documented fields, only applied data, and never mutates
   assert.equal(document.units.groundPlane, 'XZ');
   assert.equal(document.units.up, 'Y');
   assert.deepEqual(document.map, { width: MAP_WIDTH, depth: MAP_DEPTH });
-  assert.equal(document.furniture.length, 20);
+  assert.equal(document.furniture.length, 40);
   assert.equal(document.hideSpots.length, 8);
-  assert.equal(document.rooms.length, 12);
-  assert.equal(document.doors.length, 18);
+  assert.equal(document.rooms.length, 18);
+  assert.equal(document.doors.length, 31);
   assert.equal(document.spawns.length, 2);
   assert.equal(document.riceCandidates.length, 14);
 
-  session.moveTarget('dining_table', 13.2, 3.5);
+  // 地图放大后餐厅南墙的 `door_dining_south_hall` 落在 (14, 7)：餐桌停在 z = 3.2
+  // 既盖住 (13.4, 3.6)，又给门口留出通道；再往南移到 z = 6.2 就堵住门前通道，必须被拒。
+  session.moveTarget('dining_table', 13.2, 3.2);
   session.apply();
-  session.moveTarget('dining_table', 13.2, 4.6);
+  session.moveTarget('dining_table', 13.2, 6.2);
   const rejected = session.apply();
   assert.equal(rejected.ok, false);
   const table = session.exportJson().furniture.find(item => item.id === 'dining_table');
-  assert.deepEqual(table.position, { x: 13.2, z: 3.5 });
+  assert.deepEqual(table.position, { x: 13.2, z: 3.2 });
   assert.equal(table.roomId, 'dining');
   assert.equal(table.kind, 'furniture');
   assert.equal(table.rotationDeg, 0);
@@ -377,11 +410,11 @@ test('export carries the documented fields, only applied data, and never mutates
   const spot = session.exportJson().hideSpots.find(item => item.id === 'hide_main_bed');
   assert.equal(spot.kind, 'BED');
   assert.equal(spot.furnitureId, 'main_bed');
-  assert.deepEqual(spot.anchor, { x: -14.4, z: -6.15 });
+  assert.deepEqual(spot.anchor, { x: -22.9, z: -7.65 });
   assert.ok(Number.isFinite(spot.facingDeg));
 
   assert.deepEqual(clone(FURNITURE), authoredFurniture);
-  assert.equal(FURNITURE.length, 20);
+  assert.equal(FURNITURE.length, 40);
   assert.equal(HIDE_SPOTS.length, 8);
   assert.ok(FURNITURE.some(item => item.id === 'living_carton'));
   assert.ok(FURNITURE.some(item => item.id === 'storage_carton'));
@@ -399,7 +432,10 @@ test('the scene editor switch is DEV-only and its limits stay out of GAME_CONFIG
 
 test('validateEditedMap is a pure function of the draft', () => {
   const session = new MapEditSession();
-  session.setField('living_sofa', 'x', 8.5);
+  // A single out-of-room move: -9 leaves 客厅 to the west without touching any
+  // other piece, so this draft violates exactly one rule. The old probe (8.5) now
+  // also overlaps `living_tv_cabinet`, which would no longer isolate the boundary.
+  session.setField('living_sofa', 'x', -9);
   const first = session.validateDraft();
   const second = session.validateDraft();
   assert.deepEqual(first, second);
@@ -440,11 +476,18 @@ function simulateDrag(session, id, moves) {
   return statuses;
 }
 
+// A +0.05-per-step drag of the living carton, anchored on the authored position
+// so the path follows the map instead of repeating the pre-enlargement literals.
+function cartonDragPath(steps) {
+  const carton = authoredFurnitureOf('living_carton');
+  return Array.from({ length: steps },
+    (_, index) => [carton.x + 0.05 * (index + 1), carton.z + 0.05 * (index + 1)]);
+}
+
 test('a drag never runs the full map validation per pointermove', () => {
   const session = new MapEditSession();
   const before = session.validationRuns;
-  const statuses = simulateDrag(session, 'living_carton',
-    [[7.95, 3.95], [8.0, 4.0], [8.05, 4.05], [8.1, 4.1], [8.15, 4.15], [8.2, 4.2]]);
+  const statuses = simulateDrag(session, 'living_carton', cartonDragPath(6));
   assert.deepEqual([...new Set(statuses)], ['DRAGGING']);
   assert.equal(session.validationDeferred, true);
   assert.equal(session.validationRuns, before,
@@ -454,7 +497,7 @@ test('a drag never runs the full map validation per pointermove', () => {
 test('releasing the drag validates exactly once and then serves the cache', () => {
   const session = new MapEditSession();
   const before = session.validationRuns;
-  simulateDrag(session, 'living_carton', [[7.95, 3.95], [8.0, 4.0], [8.05, 4.05]]);
+  simulateDrag(session, 'living_carton', cartonDragPath(3));
   session.endDeferredValidation();
   const release = session.validateDraft().filter(item =>
     item.targetId === 'living_carton' || item.targetId === 'hide_living_carton');
@@ -469,7 +512,11 @@ test('releasing the drag validates exactly once and then serves the cache', () =
 test('an illegal drag is still rejected on release and rolls back', () => {
   const session = new MapEditSession();
   const before = session.validationRuns;
-  simulateDrag(session, 'hide_main_bed', [[-14.3, -6.1], [-14.1, -6.0], [-10.5, -5]]);
+  // A short drag away from the authored anchor, then a jump far outside the
+  // 2.0-unit circle around `main_bed`.
+  const anchor = HIDE_SPOTS.find(item => item.id === 'hide_main_bed');
+  simulateDrag(session, 'hide_main_bed', [[anchor.x + 0.1, anchor.z + 0.05],
+    [anchor.x + 0.5, anchor.z + 0.4], [-19.5, -10]]);
   assert.equal(session.validationRuns, before, 'an illegal draft is not validated mid-drag');
   session.endDeferredValidation();
   const rejections = session.validateDraft().filter(item => item.targetId === 'hide_main_bed');
@@ -483,10 +530,12 @@ test('an illegal drag is still rejected on release and rolls back', () => {
 test('a dragged furniture keeps its anchor and exact region in sync while dragging', () => {
   const session = new MapEditSession();
   const beforeAnchor = session.get('hide_living_carton');
-  simulateDrag(session, 'living_carton', [[7.95, 3.95], [8.0, 4.0]]);
+  const carton = authoredFurnitureOf('living_carton');
+  simulateDrag(session, 'living_carton', cartonDragPath(2));
   const during = session.regionPreview('living_carton', false);
   assert.ok(during, 'the exact outline stays available while dragging');
-  assert.deepEqual({ x: during.geometry.centre.x, z: during.geometry.centre.z }, { x: 8, z: 4 });
+  assert.deepEqual({ x: during.geometry.centre.x, z: during.geometry.centre.z },
+    { x: carton.x + 0.1, z: carton.z + 0.1 });
   assert.equal(during.sampling, null, 'no discrete sampling while dragging');
   const anchor = session.get('hide_living_carton');
   assert.ok(Math.abs(anchor.x - beforeAnchor.x - 0.1) < 1e-9);
@@ -514,13 +563,13 @@ test('a hard reset ends the drag window without needing a validation', () => {
 test('a deferred drag still exports applied data with the V3 document', () => {
   const session = new MapEditSession();
   assert.equal(MAP_EXPORT_VERSION, 3);
-  simulateDrag(session, 'dining_table', [[13.1, 3.4], [13.2, 3.5]]);
+  simulateDrag(session, 'dining_table', [[13.1, 3.4], [13.2, 3.2]]);
   const pending = session.exportJson();
   assert.equal(pending.formatVersion, MAP_EXPORT_VERSION);
   assert.deepEqual(pending.furniture.find(item => item.id === 'dining_table').position,
-    { x: 12, z: 1.5 }, 'unapplied drag data must never be exported');
+    { x: 12, z: 2 }, 'unapplied drag data must never be exported');
   session.endDeferredValidation();
   assert.equal(session.apply().ok, true);
   const applied = session.exportJson().furniture.find(item => item.id === 'dining_table');
-  assert.deepEqual(applied.position, { x: 13.2, z: 3.5 });
+  assert.deepEqual(applied.position, { x: 13.2, z: 3.2 });
 });

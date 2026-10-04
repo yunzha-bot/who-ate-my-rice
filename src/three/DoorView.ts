@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { doorVisualGeometry } from './DoorVisualGeometry.ts';
 import { GAME_CONFIG } from '../config/gameConfig.ts';
 import type { DoorState } from '../systems/DoorSystem.ts';
 import type { DoorNode } from './map/apartmentMap.ts';
@@ -11,25 +12,32 @@ export class DoorView {
   private readonly label: THREE.Sprite | null;
   private readonly material: THREE.MeshStandardMaterial;
   private readonly lockCoreMaterial: THREE.MeshStandardMaterial;
+  private readonly handle: THREE.Mesh;
 
   constructor(definition: DoorNode, debugIndex: number, debug: boolean) {
     this.definition = definition;
     const config = GAME_CONFIG.door;
+    const visual = doorVisualGeometry(definition.width, config.leafThickness);
     this.object.name = definition.id;
     this.object.position.set(
-      definition.x - Math.cos(definition.rotation) * definition.width / 2,
+      definition.x + Math.cos(definition.rotation) * visual.hingeX,
       0,
-      definition.z + Math.sin(definition.rotation) * definition.width / 2,
+      definition.z - Math.sin(definition.rotation) * visual.hingeX,
     );
     this.object.rotation.y = definition.rotation;
     this.material = new THREE.MeshStandardMaterial({ color: config.colors.closed, roughness: 0.9 });
     this.leaf = new THREE.Mesh(
-      new THREE.BoxGeometry(definition.width, config.leafHeight, config.leafThickness),
+      new THREE.BoxGeometry(visual.leafWidth, visual.leafHeight, visual.leafDepth),
       this.material,
     );
-    this.leaf.position.set(definition.width / 2, config.leafHeight / 2, 0);
+    this.leaf.position.set(visual.leafCenterX, visual.leafHeight / 2, 0);
     this.leaf.castShadow = this.leaf.receiveShadow = true;
     this.object.add(this.leaf);
+    this.handle = new THREE.Mesh(new THREE.BoxGeometry(.19, .045, .065),
+      new THREE.MeshStandardMaterial({ color: 0x735c3b, metalness: .3, roughness: .55 }));
+    this.handle.position.set(visual.farEdgeX - .2, visual.leafHeight * .52,
+      visual.leafDepth / 2 + .025);
+    this.object.add(this.handle);
 
     this.lockCoreMaterial = new THREE.MeshStandardMaterial({
       color: config.colors.lockCore,
@@ -38,12 +46,13 @@ export class DoorView {
     });
     this.lockCore = new THREE.Mesh(
       new THREE.BoxGeometry(0.16, 0.22, 0.12), this.lockCoreMaterial);
-    this.lockCore.position.set(definition.width - 0.18, config.leafHeight * 0.58, 0.12);
+    this.lockCore.position.set(visual.farEdgeX - .18, visual.leafHeight * .58,
+      visual.leafDepth / 2 + .06);
     this.object.add(this.lockCore);
     this.lockCore.visible = false;
     this.label = debug ? createLabel(`D${String(debugIndex + 1).padStart(2, '0')} CLOSED`) : null;
     if (this.label) {
-      this.label.position.set(definition.width / 2, config.leafHeight + 0.45, 0);
+      this.label.position.set(visual.leafCenterX, visual.leafHeight + .45, 0);
       this.object.add(this.label);
     }
   }
@@ -52,8 +61,9 @@ export class DoorView {
     const config = GAME_CONFIG.door;
     this.object.rotation.y = this.definition.rotation +
       (state.state === 'OPEN' ? config.openAngle : 0);
-    this.material.color.setHex(state.state === 'OPEN' ? config.colors.open
-      : state.state === 'LOCKED' ? config.colors.locked : config.colors.closed);
+    // Wood stays wood. Lock core + open leaf silhouette communicate real state.
+    this.material.color.setHex(state.state === 'OPEN' ? 0xc2b390
+      : state.state === 'LOCKED' ? 0xa47b61 : 0xc3a17b);
     const disabled = state.lockCoreState === 'DISABLED';
     this.lockCore.visible = disabled || (state.state === 'LOCKED' && state.locked);
     this.lockCoreMaterial.color.setHex(disabled
@@ -70,6 +80,10 @@ export class DoorView {
   lockCoreWorldPosition(target = new THREE.Vector3()): THREE.Vector3 {
     this.object.updateWorldMatrix(true, false);
     return this.lockCore.getWorldPosition(target);
+  }
+
+  setDebugVisible(visible: boolean): void {
+    if (this.label) this.label.visible = visible;
   }
 
   closedCollisionBox(): THREE.Box3 {
@@ -90,6 +104,8 @@ export class DoorView {
     this.material.dispose();
     this.lockCore.geometry.dispose();
     this.lockCoreMaterial.dispose();
+    this.handle.geometry.dispose();
+    (this.handle.material as THREE.Material).dispose();
     if (this.label) {
       const material = this.label.material as THREE.SpriteMaterial;
       material.map?.dispose();

@@ -1,8 +1,12 @@
 import * as THREE from 'three';
+import { buildResidentialExterior } from '../ResidentialExterior.ts';
+import { doorVisualGeometry } from '../DoorVisualGeometry.ts';
+import { dressFurniture, furnitureColor, HOME_PALETTE, HOME_COMPOSITION } from '../AlphaPresentation.ts';
+import { GAME_CONFIG } from '../../config/gameConfig.ts';
 import { orientedObstacleFromRect, type OrientedObstacle } from '../CollisionWorld.ts';
 import { rectCorners } from './RotatedRect.ts';
 import { DEBUG_MAP, FURNITURE, hideSpotDebugMarkers, HIDE_SPOTS, RICE_CANDIDATES,
-  ROOMS, SPAWNS, WALLS, type HideSpot, type Rect } from './apartmentMap';
+  ROOMS, SPAWNS, WALLS, DOOR_NODES, type HideSpot, type Rect } from './apartmentMap.ts';
 
 const material = (color: number) => new THREE.MeshStandardMaterial({ color, roughness: 1 });
 
@@ -55,6 +59,7 @@ export interface ApartmentBuildOptions {
 
 export interface ApartmentBuild {
   root: THREE.Group;
+  debugRoot: THREE.Group;
   // Exact axis-aligned colliders (walls and rotation-0 pieces).
   obstacles: THREE.Box3[];
   // Exact colliders for pieces rotated by an arbitrary angle. Their bounding
@@ -97,6 +102,10 @@ export function buildApartment(parent: THREE.Object3D,
   const root = new THREE.Group();
   root.name = 'apartment';
   parent.add(root);
+  const debugRoot = new THREE.Group();
+  debugRoot.name = 'map-debug-labels';
+  debugRoot.visible = false;
+  root.add(debugRoot);
   const obstacles: THREE.Box3[] = [];
   const orientedObstacles: OrientedObstacle[] = [];
   const furnitureMeshes = new Map<string, THREE.Mesh>();
@@ -105,18 +114,29 @@ export function buildApartment(parent: THREE.Object3D,
   anchorGizmoRoot.name = 'hide-spot-anchors';
   anchorGizmoRoot.visible = options.anchorGizmos ?? false;
   root.add(anchorGizmoRoot);
+  buildResidentialExterior(root, ROOMS);
 
   for (const room of ROOMS) {
     const floor = box(root, room.width - 0.04, 0.12, room.depth - 0.04,
-      room.color, room.x, -0.06, room.z);
+      // `north_balcony` matches on "balcony"; `utility` is a tiled wet/laundry room.
+      /bathroom|kitchen|balcony|utility/.test(room.id) ? HOME_PALETTE.tile : 0xbca17c,
+      room.x, -0.06, room.z);
     floor.castShadow = false;
-    if (debug) marker(root, room.name, '#ffffff', room.x, room.z, 0.18);
+    const points: THREE.Vector3[] = [];
+    for (let z = room.minZ + .65; z < room.maxZ; z += .65)
+      points.push(new THREE.Vector3(room.minX + .025, .008, z),
+        new THREE.Vector3(room.maxX - .025, .008, z));
+    const grain = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),
+      new THREE.LineBasicMaterial({ color: 0x917451, transparent: true, opacity: .16,
+        depthWrite: false }));
+    root.add(grain);
+    if (debug) marker(debugRoot, room.name, '#ffffff', room.x, room.z, 0.18);
   }
 
   const addObstacle = (rect: Rect): void => {
     const isFurniture = rect.kind === 'furniture';
     const rotation = rect.rotation ?? 0;
-    const color = isFurniture ? 0x746d67 : 0x59646d;
+    const color = isFurniture ? furnitureColor(rect.id) : HOME_PALETTE.wall;
     const mesh = box(root, rect.width, rect.height, rect.depth, color,
       rect.x, rect.height / 2, rect.z);
     // The visual mesh follows the same angle as the collision footprint.
@@ -131,10 +151,42 @@ export function buildApartment(parent: THREE.Object3D,
       // axis-aligned bounds must never be registered as a solid box.
       orientedObstacles.push(orientedObstacleFromRect(rect));
     }
-    if (isFurniture) furnitureMeshes.set(rect.id, mesh);
-    if (debug && isFurniture) addFurnitureOutline(root, rect);
+    if (!isFurniture) {
+      // Cutaway wall presentation AFTER authoritative colliders are captured.
+      mesh.scale.y = HOME_COMPOSITION.wallHeightScale;
+      mesh.position.y = rect.height * HOME_COMPOSITION.wallHeightScale / 2;
+      // Broaden only the short axis, never shorten a doorway along the wall.
+      if (rect.width < rect.depth) mesh.scale.x = HOME_COMPOSITION.wallThicknessScale;
+      else mesh.scale.z = HOME_COMPOSITION.wallThicknessScale;
+      const cap = box(root, rect.width < rect.depth ? .36 : rect.width,
+        .12, rect.width < rect.depth ? rect.depth : .36, 0xcbbb9c,
+        rect.x, rect.height * HOME_COMPOSITION.wallHeightScale + .06, rect.z);
+      cap.name = 'visual-wall-cap';
+    }
+    if (isFurniture) {
+      furnitureMeshes.set(rect.id, mesh);
+      dressFurniture(mesh, rect);
+    }
+    if (debug && isFurniture) addFurnitureOutline(debugRoot, rect);
   };
   [...WALLS, ...furniture].forEach(addObstacle);
+  // Stationary door casing: it must not rotate with the opening leaf.
+  for (const door of DOOR_NODES) {
+    const visual = doorVisualGeometry(door.width, GAME_CONFIG.door.leafThickness);
+    const frame = new THREE.Group();
+    frame.position.set(door.x, 0, door.z);
+    frame.rotation.y = door.rotation;
+    frame.name = `visual-frame-${door.id}`;
+    root.add(frame);
+    for (const side of [-1, 1]) {
+      const post = box(frame, visual.jambWidth, visual.jambHeight, visual.frameDepth,
+        0xab9473, side * (door.width / 2 - visual.jambWidth / 2), visual.jambHeight / 2, 0);
+      post.name = `jamb-${side < 0 ? 'left' : 'right'}`;
+    }
+    const header = box(frame, door.width, visual.headerHeight, visual.frameDepth,
+      0xab9473, 0, visual.headerY, 0);
+    header.name = 'door-header';
+  }
 
   for (const spot of hideSpots) {
     const group = new THREE.Group();
@@ -173,22 +225,22 @@ export function buildApartment(parent: THREE.Object3D,
 
   if (debug) {
     for (const candidate of RICE_CANDIDATES) {
-      box(root, 0.3, 0.03, 0.3, 0x5889b0, candidate.x, 0.025, candidate.z);
-      marker(root, candidate.id, '#9fd7ff', candidate.x, candidate.z, 0.45);
+      box(debugRoot, 0.3, 0.03, 0.3, 0x5889b0, candidate.x, 0.025, candidate.z);
+      marker(debugRoot, candidate.id, '#9fd7ff', candidate.x, candidate.z, 0.45);
     }
     // S7C-1A: debug-only view of the hide spots (id, type and anchor
     // coordinates). Nothing is produced while the debug labels are off.
     for (const spot of hideSpotDebugMarkers(debug, hideSpots)) {
-      box(root, 0.36, 0.03, 0.36, 0x7fd08a, spot.x, 0.025, spot.z);
-      markerLines(root, spot.text, '#b7e0a2', spot.x, spot.z, 1.6, 26);
+      box(debugRoot, 0.36, 0.03, 0.36, 0x7fd08a, spot.x, 0.025, spot.z);
+      markerLines(debugRoot, spot.text, '#b7e0a2', spot.x, spot.z, 1.6, 26);
     }
     // Authored reference points; the live per-round spawns are shown in DEV.
-    marker(root, 'DS REF SPAWN', '#91caff', SPAWNS.deepseek.x, SPAWNS.deepseek.z, 1.35);
-    marker(root, 'HU REF SPAWN', '#ffc18e', SPAWNS.human.x, SPAWNS.human.z, 1.35);
+    marker(debugRoot, 'DS REF SPAWN', '#91caff', SPAWNS.deepseek.x, SPAWNS.deepseek.z, 1.35);
+    marker(debugRoot, 'HU REF SPAWN', '#ffc18e', SPAWNS.human.x, SPAWNS.human.z, 1.35);
   }
 
   return {
-    root, obstacles, orientedObstacles, furnitureMeshes, anchorGizmos, anchorGizmoRoot,
+    root, debugRoot, obstacles, orientedObstacles, furnitureMeshes, anchorGizmos, anchorGizmoRoot,
     dispose(): void {
       root.traverse(object => {
         if (object instanceof THREE.Sprite) {

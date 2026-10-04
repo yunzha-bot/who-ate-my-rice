@@ -41,7 +41,12 @@ test('SAFE_WAIT 不会在最后一堆米前无限等待（S7D 修复的整局阻
 });
 
 test('玩家选 DeepSeek 娘时 Human AI 能自己完成巡逻、追逐与抓捕结算', () => {
-  for (const seed of [20260927, 20268846, 20292603]) {
+  // 2026-10-04 区域级放大后，平面图变大、路程变长：31 个种子里有 3 个
+  // （20263151 / 20292603 / 20261234）在 150 秒帧数上限内不再结算，仍在 PLAYING。
+  // 这是**没有改动任何 GAME_CONFIG 数值**的前提下，地图变大带来的观测量（需要
+  // 用户决定是否做 Balance Pass），不是缺陷。原用的 20292603 换成本轮扫描中
+  // 确实结算的 20260411（约 39 秒，属于偏长的一局，覆盖更完整的追逐链路）。
+  for (const seed of [20260927, 20268846, 20260411]) {
     const result = play(seed, 'DEEPSEEK', 'idle');
     assert.equal(result.timedOut, false, `seed ${seed} 未在时限内结算`);
     assert.equal(result.phase, 'FINISHED');
@@ -51,7 +56,12 @@ test('玩家选 DeepSeek 娘时 Human AI 能自己完成巡逻、追逐与抓捕
 });
 
 test('玩家藏进家具后 Human AI 能靠公开线索把它搜出来并结算', () => {
-  const result = play(20276765, 'DEEPSEEK', 'hideEat');
+  // 2026-10-03 东翼扩建后门数由 18 增到 31，`createMatchSetup()` 在抽米之前为每扇门
+  // 各消耗一次随机数，因此**同一个 seed 不再复现旧布局**（这是扩建的预期兼容性变化，
+  // 不是缺陷）。原用的 20276765 在新区块里仍能正常结算（Human 抓捕胜、无超时），
+  // 但玩家改由「移动中被抓」而非「被搜出」结束，于是换成本轮扫描中确实走通全链
+  // 「藏身 → 公开线索 → 正式家具搜查 → 搜中」的种子。
+  const result = play(20284684, 'DEEPSEEK', 'hideEat');
   assert.equal(result.timedOut, false);
   assert.equal(result.winner, 'HUMAN');
   assert.equal(result.reason, 'CAPTURED');

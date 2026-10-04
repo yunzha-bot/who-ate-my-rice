@@ -27,14 +27,22 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, ROOMS, WALLS }
 const trace = (id, x, z, createdAt, dx = 1, dz = 0.2) => ({ id, position: { x, z },
   heading: Math.atan2(dx, dz), createdAt,
   lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs, strength: 1 });
-// 客厅里的一段连续米痕，链尾落在客厅纸箱的公开交互区域内。
-const CARTON_1 = trace('carton-1', 6.5, 3.5, 100, 1, 0.2);
-const CARTON_2 = trace('carton-2', 7.0, 3.6, 200, 1, 0.2);
-// 次卧床附近的一段连续米痕，链尾落在次卧床的公开交互区域内。
-const BED_1 = trace('bed-1', -12.0, 10.4, 100, -1.2, -0.6);
-const BED_2 = trace('bed-2', -13.2, 9.8, 200, -1.2, -0.6);
-const LIVING = { x: 2, z: 3 };
-const BED_ORIGIN = { x: -12.5, z: 10 };
+// 2026-10-04 区域级放大：客厅纸箱中心 (-5.4, -9.6)、唯一锚点 (-5.4, -8.6) 在 +Z
+// 一侧，因此一段走向纸箱的连续米痕沿 -Z 前进（实体 heading = atan2(0, -1) = π）；
+// 最新一粒落在锚点上，处在公开交互区域内。
+const CARTON = HIDE_SPOTS.find(spot => spot.id === 'hide_living_carton');
+const CARTON_1 = trace('carton-1', CARTON.x, CARTON.z + 0.5, 100, 0, -1);
+const CARTON_2 = trace('carton-2', CARTON.x, CARTON.z, 200, 0, -1);
+// 次卧床附近的一段连续米痕：沿用放大前「锚点 + (2.4, 1.5) / + (1.2, 0.9)」的相对
+// 位置，链尾仍落在次卧床的公开交互区域内。
+const SECOND_BED_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_second_bed');
+const BED_1 = trace('bed-1', SECOND_BED_ANCHOR.x + 2.4, SECOND_BED_ANCHOR.z + 1.5,
+  100, -1.2, -0.6);
+const BED_2 = trace('bed-2', SECOND_BED_ANCHOR.x + 1.2, SECOND_BED_ANCHOR.z + 0.9,
+  200, -1.2, -0.6);
+// 放大前两个起点距各自锚点分别约 5.0 与 4.0，这里保持同一相对距离。
+const LIVING = { x: CARTON.x, z: CARTON.z + 5 };
+const BED_ORIGIN = { x: SECOND_BED_ANCHOR.x + 3.4, z: SECOND_BED_ANCHOR.z + 2.1 };
 
 function harness(origin = LIVING) {
   const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
@@ -214,7 +222,7 @@ test('a last-seen investigation is never preempted by an older trace batch', () 
   // 先看见客厅米痕但被目视目标占用 → 延后；随后在次卧失去视线。
   env.ai.update(env.input({ visibleTraces: [CARTON_1, CARTON_2],
     visibleTarget: { x: 4, z: 3 }, nowMs: 1_000 }));
-  const seen = { position: { x: -12.5, z: 10 }, timeMs: 1_100 };
+  const seen = { position: { ...BED_ORIGIN }, timeMs: 1_100 };
   env.ai.update(env.input({ human: seen.position, visibleTarget: { x: 4, z: 3 },
     nowMs: 1_050 }));
   env.ai.update(env.input({ human: seen.position, lastSeen: seen, nowMs: 1_100 }));
@@ -253,10 +261,10 @@ test('an expired last seen and expired traces never form an old suspicion', () =
   assert.equal(env.ai.checkHideStartCount, 0);
   assert.equal(env.ai.state, 'PATROL');
   // ② Last Seen 过期：同房间门槛必须拒绝，不得形成旧怀疑。
-  const stale = { position: { x: -12.5, z: 10 }, timeMs: 100 };
+  const stale = { position: { ...BED_ORIGIN }, timeMs: 100 };
   const env2 = harness();
   env2.ai.update(env2.input({ human: stale.position,
-    visibleTarget: { x: -12.5, z: 10 }, nowMs: 100 }));
+    visibleTarget: { ...BED_ORIGIN }, nowMs: 100 }));
   env2.ai.update(env2.input({ human: env2.snap(stale.position), lastSeen: stale,
     nowMs: 100 }));
   assert.equal(env2.ai.state, 'INVESTIGATE');
@@ -336,7 +344,7 @@ test('a trace miss finishes the action but keeps the approved investigation budg
     env.ai.update(env.input({ visibleTraces: [CARTON_1, CARTON_2],
       nowMs: 2_000 + frame * 50 }));
   assert.equal(env.ai.checkHideStartCount, 1);
-  const extra = trace('carton-3', 7.4, 3.7, 2_600, 1, 0.2);
+  const extra = trace('carton-3', CARTON.x + 0.4, CARTON.z + 0.1, 2_600, 0, -1);
   env.ai.update(env.input({ visibleTraces: [CARTON_1, CARTON_2, extra], nowMs: 2_700 }));
   assert.equal(env.ai.checkHideStartCount, 2);
   assert.notEqual(env.ai.checkHideSpotId, 'hide_living_carton');

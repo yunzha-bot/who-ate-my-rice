@@ -51,12 +51,12 @@ export class RiceView {
     this.config = config;
 
     this.body = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshStandardMaterial({ color, roughness: 1 }),
+      new THREE.CylinderGeometry(0.5, 0.4, 1, 12),
+      new THREE.MeshStandardMaterial({ color: 0xc9ad7d, roughness: 1 }),
     );
     this.bulge = new THREE.Mesh(
       new THREE.SphereGeometry(0.5, 12, 8),
-      new THREE.MeshStandardMaterial({ color: new THREE.Color(color).multiplyScalar(1.06), roughness: 1 }),
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(color).lerp(new THREE.Color(0xfff9df), .7), roughness: .8 }),
     );
     this.body.castShadow = this.body.receiveShadow = true;
     this.bulge.castShadow = this.bulge.receiveShadow = true;

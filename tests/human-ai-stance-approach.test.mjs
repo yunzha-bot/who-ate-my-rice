@@ -28,14 +28,21 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, ROOMS, WALLS }
 const trace = (id, x, z, createdAt, dx = 1, dz = 0.2) => ({ id, position: { x, z },
   heading: Math.atan2(dx, dz), createdAt,
   lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs, strength: 1 });
-// 客厅纸箱附近 / 次卧床附近的连续米痕（都由真实候选排序指向对应家具）。
-const CARTON_1 = trace('carton-1', 6.5, 3.5, 100, 1, 0.2);
-const CARTON_2 = trace('carton-2', 7.0, 3.6, 200, 1, 0.2);
-const BED_1 = trace('bed-1', -12.0, 10.4, 100, -1.2, -0.6);
-const BED_2 = trace('bed-2', -13.2, 9.8, 200, -1.2, -0.6);
-// 全部是真实地图上「可站立」的起点（碰撞体内部的坐标不能用来走图）。
-const LIVING_ORIGIN = { x: 2, z: 3 };
-const BED_ORIGIN = { x: -11, z: 11 };
+// 2026-10-04 区域级放大：客厅纸箱中心 (-5.4, -9.6)、唯一锚点 (-5.4, -8.6) 在 +Z
+// 一侧，所以走向纸箱的连续米痕沿 -Z 前进（实体 heading = atan2(0, -1) = π）。
+const CARTON = HIDE_SPOTS.find(spot => spot.id === 'hide_living_carton');
+const CARTON_1 = trace('carton-1', CARTON.x, CARTON.z + 0.5, 100, 0, -1);
+const CARTON_2 = trace('carton-2', CARTON.x, CARTON.z, 200, 0, -1);
+// 次卧床附近的一段连续米痕：沿用放大前的相对位置（锚点 + (2.4, 1.5) / + (1.2, 0.9)）。
+const SECOND_BED_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_second_bed');
+const BED_1 = trace('bed-1', SECOND_BED_ANCHOR.x + 2.4, SECOND_BED_ANCHOR.z + 1.5,
+  100, -1.2, -0.6);
+const BED_2 = trace('bed-2', SECOND_BED_ANCHOR.x + 1.2, SECOND_BED_ANCHOR.z + 0.9,
+  200, -1.2, -0.6);
+// 全部是真实地图上「可站立」的起点（碰撞体内部的坐标不能用来走图）；
+// 与放大前一样，两个起点各自距对应锚点约 5.0 与 4.0。
+const LIVING_ORIGIN = { x: CARTON.x, z: CARTON.z + 5 };
+const BED_ORIGIN = { x: SECOND_BED_ANCHOR.x + 3.4, z: SECOND_BED_ANCHOR.z + 2.1 };
 
 function harness(origin) {
   const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
@@ -132,26 +139,29 @@ function runFormalCheck(env, occupied) {
   return resolution;
 }
 
-test('reaching the navigation cell alone is not a legal stance (the real 0.313 u gap)', () => {
+test('reaching the navigation cell alone is not a legal stance (the real 0.349 u gap)', () => {
   const env = harness(LIVING_ORIGIN);
-  // 真实规划器给出的主卧床站位：它的**导航吸附点**与站位本身相差 0.313 世界单位，
+  // 真实规划器给出的次卧床站位：它的**导航吸附点**与站位本身相差 0.349 世界单位，
   // 明显大于 waypointTolerance（0.25）。这正是真实日志里 STANCE_LOST 的几何来源。
-  const mainBed = FURNITURE.find(rect => rect.id === 'main_bed');
-  const plan = planHideSearchStance('hide_main_bed', mainBed, LIVING_ORIGIN,
+  // （2026-10-04 区域级放大前这个样本是主卧床的 0.313；放大后主卧床在更大的房间里
+  // 规划出的站位总是落在离导航格心 0.086 的位置，于是改用同样真实、且仍然错位超过
+  // 容差的次卧床站位作为构造样本——断言本身一字未改。）
+  const secondBed = FURNITURE.find(rect => rect.id === 'second_bed');
+  const plan = planHideSearchStance('hide_second_bed', secondBed, LIVING_ORIGIN,
     env.stanceWorld);
   assert.equal(plan.code, 'READY');
   const snapGap = Math.hypot(plan.stance.navigationCell.x - plan.stance.stancePoint.x,
     plan.stance.navigationCell.z - plan.stance.stancePoint.z);
   assert.ok(snapGap > GAME_CONFIG.humanAI.waypointTolerance + 1e-9,
     `构造样本必须真的错位：吸附点偏差 ${snapGap}`);
-  assert.ok(Math.abs(snapGap - 0.313) < 0.01, `真实测量值应当稳定：${snapGap}`);
+  assert.ok(Math.abs(snapGap - 0.349) < 0.01, `真实测量值应当稳定：${snapGap}`);
 
-  // 让 AI 真实进入 CHECK_HIDE（次卧床的坐标在这条测试里无所谓，站位的来源才是关键）。
+  // 让 AI 真实进入 CHECK_HIDE（客厅纸箱的坐标在这条测试里无所谓，站位的来源才是关键）。
   env.walk({ visibleTraces: [CARTON_1, CARTON_2] });
   assert.equal(env.ai.state, 'CHECK_HIDE');
-  // 场景布置：把「真实规划出来的 main_bed 站位」交给控制器，并把角色放在吸附点上。
+  // 场景布置：把「真实规划出来的次卧床站位」交给控制器，并把角色放在吸附点上。
   env.ai.checkHideStance = plan.stance;
-  env.ai.checkHideSpotId = 'hide_main_bed';
+  env.ai.checkHideSpotId = 'hide_second_bed';
   env.ai.checkHidePhase = 'TRAVEL';
   env.ai.target = { ...plan.stance.stancePoint };
   env.walker.set(plan.stance.navigationCell);
@@ -171,7 +181,7 @@ test('reaching the navigation cell alone is not a legal stance (the real 0.313 u
   assert.ok(dot > 0.999, `最终接近方向必须指向原始站位：dot=${dot}`);
   // 继续走：必须真的走到规划站位，然后才开始 900 ms 停留。
   const request = walkToCheck(env);
-  assert.equal(request, 'hide_main_bed');
+  assert.equal(request, 'hide_second_bed');
   assert.ok(env.ai.checkHideApproachSteps >= 1, '必须真的走过一段最终接近');
   assert.ok(env.ai.checkHideStanceDistance <=
     GAME_CONFIG.humanAI.waypointTolerance + GAME_CONFIG.collision.contactEpsilon,

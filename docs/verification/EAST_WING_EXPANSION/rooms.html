@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>东翼新房间逐个复核</title>
+<style>body{margin:0;overflow:hidden;background:#d1cec3}canvas{display:block}
+output{position:fixed;top:8px;left:8px;background:#fffc;padding:6px;font:12px sans-serif}</style>
+<!--
+  东翼扩建复核页（仅本目录证据用，不属于游戏源码，不参与玩法/碰撞）。
+  与 docs/verification/EXTERIOR_GEOMETRY/review.html 同一套做法：
+  直接 import 正式 buildApartment / DoorView / 相机定位 / 深度拟合，不复制坐标。
+  差别只有两点：
+    1. buildApartment(..., {debug:true}) 并打开 debugRoot，让官方地图标签（房间中文名、
+       大米候选 id、藏身锚点）可见，从而在截图里直接读出房间名；
+    2. 相机按照 ?room=<id> 摆到该房间中心的等轴测视点。
+  ?room=all 给出东翼总览。
+-->
+<output id="status">loading</output>
+<script type="module">
+import * as THREE from 'three';
+import { buildApartment } from '/src/three/map/MapBuilder.ts';
+import { DoorView } from '/src/three/DoorView.ts';
+import { DOOR_NODES, ROOMS } from '/src/three/map/apartmentMap.ts';
+import { positionCameraOnTarget } from '/src/three/CameraRelativeMovement.ts';
+import { fitOrthographicSceneDepth } from '/src/three/SceneCameraDepth.ts';
+
+const params = new URLSearchParams(location.search);
+const want = params.get('room') ?? 'all';
+const height = Number(params.get('h') ?? '0') || 0;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd1cec3);
+scene.add(new THREE.HemisphereLight(0xfff5e4, 0x9c9988, 2));
+const sun = new THREE.DirectionalLight(0xffefd8, 2.4);
+sun.position.set(-8, 24, 12);
+scene.add(sun);
+
+// 官方 DEV 地图标签：房间中文名 / 大米候选 id / 藏身锚点都由 MapBuilder 自己画。
+const apartment = buildApartment(scene, { debug: true });
+apartment.debugRoot.visible = true;
+const visualBounds = new THREE.Box3().setFromObject(apartment.root);
+DOOR_NODES.forEach((door, i) => scene.add(new DoorView(door, i, false).object));
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+document.body.append(renderer.domElement);
+
+const camera = new THREE.OrthographicCamera();
+const offset = new THREE.Vector3(12, 14, 12);
+
+function target() {
+  if (want === 'all') return new THREE.Vector3(16.5, 0, 0);
+  const room = ROOMS.find(r => r.id === want);
+  if (!room) throw new Error('unknown room ' + want);
+  return new THREE.Vector3(room.x, 0, room.z);
+}
+
+const status = document.getElementById('status');
+function draw() {
+  const aspect = innerWidth / innerHeight;
+  const h = height || (want === 'all' ? 30 : 18);
+  Object.assign(camera, { left: -h * aspect / 2, right: h * aspect / 2,
+    top: h / 2, bottom: -h / 2 });
+  camera.near = 0.1;
+  camera.far = 100;
+  camera.updateProjectionMatrix();
+  const t = target();
+  positionCameraOnTarget(camera, t, offset);
+  camera.updateMatrixWorld(true);
+  fitOrthographicSceneDepth(camera, visualBounds);
+  renderer.render(scene, camera);
+  const room = ROOMS.find(r => r.id === want);
+  status.textContent = `${want}${room ? ` ${room.name} x[${room.minX},${room.maxX}]`
+    + ` z[${room.minZ},${room.maxZ}]` : ''} / h ${h} / aspect ${aspect.toFixed(4)}`
+    + ` / ${innerWidth}x${innerHeight} / near ${camera.near} far ${camera.far.toFixed(1)}`;
+}
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); draw(); });
+draw();
+window.__roomProbe = () => ({ want, status: status.textContent });
+</script></html>

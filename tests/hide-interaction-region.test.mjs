@@ -164,8 +164,9 @@ test('furniture rotation keeps the region, a moved anchor turns the sector axis'
   const after = hideRegionGeometry(spot, turned);
   assert.deepEqual(after.centre, before.centre);
   assert.equal(after.axisAngle, before.axisAngle);
-  for (const point of [{ x: -17.2, z: -6.6 }, { x: -15.8, z: -6.6 },
-    { x: -16.1, z: -9.3 }]) {
+  for (const point of [{ x: authored.x - 1.1, z: authored.z + 1.2 },
+    { x: authored.x + 0.3, z: authored.z + 1.2 },
+    { x: authored.x, z: authored.z - 1.5 }]) {
     assert.equal(pointInHideRegion(after, point), pointInHideRegion(before, point));
   }
   // Moving the furniture moves the region; moving the anchor turns its axis.
@@ -201,8 +202,21 @@ test('the interaction aims at the exposed furniture surface, not the centre', ()
 });
 
 test('a standable position behind a wall is rejected by the surface route', () => {
-  const setup = setupOf('hide_storage_carton');
-  const behindWall = { x: 14.6, z: -4.8 };
+  // 2026-10-04 区域级放大后，授权地图上**不存在**「站得住、落在自己区域内、却被墙
+  // 挡在家具表面之外」的点：0.02 步长扫过 8 个区域的全部可站点，`surfaceClear` 全为
+  // true，`SURFACE_BLOCKED` / `NOT_NAVIGABLE` 不再由授权坐标产生。原因是储物间纸箱
+  // （16.7, -12.5）虽然仍离厨房隔墙 0.7，但厨房一侧紧贴隔墙的是厨房柜台
+  // （15.55, -13，占 x 15.2–15.9 / z -14.5–-11.5），墙内侧那一条可站带被柜台占满。
+  // 这里沿用本文件其它用例既有做法：只把**这一件家具搬到隔墙旁边**（保持离墙 0.7、
+  // 保持锚点在储物间一侧），几何仍全部由真实墙 / 真实碰撞 / 真实感知算出，
+  // 重建放大前「站在厨房、隔墙去摸储物间纸箱」的那个样本。
+  const movedFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
+    ? { ...rect, x: 16.7, z: -4.8 } : rect);
+  const movedSpot = { ...spotsById.get('hide_storage_carton'), x: 17.75, z: -4.8 };
+  const setup = hideRegionSetup(movedSpot, movedFurniture);
+  assert.ok(setup);
+
+  const behindWall = { x: 15.6, z: -4.8 };
   // Really the other side of the storage/kitchen wall, and really standable.
   assert.equal(roomAt(behindWall.x, behindWall.z).id, 'kitchen');
   assert.equal(roomAt(setup.geometry.anchor.x, setup.geometry.anchor.z).id, 'storage');
@@ -214,16 +228,15 @@ test('a standable position behind a wall is rejected by the surface route', () =
   assert.equal(check.legal, false);
   assert.equal(check.code, 'SURFACE_BLOCKED');
 
-  // The larger living-carton circle reaches across a wall too, but the actor
-  // circle cannot stand there, so it creates no legal position either.
-  const living = setupOf('hide_living_carton');
-  const intoDining = { x: 9.05, z: 4.2 };
-  assert.equal(roomAt(intoDining.x, intoDining.z).id, 'dining');
-  const diningCheck = checkHideRegionPosition(living, intoDining, world);
-  assert.equal(diningCheck.insideRegion, true);
-  assert.equal(diningCheck.standable, false);
-  assert.equal(diningCheck.legal, false);
-  assert.equal(diningCheck.code, 'NOT_STANDABLE');
+  // 同一个区域的另一半：纸箱圆也跨过墙伸到厨房一侧，但角色圆贴着墙站不住，
+  // 所以那里同样不构成任何合法位置（判定顺序：可站 > 表面通畅）。
+  const intoWall = { x: 15.75, z: -4.8 };
+  assert.equal(roomAt(intoWall.x, intoWall.z).id, 'kitchen');
+  const wallCheck = checkHideRegionPosition(setup, intoWall, world);
+  assert.equal(wallCheck.insideRegion, true);
+  assert.equal(wallCheck.standable, false);
+  assert.equal(wallCheck.legal, false);
+  assert.equal(wallCheck.code, 'NOT_STANDABLE');
 });
 
 test('legal positions exist, stay in their own room and reach the anchor', () => {

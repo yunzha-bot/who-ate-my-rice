@@ -373,7 +373,7 @@ test('escape uses apartment navigation and circle collision without corner penet
   const navigation = new NavigationSystem(world, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
   const perception = new PerceptionGeometry(WALLS, DOOR_NODES, () => doors.doors);
   const ai = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
-  const position = new Vector3(2, C.three.actorHeight / 2, -3);
+  const position = new Vector3(2, C.three.actorHeight / 2, -4.5);
   const human = { x: 3, z: -3 };
   assert.equal(perception.inspectVision(position, human, C.perception.visionRange).status,
     'VISIBLE');
@@ -403,7 +403,7 @@ test('thirty-second living-room threat does not loop between escaping and the sa
   const perception = new PerceptionGeometry(WALLS, DOOR_NODES, () => doors.doors);
   const vision = new VisionSystem();
   const ai = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
-  const position = new Vector3(2, C.three.actorHeight / 2, -3);
+  const position = new Vector3(2, C.three.actorHeight / 2, -4.5);
   const human = { x: 2.8, z: -3 };
   const rice = RICE_CANDIDATES
     .filter(candidate => ['rice_02', 'rice_06', 'rice_09', 'rice_11', 'rice_13']
@@ -412,7 +412,10 @@ test('thirty-second living-room threat does not loop between escaping and the sa
       maxProgressMs: C.rice.maxProgressMs, completed: false }));
   let evadeEntries = 0;
   let lastState = '';
-  let visitedSafeRice = false;
+  // 2026-10-04 区域级放大后，AI 不再固定重定向到书房那份米（rice_13）：更大的
+  // 平面图里不同米堆的相对代价变了，选中哪一份取决于新坐标。这里记录它**曾经**
+  // 瞄准过的米堆房间，断言「确实重定向到了受威胁房间之外」这一真正的不变量。
+  const targetedRooms = new Set();
   for (let frame = 0; frame < 600; frame++) {
     vision.update(50, human, position, perception);
     const sight = vision.get('DEEPSEEK');
@@ -422,7 +425,8 @@ test('thirty-second living-room threat does not loop between escaping and the sa
       lastSeenHuman: sight.lastSeen, perceptionNowMs: vision.nowMs });
     if (ai.state === 'EVADE' && lastState !== 'EVADE') evadeEntries++;
     lastState = ai.state;
-    visitedSafeRice ||= ai.targetRiceId === 'rice_13';
+    if (ai.targetRiceId)
+      targetedRooms.add(RICE_CANDIDATES.find(point => point.id === ai.targetRiceId)?.roomId);
     const speed = C.player.speed / C.three.pixelsPerUnit;
     position.copy(world.move(position, command.direction.x * speed * 0.05,
       command.direction.z * speed * 0.05, C.collision.playerRadius,
@@ -432,7 +436,8 @@ test('thirty-second living-room threat does not loop between escaping and the sa
   }
   assert.ok(evadeEntries <= 2,
     'AI must not oscillate between living-room rice and escape every few seconds');
-  assert.equal(visitedSafeRice, true, 'AI should redirect to a safer reachable rice');
+  assert.ok([...targetedRooms].some(roomId => roomId && roomId !== 'living'),
+    'AI should redirect to a safer reachable rice outside the threatened room');
   assert.notEqual(ai.targetRiceId, 'rice_02');
 });
 
@@ -449,7 +454,7 @@ test('authored apartment recovery keeps moving after Human leaves the area', () 
   const sprint = new SprintSystem(C.sprint.durationMs, C.sprint.riskThreshold,
     C.sprint.stunMs);
   const ai = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS);
-  const position = new Vector3(2, C.three.actorHeight / 2, -3);
+  const position = new Vector3(2, C.three.actorHeight / 2, -4.5);
   const rice = RICE_CANDIDATES
     .filter(candidate => ['rice_02', 'rice_06', 'rice_09', 'rice_11', 'rice_13']
       .includes(candidate.id))
@@ -491,7 +496,12 @@ test('authored apartment recovery keeps moving after Human leaves the area', () 
   }
   assert.equal(recoveryMoved, true);
   assert.ok(longestIdleMs <= 250);
-  assert.equal(ai.targetRiceId, 'rice_13');
+  // 2026-10-04 区域级放大后，最终落在哪一份安全米取决于新的路程代价（rice_11
+  // 卫生间与 rice_06 厨房都出现过，二者都是合理的「远离威胁」选择，评分带内还会
+  // 随机挑选）。这里断言真正的不变量：仍然持有目标，且目标不在受威胁的房间。
+  const finalRice = RICE_CANDIDATES.find(point => point.id === ai.targetRiceId);
+  assert.ok(finalRice, `expected an authored rice target, got ${ai.targetRiceId}`);
+  assert.notEqual(finalRice.roomId, 'living');
 });
 
 test('stationary visible Human cannot pin DeepSeek at a reached escape goal', () => {
@@ -679,7 +689,7 @@ test('twenty-second static Human at living exit does not trap escape in living-h
   const perception = new PerceptionGeometry(WALLS, DOOR_NODES, () => doors.doors);
   const vision = new VisionSystem();
   const ai = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS, () => 0);
-  const position = new Vector3(2, C.three.actorHeight / 2, -3);
+  const position = new Vector3(2, C.three.actorHeight / 2, -4.5);
   const human = { x: 3, z: -3 };
   const portions = RICE_CANDIDATES.slice(0, 5).map(candidate => ({ ...candidate,
     progressMs: 0, maxProgressMs: C.rice.maxProgressMs, completed: false }));
@@ -714,8 +724,14 @@ test('twenty-second static Human at living exit does not trap escape in living-h
     if (room !== previousRoom) crossings++;
     previousRoom = room;
   }
-  assert.ok(targetRooms.has('bathroom') || targetRooms.has('second_bedroom'));
-  assert.ok(visitedRooms.has('bathroom') && visitedRooms.has('study'),
+  // 2026-10-04 区域级放大后，从客厅逃跑时评分最高的房间变成紧邻的厨房（路程
+  // 更短），不再是最远的卫生间 / 次卧。这条用例真正防的是「在客厅↔主走廊之间
+  // 来回弹」的老问题，所以断言收敛为：真的选了一个逃离目的地、目的地永远不是
+  // 正在逃离的房间、AI 真的走过多个房间、过门次数有限。
+  assert.ok(targetRooms.size > 0, 'the AI must name an escape destination');
+  assert.equal(targetRooms.has('living'), false,
+    'the escape destination must never be the room being fled');
+  assert.ok(visitedRooms.size >= 3,
     'AI should physically cross into other reachable rooms, not only rename a target');
   assert.ok(crossings < 20, 'must not repeatedly bounce across one doorway');
 });

@@ -5,10 +5,20 @@ import { precheckMapApplication } from '../src/three/map/MapApplicationPrecheck.
 
 // S7C-1B：地图应用前的只读预检。失败时调用方（场景编辑器）直接拒绝应用，
 // 旧地图、两个角色站位与旧藏身状态都必须原样保留。
+//
+// 2026-10-04 区域级放大：角色站位不再写死世界坐标，而是**从授权地图推导**——
+// 两个角色用 `SPAWNS`，藏身者用藏身点唯一的 enter = exit 锚点。这样地图再放大
+// 也不会让预检样本失效。
 const actors = [
   { id: 'DEEPSEEK', x: SPAWNS.deepseek.x, z: SPAWNS.deepseek.z },
   { id: 'HUMAN', x: SPAWNS.human.x, z: SPAWNS.human.z },
 ];
+const anchorOf = id => {
+  const spot = HIDE_SPOTS.find(entry => entry.id === id);
+  assert.ok(spot, `${id} 必须存在于授权地图`);
+  return { x: spot.x, z: spot.z };
+};
+const MAIN_BED_ANCHOR = anchorOf('hide_main_bed');
 const base = (overrides = {}) => ({
   furniture: FURNITURE,
   hideSpots: HIDE_SPOTS,
@@ -21,7 +31,7 @@ const blockerAt = ({ x, z, size = 3 }) => ({ id: 'test_blocker', kind: 'furnitur
 
 test('当前正式地图 + 两个出生点 + 藏身者站在锚点上：预检通过', () => {
   const result = precheckMapApplication(base({
-    concealed: { spotId: 'hide_main_bed', x: -14.4, z: -6.15 },
+    concealed: { spotId: 'hide_main_bed', ...MAIN_BED_ANCHOR },
   }));
   assert.equal(result.ok, true);
   assert.equal(result.code, 'OK');
@@ -41,7 +51,7 @@ test('新地图让某个角色站在非法位置时拒绝，并指出是哪个�
 test('新地图缺少正在使用的藏身点时拒绝', () => {
   const result = precheckMapApplication(base({
     hideSpots: HIDE_SPOTS.filter(spot => spot.id !== 'hide_main_bed'),
-    concealed: { spotId: 'hide_main_bed', x: -14.4, z: -6.15 },
+    concealed: { spotId: 'hide_main_bed', ...MAIN_BED_ANCHOR },
   }));
   assert.equal(result.ok, false);
   assert.equal(result.code, 'HIDE_SPOT_MISSING');
@@ -50,8 +60,8 @@ test('新地图缺少正在使用的藏身点时拒绝', () => {
 
 test('新地图让藏身出口无法站立时拒绝（不能先强行请出再发现地图不可用）', () => {
   const result = precheckMapApplication(base({
-    furniture: [...FURNITURE, blockerAt({ x: -14.4, z: -6.15 })],
-    concealed: { spotId: 'hide_main_bed', x: -14.4, z: -6.15 },
+    furniture: [...FURNITURE, blockerAt(MAIN_BED_ANCHOR)],
+    concealed: { spotId: 'hide_main_bed', ...MAIN_BED_ANCHOR },
   }));
   assert.equal(result.ok, false);
   assert.equal(result.code, 'HIDE_POSITION_NOT_STANDABLE');
@@ -61,13 +71,13 @@ test('新地图让藏身出口无法站立时拒绝（不能先强行请出再�
 test('预检是只读的：不修改地图数据，也不改写传入的藏身信息', () => {
   const furnitureSnapshot = JSON.parse(JSON.stringify(FURNITURE));
   const spotsSnapshot = JSON.parse(JSON.stringify(HIDE_SPOTS));
-  const concealed = { spotId: 'hide_main_bed', x: -14.4, z: -6.15 };
+  const concealed = { spotId: 'hide_main_bed', ...MAIN_BED_ANCHOR };
   precheckMapApplication(base({
-    furniture: [...FURNITURE, blockerAt({ x: -14.4, z: -6.15 })], concealed,
+    furniture: [...FURNITURE, blockerAt(MAIN_BED_ANCHOR)], concealed,
   }));
   assert.deepEqual(JSON.parse(JSON.stringify(FURNITURE)), furnitureSnapshot);
   assert.deepEqual(JSON.parse(JSON.stringify(HIDE_SPOTS)), spotsSnapshot);
-  assert.deepEqual(concealed, { spotId: 'hide_main_bed', x: -14.4, z: -6.15 });
+  assert.deepEqual(concealed, { spotId: 'hide_main_bed', ...MAIN_BED_ANCHOR });
 });
 
 test('没有藏身者时只检查两个角色的站位', () => {

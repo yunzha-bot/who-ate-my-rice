@@ -276,3 +276,199 @@ body.scene-editor-open .debug-panel { right: 366px; }
 .skill-hud[hidden] { display: none; }
 .skill-hud-state { color: #8fc7e8; }
 .skill-hud-notice { color: #e5c56f; }
+
+/* Alpha presentation: scoped to player UI; editor / DEV styling is untouched. */
+body { background: #e5ded0; color: #493e32; }
+.faction-menu { top: 50%; left: 5vw; transform: translateY(-50%);
+  width: min(360px, 42vw); max-height: 94vh; overflow: auto; padding: 28px;
+  gap: 12px; border: 1px solid #fff8e6; border-radius: 24px;
+  color: #493e32; background: #fffaeeef; box-shadow: 0 20px 60px #57432b26;
+  animation: home-arrive .3s ease-out; }
+.menu-eyebrow { font-size: 10px; letter-spacing: .13em; color: #88745c; }
+.faction-menu h1 { font-size: clamp(32px, 4vw, 54px); line-height: 1.1; letter-spacing: -.04em; }
+.faction-menu h1 em { font-style: normal; color: #b57843; }
+.faction-menu h2 { font-size: 12px; margin: 10px 0 0; color: #88745c; }
+.menu-intro { margin: 2px 0 8px; color: #88745c; font-size: 14px; }
+.faction-menu label { display: flex; align-items: center; gap: 10px; padding: 12px;
+  border: 1px solid #ddcfb8; border-radius: 12px; transition: background .15s, border-color .15s; }
+.faction-menu label:has(input:checked) { background: #eaf0e4; border-color: #839e78; }
+.faction-menu label strong, .faction-menu label small { display: block; }
+.faction-menu label small { margin-top: 4px; font-size: 11px; color: #7c705f; }
+.faction-menu input { accent-color: #64835a; }
+.faction-menu button, .pause-actions button, .result-actions button {
+  border: 1px solid #89704e; border-radius: 12px; padding: 12px 18px;
+  background: #698661; color: #fffcef; font: 600 15px system-ui, sans-serif;
+  box-shadow: 0 3px 0 #506749; transition: filter .12s, transform .12s; }
+.faction-menu button:hover, .pause-actions button:hover, .result-actions button:hover { filter: brightness(1.09); }
+.faction-menu button:active, .pause-actions button:active, .result-actions button:active { transform: translateY(2px); box-shadow: none; }
+.faction-menu button:focus-visible, .pause-actions button:focus-visible, .result-actions button:focus-visible {
+  outline: 3px solid #bb8b4f; outline-offset: 3px; }
+.menu-controls { color: #8c7a65; font-size: 10px; text-align: center; margin: 5px 0 0; }
+.game-overlay { width: min(390px, 92vw); max-height: 94vh; overflow: auto;
+  padding: 30px; border: 1px solid #fff9e9; border-radius: 24px;
+  background: #fff9eeef; color: #4c4033; box-shadow: 0 24px 100px #30231350;
+  font-size: 17px; line-height: 1.9; }
+.overlay-text::first-line { font-weight: 800; font-size: 27px; }
+.pause-actions button:not(:first-child), .result-actions button:not(:first-child) {
+  background: #eee4d4; color: #675642; box-shadow: 0 2px 0 #cbbcaa; border-color: #cbbcaa; }
+.alpha-hud { position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  font-variant-numeric: tabular-nums; color: #4d4438; }
+.alpha-hud[hidden], .alpha-hud [hidden] { display: none; }
+.alpha-score { position: absolute; top: 18px; left: 22px; display: flex; align-items: center;
+  gap: 22px; padding: 11px 18px; border: 1px solid #fff9e8; border-radius: 16px;
+  background: #fff9eceb; box-shadow: 0 4px 16px #634d3018; }
+.alpha-faction { color: #547e95; font-size: 12px; font-weight: 700; }
+.alpha-hud[data-faction="HUMAN"] .alpha-faction { color: #a56c40; }
+.alpha-rice { font-size: 24px; letter-spacing: .02em; }
+.alpha-score time { font-size: 15px; color: #8c7a61; }
+.alpha-goal { position: absolute; top: 75px; left: 28px; margin: 0; font-size: 12px;
+  padding: 4px 9px; border-radius: 7px; background: #fffaebcd; }
+.alpha-skills { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; align-items: center; white-space: nowrap; }
+.alpha-key, .alpha-cooldown { border: 1px solid #fff6e4; border-radius: 12px; padding: 9px 12px;
+  background: #fff8eae8; box-shadow: 0 3px 10px #49331616; font-size: 12px; font-weight: 650; }
+.alpha-key small { color: #8d7e6a; font-size: 10px; margin-left: 4px; }
+.alpha-cooldown { display: flex; align-items: center; gap: 7px; color: #978d7b; }
+.alpha-cooldown::before { content: ''; width: 18px; height: 18px; border-radius: 50%;
+  background: conic-gradient(#7f9d6d var(--cooldown), #ddd3c3 0);
+  mask: radial-gradient(transparent 45%, black 49%); }
+.alpha-cooldown[data-ready="true"] { color: #557348; }
+.alpha-ready { position: absolute; top: 36%; left: 50%; transform: translateX(-50%);
+  white-space: pre-line; font-size: 44px; font-weight: 800; text-align: center;
+  color: #fff9e6; text-shadow: 0 2px 12px #4b392bbb; }
+.alpha-ready::first-line { font-size: 18px; font-weight: 500; }
+.alpha-progress { position: absolute; left: 50%; bottom: 130px; transform: translateX(-50%);
+  min-width: 210px; padding: 9px 16px; background: #fff9ebed; border-radius: 12px;
+  font-size: 12px; text-align: center; overflow: hidden; }
+.alpha-progress::after { position: absolute; content: ''; bottom: 0; left: 0;
+  width: var(--progress); height: 3px; background: #86a877; }
+.alpha-progress[data-danger="true"]::after { background: #c47860; }
+.skill-hud { bottom: 66px; padding: 7px 14px; background: #fffaece8; color: #695a47;
+  max-width: min(650px, 92vw); font-size: 12px; border-radius: 10px; z-index: 2; }
+.skill-hud-state { color: #655d4c; }
+.skill-hud-notice { color: #a36939; }
+.skill-hud-notice:empty { display: none; }
+@keyframes home-arrive { from { opacity: 0; margin-top: 8px; } to { opacity: 1; margin-top: 0; } }
+@media (max-width: 800px) {
+  .faction-menu { width: min(330px, 90vw); left: 4vw; padding: 20px; }
+  .alpha-score { top: 46px; left: 10px; gap: 12px; padding: 8px 12px; }
+  .alpha-goal { top: 105px; left: 10px; }
+  .alpha-skills { gap: 4px; }
+  .alpha-key, .alpha-cooldown { padding: 7px; font-size: 10px; }
+  .alpha-key small { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .faction-menu { animation: none; }
+  .faction-menu button, .pause-actions button, .result-actions button { transition: none; }
+}
+
+/* Residential diorama composition. Formal UI has independent screen zones. */
+#app::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  box-shadow: inset 0 0 100px #554d3420; border: 12px solid #f3efe130; }
+.faction-menu { inset: 0; transform: none; width: auto; max-height: none; padding: 0;
+  overflow: hidden; display: block; border: 0; border-radius: 0; box-shadow: none;
+  background: linear-gradient(90deg, #eee9dbe8 0%, #eee9db70 27%, transparent 52%);
+  pointer-events: none; }
+.menu-story { position: absolute; left: 5vw; top: 11vh; width: 36vw; }
+.menu-eyebrow { display: block; color: #6d7867; letter-spacing: .17em; font-size: 11px; }
+.faction-menu h1 { margin: 26px 0 20px; font-size: clamp(48px, 6.2vw, 96px);
+  font-weight: 850; line-height: 1.04; letter-spacing: -.07em; color: #3f493d; }
+.faction-menu h1 em { color: #a77048; }
+.menu-intro { font-size: 15px; line-height: 1.9; color: #77776a; padding-left: 16px; border-left: 2px solid #9aab8e; }
+.faction-dock { position: absolute; left: 5vw; right: 5vw; bottom: 8vh; display: flex;
+  gap: 12px; align-items: stretch; padding: 0; margin: 0; border: 0; pointer-events: auto; }
+.faction-dock legend { padding: 0 0 14px; color: #59634f; font-size: 13px; letter-spacing: .12em; }
+.faction-menu label { flex: 1; max-width: 340px; padding: 22px 24px; border-radius: 3px;
+  background: #f7f5eade; border: 1px solid #bcbcae; box-shadow: 0 5px 20px #3842310a; }
+.faction-menu label:has(input:checked) { background: #536b59; border-color: #536b59; color: #fffbed; }
+.faction-menu label:has(input:checked) small { color: #e0e5d9; }
+.faction-menu label:focus-within { outline: 2px solid #a77048; outline-offset: 3px; }
+.faction-menu label strong { font-size: 21px; letter-spacing: .05em; }
+.faction-menu label small { font-size: 12px; margin-top: 7px; }
+.faction-number { font-size: 37px; font-weight: 300; opacity: .5; margin-right: 8px; }
+.faction-menu input { width: 14px; accent-color: #a77048; }
+.faction-dock button { align-self: stretch; min-width: 185px; margin-left: auto;
+  border-radius: 3px; background: #a97047; box-shadow: none; border: 0; font-size: 18px; }
+.faction-dock button span { display: inline-block; margin-left: 28px; font-size: 28px; }
+.menu-controls { position: absolute; left: 5vw; bottom: 2vh; margin: 0; text-align: left; letter-spacing: .08em; }
+.home-masthead { position: absolute; left: 30px; top: 26px; display: flex; flex-direction: column;
+  gap: 5px; color: #4b5647; letter-spacing: .08em; }
+.home-masthead span { font-weight: 800; font-size: 19px; }
+.home-masthead small { font-size: 10px; color: #7b8173; }
+.alpha-score { left: 30px; top: 29%; width: 205px; display: block; padding: 22px 20px;
+  background: linear-gradient(120deg, #f7f5eaf2, #f7f5eaa8); border: 0; border-left: 3px solid #779580;
+  border-radius: 0 18px 18px 0; box-shadow: 0 8px 30px #34453312; }
+.alpha-faction { font-size: 11px; color: #52755f; letter-spacing: .07em; }
+.alpha-objective { margin: 14px 0 22px; font-size: 23px; line-height: 1.4; letter-spacing: -.03em; }
+.alpha-rice { display: block; margin-top: 12px; font-size: 16px; }
+.alpha-goal { position: static; margin: 12px 0 22px; padding: 0; background: none;
+  font-size: 11px; line-height: 1.8; color: #747969; white-space: pre-line; }
+.rice-inventory { display: flex; gap: 8px; }
+.rice-inventory i { width: 19px; height: 27px; display: block; border: 1px solid #a0ab94;
+  border-radius: 45% 45% 35% 35%; background: #eee3bb; box-shadow: inset 0 -6px #dbcda0; }
+.rice-inventory i[data-done="true"] { background: #839b83; box-shadow: inset 0 -6px #6a886c; border-color: #68866c; }
+.alpha-hud[data-faction="HUMAN"] .alpha-score { border-color: #b58659; }
+.alpha-hud[data-faction="HUMAN"] .rice-inventory i[data-done="true"] { opacity: .28; background: transparent; box-shadow: none; }
+.match-clock { display: flex; align-items: center; justify-content: space-between; padding-top: 12px;
+  border-top: 1px solid #7a816333; }
+.match-clock small { font-size: 10px; color: #8a8c7a; }
+.alpha-score time { font-size: 21px; color: #59604f; }
+.movement-guide { position: absolute; bottom: 25px; left: 30px; font-size: 11px; color: #6f7868; }
+.movement-guide b { letter-spacing: .18em; margin-right: 8px; }
+.movement-guide span { display: block; margin-top: 7px; opacity: .65; }
+.alpha-skills { bottom: 25px; right: 28px; left: auto; transform: none; gap: 8px; align-items: stretch; }
+.alpha-key, .alpha-cooldown { border-radius: 6px; border: 1px solid #fdfcf2; padding: 15px 16px;
+  background: #f6f3e8ed; box-shadow: 0 4px 15px #49503d12; font-size: 12px; }
+.alpha-key { display: flex; align-items: center; gap: 13px; }
+.alpha-key>b { font-size: 25px; font-weight: 500; color: #71856b; }
+.alpha-key small { display: block; margin: 4px 0 0; font-weight: 400; font-size: 9px; }
+.alpha-cooldown::before { width: 29px; height: 29px; flex-shrink: 0; }
+.alpha-hud[data-faction="HUMAN"] .alpha-q { background: #68775d; color: #fffae7; }
+.alpha-hud[data-faction="HUMAN"] .alpha-q::before { background: conic-gradient(#eed3a0 var(--cooldown), #95a086 0); }
+.alpha-ready { top: 31%; left: 55%; color: #fffdf0; padding: 22px 45px;
+  background: #50664fe8; font-size: 47px; font-weight: 700; border-radius: 2px 24px 2px 24px;
+  text-shadow: none; box-shadow: 0 12px 50px #334c3226; line-height: 1.6; }
+.alpha-ready { width: 260px; box-sizing: border-box; white-space: nowrap; text-align: center; }
+.alpha-ready small, .alpha-ready strong, .alpha-ready span { display: block; }
+.alpha-ready small { font-size: 19px; }
+.alpha-ready strong { font-size: 64px; line-height: 1.3; }
+.alpha-ready span { font-size: 15px; font-weight: 400; }
+.skill-hud { bottom: 110px; left: 55%; max-width: 420px; border-radius: 3px;
+  padding: 9px 18px; background: #f8f5e7eb; border-bottom: 2px solid #849377; }
+.alpha-progress { bottom: 161px; left: 55%; border-radius: 3px; }
+.game-overlay { top: 0; bottom: 0; left: 0; width: min(440px, 40vw); max-height: none;
+  transform: none; padding: 15vh 3.5vw 5vh; text-align: left; border: 0; border-radius: 0;
+  background: #f6f2e5f5; box-shadow: 15px 0 70px #34412d24; white-space: normal; }
+.overlay-kicker { font-size: 11px; color: #86917a; letter-spacing: .15em; }
+.overlay-text h1 { font-size: clamp(30px, 3.4vw, 52px); line-height: 1.18; margin: 24px 0; color: #465640; }
+.overlay-text p { font-size: 14px; line-height: 1.8; color: #7b806b; }
+.overlay-stats { border-top: 1px solid #b7bda9; padding-top: 24px; margin-top: 30px;
+  font-size: 18px; font-variant-numeric: tabular-nums; }
+.pause-actions, .result-actions { margin-top: 35px; justify-content: stretch; }
+.pause-actions button, .result-actions button { min-width: 0; border-radius: 3px; text-align: left; }
+@media (max-width: 1000px) {
+  .menu-story { top: 8vh; }
+  .faction-menu h1 { font-size: 55px; }
+  .faction-menu label { padding: 15px; }
+  .faction-number { display: none; }
+  .faction-dock button { min-width: 150px; }
+  .alpha-score { width: 160px; left: 15px; padding: 15px 12px; }
+  .alpha-objective { font-size: 19px; }
+  .alpha-skills { right: 15px; }
+  .alpha-key, .alpha-cooldown { padding: 10px; font-size: 10px; }
+}
+@media (max-width: 650px) {
+  .menu-story { top: 5vh; width: 70vw; }
+  .menu-intro { display: none; }
+  .faction-dock { flex-wrap: wrap; }
+  .faction-menu label { min-width: 40%; }
+  .faction-menu label strong { font-size: 16px; }
+  .faction-dock button { width: 100%; padding: 10px; }
+  .alpha-score { top: 95px; width: 130px; }
+  .alpha-goal { display: none; }
+  .alpha-objective { font-size: 16px; }
+  .rice-inventory { gap: 4px; }
+  .rice-inventory i { width: 15px; height: 21px; }
+  .movement-guide { display: none; }
+  .game-overlay { width: 85vw; }
+}

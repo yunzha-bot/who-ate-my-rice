@@ -24,9 +24,9 @@ const free = (x, z) => {
     Math.abs(z - rect.z) <= rect.depth / 2 + radius);
 };
 
-test('reference floorplan keeps ten main spaces plus balcony and closet in their stated positions', () => {
-  assert.equal(ROOMS.filter(room => room.major).length, 10);
-  assert.equal(ROOMS.length, 12);
+test('reference floorplan keeps fifteen main spaces plus balcony, closet and north balcony', () => {
+  assert.equal(ROOMS.filter(room => room.major).length, 15);
+  assert.equal(ROOMS.length, 18);
   assert.equal(roomIds.size, ROOMS.length);
   const at = id => byId.get(id);
   assert.ok(at('balcony').z < at('living').z);
@@ -41,8 +41,14 @@ test('reference floorplan keeps ten main spaces plus balcony and closet in their
   assert.ok(at('entry').x > at('study').x && at('entry').z > at('living').z);
   assert.ok(new Set(ROOMS.map(room => `${room.width}x${room.depth}`)).size >= 8);
   assert.ok(at('living').width * at('living').depth > at('dining').width * at('dining').depth);
-  assert.equal(MAP_WIDTH, 36);
-  assert.equal(MAP_DEPTH, 30);
+  // 2026-10-04 区域级放大：整张平面按「区域」重排（房间 18 → 18，拓扑不变），
+  // 世界盒从 48×30 扩到 56×38，并重新以原点为中心（旧图中心是 X +3）。
+  // 深度取 38 而不是 40：只读顾问指出各区域若一律 ×1.33 就退化成机械缩放，
+  // 于是两端只服务附属空间 / 走廊端点的分带各收 0.5，把总面积倍率压到 1.71。
+  // 世界盒必须仍然关于原点对称——`CollisionWorld` 与 `NavigationSystem`
+  // 都只接受 halfWidth / halfDepth，没有中心偏移参数。
+  assert.equal(MAP_WIDTH, 56);
+  assert.equal(MAP_DEPTH, 38);
 });
 
 test('fourteen candidate nodes sample five unique rice and both faction spawns are valid', () => {

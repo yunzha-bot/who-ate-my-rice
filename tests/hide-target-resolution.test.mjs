@@ -37,10 +37,21 @@ function harness() {
   return { collision, navigation, doors, world, resolve, standable };
 }
 
+// 2026-10-04 区域级放大：所有样本都从授权地图推导，不再写死旧世界坐标。
+const spotOf = id => HIDE_SPOTS.find(spot => spot.id === id);
+const furnitureOf = id => FURNITURE.find(rect => rect.id === id);
+// 次卧床（家具中心 -21.5, 12.5；唯一锚点 -22.9, 11.4）的合法站位：沿用放大前
+// 「锚点 + (3.1, 1.9)」的相对位置，真实几何判定为 LEGAL、且只落在它一个区域内。
+const SECOND_BED_ANCHOR = spotOf('hide_second_bed');
+const BED_LEGAL = { x: SECOND_BED_ANCHOR.x + 3.1, z: SECOND_BED_ANCHOR.z + 1.9 };
+// 主卧里「在区域内但站不住」的样本：床角外 0.2 左右，仍在 R = 2 的区域内。
+const MAIN_BED = furnitureOf('main_bed');
+const MAIN_BED_NOT_STANDABLE = { x: MAIN_BED.x - 1.2, z: MAIN_BED.z - 1.3 };
+
 test('the exact number of furniture interaction regions is entered and ranked by anchor distance', () => {
   const env = harness();
   // 次卧床的正锚点附近：区域内、合法。
-  const inside = env.resolve({ x: -11.3, z: 10.8 });
+  const inside = env.resolve(BED_LEGAL);
   assert.equal(inside.code, 'LEGAL');
   assert.equal(inside.legal, true);
   assert.equal(inside.spotId, 'hide_second_bed');
@@ -64,21 +75,41 @@ test('the exact number of furniture interaction regions is entered and ranked by
 
 test('the real map has exactly the regions we think it has, and every non-legal code is reachable', () => {
   const env = harness();
-  // 真实地图上「区域内但不合法」的样本（都不是编造的点，而是真实几何算出来的）：
-  // ① 站在区域内、但与家具之间被墙 / 别的家具挡住 → SURFACE_BLOCKED。
-  const blocked = env.resolve({ x: 14.5, z: -4.8 });
+  // 2026-10-04 区域级放大后，授权坐标本身**再也给不出** SURFACE_BLOCKED 与
+  // NOT_NAVIGABLE：0.02 步长扫过 8 个区域的全部可站点，surfaceClear 与 navigable
+  // 全为 true（房间变大、家具没变大，纸箱也不再贴着能站人的墙）。这两个码仍然必须
+  // 可达，所以沿用本文件下一个用例的既有做法——只搬动家具，几何依旧全部由真实的
+  // 墙 / 碰撞 / 导航 / 感知计算。
+  //
+  // ① 站在区域内、但与家具之间被厨房隔墙挡住 → SURFACE_BLOCKED。
+  //    把储物间纸箱保持离隔墙 0.7（x = 16.7），z 移到厨房柜台（z -14.5…-11.5）够不到
+  //    的 -4.8，重建放大前「站厨房、隔墙摸储物间纸箱」的样本。
+  const wallFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
+    ? { ...rect, x: 16.7, z: -4.8 } : rect);
+  const wallSpots = HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
+    ? { ...spot, x: 17.75, z: -4.8 } : spot);
+  const blocked = env.resolve({ x: 15.6, z: -4.8 },
+    { spots: wallSpots, furniture: wallFurniture });
   assert.equal(blocked.spotId, 'hide_storage_carton');
   assert.equal(blocked.code, 'SURFACE_BLOCKED');
   assert.equal(blocked.legal, false);
   assert.equal(blocked.legalTarget, null);
   // ② 区域内但真实碰撞体站不住（撞在家具上）→ NOT_STANDABLE。
-  const notStandable = env.resolve({ x: -14.2, z: -6.3 });
+  const notStandable = env.resolve(MAIN_BED_NOT_STANDABLE);
   assert.equal(notStandable.spotId, 'hide_main_bed');
   assert.equal(notStandable.code, 'NOT_STANDABLE');
-  assert.equal(env.standable({ x: -14.2, z: -6.3 }), false);
+  assert.equal(env.standable(MAIN_BED_NOT_STANDABLE), false);
   // ③ 区域内但没有可用导航格 → NOT_NAVIGABLE。
-  const notNavigable = env.resolve({ x: 7.5, z: 4.6 });
-  assert.equal(notNavigable.spotId, 'hide_living_carton');
+  //    车库西北角（家政间隔墙 z = 4.5 与车库工作台 z 5.2…7.8 之间）是一条真实存在的
+  //    「站得住、但四周导航格全被挡住」的窄缝：把储物间纸箱搬到缝西侧，缝里的可站点
+  //    就落在它的区域内，最近的空闲格中心超过 0.45（REGION_NAV_SNAP_LIMIT）。
+  const pocketFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
+    ? { ...rect, x: 26.6, z: 4.9 } : rect);
+  const pocketSpots = HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
+    ? { ...spot, x: 26.6, z: 4.9 } : spot);
+  const notNavigable = env.resolve({ x: 27.3, z: 4.9 },
+    { spots: pocketSpots, furniture: pocketFurniture });
+  assert.equal(notNavigable.spotId, 'hide_storage_carton');
   assert.equal(notNavigable.code, 'NOT_NAVIGABLE');
   // 四个中文说明必须齐备（DEV / HUD 直接显示）。
   for (const code of ['LEGAL', 'OUTSIDE_REGION', 'NOT_STANDABLE', 'SURFACE_BLOCKED',
@@ -88,7 +119,7 @@ test('the real map has exactly the regions we think it has, and every non-legal 
 
 test('the resolution is deterministic and never depends on who is hidden where', () => {
   const env = harness();
-  const point = { x: -11.3, z: 10.8 };
+  const point = { ...BED_LEGAL };
   const first = env.resolve(point);
   for (let index = 0; index < 5; index++) {
     const again = env.resolve(point);
@@ -109,14 +140,18 @@ test('the resolution is deterministic and never depends on who is hidden where',
 test('two overlapping regions still resolve to exactly one furniture', () => {
   const env = harness();
   // 真实地图上 8 个交互区域互不重叠（这是一个事实，不是假设）。为了验证「重叠时
-  // 仍然只有一个目标」这条规则，这里把储物间纸箱搬到客厅纸箱旁边：几何仍然全部
-  // 由真实的 `hideRegionSetup` / `pointInHideRegion` / `checkHideRegionPosition` 计算。
+  // 仍然只有一个目标」这条规则，这里把两件纸箱分别搬到客厅 / 厨房隔墙（x = 8）两侧
+  // 并让两个 R = 1.2 的圆真正重叠：几何仍然全部由真实的 `hideRegionSetup` /
+  // `pointInHideRegion` / `checkHideRegionPosition` 计算，跨墙的那一路由真实墙体判
+  // 定遮挡（放大前的样本正是「客厅纸箱 + 搬到餐厅一侧的储物间纸箱」）。
   const movedFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
-    ? { ...rect, x: 9.6, z: 3.9 } : rect);
-  const movedSpots = (anchorX) => HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
-    ? { ...spot, x: anchorX, z: 3.9 } : spot);
-  const overlapPoint = { x: 8.6, z: 4.4 };
-  const both = env.resolve(overlapPoint, { spots: movedSpots(9.5),
+    ? { ...rect, x: 8.6, z: -9.6 }
+    : rect.id === 'living_carton' ? { ...rect, x: 6.6, z: -9.6 } : rect);
+  const movedSpots = (anchorX) => HIDE_SPOTS.map(spot =>
+    spot.id === 'hide_storage_carton' ? { ...spot, x: anchorX, z: -9.6 }
+      : spot.id === 'hide_living_carton' ? { ...spot, x: 6.6, z: -8.6 } : spot);
+  const overlapPoint = { x: 7.5, z: -9.6 };
+  const both = env.resolve(overlapPoint, { spots: movedSpots(8.5),
     furniture: movedFurniture });
   // 这一点真的同时落在两个区域内。
   assert.equal(both.candidatesInRegion, 2, '构造样本必须真的落在两个交互区域里');
@@ -125,7 +160,7 @@ test('two overlapping regions still resolve to exactly one furniture', () => {
   assert.equal(both.code, 'SURFACE_BLOCKED');
   assert.equal(both.legalTarget.spotId, 'hide_living_carton', '合法目标必须是另一件');
   // 把储物间纸箱的锚点挪远一点，两者一致：目标与合法目标都是客厅纸箱。
-  const consistent = env.resolve(overlapPoint, { spots: movedSpots(10.4),
+  const consistent = env.resolve(overlapPoint, { spots: movedSpots(9.5),
     furniture: movedFurniture });
   assert.equal(consistent.candidatesInRegion, 2);
   assert.equal(consistent.spotId, 'hide_living_carton');
@@ -142,12 +177,12 @@ test('two overlapping regions still resolve to exactly one furniture', () => {
   };
   const pointing = headingRad => ({ headingRad,
     halfAngleDeg: GAME_CONFIG.humanSearch.halfAngleDeg });
-  const towardLiving = env.resolve(overlapPoint, { spots: movedSpots(10.4),
+  const towardLiving = env.resolve(overlapPoint, { spots: movedSpots(9.5),
     furniture: movedFurniture, pointing: pointing(headingTo('living_carton')) });
   assert.equal(towardLiving.pointedLegalTarget.spotId, 'hide_living_carton');
   assert.equal(towardLiving.pointedLegalTarget.pointed, true);
   assert.ok(towardLiving.pointedLegalTarget.pointingDeltaDeg < 5);
-  const towardBlocked = env.resolve(overlapPoint, { spots: movedSpots(10.4),
+  const towardBlocked = env.resolve(overlapPoint, { spots: movedSpots(9.5),
     furniture: movedFurniture, pointing: pointing(headingTo('storage_carton')) });
   assert.equal(towardBlocked.legalTarget.spotId, 'hide_living_carton');
   assert.equal(towardBlocked.pointedLegalTarget, null,
@@ -162,13 +197,13 @@ test('two overlapping regions still resolve to exactly one furniture', () => {
     assert.equal(typeof result.spotId, 'string');
   }
   // 同一个公开输入重复解析仍然是同一个结果（确定性也覆盖重叠场景）。
-  assert.equal(env.resolve(overlapPoint, { spots: movedSpots(9.5),
+  assert.equal(env.resolve(overlapPoint, { spots: movedSpots(8.5),
     furniture: movedFurniture }).spotId, both.spotId);
 });
 
 test('player Q priority: cooldown, then an exposed target, then the pointed furniture', () => {
   const env = harness();
-  const furnitureTarget = env.resolve({ x: -11.3, z: 10.8 }).pointedLegalTarget;
+  const furnitureTarget = env.resolve(BED_LEGAL).pointedLegalTarget;
   assert.ok(furnitureTarget);
   // ① 冷却中：直接拒绝，不产生任何新的冷却，也不给出「Q 可用」的提示。
   const cooling = resolvePlayerQPlan({ cooldownReady: false, remainingSeconds: 8.4,

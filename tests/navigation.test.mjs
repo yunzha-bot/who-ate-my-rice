@@ -82,6 +82,7 @@ test('Human AI opens ordinary doors and walks across the real apartment', () => 
   const ai = new HumanAIController(nav, ROOMS, DOOR_NODES);
   const human = new Vector3(SPAWNS.human.x, 0.35, SPAWNS.human.z);
   const opened = [];
+  const kitchen = ROOMS.find(room => room.id === 'kitchen');
   let leftKitchen = false;
   for (let frame = 0; frame < 300; frame++) {
     const command = ai.update({ deltaMs: 50, human, visibleTarget: null,
@@ -94,7 +95,8 @@ test('Human AI opens ordinary doors and walks across the real apartment', () => 
     }
     human.copy(world.move(human, command.direction.x * 4.14 * 0.05,
       command.direction.z * 4.14 * 0.05, 0.23, 0.7));
-    if (human.x < 9) leftKitchen = true;
+    if (human.x < kitchen.minX || human.x > kitchen.maxX ||
+        human.z < kitchen.minZ || human.z > kitchen.maxZ) leftKitchen = true;
     assert.equal(world.canOccupyStaticXZ(human.x, human.z, 0.23, 0.7), true);
   }
   assert.ok(opened.length > 0, 'Human should open a normal door on its selected route');

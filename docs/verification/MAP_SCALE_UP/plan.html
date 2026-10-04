@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>谁吃了我的米 — 区域级放大 平面图对照</title>
+<style>
+  html,body{margin:0;padding:0;background:#1b1d21;color:#e8e4da;
+    font:13px/1.5 "Segoe UI","Microsoft YaHei",sans-serif}
+  .wrap{display:flex;gap:0;align-items:flex-start}
+  .panel{padding:10px 12px 18px}
+  h2{margin:6px 0 2px;font-size:15px;font-weight:600}
+  .sub{margin:0 0 8px;font-size:12px;color:#a9a49a}
+  canvas{display:block;background:#26292e;border:1px solid #3a3e45}
+  .legend{position:fixed;left:12px;bottom:10px;font-size:11px;color:#a9a49a}
+  .legend b{color:#e8e4da}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <h2>放大前（2026-10-03 东翼扩建轮，48 × 30）</h2>
+    <p class="sub">18 区域 / 31 门 / 32 家具 / 14 米点 / 8 藏身点，房间总面积 1143</p>
+    <canvas id="before" width="820" height="560"></canvas>
+  </div>
+  <div class="panel">
+    <h2>放大后（2026-10-04 区域级放大，56 × 38）</h2>
+    <p class="sub">18 区域 / 31 门 / 40 家具 / 14 米点 / 8 藏身点，房间总面积 1950（×1.71）</p>
+    <canvas id="after" width="820" height="560"></canvas>
+  </div>
+</div>
+<div class="legend">
+  <b>图例</b>：浅色块=房间（深色=主要空间，暗色=附属空间）· 橙线=门洞 · 深灰块=家具 ·
+  黄点+id=米点候选 · 蓝/红方块=DeepSeek/Human 参考出生点 · 紫点=藏身锚点
+</div>
+<script>
+const DOOR_PAIRS = [
+  ['door_balcony_living','balcony','living'],['door_balcony_kitchen','balcony','kitchen'],
+  ['door_living_kitchen','living','kitchen'],['door_kitchen_storage','kitchen','storage'],
+  ['door_storage_dining','storage','dining'],['door_kitchen_dining','kitchen','dining'],
+  ['door_living_dining','living','dining'],['door_hall_living','hall','living'],
+  ['door_hall_master','hall','main_bedroom'],['door_master_closet','main_bedroom','closet'],
+  ['door_closet_hall','closet','hall'],['door_hall_bathroom','hall','bathroom'],
+  ['door_bathroom_bedroom2','bathroom','second_bedroom'],['door_bedroom2_study','second_bedroom','study'],
+  ['door_hall_study','hall','study'],['door_study_entry','study','entry'],
+  ['door_living_entry','living','entry'],['door_dining_entry','dining','entry'],
+  ['door_balcony_north_balcony','balcony','north_balcony'],
+  ['door_north_balcony_kitchen','north_balcony','kitchen'],
+  ['door_north_balcony_storage','north_balcony','storage'],
+  ['door_north_balcony_guest_room','north_balcony','guest_room'],
+  ['door_entry_south_hall','entry','south_hall'],
+  ['door_south_hall_east_hall','south_hall','east_hall'],
+  ['door_dining_south_hall','dining','south_hall'],
+  ['door_dining_east_hall','dining','east_hall'],
+  ['door_storage_east_hall','storage','east_hall'],
+  ['door_guest_room_utility','guest_room','utility'],
+  ['door_utility_east_hall','utility','east_hall'],
+  ['door_utility_garage','utility','garage'],['door_garage_east_hall','garage','east_hall'],
+];
+
+const BEFORE = {
+  width: 48, depth: 30,
+  rooms: {
+    balcony:[-3,9,-15,-10,0], main_bedroom:[-17,-8,-10,0,1], closet:[-8,-3,-10,-3,0],
+    living:[-3,9,-10,5,1], kitchen:[9,15,-12,-2,1], storage:[15,18,-12,0,1],
+    dining:[9,15,-2,5,1], bathroom:[-18,-8,0,5,1], hall:[-8,-3,-3,5,1],
+    second_bedroom:[-17,-8,5,15,1], study:[-8,1,5,15,1], entry:[1,12,5,13,1],
+    north_balcony:[9,18,-15,-12,0], south_hall:[12,15,5,15,1], east_hall:[15,18,0,15,1],
+    guest_room:[18,24,-15,-4,1], utility:[18,24,-4,3,1], garage:[18,24,3,15,1],
+  },
+  furniture: [
+    ['living_sofa',0,-3,2.2,1.1],['living_coffee_table',3,-2,1.2,1],['living_tv_cabinet',6.8,-4.5,1.5,.6],
+    ['dining_table',12,1.5,1.8,1.4],['kitchen_counter',13.7,-8.4,.7,3],['kitchen_island',11,-6.3,1.1,1.6],
+    ['kitchen_fridge',14,-3.6,.8,.8],['storage_shelf',17.35,-7.5,.5,2.5],['main_bed',-13,-5,2.1,2.3],
+    ['main_wardrobe',-16.1,-7.8,.6,2.1],['closet_wardrobe',-4.1,-7.6,.55,2.4],['bath_sink',-16.4,2.7,.8,1],
+    ['bath_tub',-11.3,3.8,1.7,.7],['second_bed',-13,10,2.1,2.2],['second_cabinet',-16.2,6.7,.6,1.4],
+    ['study_desk',-3.1,9.2,1.7,1],['study_bookshelf',-.1,12.1,.6,2.1],['entry_bench',7.1,11.5,1.4,.6],
+    ['living_carton',7.9,3.9,.9,.9],['storage_carton',15.7,-4.8,.9,.9],
+    ['north_balcony_washer',10.6,-13.5,.8,.8],['north_balcony_rack',14.5,-13.6,1.6,.5],
+    ['south_hall_console',12.55,12,.5,1.2],['east_hall_console',15.55,12.5,.5,1.2],
+    ['guest_bed',22,-11,2.1,2.3],['guest_wardrobe',23.6,-13,.6,2.4],['utility_counter',23.6,-.5,.7,3],
+    ['utility_shelf',19.6,2.4,1.2,.5],['utility_washer',19.4,-3.4,.8,.8],['garage_car',20.6,10,1.9,3.8],
+    ['garage_workbench',23.6,5.5,.7,2.6],['garage_shelf',23.7,12.5,.5,2.6],
+  ],
+  rice: [['rice_01',6.8,-13.1],['rice_02',0,-6],['rice_03',19.5,-6.5],['rice_04',10.5,3.3],
+    ['rice_05',21,-2.5],['rice_06',10.5,-10.4],['rice_07',19.5,6],['rice_08',16.1,-3.3],
+    ['rice_09',-15.1,-8.2],['rice_10',-6.5,-5.2],['rice_11',-15,3.4],['rice_12',-15.1,12.5],
+    ['rice_13',-6.2,7.1],['rice_14',-6.4,2.9]],
+  spawns: [['DEEPSEEK',6.2,9.7],['HUMAN',10.3,-4.4]],
+  hides: [[-14.4,-6.15],[-14.4,8.9],[-16.65,-6.6],[-3.57,-8.8],[-.8,11.05],[16.8,-8.75],[7,3.6],[16.6,-4.8]],
+};
+
+const AFTER = {
+  width: 56, depth: 38,
+  rooms: {
+    balcony:[-8,8,-19,-13.5,0], main_bedroom:[-26.5,-14.5,-13.5,.5,1], closet:[-14.5,-8,-13.5,-3.5,0],
+    living:[-8,8,-13.5,7,1], kitchen:[8,16,-15.5,-2,1], storage:[16,20,-15.5,.5,1],
+    dining:[8,16,-2,7,1], bathroom:[-28,-14.5,.5,7,1], hall:[-14.5,-8,-3.5,7,1],
+    second_bedroom:[-26.5,-14.5,7,19,1], study:[-14.5,-2.5,7,19,1], entry:[-2.5,12,7,17,1],
+    north_balcony:[8,20,-19,-15.5,0], south_hall:[12,16,7,19,1], east_hall:[16,20,.5,19,1],
+    guest_room:[20,28,-19,-5,1], utility:[20,28,-5,4.5,1], garage:[20,28,4.5,19,1],
+  },
+  furniture: [
+    ['living_sofa',1.2,-2.6,2.2,1.1],['living_coffee_table',4.3,-2.6,1.2,1],['living_tv_cabinet',7.5,-2.6,.6,1.5],
+    ['dining_table',12,2,1.8,1.4],['kitchen_counter',15.55,-13,.7,3],['kitchen_island',11.5,-11.5,1.1,1.6],
+    ['kitchen_fridge',15.5,-6,.8,.8],['storage_shelf',19.5,-6,.5,2.5],['main_bed',-21.5,-6.5,2.1,2.3],
+    ['main_wardrobe',-26,-10,.6,2.1],['closet_wardrobe',-8.6,-9.5,.55,2.4],['bath_sink',-27.4,2.5,.8,1],
+    ['bath_tub',-22,6.2,1.7,.7],['second_bed',-21.5,12.5,2.1,2.2],['second_cabinet',-25.9,9.5,.6,1.4],
+    ['study_desk',-3.8,9.5,1.7,1],['study_bookshelf',-8,18.4,2.1,.6],['entry_bench',7.5,16.4,1.4,.6],
+    ['living_carton',-5.4,-9.6,.9,.9],['storage_carton',16.7,-12.5,.9,.9],
+    ['north_balcony_washer',10.5,-18.2,.8,.8],['north_balcony_rack',15.5,-18.3,1.6,.5],
+    ['south_hall_console',12.55,17,.5,1.2],['east_hall_console',16.55,17.5,.5,1.2],
+    ['guest_bed',22,-12.5,2.1,2.3],['guest_wardrobe',27.3,-17,.6,2.4],['utility_counter',27.3,-1,.7,3],
+    ['utility_shelf',21,3.9,1.2,.5],['utility_washer',20.8,-4.2,.8,.8],['garage_car',22.6,12,1.9,3.8],
+    ['garage_workbench',27.3,6.5,.7,2.6],['garage_shelf',27.4,17,.5,2.6],
+    ['main_nightstand',-23.1,-6.5,.6,.6],['main_dresser',-25.9,-5,.5,1],['closet_shelf',-13.9,-6.5,.5,2],
+    ['storage_rack',19.5,-13.5,.5,2],['bath_toilet',-25,6.2,.6,.7],['second_desk',-19,18.4,1.4,.6],
+    ['entry_shoe_rack',11.3,15.5,.5,1.2],['guest_desk',20.7,-7.5,.6,1.2],
+  ],
+  rice: [['rice_01',4.5,-17],['rice_02',3.4,4.4],['rice_03',24.5,-8],['rice_04',10.2,4.2],
+    ['rice_05',24.3,.6],['rice_06',11,-5.5],['rice_07',21.5,7],['rice_08',17.4,-2.6],
+    ['rice_09',-18.5,-11],['rice_10',-12.6,-6],['rice_11',-17.5,3.6],['rice_12',-18,16],
+    ['rice_13',-6,12],['rice_14',-11.25,1]],
+  spawns: [['DEEPSEEK',7,11],['HUMAN',12.5,-3.5]],
+  hides: [[-22.9,-7.65],[-22.9,11.4],[-25.15,-9.5],[-9.2,-10.7],[-8.7,17.35],[18.6,-5],[-5.4,-8.6],[17.75,-12.5]],
+};
+
+// Same rule as makeDoor(): the door sits at the midpoint of the shared edge.
+function doors(map) {
+  const out = [];
+  for (const [id, aId, bId] of DOOR_PAIRS) {
+    const a = map.rooms[aId], b = map.rooms[bId];
+    if (a[1] === b[0] || b[1] === a[0]) {
+      const x = a[1] === b[0] ? a[1] : b[1];
+      const z = (Math.max(a[2], b[2]) + Math.min(a[3], b[3])) / 2;
+      out.push([x, z, 'v']);
+    } else {
+      const z = a[3] === b[2] ? a[3] : b[3];
+      const x = (Math.max(a[0], b[0]) + Math.min(a[1], b[1])) / 2;
+      out.push([x, z, 'h']);
+    }
+  }
+  return out;
+}
+
+function draw(id, map) {
+  const cv = document.getElementById(id), ctx = cv.getContext('2d');
+  const pad = 26, scale = Math.min((cv.width - pad * 2) / map.width,
+    (cv.height - pad * 2) / map.depth);
+  const X = x => cv.width / 2 + (x - 0) * scale;
+  const Y = z => cv.height / 2 + (z - 0) * scale;
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  // world box
+  ctx.strokeStyle = '#4a4f57'; ctx.lineWidth = 1;
+  ctx.strokeRect(X(-map.width / 2), Y(-map.depth / 2), map.width * scale, map.depth * scale);
+  // rooms
+  for (const [rid, r] of Object.entries(map.rooms)) {
+    ctx.fillStyle = r[4] ? '#57503f' : '#43474d';
+    ctx.fillRect(X(r[0]), Y(r[2]), (r[1] - r[0]) * scale, (r[3] - r[2]) * scale);
+    ctx.strokeStyle = '#7d8288'; ctx.lineWidth = 1;
+    ctx.strokeRect(X(r[0]), Y(r[2]), (r[1] - r[0]) * scale, (r[3] - r[2]) * scale);
+    const cx = (X(r[0]) + X(r[1])) / 2, cy = (Y(r[2]) + Y(r[3])) / 2;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#d8d3c6'; ctx.font = '600 10px "Microsoft YaHei",sans-serif';
+    ctx.fillText(rid, cx, cy - 6);
+    ctx.fillStyle = '#b4afa3'; ctx.font = '10px "Microsoft YaHei",sans-serif';
+    ctx.fillText(`${r[1] - r[0]}×${r[3] - r[2]}`, cx, cy + 7);
+  }
+  // furniture
+  for (const [, x, z, w, d] of map.furniture) {
+    ctx.fillStyle = '#2c2f33';
+    ctx.fillRect(X(x - w / 2), Y(z - d / 2), w * scale, d * scale);
+  }
+  // doors
+  for (const [x, z, axis] of doors(map)) {
+    ctx.strokeStyle = '#e2903c'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (axis === 'v') { ctx.moveTo(X(x), Y(z - 0.6)); ctx.lineTo(X(x), Y(z + 0.6)); }
+    else { ctx.moveTo(X(x - 0.6), Y(z)); ctx.lineTo(X(x + 0.6), Y(z)); }
+    ctx.stroke();
+  }
+  // rice
+  ctx.fillStyle = '#f2e5bc';
+  for (const [rid, x, z] of map.rice) {
+    ctx.beginPath(); ctx.arc(X(x), Y(z), 3.4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#e6d9a8'; ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+    ctx.fillText(rid.replace('rice_', ''), X(x) + 5, Y(z) - 4);
+    ctx.fillStyle = '#f2e5bc';
+  }
+  // spawns
+  for (const [who, x, z] of map.spawns) {
+    ctx.fillStyle = who === 'DEEPSEEK' ? '#5aa9e6' : '#e0603f';
+    ctx.fillRect(X(x) - 4, Y(z) - 4, 8, 8);
+  }
+  // hides
+  ctx.fillStyle = '#b98ad6';
+  for (const [x, z] of map.hides) { ctx.beginPath(); ctx.arc(X(x), Y(z), 4, 0, 7); ctx.fill(); }
+}
+
+draw('before', BEFORE);
+draw('after', AFTER);
+// ?only=before / ?only=after render a single plan for a standalone screenshot.
+const only = new URLSearchParams(location.search).get('only');
+if (only === 'before' || only === 'after') {
+  for (const panel of document.querySelectorAll('.panel'))
+    if (!panel.querySelector(`#${only}`)) panel.remove();
+  document.querySelector('.legend').style.position = 'static';
+  document.querySelector('.legend').style.padding = '10px 12px';
+}
+</script>
+</body>
+</html>

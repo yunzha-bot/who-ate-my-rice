@@ -35,11 +35,17 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, ROOMS, WALLS }
 const trace = (id, x, z, createdAt, dx = 1, dz = 0.2) => ({ id, position: { x, z },
   heading: Math.atan2(dx, dz), createdAt,
   lifetimeMs: GAME_CONFIG.perception.traceLifetimeMs, strength: 1 });
-// 次卧床附近的一段连续米痕：链尾落在 hide_second_bed 的公开交互区域内。
-const BED_1 = trace('bed-1', -12.0, 10.4, 100, -1.2, -0.6);
-const BED_2 = trace('bed-2', -13.2, 9.8, 200, -1.2, -0.6);
-// 次卧里**真实可站立**的起点（碰撞体内部的坐标不能用来走图）。
-const BED_ORIGIN = { x: -11, z: 11 };
+// 2026-10-04 区域级放大：次卧床搬到家具中心 (-21.5, 12.5)、唯一锚点 (-22.9, 11.4)。
+// 这一段连续米痕沿用放大前的相对位置（锚点 + (2.4, 1.5) / + (1.2, 0.9)），链尾仍然
+// 落在 hide_second_bed 的公开交互区域内。
+const SECOND_BED_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_second_bed');
+const BED_1 = trace('bed-1', SECOND_BED_ANCHOR.x + 2.4, SECOND_BED_ANCHOR.z + 1.5,
+  100, -1.2, -0.6);
+const BED_2 = trace('bed-2', SECOND_BED_ANCHOR.x + 1.2, SECOND_BED_ANCHOR.z + 0.9,
+  200, -1.2, -0.6);
+// 次卧里**真实可站立**的起点（碰撞体内部的坐标不能用来走图）；与放大前一样在
+// 锚点 + (3.4, 2.1)。
+const BED_ORIGIN = { x: SECOND_BED_ANCHOR.x + 3.4, z: SECOND_BED_ANCHOR.z + 2.1 };
 
 function harness() {
   const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
@@ -121,22 +127,32 @@ function resolve(env, overrides = {}) {
 
 test('the public map snapshot really wires all three geometry seams', () => {
   const env = harness();
+  // 2026-10-04 区域级放大：客厅 / 玄关隔墙搬到 z = 7，door_living_entry 位于
+  // (2.75, 7)（开口 x 2.15–3.35）。探针与目标沿用放大前「墙前后各 4 世界单位」的
+  // 相对关系，墙侧取门左 0.75（落在墙垛上），门侧取门心。
+  const entryDoor = DOOR_NODES.find(door => door.id === 'door_living_entry');
+  const wallProbe = { x: entryDoor.x - 0.75, z: entryDoor.z - 4 };
+  const wallTarget = { x: entryDoor.x - 0.75, z: entryDoor.z + 4 };
+  const doorProbe = { x: entryDoor.x, z: entryDoor.z - 4 };
+  const doorTarget = { x: entryDoor.x, z: entryDoor.z + 4 };
   // ① 可视性接缝：客厅 → 玄关 隔着一堵墙（不是门洞）必须看不见。
-  assert.equal(env.map.canSee({ x: 2, z: 3 }, { x: 2, z: 7 }, 11), false,
+  assert.equal(env.map.canSee(wallProbe, wallTarget, 11), false,
     '隔着墙必须看不见');
   // 门洞位置：门初始 CLOSED 时同样挡住视线，OPEN 之后才通。
-  assert.equal(env.map.canSee({ x: 5, z: 3 }, { x: 5, z: 7 }, 11), false,
+  assert.equal(env.map.canSee(doorProbe, doorTarget, 11), false,
     'CLOSED 门必须挡住视线');
   const opened = env.doors.toggle('door_living_entry', 'HUMAN');
   assert.equal(opened, 'OPENED');
-  assert.equal(env.map.canSee({ x: 5, z: 3 }, { x: 5, z: 7 }, 11), true,
+  assert.equal(env.map.canSee(doorProbe, doorTarget, 11), true,
     'OPEN 门洞必须通视');
   // ② 可站立接缝：家具足迹内不能站人。
-  assert.equal(env.map.standable({ x: 7.9, z: 3.9 }), false, '家具内部不能站');
-  assert.equal(env.map.standable({ x: -10.5, z: 9 }), true, '次卧空地上必须能站');
+  const livingCarton = FURNITURE.find(rect => rect.id === 'living_carton');
+  assert.equal(env.map.standable({ x: livingCarton.x, z: livingCarton.z }), false,
+    '家具内部不能站');
+  assert.equal(env.map.standable({ ...BED_ORIGIN }), true, '次卧空地上必须能站');
   // ③ 遮挡接缝：与非 OPEN 门叶一致。
-  assert.equal(env.map.lineBlocked({ x: 2, z: 3 }, { x: 2, z: 7 }), true);
-  assert.equal(env.map.lineBlocked({ x: 5, z: 3 }, { x: 5, z: 7 }), false,
+  assert.equal(env.map.lineBlocked(wallProbe, wallTarget), true);
+  assert.equal(env.map.lineBlocked(doorProbe, doorTarget), false,
     '开门之后同一条视线不再被判定为遮挡');
   // 三条接缝都必须存在：缺省值等于「失败即拒绝」，漏接线会让 AI 静默失效。
   for (const key of ['canSee', 'standable', 'lineBlocked'])

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>外围几何复核</title>
+<style>body{margin:0;overflow:hidden;background:#d1cec3}canvas{display:block}nav{position:fixed;top:8px;left:8px;background:#fffc;padding:6px;font:12px sans-serif}button{margin:2px}output{margin-left:8px}</style>
+<nav id="views"></nav>
+<script type="module">
+import * as THREE from 'three';
+import { buildApartment } from '/src/three/map/MapBuilder.ts';
+import { DoorView } from '/src/three/DoorView.ts';
+import { DOOR_NODES, ROOMS, MAP_WIDTH, MAP_DEPTH } from '/src/three/map/apartmentMap.ts';
+import { homeFrustum } from '/src/three/AlphaPresentation.ts';
+import { positionCameraOnTarget } from '/src/three/CameraRelativeMovement.ts';
+import { fitOrthographicSceneDepth } from '/src/three/SceneCameraDepth.ts';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xd1cec3);
+scene.add(new THREE.HemisphereLight(0xfff5e4,0x9c9988,2));
+const sun=new THREE.DirectionalLight(0xffefd8,2.4);sun.position.set(-8,24,12);scene.add(sun);
+const apartment=buildApartment(scene,{debug:false});
+const visualBounds=new THREE.Box3().setFromObject(apartment.root);
+DOOR_NODES.forEach((door,i)=>scene.add(new DoorView(door,i,false).object));
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);document.body.append(renderer.domElement);
+const camera=new THREE.OrthographicCamera(),offset=new THREE.Vector3(12,14,12);
+const left=Math.min(...ROOMS.map(r=>r.minX)),right=Math.max(...ROOMS.map(r=>r.maxX));
+const back=Math.min(...ROOMS.map(r=>r.minZ)),front=Math.max(...ROOMS.map(r=>r.maxZ));
+const presets={full:[-3,-3,Math.max(MAP_DEPTH+56,94)],north:[0,back-20,38],east:[right+23,0,33],
+  south:[-8,front+22,36],west:[left-17,0,44],nw:[left-18,back+10,39],
+  ne:[right-1,back-20,28],se:[right+21,front-1.5,28],sw:[left-21,front+20,28],
+  close:[left-18,front-6,25],menu:[0,0,40]};
+let active='full';
+const status=document.createElement('output');
+function draw(view){
+  active=view;const [x,z,h]=presets[view],a=innerWidth/innerHeight;
+  Object.assign(camera,view==='menu'?homeFrustum(a,true,14,MAP_DEPTH,MAP_WIDTH):{left:-h*a/2,right:h*a/2,top:h/2,bottom:-h/2});
+  camera.near=.1;camera.far=100;camera.updateProjectionMatrix();
+  positionCameraOnTarget(camera,new THREE.Vector3(x,0,z),offset);
+  camera.updateMatrixWorld(true);
+  fitOrthographicSceneDepth(camera,visualBounds);
+  renderer.render(scene,camera);status.textContent=`${view} / near ${camera.near} / far ${camera.far.toFixed(1)}`;
+}
+for(const [id,label] of Object.entries({full:'全景',north:'上',east:'右',south:'下',west:'左',nw:'左上',ne:'右上',se:'右下',sw:'左下',close:'建筑近景',menu:'正式菜单镜头'})){
+  const b=document.createElement('button');b.textContent=label;b.onclick=()=>draw(id);document.querySelector('nav').append(b);
+}
+document.querySelector('nav').append(status);
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);draw(active);});draw('full');
+</script></html>

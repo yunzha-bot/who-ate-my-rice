@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><title>区域级放大复核视角</title>
+<style>body{margin:0;overflow:hidden;background:#d1cec3}canvas{display:block}
+output{position:fixed;top:8px;left:8px;background:#fffc;padding:6px;font:12px sans-serif}</style>
+<!--
+  区域级放大复核页（仅本目录证据用，不属于游戏源码，不参与玩法/碰撞）。
+  与 docs/verification/EAST_WING_EXPANSION/rooms.html 同一套做法：直接 import 正式的
+  buildApartment / DoorView / 相机定位 / 深度拟合，不复制任何坐标。差别：
+    1. buildApartment(..., {debug:true}) 打开官方地图标签（房间中文名、米点 id、藏身锚点）；
+    2. 相机按 ?view=<name> 摆到对应视点，?h= 覆盖正交高度。
+  视角：all(整图) / house(住宅) / living / main_bedroom / hall / east_hall / exterior(外围街区)
+-->
+<output id="status">loading</output>
+<script type="module">
+import * as THREE from 'three';
+import { buildApartment } from '/src/three/map/MapBuilder.ts';
+import { DoorView } from '/src/three/DoorView.ts';
+import { DOOR_NODES, ROOMS } from '/src/three/map/apartmentMap.ts';
+import { positionCameraOnTarget } from '/src/three/CameraRelativeMovement.ts';
+import { fitOrthographicSceneDepth } from '/src/three/SceneCameraDepth.ts';
+
+const params = new URLSearchParams(location.search);
+const want = params.get('view') ?? 'all';
+const height = Number(params.get('h') ?? '0') || 0;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xd1cec3);
+scene.add(new THREE.HemisphereLight(0xfff5e4, 0x9c9988, 2));
+const sun = new THREE.DirectionalLight(0xffefd8, 2.4);
+sun.position.set(-8, 24, 12);
+scene.add(sun);
+
+const apartment = buildApartment(scene, { debug: true });
+apartment.debugRoot.visible = true;
+const visualBounds = new THREE.Box3().setFromObject(apartment.root);
+DOOR_NODES.forEach((door, i) => scene.add(new DoorView(door, i, false).object));
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+document.body.append(renderer.domElement);
+
+const camera = new THREE.OrthographicCamera();
+// 正式游戏的相机偏移方向（与 ThreeGame 的相机相对移动一致）。
+const offset = new THREE.Vector3(12, 14, 12);
+
+const VIEWS = {
+  all: { target: [0, 0, 0], h: 70 },
+  house: { target: [0, 0, 0], h: 48 },
+  living: { target: [0, 0, -3], h: 17 },
+  main_bedroom: { target: [-20.5, 0, -6.5], h: 15 },
+  hall: { target: [-11.25, 0, 2], h: 13 },
+  east_hall: { target: [18, 0, 10], h: 22 },
+  exterior: { target: [-6, 0, 34], h: 74 },
+};
+const view = VIEWS[want];
+if (!view) throw new Error('unknown view ' + want);
+
+const status = document.getElementById('status');
+function draw() {
+  const aspect = innerWidth / innerHeight;
+  const h = height || view.h;
+  Object.assign(camera, { left: -h * aspect / 2, right: h * aspect / 2,
+    top: h / 2, bottom: -h / 2 });
+  camera.near = 0.1;
+  camera.far = 100;
+  camera.updateProjectionMatrix();
+  const t = new THREE.Vector3(...view.target);
+  positionCameraOnTarget(camera, t, offset);
+  camera.updateMatrixWorld(true);
+  fitOrthographicSceneDepth(camera, visualBounds);
+  renderer.render(scene, camera);
+  status.textContent = `${want} target ${view.target.join(',')} / h ${h}`
+    + ` / aspect ${aspect.toFixed(4)} / ${innerWidth}x${innerHeight}`
+    + ` / near ${camera.near} far ${camera.far.toFixed(1)}`;
+}
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); draw(); });
+draw();
+window.__viewProbe = () => ({ want, status: status.textContent });
+</script></html>

@@ -17,8 +17,17 @@ import { inferTraceDirection } from '../src/systems/HumanTraceTracking.ts';
 
 const carton = HIDE_SPOTS.find(spot => spot.id === 'hide_living_carton');
 const cartonSetup = hideRegionSetup(carton, FURNITURE);
-const clue = (id, x, z, createdAt) => ({ traceId: id, position: { x, z }, heading: 0,
-  createdAt, discoveredAt: createdAt, validUntil: createdAt + 15_000 });
+// 2026-10-04 区域级放大：客厅纸箱搬到 (-5.4, -9.6)，它唯一的 enter = exit 锚点是
+// (-5.4, -8.6)（在纸箱 +Z 一侧）。所以「沿着锚点走向纸箱」的那条连续米痕是沿 -Z
+// 前进的两粒米：最新一粒正好落在锚点（在公开交互区域内），更早一粒在 +Z 0.5 处。
+// 米痕实体的朝向字段用 atan2(dx, dz)，沿 -Z 前进即 π，换算成世界朝向 -π/2 与链
+// 方向一致，因此不会构成「方向矛盾」。
+const CLUE_1 = { x: carton.x, z: carton.z + 0.5 };
+const CLUE_2 = { x: carton.x, z: carton.z };
+const CLUE_HEADING = Math.atan2(0, -1);
+const clue = (id, x, z, createdAt) => ({ traceId: id, position: { x, z },
+  heading: CLUE_HEADING, createdAt, discoveredAt: createdAt,
+  validUntil: createdAt + 15_000 });
 
 const base = (overrides = {}) => ({
   spots: HIDE_SPOTS,
@@ -34,8 +43,8 @@ const base = (overrides = {}) => ({
 });
 
 test('the ranking is deterministic and sorted by public score then distance', () => {
-  const clue1 = clue('a', 6.5, 3.5, 100);
-  const clue2 = clue('b', 7.0, 3.6, 200);
+  const clue1 = clue('a', CLUE_1.x, CLUE_1.z, 100);
+  const clue2 = clue('b', CLUE_2.x, CLUE_2.z, 200);
   const inference = inferTraceDirection([clue1, clue2]);
   const input = base({ clues: [clue1, clue2], inference });
   const first = rankHideSearchCandidates(input);
@@ -74,8 +83,8 @@ test('failed-cooldown, already-checked and missing-furniture candidates are excl
 });
 
 test('the public score is exactly the documented formula, including the termination bonus', () => {
-  const inside = clue('a', 6.5, 3.5, 100);
-  const newest = clue('b', 7.0, 3.6, 200);
+  const inside = clue('a', CLUE_1.x, CLUE_1.z, 100);
+  const newest = clue('b', CLUE_2.x, CLUE_2.z, 200);
   const inference = inferTraceDirection([inside, newest]);
   const origin = { x: 2, z: 3 };
   const scored = rankHideSearchCandidates(base({
@@ -95,8 +104,8 @@ test('the public score is exactly the documented formula, including the terminat
     `公开评分必须能被逐项复算：实际 ${scored.score}，期望 ${expected}`);
   assert.ok(scored.basis.some(text => text.includes('公开交互区域内')));
 
-  // 最新米痕落在区域外时不存在终止加分项。
-  const outsideNewest = { ...newest, position: { x: 4.0, z: 3.0 } };
+  // 最新米痕落在区域外时不存在终止加分项（这里把它挪到客厅里远离纸箱的位置）。
+  const outsideNewest = { ...newest, position: { x: carton.x + 3.0, z: carton.z + 2.0 } };
   const outsideInference = inferTraceDirection([inside, outsideNewest]);
   const outsideScored = rankHideSearchCandidates(base({
     clues: [inside, outsideNewest], inference: outsideInference, origin,
@@ -106,8 +115,8 @@ test('the public score is exactly the documented formula, including the terminat
 });
 
 test('alignment, Last Seen and heard-sound bonuses only come from public clues', () => {
-  const clueA = clue('a', 6.5, 3.5, 100);
-  const clueB = clue('b', 7.0, 3.6, 200);
+  const clueA = clue('a', CLUE_1.x, CLUE_1.z, 100);
+  const clueB = clue('b', CLUE_2.x, CLUE_2.z, 200);
   const towards = inferTraceDirection([clueA, clueB]);
   const away = { ...towards, direction: { x: -1, z: 0 }, directionHeadingRad: Math.PI };
   const scoreOf = input => rankHideSearchCandidates(input)
@@ -119,18 +128,20 @@ test('alignment, Last Seen and heard-sound bonuses only come from public clues',
 
   const withoutSeen = scoreOf(base({ clues: [clueA, clueB], inference: towards }));
   const withSeen = scoreOf(base({ clues: [clueA, clueB], inference: towards,
-    lastSeen: { position: { x: 7.9, z: 3.9 }, timeMs: 1 } }));
+    lastSeen: { position: { x: carton.x, z: carton.z }, timeMs: 1 } }));
   assert.equal(withSeen - withoutSeen, CANDIDATE_LAST_SEEN_BONUS);
   const withSound = scoreOf(base({ clues: [clueA, clueB], inference: towards,
-    heard: { position: { x: 7.9, z: 3.9 }, type: 'FOOTSTEP' } }));
+    heard: { position: { x: carton.x, z: carton.z }, type: 'FOOTSTEP' } }));
   assert.equal(withSound - withoutSeen, CANDIDATE_SOUND_BONUS);
 });
 
 test('a wide-open clue still produces several candidates without inventing one', () => {
-  const between = clue('a', -15.0, -6.5, 100);
+  // 主卧（-26.5…-14.5 × -13.5…0.5）里的一个痕迹落点：主卧自己就有两件公开家具。
+  const mainBedAnchor = HIDE_SPOTS.find(spot => spot.id === 'hide_main_bed');
+  const between = clue('a', mainBedAnchor.x + 2.4, mainBedAnchor.z, 100);
   const inference = inferTraceDirection([between]);
   const report = rankHideSearchCandidates(base({ clues: [between], inference,
-    origin: { x: -14.4, z: -6.15 } }));
+    origin: { x: mainBedAnchor.x + 4.4, z: mainBedAnchor.z } }));
   assert.ok(report.candidates.length >= 2,
     '主卧里有两件公开家具，痕迹落点应当同时给出多个候选');
   assert.ok(report.candidates.every(candidate =>
@@ -139,7 +150,7 @@ test('a wide-open clue still produces several candidates without inventing one',
 });
 
 test('the clue gate keeps a single grain from locking onto furniture', () => {
-  const single = clue('a', 7.0, 3.6, 100);
+  const single = clue('a', CLUE_2.x, CLUE_2.z, 100);
   const singleInference = inferTraceDirection([single]);
   const noExtra = gateHideSearchByClues({ inference: singleInference, lastSeen: null,
     heard: null, spots: HIDE_SPOTS, furniture: FURNITURE });
@@ -149,14 +160,15 @@ test('the clue gate keeps a single grain from locking onto furniture', () => {
 
   // 一粒米 + 一条独立公开线索（Last Seen 落在家具的公开交互区域内）才放行。
   const withSeen = gateHideSearchByClues({ inference: singleInference,
-    lastSeen: { position: { x: 7.9, z: 3.9 }, timeMs: 1 }, heard: null,
+    lastSeen: { position: { x: carton.x, z: carton.z }, timeMs: 1 }, heard: null,
     spots: HIDE_SPOTS, furniture: FURNITURE });
   assert.equal(withSeen.ok, true);
   assert.deepEqual(withSeen.extraClueSpotIds, ['hide_living_carton']);
 
   // 两粒连续米痕本身就构成可搜查的路径。
-  const chained = gateHideSearchByClues({ inference: inferTraceDirection([clue('a', 6.5, 3.5, 100),
-    clue('b', 7.0, 3.6, 200)]), lastSeen: null, heard: null,
+  const chained = gateHideSearchByClues({ inference: inferTraceDirection([
+    clue('a', CLUE_1.x, CLUE_1.z, 100), clue('b', CLUE_2.x, CLUE_2.z, 200)]),
+  lastSeen: null, heard: null,
   spots: HIDE_SPOTS, furniture: FURNITURE });
   assert.equal(chained.ok, true);
   assert.equal(chained.code, 'OK');
@@ -164,7 +176,7 @@ test('the clue gate keeps a single grain from locking onto furniture', () => {
   assert.equal(gateHideSearchByClues({ inference: inferTraceDirection([]),
     lastSeen: null, heard: null, spots: HIDE_SPOTS, furniture: FURNITURE }).code, 'NO_CLUE');
   assert.equal(gateHideSearchByClues({ inference: {
-    code: 'CHAIN_CONTRADICTORY', confidence: 'LOW', anchor: { x: 7, z: 3.6 },
+    code: 'CHAIN_CONTRADICTORY', confidence: 'LOW', anchor: { x: carton.x, z: carton.z },
     direction: null, directionHeadingRad: null, chain: ['a', 'b'], newestTraceId: 'b',
     gaps: 0, basis: [],
   }, lastSeen: null, heard: null, spots: HIDE_SPOTS, furniture: FURNITURE }).code,

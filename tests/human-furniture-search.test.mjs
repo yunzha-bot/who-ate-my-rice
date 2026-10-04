@@ -51,8 +51,10 @@ function headingToward(position, furnitureId, furniture = FURNITURE) {
   return Math.atan2(aim.z - position.z, aim.x - position.x);
 }
 
-// 次卧床的合法交互位置（真实几何判定为 LEGAL）。
-const BED_LEGAL = { x: -11.3, z: 10.8 };
+// 次卧床（家具中心 -21.5, 12.5；唯一锚点 -22.9, 11.4）的合法交互位置：沿用放大前
+// 「锚点 + (3.1, 1.9)」的相对位置，真实几何判定为 LEGAL。
+const SECOND_BED_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_second_bed');
+const BED_LEGAL = { x: SECOND_BED_ANCHOR.x + 3.1, z: SECOND_BED_ANCHOR.z + 1.9 };
 // 客厅里一个不属于任何交互区域的位置。
 const LIVING_FREE = { x: 2, z: 3 };
 
@@ -150,13 +152,24 @@ test('the furniture branch needs facing, but never the fan distance or half angl
 
 test('a wall or a closed door between the player and the furniture forbids the search', () => {
   const env = harness();
-  // 真实几何：这个点在自己的交互区域内，但与家具之间被挡住 → SURFACE_BLOCKED。
-  const blocked = env.resolve({ x: 14.5, z: -4.8 });
+  // 真实几何：这个点在自己的交互区域内，但与家具之间被墙挡住 → SURFACE_BLOCKED。
+  // 2026-10-04 区域级放大后，授权坐标里已经没有这样的点（0.02 步长扫过 8 个区域的
+  // 全部可站点，surfaceClear 全为 true）：储物间纸箱虽然仍离厨房隔墙 0.7，但厨房一侧
+  // 贴墙的是厨房柜台（z -14.5…-11.5），没给「站得住又被墙挡住」留位置。这里沿用本
+  // 测试组既有的构造方式，只把纸箱保持离墙 0.7（x = 16.7）而把 z 移到柜台够不到的
+  // -4.8，重建放大前那个「站厨房、隔墙摸储物间纸箱」的样本。
+  const movedFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
+    ? { ...rect, x: 16.7, z: -4.8 } : rect);
+  const movedSpots = HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
+    ? { ...spot, x: 17.75, z: -4.8 } : spot);
+  const blockedPosition = { x: 15.6, z: -4.8 };
+  const blocked = env.resolve(blockedPosition, { spots: movedSpots,
+    furniture: movedFurniture });
   assert.equal(blocked.code, 'SURFACE_BLOCKED');
   assert.equal(blocked.legalTarget, null, '不合法时不允许高亮，也不允许按键');
   // 同一件家具，即使玩家位置在区域内，权威层也必须拒绝：不读占用、不搜查。
   const spot = HIDE_SPOTS.find(entry => entry.id === 'hide_storage_carton');
-  const rejected = searchFurniture(env, { x: 14.5, z: -4.8 },
+  const rejected = searchFurniture(env, blockedPosition,
     { spotId: spot.id, furnitureId: spot.furnitureId, code: 'SURFACE_BLOCKED',
       legal: false, distance: 0 },
     { occupied: 'hide_storage_carton' });
@@ -175,12 +188,15 @@ test('a wall or a closed door between the player and the furniture forbids the s
 
 test('overlapping regions still give the player exactly one furniture target', () => {
   const env = harness();
-  // 与 hide-target-resolution 测试相同：把储物间纸箱搬到客厅纸箱旁构造真实重叠。
+  // 与 hide-target-resolution 测试同一类构造：把储物间纸箱搬到客厅纸箱正西，两个
+  // R = 1.2 的圆真正重叠，而且**两件都合法**——唯一性完全由「指向」决定。几何全部
+  // 由真实的 `hideRegionSetup` / `pointInHideRegion` / `checkHideRegionPosition` 计算。
   const movedFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
-    ? { ...rect, x: 9.6, z: 3.9 } : rect);
-  const movedSpots = HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
-    ? { ...spot, x: 10.4, z: 3.9 } : spot);
-  const position = { x: 8.6, z: 4.4 };
+    ? { ...rect, x: -7.6, z: -9.6 } : rect);
+  const movedSpots = HIDE_SPOTS.map(spot =>
+    spot.id === 'hide_storage_carton' ? { ...spot, x: -7.8, z: -9.6 }
+      : spot.id === 'hide_living_carton' ? { ...spot, x: -5.7, z: -9.6 } : spot);
+  const position = { x: -6.5, z: -9.6 };
   const { resolution, plan } = pressQ(env, position, { spots: movedSpots,
     furniture: movedFurniture, headingRad: headingToward(position, 'living_carton',
       movedFurniture) });

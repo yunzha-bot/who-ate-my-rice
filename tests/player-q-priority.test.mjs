@@ -50,8 +50,11 @@ function headingToward(position, furnitureId, furniture = FURNITURE) {
   return { headingRad: Math.atan2(aim.z - position.z, aim.x - position.x), aim };
 }
 
-// 次卧床：家具中心 (-13,10)、2.1×2.2；其合法交互位置（真实几何判定为 LEGAL）。
-const BED_LEGAL = { x: -11.3, z: 10.8 };
+// 2026-10-04 区域级放大：次卧床的家具中心是 (-21.5, 12.5)、唯一锚点是
+// (-22.9, 11.4)；沿用放大前「锚点 + (3.1, 1.9)」的相对位置得到真实几何判定为
+// LEGAL 的合法交互位置。
+const SECOND_BED_ANCHOR = HIDE_SPOTS.find(spot => spot.id === 'hide_second_bed');
+const BED_LEGAL = { x: SECOND_BED_ANCHOR.x + 3.1, z: SECOND_BED_ANCHOR.z + 1.9 };
 // 客厅里一个不属于任何交互区域的位置。
 const LIVING_FREE = { x: 2, z: 3 };
 
@@ -183,13 +186,15 @@ test('§四.3 facing the bed with no exposed target searches exactly the bed', (
 
 test('§四.4 two overlapping legal regions: pointing decides the single furniture', () => {
   const env = harness();
-  // 把储物间纸箱搬到客厅纸箱正西（两个圆形区域纵向对齐且重叠）；这一点同时落在
-  // 两个区域里，而且**两件都合法**——因此这里的唯一性完全由「指向」决定。
+  // 把储物间纸箱搬到客厅纸箱正西（两个圆形区域横向对齐且重叠）；这一点同时落在
+  // 两个区域里，而且**两件都合法**——因此这里的唯一性完全由「指向」决定。两件纸箱
+  // 的家就是客厅（放大后客厅从 -8 到 8 宽），锚点也一并摆到两个区域中间。
   const furniture = FURNITURE.map(rect => rect.id === 'storage_carton'
-    ? { ...rect, x: 5.7, z: 3.9 } : rect);
-  const spots = HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
-    ? { ...spot, x: 5.5, z: 3.9 } : spot);
-  const position = { x: 6.8, z: 3.9 };
+    ? { ...rect, x: -7.6, z: -9.6 } : rect);
+  const spots = HIDE_SPOTS.map(spot =>
+    spot.id === 'hide_storage_carton' ? { ...spot, x: -7.8, z: -9.6 }
+      : spot.id === 'hide_living_carton' ? { ...spot, x: -5.7, z: -9.6 } : spot);
+  const position = { x: -6.5, z: -9.6 };
   const eastward = headingToward(position, 'living_carton', furniture);
   const westward = headingToward(position, 'storage_carton', furniture);
   const towardLiving = pressQ(env, position, { spots, furniture,
