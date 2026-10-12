@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
+import { rectColliders } from '../src/three/map/MapEditModel.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
 import { DoorSystem } from '../src/systems/DoorSystem.ts';
 import { resolveHideInteractionTarget, resolvePlayerQPlan, HIDE_TARGET_CODE_TEXT }
@@ -22,16 +22,14 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, WALLS }
 //   ③ 区域内「最近」「合法」「合法且被指向」是三个不同的概念（Q 只认最后一个）；
 //   ④ Q 的输入优先级（冷却 → 暴露目标 → 指向家具 → 普通扇形）是一条可枚举的纯规则。
 
-function harness() {
-  const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
-    new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-    new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2)));
-  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+function harness(furniture = FURNITURE) {
+  const colliders = rectColliders([...WALLS, ...furniture]);
+  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, colliders.boxes, colliders.oriented);
   const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
   const doors = new DoorSystem(DOOR_NODES, 3);
   const world = { collision, navigation, doorStates: doors.doors };
   const resolve = (position, overrides = {}) => resolveHideInteractionTarget({
-    position, spots: HIDE_SPOTS, furniture: FURNITURE, world, ...overrides });
+    position, spots: HIDE_SPOTS, furniture, world, ...overrides });
   const standable = point => collision.canOccupyStaticXZ(point.x, point.z,
     GAME_CONFIG.collision.playerRadius, GAME_CONFIG.three.actorHeight);
   return { collision, navigation, doors, world, resolve, standable };
@@ -103,11 +101,15 @@ test('the real map has exactly the regions we think it has, and every non-legal 
   //    车库西北角（家政间隔墙 z = 4.5 与车库工作台 z 5.2…7.8 之间）是一条真实存在的
   //    「站得住、但四周导航格全被挡住」的窄缝：把储物间纸箱搬到缝西侧，缝里的可站点
   //    就落在它的区域内，最近的空闲格中心超过 0.45（REGION_NAV_SNAP_LIMIT）。
-  const pocketFurniture = FURNITURE.map(rect => rect.id === 'storage_carton'
+  // Keep this intentional narrow-gap fixture independent of later garage layout edits.
+  const pocketBase = FURNITURE.map(rect => rect.id === 'garage_workbench'
+    ? { ...rect, x: 27.3, z: 6.5, rotation: 0 } : rect);
+  const pocketEnv = harness(pocketBase);
+  const pocketFurniture = pocketBase.map(rect => rect.id === 'storage_carton'
     ? { ...rect, x: 26.6, z: 4.9 } : rect);
   const pocketSpots = HIDE_SPOTS.map(spot => spot.id === 'hide_storage_carton'
     ? { ...spot, x: 26.6, z: 4.9 } : spot);
-  const notNavigable = env.resolve({ x: 27.3, z: 4.9 },
+  const notNavigable = pocketEnv.resolve({ x: 27.3, z: 4.9 },
     { spots: pocketSpots, furniture: pocketFurniture });
   assert.equal(notNavigable.spotId, 'hide_storage_carton');
   assert.equal(notNavigable.code, 'NOT_NAVIGABLE');

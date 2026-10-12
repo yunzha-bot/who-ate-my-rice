@@ -1,7 +1,7 @@
 import test from 'node:test';
+import { rectColliders } from '../src/three/map/MapEditModel.ts';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
@@ -48,10 +48,8 @@ const BED_2 = trace('bed-2', SECOND_BED_ANCHOR.x + 1.2, SECOND_BED_ANCHOR.z + 0.
 const BED_ORIGIN = { x: SECOND_BED_ANCHOR.x + 3.4, z: SECOND_BED_ANCHOR.z + 2.1 };
 
 function harness() {
-  const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
-    new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-    new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2)));
-  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+  const { boxes, oriented } = rectColliders([...WALLS, ...FURNITURE]);
+  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes, oriented);
   const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
   const doors = new DoorSystem(DOOR_NODES, 3);
   const perception = new PerceptionGeometry(WALLS, DOOR_NODES, () => doors.doors);
@@ -341,7 +339,7 @@ test('a stale plan (moved or rotated furniture) cancels instead of scoring a mis
   assert.equal(planned.finalAimPoint.z, stance.surfacePoint.z);
   // 地图里的书柜被旋转 90°：计划瞄点已经不在新轮廓表面上 → 取消，不记搜空。
   const rotated = FURNITURE.map(rect => rect.id === 'study_bookshelf'
-    ? { ...rect, rotation: Math.PI / 2 } : rect);
+    ? { ...rect, rotation: (rect.rotation ?? 0) + Math.PI / 2 } : rect);
   const stale = resolve(env, { furniture: rotated, occupied: 'hide_study_bookshelf' });
   assert.equal(stale.code, 'PLAN_STALE');
   assert.equal(stale.executable, false, '计划失效必须取消而不是判一次 MISS');
@@ -367,7 +365,7 @@ test('a rotated footprint still accepts a surface point that really is on it', (
   // 家具旋转后的真实轮廓用 `pointOnRectSurface` 复核：旋转 90° 后，原本在长边上的
   // 点会落到短边之外，而新的表面点仍然合法。
   const bookshelf = FURNITURE.find(rect => rect.id === 'study_bookshelf');
-  const rotated = { ...bookshelf, rotation: Math.PI / 2 };
+  const rotated = { ...bookshelf, rotation: (bookshelf.rotation ?? 0) + Math.PI / 2 };
   const before = rectSurfacePoint(bookshelf, { x: -3.0, z: 12.1 });
   assert.equal(pointOnRectSurface(before, bookshelf), true);
   assert.equal(pointOnRectSurface(before, rotated), false,

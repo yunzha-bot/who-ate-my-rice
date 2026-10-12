@@ -1,6 +1,6 @@
 import test from 'node:test';
+import { rectColliders } from '../src/three/map/MapEditModel.ts';
 import assert from 'node:assert/strict';
-import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
@@ -20,10 +20,8 @@ import { STANCE_STAND_OFF } from '../src/systems/HumanSearchTuning.ts';
 // 可搜查表面而不是家具中心。这里用真实地图与真实几何接口验证。
 
 function apartment() {
-  const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
-    new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-    new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2)));
-  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+  const { boxes, oriented } = rectColliders([...WALLS, ...FURNITURE]);
+  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes, oriented);
   const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
   const doors = new DoorSystem(DOOR_NODES, 3);
   const perception = new PerceptionGeometry(WALLS, DOOR_NODES, () => doors.doors);
@@ -138,7 +136,7 @@ test('an impossible world is reported as a refusal instead of a silent success',
     stanceWorld({ pathNodes: () => null }));
   assert.equal(unreachable.code, 'UNREACHABLE');
   const noCell = planHideSearchStance(spot.id, furniture, { x: 2, z: 3 },
-    stanceWorld({ navigationCell: () => null }));
+    stanceWorld({ standable: () => true, navigationCell: () => null }));
   assert.equal(noCell.code, 'NOT_NAVIGABLE');
   // 探测次数有确定上限，且报告里给出可读原因。
   assert.ok(unreachable.probes <= 8);

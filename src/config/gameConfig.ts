@@ -25,7 +25,7 @@ export const GAME_CONFIG = {
     color: 0xf28b45,
   },
   humanAI: {
-    movementSpeedMultiplier: 0.92, // AI 移速倍率：在 Human 基础速度上降低约 8%，不影响玩家手动控制。
+    movementSpeedMultiplier: 0.52, // AI 移速倍率：在 Human 基础速度上降低 48%，不影响玩家手动控制；2026-10-12 用户确认保留。
     navCellSize: 0.4, // 寻路网格边长：XZ 世界单位。
     repathIntervalMs: 500, // 目标移动后的最长重新寻路间隔：毫秒。
     waypointTolerance: 0.25, // 通过路径点的距离：世界单位。
@@ -110,7 +110,8 @@ export const GAME_CONFIG = {
     stationaryPassageCheckIntervalMs: 500, // 静止挡路条件的再次检查间隔：毫秒，避免逐帧 A*。
     doorEscapeMinHumanDistance: 1.5, // EVADE 关门时与当前可见 Human 的最低距离：世界单位；大于实际抓捕圈。
     doorEscapeCrossingWindowMs: 1_800, // 实际穿过门后允许考虑关门的时间：毫秒；不返回远门。
-    doorEscapeCooldownMs: 5_000, // 同一扇门再次考虑关门的冷却：毫秒；避免 Human 开门后原地振荡。
+    doorEscapeCooldownMs: 20_000, // 同一扇门再次考虑关门的冷却：毫秒；避免 Human 开门后原地振荡。
+    humanPlayerUnlockPenaltyMs: 10_000, // Human 玩家解除 DeepSeek AI 的锁后，DeepSeek AI 全局禁止再次锁门的惩罚冷却：毫秒。
     // S7C-2b DeepSeek 娘 AI 自主藏身（用户 2026-09-27 批准值，不得擅自调整）。
     // 退出安全间距刻意**复用** escapeMinSeparation（3）与逃跑语义同源，不新增同义参数；
     // 近期藏身点惩罚也不复用逃跑的 escapeRecentVisitPenalty，而是独立列出（用户批准值）。
@@ -200,12 +201,21 @@ export const GAME_CONFIG = {
     },
   },
   pulseLock: {
+    // 旧扫雷参数：保留原值供历史对照，正式玩家解锁不再读取。
     rows: 4, // 扫雷行数。
     cols: 4, // 扫雷列数。
     mines: 3, // 地雷数量，必须小于总格数。
     // 扫雷第一次揭格保证安全。
     firstRevealSafe: true,
     failureFeedbackMs: 1_500,
+    // 玩家新版 PulseLock 时机轨道；全部门共用同一组规则。
+    timing: {
+      coreCount: 3, // 每扇锁门依次完成的锁芯数量。
+      travelMs: 1_400, // 脉冲从轨道一端走到另一端的毫秒数。
+      targetWidth: 0.20, // 成功区域占轨道长度的比例。
+      targetCenters: [0.48, 0.56, 0.43], // 三个锁芯成功区域的归一化中心。
+      feedbackMs: 240, // 命中或失手反馈持续时间，毫秒。
+    },
   },
   perception: {
     // S6D debug hearing display: XZ world units, with stable near/mid/far bands.

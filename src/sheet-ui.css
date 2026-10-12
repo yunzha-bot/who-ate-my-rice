@@ -1,0 +1,183 @@
+/* The approved PNG sheets supply the UI surfaces. All text and game state stay in DOM. */
+:root {
+  --sheet-panel: url('/ui/panels/main-shell-stretch.png');
+  --sheet-compact: url('/ui/panels/compact-shell-stretch.png');
+  --sheet-button: url('/ui/components/button-shell-stretch.png');
+  --sheet-paper: url('/ui/textures/paper.png');
+}
+
+/* Compact art-backed modules leave the diorama centre unobscured. */
+.alpha-faction,
+.alpha-hud[data-faction='HUMAN'] .alpha-faction {
+  border: 10px solid transparent;
+  border-image: url('/ui/components/dark-label.png') 12 fill / 10px stretch;
+  background: none;
+  clip-path: none;
+  padding: 1px 5px;
+}
+.alpha-hud[data-faction='HUMAN'] .alpha-faction { border-image-source: url('/ui/hud/faction-warm.png'); color: var(--ui-ink); }
+.alpha-objective { background: rgb(32 39 45 / .76); clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%); }
+.rice-inventory, .match-clock {
+  border: 8px solid transparent;
+  border-image: url('/ui/hud/rice-shell.png') 12 fill / 8px stretch;
+  background: none;
+  color: var(--ui-ink);
+  padding: 0px 10px;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 22px) 100%, 0 100%, 0 8px);
+}
+.rice-inventory { gap: 4px; }
+.rice-inventory i,
+.alpha-hud[data-faction='HUMAN'] .rice-inventory i {
+  display: block;
+  width: 24px;
+  height: 23px;
+  flex: none;
+  border: 0;
+  border-radius: 0;
+  background: url('/ui/hud/rice-bowl.png') center / contain no-repeat;
+  box-shadow: none;
+  opacity: 1;
+}
+.rice-inventory i[data-done='true'],
+.alpha-hud[data-faction='HUMAN'] .rice-inventory i[data-done='true'] {
+  border: 0;
+  background: url('/ui/hud/rice-bowl.png') center / contain no-repeat;
+  filter: grayscale(1);
+  opacity: .35;
+}
+.alpha-rice {
+  border: 5px solid transparent;
+  border-image: url('/ui/components/dark-label.png') 10 fill / 5px stretch;
+  background: none;
+  color: var(--ui-paper);
+  padding: 0 5px;
+  clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 10px) 100%, 0 100%, 0 6px);
+}
+.match-clock { border-image-source: url('/ui/hud/timer-shell.png'); }
+.movement-guide {
+  border: 8px solid transparent;
+  border-image: url('/ui/components/dark-label.png') 12 fill / 8px stretch;
+  background: none;
+  padding: 2px 5px;
+}
+.alpha-key, .alpha-cooldown, .alpha-hud[data-faction='HUMAN'] .alpha-q {
+  border: 13px solid transparent;
+  border-image: url('/ui/hud/skill-blue.png') 16 fill / 13px stretch;
+  background: none;
+  color: var(--ui-ink);
+  padding: 3px 6px;
+  min-height: 56px;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 25px) 100%, 0 100%, 0 12px);
+}
+.alpha-hud[data-faction='HUMAN'] .alpha-q { border-image-source: url('/ui/hud/skill-warm.png'); }
+.alpha-key > b { color: var(--ui-ink); }
+.alpha-key small { color: var(--ui-slate); }
+.alpha-cooldown[data-ready='true'] { color: var(--ui-ink); }
+.alpha-cooldown::after { bottom: -7px; }
+.world-interaction {
+  border: 8px solid transparent;
+  border-image: url('/ui/hud/interaction-shell.png') 12 fill / 8px stretch;
+  background: none;
+  color: var(--ui-ink);
+  padding: 0 3px;
+  gap: 4px;
+  box-shadow: none;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 15px) 100%, 0 100%, 0 8px);
+}
+.world-interaction kbd { width: 18px; height: 18px; border-color: var(--ui-slate); border-radius: 2px; background: var(--ui-slate); color: var(--ui-paper); }
+.world-interaction strong { font-size: 10px; font-weight: 700; }
+
+/* Pause, results and lock panel share a light sheet-backed material. */
+.game-overlay {
+  border: 30px solid transparent;
+  border-image: var(--sheet-panel) 34 fill / 30px stretch;
+  background: none;
+  box-shadow: 5px 7px 0 rgb(32 39 45 / .23);
+  padding: 4px;
+}
+.game-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    url('/ui/panels/main-dots-left.png') left 6px bottom 7px / 73px 135px no-repeat,
+    url('/ui/panels/main-dots-right.png') right 6px top 42% / 62px 99px no-repeat;
+  pointer-events: none;
+}
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) { background: none; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-text p,
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-stats {
+  background: rgb(250 248 244 / .9) var(--sheet-paper) center / 169px 125px;
+}
+.game-overlay:is([data-outcome='win'], [data-outcome='lose'])::after {
+  content: '';
+  position: absolute;
+  right: 25px;
+  bottom: 24px;
+  width: 28%;
+  height: 10px;
+  background: url('/ui/screens/result-accent.png') center / cover no-repeat;
+  pointer-events: none;
+}
+:is(.pause-actions, .result-actions) button {
+  position: relative;
+  border: 12px solid transparent;
+  border-image: var(--sheet-button) 15 fill / 12px stretch;
+  background: none;
+  color: var(--ui-ink);
+  box-shadow: none;
+  padding: 2px 6px;
+  min-height: 44px;
+}
+:is(.pause-actions, .result-actions) button::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  width: 75px;
+  height: 100%;
+  background: url('/ui/components/button-endcap.png') right bottom / auto 70px no-repeat;
+  pointer-events: none;
+}
+:is(.pause-actions, .result-actions) button:not(:first-child),
+:is(.pause-actions, .result-actions) button:hover { background: none; border-image-source: var(--sheet-button); }
+:is(.pause-actions, .result-actions) button:hover { filter: drop-shadow(3px 4px 0 rgb(32 39 45 / .22)); }
+:is(.pause-actions, .result-actions) button:active { transform: translate(1px, 2px); filter: none; }
+.pulse-lock {
+  border: 24px solid transparent;
+  border-image: var(--sheet-compact) 28 fill / 24px stretch;
+  background: none;
+  clip-path: none;
+  box-shadow: 4px 6px 0 rgb(32 39 45 / .22);
+  color: var(--ui-ink);
+  padding: 0;
+}
+.pulse-lock::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 37px;
+  width: 66px;
+  height: 60px;
+  background: url('/ui/panels/compact-dots-upper.png') left top / contain no-repeat;
+  pointer-events: none;
+}
+.pulse-lock-header { border-bottom-color: rgb(57 69 77 / .18); }
+.pulse-lock-track { background: none; }
+.pulse-lock-track::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -7px 0;
+  border: 7px solid transparent;
+  border-image: url('/ui/pulselock/track-shell.png') 12 fill / 7px stretch;
+  pointer-events: none;
+}
+.pulse-lock-row[data-feedback='MISS'] .pulse-lock-track::before { filter: sepia(.45); }
+.pulse-lock-help { margin-top: 18px; }
+
+@media (max-width: 700px) {
+  .game-overlay { border-width: 18px; border-image-width: 18px; }
+  .pulse-lock { border-width: 18px; border-image-width: 18px; }
+}

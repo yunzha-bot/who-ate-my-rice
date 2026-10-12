@@ -1,6 +1,6 @@
+import { rectColliders } from '../src/three/map/MapEditModel.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Box3, Vector3 } from 'three';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
 import { DoorSystem, distanceToDoorSegment } from '../src/systems/DoorSystem.ts';
@@ -8,6 +8,8 @@ import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH,
   PLAYER_DIAMETER, RICE_CANDIDATES, ROOMS, SPAWNS, WALLS,
   hideSpotDebugMarkers } from '../src/three/map/apartmentMap.ts';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
+import { distanceToRect } from '../src/three/map/RotatedRect.ts';
+import { MapEditSession } from '../src/three/map/MapEditModel.ts';
 
 // S7C-1A checks the authored hide spot data only. No hide gameplay exists yet:
 // these tests must pass while every key, rule and number of S7B stays untouched.
@@ -15,16 +17,14 @@ const RADIUS = GAME_CONFIG.collision.playerRadius;
 const HEIGHT = GAME_CONFIG.three.actorHeight;
 const CELL = GAME_CONFIG.humanAI.navCellSize;
 const STRICT_RADIUS = PLAYER_DIAMETER / 2;
-const FURNITURE_KINDS = ['WARDROBE', 'BED', 'SHELF', 'CARTON'];
-const CARTON_IDS = ['living_carton', 'storage_carton'];
+const FURNITURE_KINDS = ['WARDROBE', 'BED', 'SHELF', 'CARTON', 'SOFA', 'CABINET'];
+const CARTON_IDS = ['living_carton', 'storage_carton', 'north_balcony_carton', 'utility_carton'];
 const roomById = new Map(ROOMS.map(room => [room.id, room]));
 const furnitureById = new Map(FURNITURE.map(rect => [rect.id, rect]));
 
 function apartment(furniture = FURNITURE) {
-  const boxes = [...WALLS, ...furniture].map(rect => new Box3(
-    new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-    new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2)));
-  const world = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+  const { boxes, oriented } = rectColliders([...WALLS, ...furniture]);
+  const world = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes, oriented);
   return { world, nav: new NavigationSystem(world, MAP_WIDTH, MAP_DEPTH, DOOR_NODES),
     doors: new DoorSystem(DOOR_NODES, 3) };
 }
@@ -45,22 +45,18 @@ const free = (x, z, furniture = FURNITURE) => {
     Math.abs(z - rect.z) <= rect.depth / 2 + STRICT_RADIUS);
 };
 
-const gapToRect = (x, z, rect) => Math.hypot(
-  Math.max(0, Math.abs(x - rect.x) - rect.width / 2),
-  Math.max(0, Math.abs(z - rect.z) - rect.depth / 2));
+const gapToRect = (x, z, rect) => distanceToRect({ x, z }, rect);
 
 const doorApproaches = door => door.rotation === 0
   ? [[door.x, door.z - PLAYER_DIAMETER], [door.x, door.z + PLAYER_DIAMETER]]
   : [[door.x - PLAYER_DIAMETER, door.z], [door.x + PLAYER_DIAMETER, door.z]];
 
-const wrapAngle = value => Math.atan2(Math.sin(value), Math.cos(value));
-
-test('eight hide spots carry a unique id, room, kind, furniture binding and facing', () => {
-  assert.equal(HIDE_SPOTS.length, 8);
-  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.id)).size, 8);
-  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.furnitureId)).size, 8);
-  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.label)).size, 8);
-  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.kind)).size, 4);
+test('fifteen hide spots carry a unique id, room, kind, furniture binding and facing', () => {
+  assert.equal(HIDE_SPOTS.length, 15);
+  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.id)).size, 15);
+  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.furnitureId)).size, 15);
+  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.label)).size, 15);
+  assert.equal(new Set(HIDE_SPOTS.map(spot => spot.kind)).size, 6);
   for (const spot of HIDE_SPOTS) {
     assert.ok(roomById.has(spot.roomId), spot.id);
     assert.ok(FURNITURE_KINDS.includes(spot.kind), spot.id);
@@ -68,18 +64,21 @@ test('eight hide spots carry a unique id, room, kind, furniture binding and faci
     assert.ok(Number.isFinite(spot.facing), spot.id);
     assert.ok(spot.label.length > 0, spot.id);
     const family = spot.furnitureId.replace(/^.*_/, '');
-    const expected = spot.kind === 'BED' ? ['bed']
+    const expected = spot.kind === 'SOFA' ? ['sofa']
+      : spot.kind === 'CABINET' ? ['cabinet']
+      : spot.kind === 'BED' ? ['bed']
       : spot.kind === 'WARDROBE' ? ['wardrobe']
       : spot.kind === 'SHELF' ? ['bookshelf', 'shelf'] : ['carton'];
     assert.ok(expected.includes(family), `${spot.id} -> ${spot.furnitureId}`);
   }
 });
 
-test('facing points from every anchor towards its bound furniture centre', () => {
+test('every independently authored facing survives scene editor export unchanged', () => {
+  const exported = new MapEditSession().exportJson();
   for (const spot of HIDE_SPOTS) {
-    const furniture = furnitureById.get(spot.furnitureId);
-    const expected = Math.atan2(furniture.z - spot.z, furniture.x - spot.x);
-    assert.ok(Math.abs(wrapAngle(spot.facing - expected)) < 0.001, spot.id);
+    assert.ok(Number.isFinite(spot.facing), spot.id);
+    assert.equal(exported.hideSpots.find(item => item.id === spot.id).facing,
+      spot.facing, spot.id);
   }
 });
 
@@ -132,16 +131,15 @@ test('every anchor is reachable from both faction spawns through the shared navi
   }
 });
 
-test('the two cartons are plain white-box furniture inside their own room', () => {
-  // 2026-10-04 区域级放大：家具 32 → 40（都是普通家具），藏身点总数仍是 8 个不变。
-  assert.equal(FURNITURE.length, 40);
+test('the two authored hiding cartons remain inside their own room', () => {
   assert.deepEqual(FURNITURE.filter(rect => rect.id.includes('carton'))
     .map(rect => rect.id), CARTON_IDS);
   for (const id of CARTON_IDS) {
     const carton = furnitureById.get(id);
     assert.ok(carton, id);
     assert.equal(carton.kind, 'furniture');
-    assert.deepEqual([carton.width, carton.depth, carton.height], [0.9, 0.9, 0.75]);
+    assert.deepEqual([carton.width, carton.depth, carton.height],
+      id === 'north_balcony_carton' || id === 'utility_carton' ? [.8, .8, .85] : [.9, .9, .75]);
     const spot = HIDE_SPOTS.find(value => value.furnitureId === id);
     const room = roomById.get(spot.roomId);
     assert.ok(carton.x - carton.width / 2 > room.minX &&
@@ -157,7 +155,7 @@ test('the two cartons are plain white-box furniture inside their own room', () =
   }
 });
 
-test('the two cartons block no door, no door approach and no rice marker', () => {
+test('the hiding cartons block no door, no door approach and no rice marker', () => {
   for (const id of CARTON_IDS) {
     const carton = furnitureById.get(id);
     const covers = (x, z) => Math.abs(x - carton.x) <= carton.width / 2 + STRICT_RADIUS &&
@@ -210,7 +208,7 @@ function reachableCells(furniture) {
   return { freeCells, reached };
 }
 
-test('the two cartons never cut apart space that is still walkable without them', () => {
+test('the hiding cartons never cut apart space that is still walkable without them', () => {
   const withCartons = reachableCells(FURNITURE);
   const withoutCartons = reachableCells(
     FURNITURE.filter(rect => !CARTON_IDS.includes(rect.id)));

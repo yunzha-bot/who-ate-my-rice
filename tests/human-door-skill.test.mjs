@@ -4,7 +4,7 @@ import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG as C } from '../src/config/gameConfig.ts';
 import { DoorSystem } from '../src/systems/DoorSystem.ts';
 import { HumanDoorSkill } from '../src/systems/HumanDoorSkill.ts';
-import { MinesweeperLockSystem } from '../src/systems/MinesweeperLockSystem.ts';
+import { PulseLockSystem } from '../src/systems/PulseLockSystem.ts';
 import { SprintSystem } from '../src/systems/SprintSystem.ts';
 import { CollisionWorld, canInteractWithDoorXZ } from '../src/three/CollisionWorld.ts';
 import { DoorView } from '../src/three/DoorView.ts';
@@ -94,22 +94,20 @@ test('cooldown blocks only locked-door Space, freezes on pause/finish, resets ne
   assert.ok(doors.doors.every(door => door.lockCoreState === 'ACTIVE'));
 });
 
-test('E minesweeper remains available during force cooldown and success does not start it', () => {
+test('E PulseLock remains available during force cooldown and success does not start it', () => {
   const { doors, skill } = setup();
-  const mines = new MinesweeperLockSystem(doors, C.pulseLock.rows, C.pulseLock.cols,
-    C.pulseLock.mines, () => 0);
+  const pulse = new PulseLockSystem(doors, C.pulseLock.timing);
   doors.lock(nodes[0].id, 'DEEPSEEK');
   doors.lock(nodes[1].id, 'DEEPSEEK');
   skill.use(nodes[0].id, 'HUMAN', 'PLAYING');
-  assert.equal(mines.open(nodes[1].id, 'HUMAN', 'PLAYING'), true);
+  assert.equal(pulse.open(nodes[1].id, 'HUMAN', 'PLAYING'), true);
   assert.equal(skill.cooldownRemainingMs, C.door.humanForceBreakCooldownMs);
-  assert.equal(mines.reveal(0, 0, 'PLAYING'), 'REVEALED');
-  const board = mines.get(nodes[1].id).board;
-  for (let index = 0; index < board.cells.length; index++) {
-    if (!board.cells[index].mine && !board.cells[index].revealed) {
-      mines.reveal(Math.floor(index / 4), index % 4, 'PLAYING');
-    }
+  for (let index = 0; index < pulse.coreCount; index++) {
+    pulse.advance(C.pulseLock.timing.targetCenters[index] * C.pulseLock.timing.travelMs, 'PLAYING');
+    assert.equal(pulse.press('PLAYING'), index === pulse.coreCount - 1 ? 'COMPLETE' : 'CORE_COMPLETE');
   }
+  pulse.close();
+  assert.equal(doors.disableLock(nodes[1].id, 'HUMAN'), 'UNLOCKED');
   assert.equal(doors.get(nodes[1].id).state, 'CLOSED');
   assert.equal(doors.get(nodes[1].id).lockCoreState, 'DISABLED');
   assert.equal(skill.cooldownRemainingMs, C.door.humanForceBreakCooldownMs);

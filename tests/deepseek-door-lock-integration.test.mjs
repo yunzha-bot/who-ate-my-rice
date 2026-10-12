@@ -46,7 +46,7 @@ function createHarness({ escapeBlocked = false, riceBlocked = false } = {}) {
   ai.threatEstimate = human;
 
   const frame = ({ position, visibleHuman, sprintState = 'NORMAL', deltaMs = 16,
-    captureProgressMs = 0, canLockOverride }) => {
+    captureProgressMs = 0, canLockOverride, humanPlayerUnlockPenaltyRemainingMs = 0 }) => {
     const input = {
       deltaMs, deepseek: position, rice: [rice1, rice2], doors: doors.doors,
       canOpenDoor: () => true, canCloseDoor: () => true,
@@ -56,6 +56,7 @@ function createHarness({ escapeBlocked = false, riceBlocked = false } = {}) {
           distanceToDoorSegment(position.x, position.z, node) <= C.door.interactionRange;
       }),
       activeLockSlots: C.door.maxActiveLocks - doors.activeLockedDoorCount,
+      humanPlayerUnlockPenaltyRemainingMs,
       visibleHuman, sprintState, captureProgressMs,
     };
     // update() performs these two steps before dispatching into updateSafety.
@@ -138,6 +139,20 @@ test('integration: when sight survives the close the same chain reaches LOCKED',
   assert.equal(harness.ai.doorLockUsedEvidence, false);
   assert.deepEqual(harness.ai.drainDoorLockEvents().map(event => event.type),
     ['DOOR_LOCK_PENDING', 'DOOR_LOCK_EVALUATE', 'DOOR_LOCK_APPLY']);
+});
+
+test('integration: Human player unlock penalty cancels pending lock across doors', () => {
+  const harness = createHarness();
+  crossAndClose(harness);
+  assert.equal(harness.ai.doorLockPendingId, 'D1');
+
+  const blocked = harness.frame({ position: { x: 1.0, z: 0 }, visibleHuman: null,
+    humanPlayerUnlockPenaltyRemainingMs: C.deepseekAI.humanPlayerUnlockPenaltyMs });
+
+  assert.equal(blocked.command.lockDoorId, null);
+  assert.equal(harness.ai.doorLockPendingId, null,
+    'an active global penalty cancels the pending lock instead of delaying it');
+  assert.equal(harness.ai.doorLockSkipReason, 'HUMAN_UNLOCK_PENALTY');
 });
 
 test('integration: a Human closing in cancels the pending lock', () => {

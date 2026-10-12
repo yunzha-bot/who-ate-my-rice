@@ -66,7 +66,7 @@ DEV-B 是**独立 DEV 工具**，接入现有 DEV Details 面板，不替换已�
 | 听觉 | `hearing.minAudible` | 最小可听强度（无量纲） | 0.015 | 0–0.5 / 0.001 | 下一次可听判定 |
 | 移动 | `movement.playerSpeed` | DeepSeek 基础速度（像素/秒） | 230 | 30–600 / 5 | 下一次真实移动与 AI 路程估算（**不重建导航网格**） |
 | 移动 | `movement.humanSpeedMultiplier` | Human 速度倍率（倍率） | 1.08 | 0.2–3 / 0.01 | 下一次真实移动（玩家与 Human AI 基础） |
-| 移动 | `movement.humanAiMultiplier` | Human AI 移速倍率（倍率） | 0.92 | 0.2–2 / 0.01 | 下一次 Human AI 真实移动（不影响玩家手动） |
+| 移动 | `movement.humanAiMultiplier` | Human AI 移速倍率（倍率） | 0.52 | 0.2–2 / 0.01 | 2026-10-12 用户确认；下一次 Human AI 真实移动（不影响玩家手动） |
 
 非法输入（NaN / Infinity / 非数字 / 越界 / 未知 id）一律拒绝并给出中文原因，输入框回滚到当前有效值；面板顶部有可见提示（不得静默）。
 

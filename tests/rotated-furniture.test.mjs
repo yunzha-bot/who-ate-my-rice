@@ -68,6 +68,7 @@ test('the optional 15 degree snap is off by default and never changes the stored
 
 test('a rotated piece keeps every corner inside its own room or is rejected', () => {
   const session = new MapEditSession();
+  const initialRotation = session.get('storage_shelf').rotationDeg;
   // The storage shelf is wide enough that a quarter turn pushes it out of the
   // storage room even though the axis-aligned footprint fits.
   assert.equal(session.setField('storage_shelf', 'rotationDeg', 90), null);
@@ -75,7 +76,7 @@ test('a rotated piece keeps every corner inside its own room or is rejected', ()
   assert.ok(rejections.some(item => item.targetId === 'storage_shelf' &&
     item.code === 'ROOM_BOUNDARY'), JSON.stringify(rejections.map(item => item.code)));
   assert.equal(session.apply().ok, false);
-  assert.equal(session.get('storage_shelf').rotationDeg, 0, 'a rejected rotation rolls back');
+  assert.equal(session.get('storage_shelf').rotationDeg, initialRotation, 'a rejected rotation rolls back');
 });
 
 test('furniture overlap is judged by the real rotated footprint, not the bounding box', () => {
@@ -233,9 +234,11 @@ test('rotation edits still validate once per revision, not once per frame', () =
   const before = session.validationRuns;
   session.beginDeferredValidation();
   for (const degrees of [5, 15, 45, 90, 180]) {
-    session.setField('living_sofa', 'rotationDeg', degrees);
+    // Use the free-standing table: a sofa rotation also moves its hide anchor,
+    // which can legitimately collide with its newly authored lounge table.
+    session.setField('living_coffee_table', 'rotationDeg', degrees);
     assert.equal(session.draftStatus, 'DRAGGING');
-    session.regionPreview('living_sofa', false);
+    session.regionPreview('living_coffee_table', false);
   }
   assert.equal(session.validationRuns, before, 'no full validation while editing');
   session.endDeferredValidation();

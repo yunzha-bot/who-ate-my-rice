@@ -63,3 +63,42 @@ test('HUD isolates pause/results and reflects only supplied READY, hiding and ca
   h.view.dispose();
   assert.equal(h.root.removed, true);
 });
+
+test('READY presentation pulses only on a new number and briefly shows 开始！ without delaying PLAYING', async () => {
+  const h = harness();
+  const number = h.root.querySelector('.alpha-ready strong');
+  let pulses = 0;
+  number.animate = () => { pulses++; };
+  h.view.update({ ...frame, phase: 'READY', readySeconds: 3 });
+  h.view.update({ ...frame, phase: 'READY', readySeconds: 3 });
+  assert.equal(pulses, 1);
+  h.view.update({ ...frame, phase: 'READY', readySeconds: 2 });
+  assert.equal(pulses, 2);
+  h.view.update({ ...frame, phase: 'PLAYING', readySeconds: 0 });
+  assert.equal(number.textContent, '开始！');
+  assert.equal(h.nodes.get('.alpha-ready').dataset.finishing, 'true');
+  await new Promise(resolve => setTimeout(resolve, 350));
+  assert.equal(h.nodes.get('.alpha-ready').hidden, true);
+  h.view.dispose();
+});
+
+test('actor hint reuses DOM, projects screen coordinates and clears on lifecycle transitions', () => {
+  const h = harness();
+  const hint = { label: '躲藏', detail: '', blocked: false, x: 300, y: 210, held: false };
+  h.view.update({ ...frame, interaction: hint });
+  const node = h.nodes.get('.world-interaction');
+  assert.equal(node.dataset.visible, 'true');
+  assert.equal(node.style.left, '300px');
+  assert.equal(h.nodes.get('.world-interaction strong').textContent, '躲藏');
+  h.view.update({ ...frame, interaction: { ...hint, label: '吃米', detail: '按住', held: true } });
+  assert.equal(node.dataset.pressed, 'true');
+  assert.equal(h.nodes.get('.world-interaction strong').textContent, '吃米');
+  h.view.update({ ...frame, interaction: null });
+  assert.equal(node.dataset.visible, 'false');
+  assert.equal(node.dataset.pressed, 'false');
+  for (const phase of ['READY', 'PAUSED', 'FINISHED', 'FACTION_SELECT']) {
+    h.view.update({ ...frame, phase, interaction: hint });
+    assert.equal(node.dataset.visible, 'false');
+  }
+  assert.equal(h.builds(), 1);
+});

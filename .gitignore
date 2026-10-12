@@ -16,3 +16,11 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
+# 仅发布正式 v6；旧版与中间模型保留本机。
+/public/assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb
+/public/assets/characters/deepseek/deepseek_animated_v1.glb
+/public/assets/characters/deepseek/deepseek_animated_v2.glb
+/public/assets/characters/deepseek/deepseek_animated_v3.glb
+/public/assets/characters/deepseek/deepseek_animated_v4.glb
+/public/assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb

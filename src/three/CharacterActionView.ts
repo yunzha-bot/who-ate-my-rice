@@ -3,8 +3,11 @@ import { GAME_CONFIG as C } from '../config/gameConfig.ts';
 import type { CharacterAction } from '../systems/CharacterAction.ts';
 import type { Faction } from './LocalControl.ts';
 import { HomeAvatar } from './AlphaPresentation.ts';
+import { loadDeepSeekModel, disposeDeepSeekModel } from './DeepSeekGlbModel.ts';
+import { DeepSeekAnimation, type DeepSeekVisualState } from './DeepSeekAnimation.ts';
+import { DeepSeekHairMotion } from './DeepSeekHairMotion.ts';
 
-/** Visual-only bridge. A future GLB loader may supply its mixer and named clips. */
+/** Visual-only bridge shared by the DeepSeek player and NPC. */
 export class CharacterActionView {
   action: CharacterAction = 'IDLE';
   lastTransitionReason = 'ROUND_START';
@@ -23,6 +26,9 @@ export class CharacterActionView {
   private readonly faction: Faction;
   private readonly random: () => number;
   private readonly avatar: HomeAvatar;
+  private disposed = false;
+  private deepseekAnimation: DeepSeekAnimation | null = null;
+  private deepseekHair: DeepSeekHairMotion | null = null;
   private readonly onMixerFinished = (event: { action: THREE.AnimationAction }): void => {
     if (event.action !== this.specialIdleAction) return;
     this.currentIdleSlot = null;
@@ -38,6 +44,28 @@ export class CharacterActionView {
     this.random = random;
     this.avatar = new HomeAvatar(mesh, faction === 'DEEPSEEK');
     this.paint();
+    if (faction === 'DEEPSEEK' && typeof window !== 'undefined') {
+      void this.loadVisual();
+    }
+  }
+
+  private async loadVisual(staticOnly = false): Promise<void> {
+    let model: THREE.Group | null = null;
+    try {
+      model = await loadDeepSeekModel(staticOnly);
+      if (this.disposed) { disposeDeepSeekModel(model); return; }
+      this.avatar.useExternalVisual(model);
+      if (model.animations.length) this.deepseekAnimation = new DeepSeekAnimation(model,
+        C.characterAnimation.transitionMs / 1000);
+      this.deepseekHair = new DeepSeekHairMotion(model, this.mesh);
+    } catch (error) {
+      console.warn('DeepSeek visual unavailable; falling back', error);
+      if (model) disposeDeepSeekModel(model);
+      if (this.disposed) return;
+      this.avatar.clearExternalVisual();
+      // loadDeepSeekModel already tries the static GLB after animated variants;
+      // if that is also absent, keep the procedural avatar instead of retrying it.
+    }
   }
 
   attachMixer(mixer: THREE.AnimationMixer,
@@ -60,7 +88,8 @@ export class CharacterActionView {
   }
 
   /** Called only in PLAYING; pause and menus freeze both clip time and fall pose time. */
-  update(requested: CharacterAction, deltaMs: number): void {
+  update(requested: CharacterAction, deltaMs: number,
+    visualState: DeepSeekVisualState = { concealed: false, eating: false }): void {
     const elapsed = Math.max(0, deltaMs);
     if (requested === 'FALL') this.fallRemainingMs = C.characterAnimation.fallPoseMs;
     else this.fallRemainingMs = Math.max(0, this.fallRemainingMs - elapsed);
@@ -77,12 +106,27 @@ export class CharacterActionView {
       this.playClip();
     }
     this.mixer?.update(elapsed / 1000);
+    this.deepseekHair?.restore();
+    if (this.deepseekAnimation) {
+      try { this.deepseekAnimation.update(this.action, elapsed / 1000, visualState); }
+      catch (error) {
+        console.warn('DeepSeek animation failed; restoring static GLB', error);
+        this.deepseekAnimation.dispose();
+        this.deepseekAnimation = null;
+        this.deepseekHair = null;
+        this.avatar.clearExternalVisual();
+        void this.loadVisual(true);
+      }
+    }
     this.tryPlaySpecialIdle();
     this.avatar.root.visible = !this.mixer;
     if (!this.mixer) this.avatar.update(this.action, elapsed);
+    this.deepseekHair?.update(elapsed / 1000, visualState.concealed);
   }
 
   reset(): void {
+    this.deepseekHair?.reset();
+    this.deepseekAnimation?.reset();
     this.avatar.reset();
     this.fallRemainingMs = 0;
     this.action = 'IDLE';
@@ -105,6 +149,8 @@ export class CharacterActionView {
   }
 
   dispose(): void {
+    this.disposed = true;
+    this.deepseekAnimation?.dispose();
     this.mixer?.removeEventListener('finished', this.onMixerFinished);
     this.activeClip?.stop();
     this.avatar.dispose();
@@ -132,7 +178,7 @@ export class CharacterActionView {
     if (action === 'FALL') return '风险冲刺结束，进入摔倒';
     if (action === 'STUN') return '摔倒姿态结束，仍在眩晕';
     if (action === 'INTERACT') return this.faction === 'DEEPSEEK'
-      ? '靠门按住 E 或 Q' : '扫雷面板打开或靠门按住 E';
+      ? '靠门按 E 或 Q' : 'PulseLock 面板打开或靠门按 E';
     if (action === 'CURIOUS_PEEK') return '好奇试探：预留探头 GLB 片段';
     if (action === 'CURIOUS_LOOK') return '好奇观察：预留左右观察 GLB 片段';
     return '有效抓捕圈内';

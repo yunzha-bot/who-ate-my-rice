@@ -20,7 +20,7 @@ export interface SceneEditorPanelOptions {
   onDiscard: () => void;
   onResetTarget: (id: string) => void;
   onExport: () => void;
-  // V2 布局持久化：保存到本地存档、从文件导入 V3 文档、恢复默认地图。
+  // 项目布局文件保存、V3 JSON 导入与恢复。
   onSave: () => void;
   onImportFile: (file: File) => void;
   onRestoreDefault: () => void;
@@ -45,7 +45,6 @@ export interface SceneEditorPanelState {
   layout: LayoutStatus;
   layoutSavedAt: string | null;
   layoutError: string | null;
-  layoutStorageAvailable: boolean;
 }
 
 const FURNITURE_NUMERIC_FIELDS: readonly { field: string; label: string; step: number }[] = [
@@ -486,9 +485,8 @@ export class SceneEditorPanel {
       `双阵营：${state.freezeState}（${state.freezeReason}）`,
       `草稿状态：${state.draftStatus}｜已应用编辑：${state.appliedCount}`,
       `布局：${state.layout.label}｜${state.layout.text}｜` +
-        (state.layoutSavedAt ? `存档时间 ${state.layoutSavedAt}` : '无本地存档'),
-      `未保存修改：${state.layout.pending ? '是' : '否'}` +
-        (state.layoutStorageAvailable ? '' : '｜localStorage 不可用'),
+        (state.layoutSavedAt ? `保存时间 ${state.layoutSavedAt}` : '项目文件已加载'),
+      `未保存修改：${state.layout.pending || state.draftStatus !== 'UNCHANGED' ? '是' : '否'}`,
       `当前选中：${state.selection ?? '无'}`,
       `最近拒绝：${state.lastRejection}`,
       `最近导入 / 恢复失败：${state.layoutError ?? '无'}`,
@@ -502,12 +500,12 @@ export class SceneEditorPanel {
   // 布局状态单独一行并带 `data-layout-state`：浏览器复核与人工验收可以直接读它，
   // 不必从多行状态文本里猜。
   private renderLayoutState(state: SceneEditorPanelState): void {
-    const parts = [`布局：${state.layout.text}`, `未保存修改：${state.layout.pending ? '是' : '否'}`,
-      state.layoutSavedAt ? `存档：${state.layoutSavedAt}` : '存档：无'];
-    if (!state.layoutStorageAvailable) parts.push('localStorage 不可用');
+    const pending = state.layout.pending || state.draftStatus !== 'UNCHANGED';
+    const parts = [`布局：${state.layout.text}`, `未保存修改：${pending ? '是' : '否'}`,
+      state.layoutSavedAt ? `项目文件：${state.layoutSavedAt}` : '项目文件：sceneLayout.json'];
     if (state.layoutError) parts.push(`最近失败：${state.layoutError}`);
     this.layoutState.dataset.layoutState = state.layout.label;
-    this.layoutState.dataset.layoutUnsaved = state.layout.pending ? 'true' : 'false';
+    this.layoutState.dataset.layoutUnsaved = pending ? 'true' : 'false';
     this.layoutState.textContent = parts.join('｜');
   }
 

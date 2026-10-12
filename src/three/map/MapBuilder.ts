@@ -1,4 +1,9 @@
 import * as THREE from 'three';
+import { addEntryDoorMat } from '../EntryFurnitureVisual.ts';
+import { InteriorShadowView, applyInteriorSunShadow, isCoveredInterior,
+  wallHasOutdoorSide } from '../InteriorShadowView.ts';
+import { dressClosedExteriorWall } from './ClosedExteriorDoors.ts';
+import { buildGarageFloor } from './GarageGround.ts';
 import { buildResidentialExterior } from '../ResidentialExterior.ts';
 import { doorVisualGeometry } from '../DoorVisualGeometry.ts';
 import { dressFurniture, furnitureColor, HOME_PALETTE, HOME_COMPOSITION } from '../AlphaPresentation.ts';
@@ -68,6 +73,9 @@ export interface ApartmentBuild {
   furnitureMeshes: Map<string, THREE.Mesh>;
   anchorGizmos: Map<string, THREE.Group>;
   anchorGizmoRoot: THREE.Group;
+  hideSpotIndicators: Map<string, THREE.Mesh>;
+  hideSpotIndicatorRoot: THREE.Group;
+  interiorShadows: InteriorShadowView;
   dispose(): void;
 }
 
@@ -100,6 +108,7 @@ export function buildApartment(parent: THREE.Object3D,
   const furniture = options.furniture ?? FURNITURE;
   const hideSpots = options.hideSpots ?? HIDE_SPOTS;
   const root = new THREE.Group();
+  const interiorShadows = new InteriorShadowView();
   root.name = 'apartment';
   parent.add(root);
   const debugRoot = new THREE.Group();
@@ -114,25 +123,49 @@ export function buildApartment(parent: THREE.Object3D,
   anchorGizmoRoot.name = 'hide-spot-anchors';
   anchorGizmoRoot.visible = options.anchorGizmos ?? false;
   root.add(anchorGizmoRoot);
+  const hideSpotIndicators = new Map<string, THREE.Mesh>();
+  const hideSpotIndicatorRoot = new THREE.Group();
+  hideSpotIndicatorRoot.name = 'hide-spot-indicators';
+  hideSpotIndicatorRoot.visible = false;
+  root.add(hideSpotIndicatorRoot);
   buildResidentialExterior(root, ROOMS);
 
   for (const room of ROOMS) {
+    if (room.id === 'garage') {
+      const first = root.children.length;
+      buildGarageFloor(root, room, furniture.find(item => item.id === 'garage_car'));
+      root.children.slice(first).forEach(object => applyInteriorSunShadow(object, true));
+      if (debug) marker(debugRoot, room.name, '#ffffff', room.x, room.z, 0.18);
+      continue;
+    }
     const floor = box(root, room.width - 0.04, 0.12, room.depth - 0.04,
       // `north_balcony` matches on "balcony"; `utility` is a tiled wet/laundry room.
       /bathroom|kitchen|balcony|utility/.test(room.id) ? HOME_PALETTE.tile : 0xbca17c,
       room.x, -0.06, room.z);
+    // 共墙移除后两块地板接齐，避免原区域边界留下黑色缝隙。
+    if (room.id === 'south_hall' || room.id === 'east_hall') {
+      floor.scale.x = (room.width - .02) / (room.width - .04);
+      floor.position.x += room.id === 'south_hall' ? .01 : -.01;
+    }
     floor.castShadow = false;
+    floor.receiveShadow = !isCoveredInterior(room.x, room.z);
     const points: THREE.Vector3[] = [];
     for (let z = room.minZ + .65; z < room.maxZ; z += .65)
       points.push(new THREE.Vector3(room.minX + .025, .008, z),
         new THREE.Vector3(room.maxX - .025, .008, z));
+    // 卫生间补齐横纵瓷砖缝，其他房间保留原表现。
+    if (room.id === 'bathroom')
+      for (let x = room.minX + .65; x < room.maxX; x += .65)
+        points.push(new THREE.Vector3(x, .008, room.minZ + .025),
+          new THREE.Vector3(x, .008, room.maxZ - .025));
     const grain = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points),
-      new THREE.LineBasicMaterial({ color: 0x917451, transparent: true, opacity: .16,
+      new THREE.LineBasicMaterial({ color: room.id === 'bathroom' ? 0x8e9e98 : 0x917451, transparent: true, opacity: .16,
         depthWrite: false }));
     root.add(grain);
     if (debug) marker(debugRoot, room.name, '#ffffff', room.x, room.z, 0.18);
   }
 
+  addEntryDoorMat(root);
   const addObstacle = (rect: Rect): void => {
     const isFurniture = rect.kind === 'furniture';
     const rotation = rect.rotation ?? 0;
@@ -152,7 +185,18 @@ export function buildApartment(parent: THREE.Object3D,
       orientedObstacles.push(orientedObstacleFromRect(rect));
     }
     if (!isFurniture) {
+      if (dressClosedExteriorWall(root, rect)) {
+        // 此替代外墙位于室外边界，保留向室外投影；不接收室内日光硬影。
+        root.children.at(-1)!.traverse(object => {
+          if (object instanceof THREE.Mesh) object.receiveShadow = false;
+        });
+        mesh.visible = false; // Closed leaf replaces this visual segment; collider above stays solid.
+        return;
+      }
       // Cutaway wall presentation AFTER authoritative colliders are captured.
+      // 有顶室内无日光硬影；外边界墙仍向露天区域投影。
+      mesh.castShadow = wallHasOutdoorSide(rect);
+      mesh.receiveShadow = false;
       mesh.scale.y = HOME_COMPOSITION.wallHeightScale;
       mesh.position.y = rect.height * HOME_COMPOSITION.wallHeightScale / 2;
       // Broaden only the short axis, never shorten a doorway along the wall.
@@ -162,10 +206,13 @@ export function buildApartment(parent: THREE.Object3D,
         .12, rect.width < rect.depth ? rect.depth : .36, 0xcbbb9c,
         rect.x, rect.height * HOME_COMPOSITION.wallHeightScale + .06, rect.z);
       cap.name = 'visual-wall-cap';
+      cap.castShadow = mesh.castShadow;
+      cap.receiveShadow = false;
     }
     if (isFurniture) {
       furnitureMeshes.set(rect.id, mesh);
       dressFurniture(mesh, rect);
+      interiorShadows.add(mesh, rect);
     }
     if (debug && isFurniture) addFurnitureOutline(debugRoot, rect);
   };
@@ -186,9 +233,19 @@ export function buildApartment(parent: THREE.Object3D,
     const header = box(frame, door.width, visual.headerHeight, visual.frameDepth,
       0xab9473, 0, visual.headerY, 0);
     header.name = 'door-header';
+    applyInteriorSunShadow(frame, isCoveredInterior(door.x, door.z));
   }
 
   for (const spot of hideSpots) {
+    // Gameplay-independent marker at the authored, validated interaction anchor.
+    const indicator = new THREE.Mesh(new THREE.RingGeometry(0.28, 0.36, 32),
+      new THREE.MeshBasicMaterial({ color: 0x8bcfd8, transparent: true,
+        opacity: 0.38, depthWrite: false, side: THREE.DoubleSide }));
+    indicator.name = `hide-indicator-${spot.id}`;
+    indicator.rotation.x = -Math.PI / 2;
+    indicator.position.set(spot.x, 0.09, spot.z);
+    hideSpotIndicators.set(spot.id, indicator);
+    hideSpotIndicatorRoot.add(indicator);
     const group = new THREE.Group();
     group.name = `anchor-${spot.id}`;
     group.position.set(spot.x, 0, spot.z);
@@ -238,10 +295,13 @@ export function buildApartment(parent: THREE.Object3D,
     marker(debugRoot, 'DS REF SPAWN', '#91caff', SPAWNS.deepseek.x, SPAWNS.deepseek.z, 1.35);
     marker(debugRoot, 'HU REF SPAWN', '#ffc18e', SPAWNS.human.x, SPAWNS.human.z, 1.35);
   }
+  applyInteriorSunShadow(debugRoot, true); // 调试米点/锚点色块永远不投影。
 
   return {
     root, debugRoot, obstacles, orientedObstacles, furnitureMeshes, anchorGizmos, anchorGizmoRoot,
+    hideSpotIndicators, hideSpotIndicatorRoot, interiorShadows,
     dispose(): void {
+      interiorShadows.dispose();
       root.traverse(object => {
         if (object instanceof THREE.Sprite) {
           const spriteMaterial = object.material;

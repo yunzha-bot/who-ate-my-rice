@@ -66,8 +66,18 @@ test('玩家藏进家具后 Human AI 能靠公开线索把它搜出来并结算'
   assert.equal(result.winner, 'HUMAN');
   assert.equal(result.reason, 'CAPTURED');
   assert.ok(result.telemetry.hideEntered >= 1, '玩家本局没有真的藏身');
-  assert.ok(result.telemetry.humanCheckStarted >= 1, 'Human AI 没有发起正式家具搜查');
-  assert.ok(result.telemetry.humanCheckHit >= 1, 'Human AI 没有搜中藏身的玩家');
+  // 2026-10-12：使用真实旋转碰撞和当前人工排布，旧种子在 19.3 秒以
+  // 离开藏身后被抓结束，不再覆盖搜查分支。保留该局的结算/藏身回归，
+  // 另用两局确实走通公开线索搜查的固定场景；不改变 AI、策略或时限。
+  for (const seed of [20292603, 20261234]) {
+    const search = play(seed, 'DEEPSEEK', 'hideEat');
+    assert.equal(search.timedOut, false, `search seed ${seed}`);
+    assert.equal(search.winner, 'HUMAN');
+    assert.equal(search.reason, 'CAPTURED');
+    assert.ok(search.telemetry.hideEntered >= 1, `seed ${seed}: 玩家没有藏身`);
+    assert.ok(search.telemetry.humanCheckStarted >= 1, `seed ${seed}: 未发起正式搜查`);
+    assert.ok(search.telemetry.humanCheckHit >= 1, `seed ${seed}: 未搜中玩家`);
+  }
 });
 
 test('整局里不应出现长时间「有移动指令但零位移」的卡墙', () => {

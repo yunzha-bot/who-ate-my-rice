@@ -1,3 +1,4 @@
+import sceneLayout from './sceneLayout.json' with { type: 'json' };
 import { GAME_CONFIG } from '../../config/gameConfig.ts';
 
 export interface Point { x: number; z: number }
@@ -17,6 +18,7 @@ export interface Rect extends Point {
 }
 export interface DoorNode extends Point {
   id: string; rotation: number; width: number;
+  debugNumber?: number; // 稳定D编号：删除某扇门不重新编号周边门。
   initialState: 'OPEN' | 'CLOSED';
   connectedRoomA: string; connectedRoomB: string;
 }
@@ -92,8 +94,8 @@ export const ROOMS: readonly Room[] = [
   room('study', '书房', -14.5, -2.5, 7, 19, 0xb8adc0),
   room('entry', '玄关', -2.5, 12, 7, 17, 0xbab4a7),
   room('north_balcony', '北阳台', 8, 20, -19, -15.5, 0xa8bfc1, false),
-  room('south_hall', '南走廊', 12, 16, 7, 19, 0xc0b8ad),
-  room('east_hall', '东走廊', 16, 20, 0.5, 19, 0xc0b8ad),
+  room('south_hall', '家庭健身区·器械区', 12, 16, 7, 19, 0xc0b8ad),
+  room('east_hall', '家庭健身区·活动区', 16, 20, 0.5, 19, 0xc0b8ad),
   room('guest_room', '客房', 20, 28, -19, -5, 0xc4b1b8),
   room('utility', '家政间', 20, 28, -5, 4.5, 0xaabfca),
   room('garage', '车库', 20, 28, 4.5, 19, 0xb9b3a6),
@@ -126,11 +128,11 @@ function makeDoor(id: string, aId: string, bId: string): DoorNode {
   throw new Error(`Door ${id} does not join adjacent rooms`);
 }
 
-// 31 扇门，配对与上一轮**逐条相同**（因此邻接图、环路与环边连通度不变）。
+// 历史31扇门的位置表；2026-10-12仅D24随健身区共墙移除，其余编号/位置不变。
 // 门中心仍然由 `makeDoor` 取共享边中点，所以房间一放大，门与门的距离就自然拉开；
 // 最窄的共享边是 balcony↔kitchen 与 storage↔dining 的 2.5（旧图是 1.6/2.5），
 // 门叶两侧都还剩 0.65 的墙垛，不会贴墙角。
-export const DOOR_NODES: readonly DoorNode[] = [
+const numberedDoors: readonly DoorNode[] = [
   makeDoor('door_balcony_living', 'balcony', 'living'),
   makeDoor('door_balcony_kitchen', 'balcony', 'kitchen'),
   makeDoor('door_living_kitchen', 'living', 'kitchen'),
@@ -164,6 +166,15 @@ export const DOOR_NODES: readonly DoorNode[] = [
   makeDoor('door_utility_garage', 'utility', 'garage'),
   makeDoor('door_garage_east_hall', 'garage', 'east_hall'),
 ];
+
+export const DOOR_NODES: readonly DoorNode[] = numberedDoors
+  .map((door, index) => ({ ...door, debugNumber: index + 1 }))
+  .filter(door => door.id !== 'door_south_hall_east_hall');
+
+// 保留两个既有区域ID/边界，开放共边而非建立可锁的虚拟门。
+export const OPEN_ROOM_CONNECTIONS = [
+  { connectedRoomA: 'south_hall', connectedRoomB: 'east_hall' },
+] as const;
 
 const WALL_THICKNESS = 0.18;
 export const WALL_HEIGHT = 1.5;
@@ -224,10 +235,14 @@ function buildWalls(): Rect[] {
       ((door.connectedRoomA === a.id && door.connectedRoomB === b.id) ||
        (door.connectedRoomA === b.id && door.connectedRoomB === a.id)) &&
       (vertical ? door.x === coordinate : door.z === coordinate));
+  const isOpen = (a: Room | undefined, b: Room | undefined) => a && b &&
+    OPEN_ROOM_CONNECTIONS.some(c =>
+      (c.connectedRoomA === a.id && c.connectedRoomB === b.id) ||
+      (c.connectedRoomA === b.id && c.connectedRoomB === a.id));
   for (const x of xs) for (let index = 0; index < zs.length - 1; index++) {
     const start = zs[index], end = zs[index + 1], z = (start + end) / 2;
     const left = roomAt(x - 0.001, z), right = roomAt(x + 0.001, z);
-    if (left?.id === right?.id) continue;
+    if (left?.id === right?.id || isOpen(left, right)) continue;
     const door = relevantDoor(left, right, x, true);
     wallPieces(start, end, door, true,
       (from, to) => add(true, x, from, to));
@@ -235,7 +250,7 @@ function buildWalls(): Rect[] {
   for (const z of zs) for (let index = 0; index < xs.length - 1; index++) {
     const start = xs[index], end = xs[index + 1], x = (start + end) / 2;
     const top = roomAt(x, z - 0.001), bottom = roomAt(x, z + 0.001);
-    if (top?.id === bottom?.id) continue;
+    if (top?.id === bottom?.id || isOpen(top, bottom)) continue;
     const door = relevantDoor(top, bottom, z, false);
     wallPieces(start, end, door, false,
       (from, to) => add(false, z, from, to));
@@ -246,69 +261,8 @@ function buildWalls(): Rect[] {
 
 export const WALLS: readonly Rect[] = buildWalls();
 
-const furnishing = (id: string, x: number, z: number, width: number,
-  depth: number, height = 0.65): Rect =>
-  ({ id, x, z, width, depth, height, kind: 'furniture' });
-
-// 家具**尺寸一个都没有放大**（仍是同一套人物比例的白模）。房间扩大后，同一件
-// 家具相对房间更小，家具间距、留白与动线随之变大；只有极少数位置为了让大房间
-// 不至于空荡补了几件普通家具（`_nightstand` / `_dresser` / `_shelf` / `_rack` /
-// `_toilet` / `_desk` / `_shoe_rack` / `_desk(guest)`），它们都不绑定藏身点。
-// 所有家具仍留在白模合法范围内（宽/深 0.2–4、高 0.1–1.6），也都不压门洞与门的
-// 接近点。
-export const FURNITURE: readonly Rect[] = [
-  furnishing('living_sofa', 1.2, -2.6, 2.2, 1.1),
-  furnishing('living_coffee_table', 4.3, -2.6, 1.2, 1.0, 0.4),
-  furnishing('living_tv_cabinet', 7.5, -2.6, 0.6, 1.5),
-  furnishing('dining_table', 12, 2, 1.8, 1.4, 0.55),
-  furnishing('kitchen_counter', 15.55, -13, 0.7, 3.0, 0.8),
-  furnishing('kitchen_island', 11.5, -11.5, 1.1, 1.6, 0.75),
-  furnishing('kitchen_fridge', 15.5, -6, 0.8, 0.8, 1.2),
-  furnishing('storage_shelf', 19.5, -6, 0.5, 2.5, 1.0),
-  furnishing('main_bed', -21.5, -6.5, 2.1, 2.3, 0.45),
-  furnishing('main_wardrobe', -26, -10, 0.6, 2.1, 1.15),
-  furnishing('closet_wardrobe', -8.6, -9.5, 0.55, 2.4, 1.1),
-  furnishing('bath_sink', -27.4, 2.5, 0.8, 1.0, 0.7),
-  furnishing('bath_tub', -22, 6.2, 1.7, 0.7, 0.5),
-  furnishing('second_bed', -21.5, 12.5, 2.1, 2.2, 0.45),
-  furnishing('second_cabinet', -25.9, 9.5, 0.6, 1.4, 1.0),
-  furnishing('study_desk', -3.8, 9.5, 1.7, 1.0, 0.65),
-  furnishing('study_bookshelf', -8, 18.4, 2.1, 0.6, 1.1),
-  furnishing('entry_bench', 7.5, 16.4, 1.4, 0.6, 0.45),
-  // S7C-1A hiding cartons: plain white-box furniture, no formal art. A single
-  // row is enough because MapBuilder.addObstacle draws the box, registers the
-  // static collider and outlines it under DEBUG_MAP from this data.
-  furnishing('living_carton', -5.4, -9.6, 0.9, 0.9, 0.75),
-  furnishing('storage_carton', 16.7, -12.5, 0.9, 0.9, 0.75),
-  // 东翼家具（上一轮新增，本轮只搬到放大后的坐标；尺寸未变）。
-  furnishing('north_balcony_washer', 10.5, -18.2, 0.8, 0.8, 0.85),
-  furnishing('north_balcony_rack', 15.5, -18.3, 1.6, 0.5, 1.1),
-  furnishing('south_hall_console', 12.55, 17, 0.5, 1.2, 0.8),
-  furnishing('east_hall_console', 16.55, 17.5, 0.5, 1.2, 0.8),
-  furnishing('guest_bed', 22, -12.5, 2.1, 2.3, 0.45),
-  furnishing('guest_wardrobe', 27.3, -17, 0.6, 2.4, 1.1),
-  furnishing('utility_counter', 27.3, -1, 0.7, 3, 0.8),
-  furnishing('utility_shelf', 21, 3.9, 1.2, 0.5, 1.0),
-  furnishing('utility_washer', 20.8, -4.2, 0.8, 0.8, 0.85),
-  // A single parked car is the one large free-standing obstacle of the east wing:
-  // it splits the garage into a west lane and an east aisle for pursuit.
-  // 深度必须留在场景编辑器的白模合法范围内（宽/深 0.2–4、高 0.1–1.6），
-  // 否则 `validateEditedMap()` 会否决整张授权地图，所有编辑/存档链路一起失败。
-  furnishing('garage_car', 22.6, 12, 1.9, 3.8, 1.1),
-  furnishing('garage_workbench', 27.3, 6.5, 0.7, 2.6, 0.9),
-  furnishing('garage_shelf', 27.4, 17, 0.5, 2.6, 1.0),
-  // 2026-10-04 区域级放大时补的普通家具：让放大后的卧室 / 衣帽间 / 储物间 /
-  // 卫生间 / 玄关 / 客房不至于空荡，同时给追逐提供更多可绕行的家具岛。
-  // 全部不绑定藏身点，也全部避开门的接近点。
-  furnishing('main_nightstand', -23.1, -6.5, 0.6, 0.6, 0.5),
-  furnishing('main_dresser', -25.9, -5, 0.5, 1.0, 0.95),
-  furnishing('closet_shelf', -13.9, -6.5, 0.5, 2.0, 1.0),
-  furnishing('storage_rack', 19.5, -13.5, 0.5, 2.0, 1.0),
-  furnishing('bath_toilet', -25, 6.2, 0.6, 0.7, 0.6),
-  furnishing('second_desk', -19, 18.4, 1.4, 0.6, 0.65),
-  furnishing('entry_shoe_rack', 11.3, 15.5, 0.5, 1.2, 0.9),
-  furnishing('guest_desk', 20.7, -7.5, 0.6, 1.2, 0.65),
-];
+// 家具位置、旋转、尺寸统一保存在 sceneLayout.json；编辑器保存会更新该文件。
+export const FURNITURE: readonly Rect[] = sceneLayout.furniture as Rect[];
 
 export const RICE_CANDIDATES: readonly MapPoint[] = [
   { id: 'rice_01', roomId: 'balcony', x: 4.5, z: -17 },
@@ -336,7 +290,7 @@ export const SPAWNS = {
   human: { id: 'human_spawn', roomId: 'kitchen', x: 12.5, z: -3.5 },
 } as const;
 
-export type HideSpotKind = 'WARDROBE' | 'BED' | 'SHELF' | 'CARTON';
+export type HideSpotKind = 'WARDROBE' | 'BED' | 'SHELF' | 'CARTON' | 'SOFA' | 'CABINET';
 
 export type HideInteractionShape = 'CIRCLE' | 'SECTOR';
 
@@ -376,37 +330,10 @@ export interface HideSpot extends MapPoint {
   interactionRegion: HideInteractionRegion;
 }
 
-// 2026-10-04：藏身点仍是用户批准过的 **8 个**，ID、kind、绑定家具、DEV-A 交互
-// 区域参数（圆形 2.0 / 1.2、扇形 1.6·55°）一个都没改。房间放大后，锚点跟着
-// 各自绑定的家具搬到新位置，`facing` 按同一公式重算。新翼仍然**没有**藏身点：
-// 藏身点数量直接决定 DeepSeek 娘的候选强度与 Human 搜查负担，属于平衡决策，
-// 留给用户单独拍板。
-export const HIDE_SPOTS: readonly HideSpot[] = [
-  { id: 'hide_main_bed', roomId: 'main_bedroom', x: -22.9, z: -7.65, kind: 'BED',
-    furnitureId: 'main_bed', facing: 0.68767, label: '主卧床',
-    interactionRegion: { shape: 'CIRCLE', radius: 2 } },
-  { id: 'hide_second_bed', roomId: 'second_bedroom', x: -22.9, z: 11.4, kind: 'BED',
-    furnitureId: 'second_bed', facing: 0.66597, label: '次卧床',
-    interactionRegion: { shape: 'CIRCLE', radius: 2 } },
-  { id: 'hide_main_wardrobe', roomId: 'main_bedroom', x: -25.15, z: -9.5,
-    kind: 'WARDROBE', furnitureId: 'main_wardrobe', facing: -2.60987, label: '主卧衣柜',
-    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
-  { id: 'hide_closet', roomId: 'closet', x: -9.2, z: -10.7, kind: 'WARDROBE',
-    furnitureId: 'closet_wardrobe', facing: 1.10715, label: '衣帽间衣柜',
-    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
-  { id: 'hide_study_bookshelf', roomId: 'study', x: -8.7, z: 17.35, kind: 'SHELF',
-    furnitureId: 'study_bookshelf', facing: 0.98279, label: '书房书柜',
-    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
-  { id: 'hide_storage_shelf', roomId: 'storage', x: 18.6, z: -5, kind: 'SHELF',
-    furnitureId: 'storage_shelf', facing: -0.83794, label: '储物间货架',
-    interactionRegion: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 } },
-  { id: 'hide_living_carton', roomId: 'living', x: -5.4, z: -8.6, kind: 'CARTON',
-    furnitureId: 'living_carton', facing: -1.5708, label: '客厅纸箱',
-    interactionRegion: { shape: 'CIRCLE', radius: 1.2 } },
-  { id: 'hide_storage_carton', roomId: 'storage', x: 17.75, z: -12.5, kind: 'CARTON',
-    furnitureId: 'storage_carton', facing: 3.14159, label: '储物间纸箱',
-    interactionRegion: { shape: 'CIRCLE', radius: 1.2 } },
-];
+// 保留 2026-10-04 的 8 个既有藏身点及其参数；住宅家具 V1 新增 5 个，分散在
+// 客厅、餐厅、次卧、客房、车库。锚点仍由家具 ID 绑定；编辑器移动家具时同步锚点，
+// 缺失关联家具的导入布局会被校验拒绝（当前编辑器不提供删除家具操作）。
+export const HIDE_SPOTS: readonly HideSpot[] = sceneLayout.hideSpots as HideSpot[];
 
 // S7C-1A debug markers. A normal player view must never receive hide spot
 // information, so nothing is produced while the debug map labels are disabled.
@@ -421,7 +348,7 @@ readonly { x: number; z: number; text: readonly string[] }[] {
       `${spot.kind} (${spot.x.toFixed(2)}, ${spot.z.toFixed(2)})`] }));
 }
 
-// 环路声明与上一轮完全相同（6 条）：房间放大不改变任何一条边的存在性。
+// 保留6条区域环路；健身区 south_hall↔east_hall 现为开放通路，不再需要D24。
 export const ROUTE_LOOPS: readonly (readonly string[])[] = [
   ['living', 'dining', 'kitchen', 'living'],
   ['hall', 'main_bedroom', 'closet', 'hall'],

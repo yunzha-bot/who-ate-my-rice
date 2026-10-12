@@ -289,9 +289,9 @@ function methodBody(source, signature) {
 
 test('地图应用后重开 / 返回阵营不会重建地图（源码不变量）', () => {
   const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
-  // One declaration default + one assignment inside rebuildApartment.
-  assert.equal((source.match(/this\.mapFurniture\s*=/g) ?? []).length, 2);
-  assert.equal((source.match(/this\.hideSpots\s*=/g) ?? []).length, 2);
+  // Project layout is loaded as the initial map; rebuildApartment is the sole reassignment.
+  assert.equal((source.match(/this\.mapFurniture\s*=/g) ?? []).length, 1);
+  assert.equal((source.match(/this\.hideSpots\s*=/g) ?? []).length, 1);
   assert.equal((source.match(/this\.mapFurniture = map\.furniture;/g) ?? []).length, 1);
   const reset = methodBody(source, 'private resetRound(): void {');
   // 重开 / 返回阵营只重掷对局，不重建公寓、也不把地图重置回源码常量。
@@ -315,14 +315,14 @@ test('编辑器确实接上了保存 / 导入 / 恢复默认三条入口（源�
   }
   assert.ok(panel.includes('scene-editor-layout'));
   assert.ok(panel.includes('dataset.layoutState'));
-  for (const call of ['writeSavedLayout(', 'importLayoutText(', 'replaceSource(',
+  for (const call of ["fetch('/__dev/scene-layout'", 'importLayoutText(', 'replaceSource(',
     'authoredMapSource()']) {
     assert.ok(editor.includes(call), `编辑器缺少：${call}`);
   }
   assert.ok(editor.includes('RESTORE_DEFAULT_CONFIRM'));
   const game = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
-  assert.ok(game.includes('readSavedLayout('));
-  assert.ok(game.includes('layoutStorage: this.layoutStorage'));
+  assert.ok(game.includes('authoredLayoutDocument()'));
+  assert.equal(game.includes('readSavedLayout('), false);
 });
 
 test('会话换源：草稿与已应用数据一起跟随，且不残留旧草稿', () => {

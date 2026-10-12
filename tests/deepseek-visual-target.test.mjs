@@ -20,7 +20,7 @@ test('facing a legal furniture target highlights exactly the E-selected spot', (
 
 test('facing away hides the outline without changing formal E arbitration', () => {
   assert.deepEqual(target({ headingRad: Math.PI }), { kind: 'NONE' });
-  assert.equal(resolveInteractionIntent({ minesweeperOpen: false, concealed: false,
+  assert.equal(resolveInteractionIntent({ pulseLockOpen: false, concealed: false,
     door: null, rice: { distance: 0.8 }, hide: { spotId: hide.spotId } }), 'HIDE_ENTER');
 });
 
@@ -50,19 +50,19 @@ test('rice has its visual-only 45-degree cone, with no effect on eating intent',
     headingRad: Math.PI / 4 }).kind, 'RICE');
   assert.equal(target({ intent: 'RICE', hide: null, furniture: null,
     headingRad: Math.PI / 3 }).kind, 'NONE');
-  assert.equal(resolveInteractionIntent({ minesweeperOpen: false, concealed: false,
+  assert.equal(resolveInteractionIntent({ pulseLockOpen: false, concealed: false,
     door: null, rice: { distance: 0.8 }, hide: null }), 'RICE');
 });
 
 test('furniture wins over overlapping rice even if the player faces only the rice', () => {
-  const intent = resolveInteractionIntent({ minesweeperOpen: false, concealed: false,
+  const intent = resolveInteractionIntent({ pulseLockOpen: false, concealed: false,
     door: null, rice: { distance: 0.8 }, hide: { spotId: hide.spotId } });
   assert.equal(intent, 'HIDE_ENTER');
   assert.equal(target({ intent, headingRad: Math.PI }).kind, 'NONE');
 });
 
 test('door priority suppresses both furniture and rice outlines', () => {
-  const intent = resolveInteractionIntent({ minesweeperOpen: false, concealed: false,
+  const intent = resolveInteractionIntent({ pulseLockOpen: false, concealed: false,
     door: { distance: 0.5 }, rice: { distance: 0.8 }, hide: { spotId: hide.spotId } });
   assert.equal(intent, 'DOOR');
   assert.equal(target({ intent }).kind, 'NONE');
@@ -71,7 +71,7 @@ test('door priority suppresses both furniture and rice outlines', () => {
 
 test('concealed exit and open minesweeper suppress all usable outlines', () => {
   assert.equal(target({ intent: 'HIDE_EXIT' }).kind, 'NONE');
-  assert.equal(target({ intent: 'MINESWEEPER' }).kind, 'NONE');
+  assert.equal(target({ intent: 'PULSE_LOCK' }).kind, 'NONE');
 });
 
 test('sprint, stun or active capture never advertises a usable furniture or rice target', () => {

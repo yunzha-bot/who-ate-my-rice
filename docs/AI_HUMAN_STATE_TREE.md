@@ -85,7 +85,7 @@ Human 玩家 Q 的白色家具轮廓及 DP 娘的家具 / 米堆轮廓是玩家�
 | rooms / doors / cooldown | 游戏系统给的静态地图及当前门/技能状态 | 巡逻、搜索、路线和开门选择；并非对手感知 |
 | 公开地图快照（藏身点 + 家具 + 站位/遮挡接缝） | 当前已应用地图的公开数据与真实几何接口 | CHECK_HIDE 的候选、站位与遮挡判定；**不含占用状态或隐藏坐标** |
 
-Human AI 现在会读取米痕，但**只读取它自己真正看得见的那部分**，并且只保存有限快照（图层 C）用于循迹；它不读取 `HideSystem.occupancyOf()`、真实藏身点 ID、隐藏时的实时坐标或任何开发者真值。共用 NavigationSystem 的 XZ A* 网格（0.4 世界单位）、八向移动但禁止斜穿墙角；最终位移仍经 CollisionWorld。普通 CLOSED 门作为可走的高成本边，到交互侧调用 DoorSystem.toggle。锁门时比较绕行与穿锁规划路径时间：CD 就绪可强破，否则 AI 用自己的耗时/概率模拟解锁，**不操作玩家扫雷 UI**。AI 解锁成功调用 DoorSystem.disableLock，使 LOCKED → CLOSED，之后仍须开门；强破调用 HumanDoorSkill，直接 OPEN。门/锁芯/CD/失败避让变化、周期或卡路使路径重算。
+Human AI 现在会读取米痕，但**只读取它自己真正看得见的那部分**，并且只保存有限快照（图层 C）用于循迹；它不读取 `HideSystem.occupancyOf()`、真实藏身点 ID、隐藏时的实时坐标或任何开发者真值。共用 NavigationSystem 的 XZ A* 网格（0.4 世界单位）、八向移动但禁止斜穿墙角；最终位移仍经 CollisionWorld。普通 CLOSED 门作为可走的高成本边，到交互侧调用 DoorSystem.toggle。锁门时比较绕行与穿锁规划路径时间：CD 就绪可强破，否则 AI 用自己的耗时/概率模拟解锁，**不操作玩家 PulseLock UI**。AI 解锁成功调用 DoorSystem.disableLock，使 LOCKED → CLOSED，之后仍须开门；强破调用 HumanDoorSkill，直接 OPEN。门/锁芯/CD/失败避让变化、周期或卡路使路径重算。
 
 ## 实际配置、计时与概率
 
@@ -93,7 +93,7 @@ Human AI 现在会读取米痕，但**只读取它自己真正看得见的那部
 
 | 变量 | 当前值 | 用途 |
 |---|---:|---|
-| GAME_CONFIG.humanAI.movementSpeedMultiplier | 0.92 | 仅 AI Human 的移动倍率；底速为 player.speed 230 像素/秒 ÷ three.pixelsPerUnit 60 × human.speedMultiplier 1.08 |
+| GAME_CONFIG.humanAI.movementSpeedMultiplier | 0.52 | 2026-10-12 用户确认；仅 AI Human 的移动倍率；底速为 player.speed 230 像素/秒 ÷ three.pixelsPerUnit 60 × human.speedMultiplier 1.08 |
 | GAME_CONFIG.humanAI.navCellSize | 0.4 u | 寻路格 |
 | GAME_CONFIG.humanAI.repathIntervalMs | 500 ms | 路径周期重算 |
 | GAME_CONFIG.humanAI.waypointTolerance | 0.25 u | 到达节点 |

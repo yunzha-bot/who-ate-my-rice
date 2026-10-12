@@ -4,6 +4,33 @@
 
 ## 1. 项目概况
 
+### 当前正式角色资源（2026-10-12）
+
+- DeepSeek玩家与NPC首选 `public/assets/characters/deepseek/deepseek_animated_v6_hair.glb`，共用现有骨骼动画与头发动态；程序化角色用于加载失败回退。正式v6纳入公开快照，旧版本留在本机。下方方案B模型排除记录为此前状态。
+- 本机与全新公开副本浏览器实测两阵营均加载正式v6，模型响应哈希一致、动画与头发动态有效；正式GLB已加入Git索引，等待用户确认commit/push。
+
+### 2026-10-12 提交前专项修复（人工验收通过，待提交授权）
+
+- 已复现原21项失败，修复过时的碰撞测试环境与布局夹具；`npm test` 现为 **839/839**，无失败/跳过；独立 TypeScript、build、`git diff --check` 均退出0。以下818/839等为历史审查结果，不是当前门禁。
+- 用户本轮明确确认保留 Human AI 倍率 **0.52** 与 `hide_storage_shelf` 半角 **60°**；未改任何玩法数值，只同步注释、文档与测试。S7A 的0.92为历史批准值，不再是当前配置。
+- 110件家具、15个HideSpot及权威布局文件哈希不变。真实浏览器双阵营进入正常，Human局中DeepSeek AI吃完5份米并结算；DeepSeek固定种子局Human AI于01:04完成抓捕。用户现已明确确认门、PulseLock成功/失败、躲藏进入/退出、DEV保存后刷新恢复全部通过；最终只读核对磁盘哈希与保存接口revision一致。
+- 逐项失败根因、修改清单和验证限制见 [专项修复报告](PRE_S13_TEST_REPAIR.md)。专项修复测试基线为839/839。当前公开快照按方案B准备：4个混元3D GLB本机保留但不发布，授权未确认；其余资源按用户已确认来源声明管理。详见 [快照审查](PRE_S13_SNAPSHOT_REVIEW.md)。
+
+- 方案B前的公开审查曾把4个混元3D模型许可待确认列为阻断；用户已决定将该4个GLB及内嵌贴图从公开清单排除。其它资产依用户来源确认管理；不把旧审查状态当作当前范围。
+
+- 来源记录：DeepSeek模型由腾讯混元3D官方网页免费版生成，之后Blender优化、骨骼绑定与动画、导出GLB并接入Three.js。其网页协议仍无法核实免费输出与内嵌贴图的公开再分发条件；该模型因此排除于本次Public快照。核查见`ASSET_PROVENANCE.md`，未使用其它腾讯产品协议或开源许可证替代。
+
+- 2026-10-12公开快照方案B：用户授权先发布代码和可公开项目资源，暂不发布4个混元3D角色GLB及内嵌贴图。四文件未在当前索引或`origin/main`历史中发现；本机文件原位保留，并以精确路径加入`.gitignore`。公开副本`npm ci`、839/839测试、TypeScript和build通过；但真实浏览器双阵营缺模型游玩验收未完成，Computer Use宿主因无法确认浏览器URL而中止。根据条件授权，暂不暂存、commit或push；后续继续完成人工/浏览器验收，再按149项清单复核。
+
+### 2026-10-12 S13 前开发快照审查
+
+- 用户要求将当前玩法、角色/动画、UI、家具与地图成果整理上传；本轮先完成文件与门禁审查，**必须再次获得用户确认后才 commit / push**，不创建 Tag。S13 音频与反馈尚未开始，不因快照审查标记新阶段 Gate 通过。
+- 当前真实 DEV 编辑器显示 SAVED、草稿 UNCHANGED、未保存修改：否；权威 `src/three/map/sceneLayout.json` 含110件家具、15个藏身点，磁盘 SHA256 与保存接口 revision 一致。本轮未写回或恢复任何布局。
+- 本轮实测 `npm test` **818/839，21项失败**；动画/头发/米袋/PulseLock/健身区定向18/18，独立TypeScript、build、diff检查通过。21项失败名称与上一轮米袋记录一致，不代表已修复；以下旧章节的全绿数字仅为历史轮次基线。
+- 运行角色现为 `deepseek_animated_v6_hair.glb`，回退v5与静态模型，测试还读取v2；米袋已接入用户模型优化后的自包含GLB。旧动画、截图和调试文件按清单保留本机不上传。
+- 该次快照审查发现Human AI 0.52与旧0.92说明冲突；已由上方专项修复及用户确认处理。快照仍不是正式发布验收。
+- 完整拟提交/排除清单、失败名称、资产体积与边界见 [S13前快照审查](PRE_S13_SNAPSHOT_REVIEW.md)。原有未提交成果保留，待用户确认是否按当前状态归档。
+
 《谁吃了我的米》是双阵营单机追逐游戏：DeepSeek 娘尝试吃完每局随机激活的 5 份米；Human 通过抓捕赢得对局。玩家可选择任一阵营。现有玩法包括门、冲刺、米堆、抓捕、双向感知及两套按阵营启用的 AI。
 
 - 主工程：Web / Three.js 3D 灰盒 Alpha，面向桌面 Chrome / Edge。
@@ -37,7 +64,17 @@
 
 当前状态：S7B 已整体通过阶段 Gate；S7C 已批准子阶段均已归档；S7D 已通过用户最终集中验收，本轮获准正式 Git 归档（以实际远端核验为准）。DEV-A、DEV-B 与 DEV 场景编辑器 V2 均已通过各自验收并归档。Human AI `CHECK_HIDE` 与 DeepSeek AI 自主藏身都已是真实运行状态；S8 尚未授权。
 
+当前未归档专项：Human 玩家手动破解锁门改为三锁芯 PulseLock 时机面板；核心逻辑、UI 与自动化回归已实现，等待用户浏览器人工试玩验收。Human AI 仍使用自己的计时解锁流程，旧扫雷 UI 不再接入正式游戏。本项尚未获得 commit / push 授权。
+
+2026-10-10 DeepSeek 第四阶段按用户放宽局部蒙皮要求的新授权，已制作七个动作并将 `deepseek_animated_v2.glb` 接入玩家/NPC；保留120%比例、第三阶段静态GLB和程序化回退。18,500三角面、25骨骼、7动作。真实Chrome状态/回退检查通过，完整测试799/801（仍是两项既有Human AI失败），最终v2定向15/15、TypeScript与构建通过。**Eat抬手偏低、Hide为浅蹲，袖口/发尾瑕疵保留；游戏躲藏时HideEnter/HideIdle随角色隐藏，只在独立预览完整可见。等待人工验收，未提交、推送或标记Gate通过。** 详见[第四阶段动画验证](verification/DEEPSEEK_ANIMATION_STAGE4/README.md)。第三阶段静态资产与此前证据保留。
+
+2026-10-06 用户选定的六张正式 UI Sheet 首次接入后，用户人工验收为 **FAIL**：不透明矩形裁片外露、技能与 E 提示白底过重，米进度像椭圆。2026-10-07 已完成素材集成修正，原 Sheet 保留；派生裁片加入透明异形边角，HUD 纸底按组件降低不透明度，五格米饭改用 Sheet C 原有碗图标，动态数据继续由 DOM / TypeScript 提供。提取规则与映射见 [素材说明](../public/ui/README.md)。本轮 `npm test` 789/791（仍是两项现存非 UI 失败），定向 UI 回归 16/16，TypeScript、构建和 `git diff --check` 通过。真实对局已截图双阵营 HUD、E 藏身/离开、吃米、开/关门及米进度 0/5→1/5；PulseLock 仅在正式组件独立复核页验证外观，**尚无自然对局截图**。修正等待用户复验；未提交、未推送，不标记 Gate 通过。
+
 ## 3. 实际运行架构
+
+### 2026-10-12 当前增量：家庭健身区（待人工验收，未归档）
+
+用户明确授权南走廊/东走廊开放改造。保留 `south_hall` / `east_hall` 区域ID与边界，移除共同边 `x=16,z=7…19` 及其D24；其余30门保持位置与原D编号，区域图以开放连接替代该门。新增7件普通器械家具与2张附属无碰撞瑜伽垫，原103件家具、15个HideSpot、米点与出生点均与开工备份一致。真实Chrome双阵营四向通行/器械绕行、NPC局部追逃、编辑器四向鼠标拖动、旋转、实际保存、刷新与服务重启检查通过。完整测试815/836、21项失败与卫生间轮同名；独立TypeScript、构建通过。具体范围、截图与限制见 [家庭健身区验证](verification/HOME_GYM/REPORT.md)。不代表人工验收或Gate通过；不进入下一阶段。
 
 ### 当前专项：Gameplay 住宅「区域级放大」+ 外围建筑 parcel 约束（待集中人工验收）
 
@@ -62,7 +99,7 @@
 9. `src/config/gameConfig.ts` 导出 `GAME_CONFIG`；所有可调玩法参数由此定义，改动时同步 `docs/GAME_BALANCE_CONFIG.md`。地图坐标和状态枚举仍属于相应地图/系统。
 10. `src/three/DebugDetailsPanel.ts` 和 `ThreeGame.ts` 展示可收纳 UE Details 风格 DEV 面板。`src/systems/AILogCollector.ts` 以状态快照差异和显式事件记录 AI JSON；面板提供当前局导出。
 11. **DEV-B 实时 AI 调试工具**（开发环境专用，接入 DEV 面板，不替换场景编辑器）：`src/systems/RuntimeDebugOverrides.ts`（仅内存的参数覆盖层，38 项白名单）、`src/systems/DevBRuntimeBinding.ts`（半径变化清空抓捕进度、新局清覆盖、有效速度）、`src/systems/DevBParamStore.ts` + `src/systems/DevBParamPersistence.ts`（2026-09-27 持久化轮新增：本地预设的存档格式 / 严格校验 / 三态，以及只经 `RuntimeDebugOverrides.restore()` 的应用路径）、`src/systems/DevBObserver.ts`（只读状态整理）、`src/three/DevBView.ts`（抓捕圈 / 视觉距离圆 / 真实视线 / AI 路径 / 声音事件）、`src/three/DevBPanel.ts` + `src/three/DevBDebug.ts`（面板与编排）。感知与两套 AI 通过可选 `SoundTuning` / `OcclusionTuning` / `VisionTuning` / `setRuntimeTuning()` 读取有效值；正式 `GAME_CONFIG` 始终只读。
-12. **S7C-1B 藏身与 Q 技能**（用户浏览器人工验收 6/6 通过，已归档）：`src/systems/HideSystem.ts`（纯逻辑藏身状态机：E 点按立即切换、每条拒绝路径、退出原因与事件）、`src/systems/HumanSearchSkill.ts`（Human Q 扇形判定核心，与按键、冷却、特效分离）、`src/systems/HideInteractionArbitration.ts`（E 键唯一仲裁：扫雷 > 门 > 藏身 > 进食）、`src/systems/SkillCooldown.ts` + `src/systems/SkillGates.ts`（两个 Q 的冷却与门禁）、`src/three/HideSearchView.ts`（扇形特效与命中家具临时高亮，几何体只创建一次）、`src/three/map/MapApplicationPrecheck.ts`（地图应用前只读预检）。`ThreeGame` 负责接线：`VisionSystem.setConcealed()`、抓捕资格门控、`GameStateSystem.forceCapture()`（复用同一条抓捕结算）、藏身期间位移/冲刺/进食/锁门封锁、普通 HUD 技能提示与 DEV `Hide / 藏身` 分类。
+12. **S7C-1B 藏身与 Q 技能**（用户浏览器人工验收 6/6 通过，已归档）：`src/systems/HideSystem.ts`（纯逻辑藏身状态机：E 点按立即切换、每条拒绝路径、退出原因与事件）、`src/systems/HumanSearchSkill.ts`（Human Q 扇形判定核心，与按键、冷却、特效分离）、`src/systems/HideInteractionArbitration.ts`（E 键唯一仲裁；当前工作副本为 PulseLock > 门 > 藏身 > 进食）、`src/systems/SkillCooldown.ts` + `src/systems/SkillGates.ts`（两个 Q 的冷却与门禁）、`src/three/HideSearchView.ts`（扇形特效与命中家具临时高亮，几何体只创建一次）、`src/three/map/MapApplicationPrecheck.ts`（地图应用前只读预检）。`ThreeGame` 负责接线：`VisionSystem.setConcealed()`、抓捕资格门控、`GameStateSystem.forceCapture()`（复用同一条抓捕结算）、藏身期间位移/冲刺/进食/锁门封锁、普通 HUD 技能提示与 DEV `Hide / 藏身` 分类。
 13. **S7C-2：Human AI 搜查与玩家交互提示**（功能实现及集中人工验收通过，已随检查点 `f243047` 归档推送）：Human AI 仅以公开线索搜查家具；Human 玩家 Q 优先抓捕暴露目标，否则只搜查指向的一件家具；DP 娘白色轮廓提示 E 仲裁下唯一可用家具或米堆。非法站位、朝向和过期计划不计为搜空；公开几何通过后才读取权威占用。逐轮细节见阶段设计文档与 docs/AGENT_LOG.md。
 14. **S7C-2b：DeepSeek AI 自主藏身**（用户集中浏览器人工验收 8/8 PASS，已归档）：`src/systems/DeepSeekHideCandidates.ts`（公开候选层：区域内的真实空闲导航格心 + A* + 公开评分）、`src/systems/DeepSeekHideResolution.ts`（权威进入层与出口物理判据，玩家 E 与 AI 退出共用同一条公式）、`HideSystem.enterAsAI()` + 游戏层每帧签发的一次性令牌、`DeepSeekAIController` 的 `HIDE` 状态 + `DeepSeekHidePhase`、`NavigationSystem.freeCellsWithin()`（只读）、DEV `Hide` 分类 8 行 AI 字段与 AI JSON `formatVersion` **1.6**。AI 只读公开信息，不读藏身点占用、不读 Human 实时位置、不引用玩家专用的白色轮廓与按键仲裁。
 
@@ -75,7 +112,7 @@
 | S0 | `AGENTS.md` / 历史日志没有独立 S0 Gate 记录；不推断其验收。 |
 | S1 / S2 / S3 / S4 / S4.5 / S5 | 均已完成：S1 最小运行工程 `v0.0.1`、S2 一房一米 `v0.0.2`、S3 最小完整对局 `v0.0.3`（Gate = PASS）、S4 追逐原型 `v0.0.4`（Gate = PASS）、S4.5 Three.js 3D 技术迁移 `v0.0.5-tech3d`（Gate = PASS）、S5 完整 3D 灰盒地图 `v0.1.0-alpha`（Gate = PASS）；细节见 `docs/AGENT_LOG.md` 与 `docs/MAP_SPEC.md`。 |
 | S6A–S6D / S6 Alpha | 已完成并封版（S6 里程碑 `v0.2.0-alpha` 以实际推送结果为准）；S6D 声音、Vision、Last Seen、米痕和控制观察者切换经过验收。 |
-| S7A | Human AI、共享角色动作接口、高级决策和可收纳 DEV 面板已通过 Gate。**Human AI 移动倍率 0.92 与自动解锁耗时 8,750 ms 暂按用户决定接受**，自动解锁速度留到 S16 平衡阶段复评。 |
+| S7A | Human AI、共享角色动作接口、高级决策和可收纳 DEV 面板已通过 Gate。历史验收接受0.92倍率与8,750 ms自动解锁；2026-10-12用户另确认当前倍率0.52，解锁耗时不变，S16仍待授权复评。 |
 | S7B-1 | DeepSeek 自主选米、寻路、开普通门、吃完五份米；用户确认人工验收 PASS。 |
 | S7B-2 | 威胁感知、逃跑、脱险恢复及静止 Human 好奇/安全通行专项通过用户人工验收。偶发原地停留仍是优化待办。 |
 | S7B-3A | 主动关门（条件式逃脱关门）：用户 5/5 浏览器人工验收 PASS。 |
@@ -259,3 +296,11 @@ Human/DeepSeek 控制、门锁、声音与视野、米痕、好奇安全通行�
 - 用户集中人工验收（2026-09-27）：**8/8 PASS** —— ① DeepSeek NPC 自主寻找家具；② 隐藏与普通抓捕阻断；③ Human 玩家搜出 NPC；④ NPC 自主退出并恢复行动；⑤ 反复逼近与拉开，无原地进出抖动；⑥ 暂停 / 重开 / 返回菜单的状态清理；⑦ 地图热应用后旧计划正确作废；⑧ 玩家白色轮廓、Human Q、Human AI 搜查、玩家 E、门锁与 DEV 等旧功能回归。**这 8 项是用户实机确认的结果，不得改写为 DPH 自己完成的浏览器测试。**
 - 本轮归档轮实测：`npm test` **670/670**、`npx tsc --noEmit` 0、`npm run build` 0（JS 979.79 kB / gzip 262.80 kB、CSS 13.68 kB）、`git diff --check` 0；实现轮的浏览器真实复核（`docs/verification/S7C-2b/`）观察到 AI 自主藏入 `hide_living_carton` 并在 2.586 秒后自主退出。
 - 未决 / 未做：S7C-3 已通过用户集中人工验收 8/8 并随检查点 `420d8a6` 归档；**场景编辑器 V2（布局保存 / 恢复 / JSON 导入）已实现，用户集中人工验收 9/9 PASS，随归档提交进入 `main`**；DEV-B 的 38 项运行时白名单未加入 `hide*`；藏身音效与「被发现后反制」按设计刻意不做。S7C-2b 的参数在实现中**未做任何数值调整**（§4.10.9 的建议值原样落地），唯一的设计澄清是候选评分货币与「值得藏身」判据，已在 §4.10.14 说明。
+
+## DeepSeek 第四阶段当前状态（2026-10-09）
+
+GLB视觉比例已增20%，玩家和NPC共用，静态GLB内容与第三阶段一致。浏览器交互复测通过；证据在 docs/verification/DEEPSEEK_STAGE4。绑定测试未通过：23骨骼草案的定位和长发/裙摆权重需修复，未制作六个动画或导出绑定GLB。完整报告及工作副本位于项目外 `asset_work/stage4_rig`（工作资料，未纳入仓库；此为外部资料内的相对路径）。当前待人工验收比例，第四阶段整体未完成。npm test 794/796（既有两项AI失败），tsc/build/diff检查通过；未提交Git。
+
+### 后续更新：2026-10-10 头发动态候选
+
+上方为10月9日历史状态。用户现已验收v4的Idle/Walk/Run身体动作。当前游戏引用v5头发GLB（18,500三角面、26骨骼），身体动画轨道及播放倍率保持v4；六根发骨由Three.js实时阻尼弹簧驱动，v4动画与第三阶段静态模型保留回退。头发动态待人工验收，未宣称第四阶段整体通过。报告/录像/测试材料位于 asset_work/stage4_animated_20261010/hair_v5。测试802/804，仍有两项既有AI用例失败，tsc/build/diff通过；没有Git提交。

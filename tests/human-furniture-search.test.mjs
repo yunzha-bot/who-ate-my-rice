@@ -337,12 +337,12 @@ test('the two Q skills and the E interaction of DeepSeek do not regress', () => 
   assert.equal(resolveQSkill('HUMAN'), 'FAN_SEARCH');
   assert.equal(resolveQSkill(null), 'NONE');
   // DeepSeek 的 E 仍然先仲裁出门 / 藏身 / 进食，且藏身中 E 只用于退出。
-  assert.equal(resolveInteractionIntent({ minesweeperOpen: false, concealed: false,
+  assert.equal(resolveInteractionIntent({ pulseLockOpen: false, concealed: false,
     door: { distance: 0.9 }, rice: { distance: 2 }, hide: { spotId: 'hide_second_bed' } }),
   'DOOR');
-  assert.equal(resolveInteractionIntent({ minesweeperOpen: false, concealed: false,
+  assert.equal(resolveInteractionIntent({ pulseLockOpen: false, concealed: false,
     door: null, rice: null, hide: { spotId: 'hide_second_bed' } }), 'HIDE_ENTER');
-  assert.equal(resolveInteractionIntent({ minesweeperOpen: false, concealed: true,
+  assert.equal(resolveInteractionIntent({ pulseLockOpen: false, concealed: true,
     door: { distance: 0.5 }, rice: { distance: 0.5 }, hide: null }), 'HIDE_EXIT');
   // 藏身状态机本身不变：进入需要 DEEPSEEK + 人工控制 + 合法位置，退出沿用同一位置。
   const hide = new HideSystem();

@@ -1,0 +1,1325 @@
+{
+  "furniture": [
+    {
+      "id": "gym_treadmill",
+      "kind": "furniture",
+      "x": 13.05,
+      "z": 9.8,
+      "width": 1.35,
+      "depth": 2,
+      "height": 1.1,
+      "rotation": 0
+    },
+    {
+      "id": "gym_bike",
+      "kind": "furniture",
+      "x": 13.05,
+      "z": 14.4,
+      "width": 1,
+      "depth": 1.6,
+      "height": 1.1,
+      "rotation": 0
+    },
+    {
+      "id": "gym_dumbbell_rack",
+      "kind": "furniture",
+      "x": 18.6,
+      "z": 18.4,
+      "width": 1.8,
+      "depth": 0.65,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "gym_bench",
+      "kind": "furniture",
+      "x": 18.65,
+      "z": 15.9,
+      "width": 0.65,
+      "depth": 1.5,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "gym_mirror",
+      "kind": "furniture",
+      "x": 19.65,
+      "z": 14.8,
+      "width": 0.25,
+      "depth": 1.4,
+      "height": 1.6,
+      "rotation": 0
+    },
+    {
+      "id": "gym_towel_stand",
+      "kind": "furniture",
+      "x": 19.5,
+      "z": 8.9,
+      "width": 0.5,
+      "depth": 0.7,
+      "height": 0.95,
+      "rotation": 0
+    },
+    {
+      "id": "gym_water_dispenser",
+      "kind": "furniture",
+      "x": 19.5,
+      "z": 6.7,
+      "width": 0.5,
+      "depth": 0.5,
+      "height": 1.1,
+      "rotation": 0
+    },
+    {
+      "id": "living_sofa",
+      "kind": "furniture",
+      "x": 1.4244094538379786,
+      "z": -9.664417673358917,
+      "width": 2.2,
+      "depth": 1.1,
+      "height": 0.65,
+      "rotation": 0
+    },
+    {
+      "id": "living_coffee_table",
+      "kind": "furniture",
+      "x": -6.521795506170588,
+      "z": -6.17623912746196,
+      "width": 1.2,
+      "depth": 1,
+      "height": 0.4,
+      "rotation": 0
+    },
+    {
+      "id": "living_tv_cabinet",
+      "kind": "furniture",
+      "x": -1.1663252111437457,
+      "z": -5.42332063614414,
+      "width": 2.4,
+      "depth": 0.64,
+      "height": 0.55,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "dining_table",
+      "kind": "furniture",
+      "x": 12,
+      "z": 2,
+      "width": 1.8,
+      "depth": 1.4,
+      "height": 0.55,
+      "rotation": 0
+    },
+    {
+      "id": "kitchen_counter",
+      "kind": "furniture",
+      "x": 8.65,
+      "z": -11.9,
+      "width": 0.7,
+      "depth": 3,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "kitchen_island",
+      "kind": "furniture",
+      "x": 8.65,
+      "z": -9.6,
+      "width": 0.7,
+      "depth": 1.6,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "kitchen_fridge",
+      "kind": "furniture",
+      "x": 8.65,
+      "z": -3.736447722208453,
+      "width": 0.8,
+      "depth": 0.8,
+      "height": 1.2,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "storage_shelf",
+      "kind": "furniture",
+      "x": 16.63841881951396,
+      "z": -6.297396222643968,
+      "width": 0.5,
+      "depth": 2.5,
+      "height": 1,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "main_bed",
+      "kind": "furniture",
+      "x": -21.5,
+      "z": -6.5,
+      "width": 2.1,
+      "depth": 2.3,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "main_wardrobe",
+      "kind": "furniture",
+      "x": -24.93572565553825,
+      "z": -12.883200779390691,
+      "width": 0.6,
+      "depth": 2.1,
+      "height": 1.15,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "closet_wardrobe",
+      "kind": "furniture",
+      "x": -10.894391658555739,
+      "z": -12.959936099678274,
+      "width": 0.55,
+      "depth": 2.4,
+      "height": 1.1,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "bath_sink",
+      "kind": "furniture",
+      "x": -27.4,
+      "z": 2.5,
+      "width": 0.8,
+      "depth": 1,
+      "height": 0.7,
+      "rotation": 0
+    },
+    {
+      "id": "bath_tub",
+      "kind": "furniture",
+      "x": -22,
+      "z": 1.2,
+      "width": 1.7,
+      "depth": 0.7,
+      "height": 0.5,
+      "rotation": 0
+    },
+    {
+      "id": "second_bed",
+      "kind": "furniture",
+      "x": -21.5,
+      "z": 12.5,
+      "width": 2.1,
+      "depth": 2.2,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "second_cabinet",
+      "kind": "furniture",
+      "x": -25.9,
+      "z": 9.5,
+      "width": 0.6,
+      "depth": 1.4,
+      "height": 1,
+      "rotation": 0
+    },
+    {
+      "id": "study_desk",
+      "kind": "furniture",
+      "x": -3.8,
+      "z": 9.5,
+      "width": 1.7,
+      "depth": 1,
+      "height": 0.65,
+      "rotation": 0
+    },
+    {
+      "id": "study_bookshelf",
+      "kind": "furniture",
+      "x": -13.736376442000136,
+      "z": 8.999011387252928,
+      "width": 2.1,
+      "depth": 0.6,
+      "height": 1.1,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "entry_bench",
+      "kind": "furniture",
+      "x": 7.5,
+      "z": 16.4,
+      "width": 1.4,
+      "depth": 0.6,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "living_carton",
+      "kind": "furniture",
+      "x": -5.4,
+      "z": -9.6,
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 0.75,
+      "rotation": 0
+    },
+    {
+      "id": "storage_carton",
+      "kind": "furniture",
+      "x": 16.7,
+      "z": -12.5,
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 0.75,
+      "rotation": 0
+    },
+    {
+      "id": "north_balcony_carton",
+      "kind": "furniture",
+      "x": 10.5,
+      "z": -18.2,
+      "width": 0.8,
+      "depth": 0.8,
+      "height": 0.85,
+      "rotation": 0
+    },
+    {
+      "id": "north_balcony_rack",
+      "kind": "furniture",
+      "x": 15.5,
+      "z": -18.3,
+      "width": 1.6,
+      "depth": 0.5,
+      "height": 1.1,
+      "rotation": 0
+    },
+    {
+      "id": "north_balcony_life_drying_stand",
+      "kind": "furniture",
+      "x": 13,
+      "z": -18.4,
+      "width": 1.5,
+      "depth": 0.45,
+      "height": 1.2,
+      "rotation": 0
+    },
+    {
+      "id": "north_balcony_life_flower_stand",
+      "kind": "furniture",
+      "x": 17.5,
+      "z": -18.4,
+      "width": 0.85,
+      "depth": 0.5,
+      "height": 0.85,
+      "rotation": 0
+    },
+    {
+      "id": "north_balcony_life_tall_plant",
+      "kind": "furniture",
+      "x": 19.1,
+      "z": -18.4,
+      "width": 0.55,
+      "depth": 0.55,
+      "height": 0.95,
+      "rotation": 0
+    },
+    {
+      "id": "south_hall_console",
+      "kind": "furniture",
+      "x": 12.55,
+      "z": 17,
+      "width": 0.5,
+      "depth": 1.2,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "east_hall_console",
+      "kind": "furniture",
+      "x": 16.55,
+      "z": 17.5,
+      "width": 0.5,
+      "depth": 1.2,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "guest_bed",
+      "kind": "furniture",
+      "x": 25.491233603609786,
+      "z": -14.946562541137965,
+      "width": 2.1,
+      "depth": 2.3,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "guest_wardrobe",
+      "kind": "furniture",
+      "x": 21.478314139326347,
+      "z": -18.445736437344536,
+      "width": 0.6,
+      "depth": 2.4,
+      "height": 1.1,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "utility_counter",
+      "kind": "furniture",
+      "x": 20.591641095220726,
+      "z": -0.3707597766059507,
+      "width": 0.7,
+      "depth": 3,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "utility_shelf",
+      "kind": "furniture",
+      "x": 21,
+      "z": 3.9,
+      "width": 1.2,
+      "depth": 0.5,
+      "height": 1,
+      "rotation": 0
+    },
+    {
+      "id": "utility_carton",
+      "kind": "furniture",
+      "x": 20.8,
+      "z": -4.2,
+      "width": 0.8,
+      "depth": 0.8,
+      "height": 0.85,
+      "rotation": 0
+    },
+    {
+      "id": "garage_car",
+      "kind": "furniture",
+      "x": 22.6,
+      "z": 12,
+      "width": 1.9,
+      "depth": 3.8,
+      "height": 1.1,
+      "rotation": 0
+    },
+    {
+      "id": "garage_workbench",
+      "kind": "furniture",
+      "x": 26.5,
+      "z": 5.2,
+      "width": 0.7,
+      "depth": 2.6,
+      "height": 0.9,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "garage_shelf",
+      "kind": "furniture",
+      "x": 20.6,
+      "z": 15.65,
+      "width": 0.5,
+      "depth": 2.6,
+      "height": 1,
+      "rotation": 0
+    },
+    {
+      "id": "main_nightstand",
+      "kind": "furniture",
+      "x": -23.1,
+      "z": -6.5,
+      "width": 0.6,
+      "depth": 0.6,
+      "height": 0.5,
+      "rotation": 0
+    },
+    {
+      "id": "main_dresser",
+      "kind": "furniture",
+      "x": -25.9,
+      "z": -5,
+      "width": 0.5,
+      "depth": 1,
+      "height": 0.95,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "main_life_vanity",
+      "kind": "furniture",
+      "x": -17,
+      "z": -12.65,
+      "width": 1.7,
+      "depth": 0.65,
+      "height": 0.75,
+      "rotation": 0
+    },
+    {
+      "id": "main_life_vanity_stool",
+      "kind": "furniture",
+      "x": -17,
+      "z": -11.6,
+      "width": 0.55,
+      "depth": 0.5,
+      "height": 0.43,
+      "rotation": 0
+    },
+    {
+      "id": "main_life_end_bench",
+      "kind": "furniture",
+      "x": -21.5,
+      "z": -4.3,
+      "width": 1.5,
+      "depth": 0.5,
+      "height": 0.42,
+      "rotation": 0
+    },
+    {
+      "id": "closet_shelf",
+      "kind": "furniture",
+      "x": -13.9,
+      "z": -6.5,
+      "width": 0.5,
+      "depth": 2,
+      "height": 1,
+      "rotation": 0
+    },
+    {
+      "id": "storage_rack",
+      "kind": "furniture",
+      "x": 16.47497132672612,
+      "z": -3.8501237976349643,
+      "width": 0.5,
+      "depth": 2,
+      "height": 1,
+      "rotation": 0
+    },
+    {
+      "id": "bath_toilet",
+      "kind": "furniture",
+      "x": -24.8,
+      "z": 1.4,
+      "width": 0.6,
+      "depth": 0.7,
+      "height": 0.6,
+      "rotation": 0
+    },
+    {
+      "id": "second_desk",
+      "kind": "furniture",
+      "x": -25.9115832166231,
+      "z": 13.374433746383083,
+      "width": 1.4,
+      "depth": 0.6,
+      "height": 0.65,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "second_study_chair",
+      "kind": "furniture",
+      "x": -25.20766326185594,
+      "z": 13.328354616824889,
+      "width": 0.6,
+      "depth": 0.55,
+      "height": 0.55,
+      "rotation": 0
+    },
+    {
+      "id": "entry_shoe_rack",
+      "kind": "furniture",
+      "x": 11.3,
+      "z": 15.5,
+      "width": 0.5,
+      "depth": 1.2,
+      "height": 0.9,
+      "rotation": 0
+    },
+    {
+      "id": "entry_life_shoe_cabinet",
+      "kind": "furniture",
+      "x": -1.85,
+      "z": 14,
+      "width": 0.65,
+      "depth": 2.1,
+      "height": 0.85,
+      "rotation": 0
+    },
+    {
+      "id": "entry_life_changing_bench",
+      "kind": "furniture",
+      "x": -1.85,
+      "z": 10.6,
+      "width": 0.65,
+      "depth": 0.9,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "entry_life_full_mirror",
+      "kind": "furniture",
+      "x": 6.2,
+      "z": 16.5,
+      "width": 0.6,
+      "depth": 0.25,
+      "height": 1.6,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "guest_desk",
+      "kind": "furniture",
+      "x": 20.7,
+      "z": -7.5,
+      "width": 0.6,
+      "depth": 1.2,
+      "height": 0.65,
+      "rotation": 0
+    },
+    {
+      "id": "living_side_table",
+      "kind": "furniture",
+      "x": -0.5287904347821837,
+      "z": -8.424900669082154,
+      "width": 0.55,
+      "depth": 0.55,
+      "height": 0.42,
+      "rotation": 0
+    },
+    {
+      "id": "living_floor_lamp",
+      "kind": "furniture",
+      "x": -2.9237240694335638,
+      "z": -5.529124444047869,
+      "width": 0.42,
+      "depth": 0.42,
+      "height": 1.05,
+      "rotation": 0
+    },
+    {
+      "id": "living_plant",
+      "kind": "furniture",
+      "x": -1.6957182971042473,
+      "z": -9.709740111994773,
+      "width": 0.48,
+      "depth": 0.48,
+      "height": 0.85,
+      "rotation": 0
+    },
+    {
+      "id": "living_bookcase",
+      "kind": "furniture",
+      "x": 6.3156619918247205,
+      "z": -12.860769671957106,
+      "width": 0.55,
+      "depth": 2.2,
+      "height": 1.2,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "living_arm_chair",
+      "kind": "furniture",
+      "x": -0.5373475198034328,
+      "z": -9.661077622939029,
+      "width": 0.9,
+      "depth": 0.9,
+      "height": 0.65,
+      "rotation": 0
+    },
+    {
+      "id": "living_secondary_sofa",
+      "kind": "furniture",
+      "x": -3.4450590270997026,
+      "z": -9.606263184538609,
+      "width": 2.4,
+      "depth": 1.1,
+      "height": 0.68,
+      "rotation": 0
+    },
+    {
+      "id": "dining_shelf",
+      "kind": "furniture",
+      "x": 9.862017996639604,
+      "z": -1.346776797940396,
+      "width": 0.7,
+      "depth": 1.4,
+      "height": 1.15,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "dining_chair_north",
+      "kind": "furniture",
+      "x": 12,
+      "z": 0.45,
+      "width": 0.55,
+      "depth": 0.55,
+      "height": 0.52,
+      "rotation": 0
+    },
+    {
+      "id": "dining_chair_south",
+      "kind": "furniture",
+      "x": 12,
+      "z": 3.55,
+      "width": 0.55,
+      "depth": 0.55,
+      "height": 0.52,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "kitchen_trolley",
+      "kind": "furniture",
+      "x": 15.45,
+      "z": -12,
+      "width": 0.65,
+      "depth": 1,
+      "height": 0.78,
+      "rotation": 0
+    },
+    {
+      "id": "kitchen_bin",
+      "kind": "furniture",
+      "x": 15.45,
+      "z": -10.7,
+      "width": 0.45,
+      "depth": 0.45,
+      "height": 0.6,
+      "rotation": 0
+    },
+    {
+      "id": "main_reading_chair",
+      "kind": "furniture",
+      "x": -23.11224371730445,
+      "z": -12.692757483391901,
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 0.65,
+      "rotation": 0
+    },
+    {
+      "id": "main_plant",
+      "kind": "furniture",
+      "x": -25.6,
+      "z": -1.2,
+      "width": 0.48,
+      "depth": 0.48,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "second_wardrobe",
+      "kind": "furniture",
+      "x": -25.9,
+      "z": 16.3,
+      "width": 0.7,
+      "depth": 2,
+      "height": 1.2,
+      "rotation": 0
+    },
+    {
+      "id": "second_nightstand",
+      "kind": "furniture",
+      "x": -23.2,
+      "z": 12.5,
+      "width": 0.6,
+      "depth": 0.6,
+      "height": 0.52,
+      "rotation": 0
+    },
+    {
+      "id": "storage_box_stack",
+      "kind": "furniture",
+      "x": 16.8,
+      "z": -10.8,
+      "width": 0.9,
+      "depth": 1.2,
+      "height": 0.9,
+      "rotation": 0
+    },
+    {
+      "id": "storage_tool_shelf",
+      "kind": "furniture",
+      "x": 16.589309977261763,
+      "z": -14.483676488800498,
+      "width": 0.5,
+      "depth": 1.2,
+      "height": 1,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "entry_umbrella_stand",
+      "kind": "furniture",
+      "x": -1.8,
+      "z": 15.5,
+      "width": 0.42,
+      "depth": 0.42,
+      "height": 0.68,
+      "rotation": 0
+    },
+    {
+      "id": "utility_laundry_basket",
+      "kind": "furniture",
+      "x": 20.437111811890574,
+      "z": -2.39487125949164,
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 0.58,
+      "rotation": 0
+    },
+    {
+      "id": "utility_cleaning_cabinet",
+      "kind": "furniture",
+      "x": 25.725864165674,
+      "z": -4.411914164477349,
+      "width": 0.6,
+      "depth": 1.2,
+      "height": 1.1,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "garage_storage_cabinet",
+      "kind": "furniture",
+      "x": 26.84710046035899,
+      "z": 11.395920212795128,
+      "width": 0.7,
+      "depth": 1.8,
+      "height": 1.25,
+      "rotation": 0
+    },
+    {
+      "id": "garage_tire_stack",
+      "kind": "furniture",
+      "x": 20.8,
+      "z": 17.6,
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 0.72,
+      "rotation": 0
+    },
+    {
+      "id": "guest_bookshelf",
+      "kind": "furniture",
+      "x": 25.87860109630977,
+      "z": -18.465620073855266,
+      "width": 0.6,
+      "depth": 1.8,
+      "height": 1.1,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "guest_nightstand",
+      "kind": "furniture",
+      "x": 20.564885831210788,
+      "z": -8.80371636739352,
+      "width": 0.55,
+      "depth": 0.55,
+      "height": 0.48,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "balcony_bench",
+      "kind": "furniture",
+      "x": -4.8,
+      "z": -18.3,
+      "width": 1.5,
+      "depth": 0.55,
+      "height": 0.48,
+      "rotation": 0
+    },
+    {
+      "id": "balcony_planter",
+      "kind": "furniture",
+      "x": -7.25,
+      "z": -16.2,
+      "width": 0.5,
+      "depth": 0.5,
+      "height": 0.65,
+      "rotation": 0
+    },
+    {
+      "id": "balcony_life_coffee_table",
+      "kind": "furniture",
+      "x": -4.8,
+      "z": -17.15,
+      "width": 0.7,
+      "depth": 0.7,
+      "height": 0.43,
+      "rotation": 0
+    },
+    {
+      "id": "balcony_life_lounge_chair",
+      "kind": "furniture",
+      "x": -3.15,
+      "z": -17.6,
+      "width": 0.75,
+      "depth": 0.75,
+      "height": 0.55,
+      "rotation": 0.45
+    },
+    {
+      "id": "balcony_life_flower_stand",
+      "kind": "furniture",
+      "x": -7.25,
+      "z": -18.25,
+      "width": 0.9,
+      "depth": 0.6,
+      "height": 0.95,
+      "rotation": 0
+    },
+    {
+      "id": "balcony_life_flower_trough",
+      "kind": "furniture",
+      "x": 1,
+      "z": -18.45,
+      "width": 2.2,
+      "depth": 0.45,
+      "height": 0.42,
+      "rotation": 0
+    },
+    {
+      "id": "balcony_life_drying_stand",
+      "kind": "furniture",
+      "x": 5.7,
+      "z": -18.25,
+      "width": 1.7,
+      "depth": 0.65,
+      "height": 1.2,
+      "rotation": 0
+    },
+    {
+      "id": "balcony_life_tall_plant",
+      "kind": "furniture",
+      "x": -7.25,
+      "z": -14.5,
+      "width": 0.55,
+      "depth": 0.55,
+      "height": 1,
+      "rotation": 0
+    },
+    {
+      "id": "main_bookshelf",
+      "kind": "furniture",
+      "x": -15.2,
+      "z": -12,
+      "width": 0.55,
+      "depth": 1.5,
+      "height": 1.1,
+      "rotation": 0
+    },
+    {
+      "id": "main_floor_lamp",
+      "kind": "furniture",
+      "x": -16.4,
+      "z": -1.2,
+      "width": 0.42,
+      "depth": 0.42,
+      "height": 1.05,
+      "rotation": 0
+    },
+    {
+      "id": "closet_laundry_basket",
+      "kind": "furniture",
+      "x": -13.746123740753998,
+      "z": -12.862709635201302,
+      "width": 0.58,
+      "depth": 0.58,
+      "height": 0.58,
+      "rotation": 0
+    },
+    {
+      "id": "closet_dressing_stool",
+      "kind": "furniture",
+      "x": -12.643303610477261,
+      "z": -12.876296337489809,
+      "width": 0.62,
+      "depth": 0.62,
+      "height": 0.45,
+      "rotation": 0
+    },
+    {
+      "id": "bath_towel_cabinet",
+      "kind": "furniture",
+      "x": -15.2,
+      "z": 5.9,
+      "width": 0.6,
+      "depth": 1.25,
+      "height": 1.05,
+      "rotation": 0
+    },
+    {
+      "id": "bath_laundry_basket",
+      "kind": "furniture",
+      "x": -27.450701576175838,
+      "z": 3.707817538319864,
+      "width": 0.6,
+      "depth": 0.6,
+      "height": 0.55,
+      "rotation": 0
+    },
+    {
+      "id": "study_chair",
+      "kind": "furniture",
+      "x": -5.183810850310448,
+      "z": 9.56650454320646,
+      "width": 0.62,
+      "depth": 0.62,
+      "height": 0.58,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "study_low_cabinet",
+      "kind": "furniture",
+      "x": -4.763560311871274,
+      "z": 7.649133567879705,
+      "width": 0.55,
+      "depth": 1.5,
+      "height": 0.82,
+      "rotation": 1.5707963267948966
+    },
+    {
+      "id": "study_floor_lamp",
+      "kind": "furniture",
+      "x": -9.686795554225275,
+      "z": 15.31497364958944,
+      "width": 0.42,
+      "depth": 0.42,
+      "height": 1.05,
+      "rotation": 0
+    },
+    {
+      "id": "study_plant",
+      "kind": "furniture",
+      "x": -13.668613403282876,
+      "z": 16.658585185937902,
+      "width": 0.48,
+      "depth": 0.48,
+      "height": 0.78,
+      "rotation": 0
+    },
+    {
+      "id": "study_reading_sofa",
+      "kind": "furniture",
+      "x": -10.912622386954988,
+      "z": 15.161515447079898,
+      "width": 1.65,
+      "depth": 0.9,
+      "height": 0.62,
+      "rotation": 3.141592653589793
+    },
+    {
+      "id": "study_side_table",
+      "kind": "furniture",
+      "x": -12.1,
+      "z": 15.3,
+      "width": 0.5,
+      "depth": 0.5,
+      "height": 0.43,
+      "rotation": 0
+    },
+    {
+      "id": "entry_mail_console",
+      "kind": "furniture",
+      "x": 2,
+      "z": 16.3,
+      "width": 1.5,
+      "depth": 0.55,
+      "height": 0.78,
+      "rotation": 0
+    },
+    {
+      "id": "entry_coat_stand",
+      "kind": "furniture",
+      "x": -1.5769626273535777,
+      "z": 9.53122828567346,
+      "width": 0.48,
+      "depth": 0.48,
+      "height": 1.12,
+      "rotation": 0
+    },
+    {
+      "id": "entry_plant",
+      "kind": "furniture",
+      "x": -1.7,
+      "z": 8.5,
+      "width": 0.48,
+      "depth": 0.48,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "garage_tool_trolley",
+      "kind": "furniture",
+      "x": 24.7,
+      "z": 8.3,
+      "width": 0.65,
+      "depth": 0.9,
+      "height": 0.8,
+      "rotation": 0
+    },
+    {
+      "id": "living_lounge_table",
+      "kind": "furniture",
+      "x": 1.4244094538379786,
+      "z": -8.05,
+      "width": 1.1,
+      "depth": 0.55,
+      "height": 0.36,
+      "rotation": 0
+    },
+    {
+      "id": "living_standing_ac",
+      "kind": "furniture",
+      "x": -7.355075343852684,
+      "z": -12.914042548446224,
+      "width": 0.68,
+      "depth": 0.58,
+      "height": 1.55,
+      "rotation": 0
+    },
+    {
+      "id": "living_water_dispenser",
+      "kind": "furniture",
+      "x": -6.362523192471872,
+      "z": -13.021491962070348,
+      "width": 0.52,
+      "depth": 0.52,
+      "height": 1.18,
+      "rotation": 0
+    },
+    {
+      "id": "garage_box_stack",
+      "kind": "furniture",
+      "x": 20.85,
+      "z": 8.5,
+      "width": 1.05,
+      "depth": 1.25,
+      "height": 0.9,
+      "rotation": 0
+    },
+    {
+      "id": "garage_cleaning_station",
+      "kind": "furniture",
+      "x": 26,
+      "z": 7,
+      "width": 0.65,
+      "depth": 0.65,
+      "height": 0.7,
+      "rotation": 0
+    }
+  ],
+  "hideSpots": [
+    {
+      "id": "hide_north_balcony_carton",
+      "roomId": "north_balcony",
+      "kind": "CARTON",
+      "furnitureId": "north_balcony_carton",
+      "label": "北阳台纸箱",
+      "x": 10.5,
+      "z": -17.25,
+      "facing": -1.5707963267948966,
+      "interactionRegion": {
+        "shape": "CIRCLE",
+        "radius": 1.2
+      }
+    },
+    {
+      "id": "hide_utility_carton",
+      "roomId": "utility",
+      "kind": "CARTON",
+      "furnitureId": "utility_carton",
+      "label": "家政间纸箱",
+      "x": 20.8,
+      "z": -3.25,
+      "facing": -1.5707963267948966,
+      "interactionRegion": {
+        "shape": "CIRCLE",
+        "radius": 1.2
+      }
+    },
+    {
+      "id": "hide_main_bed",
+      "roomId": "main_bedroom",
+      "kind": "BED",
+      "furnitureId": "main_bed",
+      "label": "主卧床",
+      "x": -23.026786082453718,
+      "z": -7.322385477754702,
+      "facing": 0.68767,
+      "interactionRegion": {
+        "shape": "CIRCLE",
+        "radius": 2
+      }
+    },
+    {
+      "id": "hide_second_bed",
+      "roomId": "second_bedroom",
+      "kind": "BED",
+      "furnitureId": "second_bed",
+      "label": "次卧床",
+      "x": -23.088656806243087,
+      "z": 11.722542858381482,
+      "facing": 0.66597,
+      "interactionRegion": {
+        "shape": "CIRCLE",
+        "radius": 2
+      }
+    },
+    {
+      "id": "hide_main_wardrobe",
+      "roomId": "main_bedroom",
+      "kind": "WARDROBE",
+      "furnitureId": "main_wardrobe",
+      "label": "主卧衣柜",
+      "x": -24.75883699187932,
+      "z": -11.97880392952792,
+      "facing": 2.10251898038469,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_closet",
+      "roomId": "closet",
+      "kind": "WARDROBE",
+      "furnitureId": "closet_wardrobe",
+      "label": "衣帽间衣柜",
+      "x": -10.813374298015107,
+      "z": -11.789034538906998,
+      "facing": -0.4636463267948965,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_study_bookshelf",
+      "roomId": "study",
+      "kind": "SHELF",
+      "furnitureId": "study_bookshelf",
+      "label": "书房书柜",
+      "x": -12.847464448152934,
+      "z": 9.831978899479726,
+      "facing": -0.5880063267948965,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_storage_shelf",
+      "roomId": "storage",
+      "kind": "SHELF",
+      "furnitureId": "storage_shelf",
+      "label": "储物间货架",
+      "x": 17.473135825329315,
+      "z": -6.334474750853232,
+      "facing": 2.3036526535897934,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 60
+      }
+    },
+    {
+      "id": "hide_living_carton",
+      "roomId": "living",
+      "kind": "CARTON",
+      "furnitureId": "living_carton",
+      "label": "客厅纸箱",
+      "x": -5.4,
+      "z": -8.6,
+      "facing": -1.5708,
+      "interactionRegion": {
+        "shape": "CIRCLE",
+        "radius": 1.2
+      }
+    },
+    {
+      "id": "hide_storage_carton",
+      "roomId": "storage",
+      "kind": "CARTON",
+      "furnitureId": "storage_carton",
+      "label": "储物间纸箱",
+      "x": 17.75,
+      "z": -12.5,
+      "facing": 3.14159,
+      "interactionRegion": {
+        "shape": "CIRCLE",
+        "radius": 1.2
+      }
+    },
+    {
+      "id": "hide_living_sofa",
+      "roomId": "living",
+      "kind": "SOFA",
+      "furnitureId": "living_sofa",
+      "label": "客厅沙发背后",
+      "x": 1.4244094538379786,
+      "z": -10.814417673358918,
+      "facing": 1.5708,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_dining_shelf",
+      "roomId": "dining",
+      "kind": "SHELF",
+      "furnitureId": "dining_shelf",
+      "label": "餐厅收纳柜侧边",
+      "x": 9.862017996639604,
+      "z": -0.34677679794039595,
+      "facing": -1.5707963267948966,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_second_wardrobe",
+      "roomId": "second_bedroom",
+      "kind": "WARDROBE",
+      "furnitureId": "second_wardrobe",
+      "label": "次卧衣柜",
+      "x": -24.9,
+      "z": 16.3,
+      "facing": 3.14159,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_guest_bookshelf",
+      "roomId": "guest_room",
+      "kind": "SHELF",
+      "furnitureId": "guest_bookshelf",
+      "label": "客房书架侧边",
+      "x": 25.87860109630977,
+      "z": -17.465620073855266,
+      "facing": -1.5707963267948966,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    },
+    {
+      "id": "hide_garage_cabinet",
+      "roomId": "garage",
+      "kind": "CABINET",
+      "furnitureId": "garage_storage_cabinet",
+      "label": "车库储物柜",
+      "x": 25.84710046035899,
+      "z": 11.395920212795128,
+      "facing": 0,
+      "interactionRegion": {
+        "shape": "SECTOR",
+        "radius": 1.6,
+        "halfAngleDeg": 55
+      }
+    }
+  ]
+}

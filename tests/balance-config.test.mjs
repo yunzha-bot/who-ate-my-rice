@@ -4,7 +4,7 @@ import { OrthographicCamera } from 'three';
 import { GAME_CONFIG as C, RICE_MAX_PROGRESS_MS, RICE_TIMING_MODE } from '../src/config/gameConfig.ts';
 import { DoorSystem, nearestPointOnDoorSegment } from '../src/systems/DoorSystem.ts';
 import { HumanDoorSkill } from '../src/systems/HumanDoorSkill.ts';
-import { MinesweeperLockSystem } from '../src/systems/MinesweeperLockSystem.ts';
+import { PulseLockSystem } from '../src/systems/PulseLockSystem.ts';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem } from '../src/systems/PerceptionSystem.ts';
 import { createRiceTraceView } from '../src/three/RiceTraceView.ts';
 import { ACTIVE_RICE_COUNT, RICE_CANDIDATES, selectRiceCandidates } from '../src/three/map/apartmentMap.ts';
@@ -35,6 +35,7 @@ test('candidate pool size is configurable within authored map positions', () => 
 });
 
 test('door edge targeting and Human Space use configured geometry and cooldown', () => {
+  assert.equal(C.deepseekAI.humanPlayerUnlockPenaltyMs, 10_000);
   const node = { id: 'door', x: 0, z: 0, rotation: 0, width: 1.2,
     initialState: 'CLOSED', connectedRoomA: 'a', connectedRoomB: 'b' };
   const edge = nearestPointOnDoorSegment(node.width / 2, 0, node);
@@ -51,26 +52,23 @@ test('door edge targeting and Human Space use configured geometry and cooldown',
   assert.equal(skill.cooldownRemainingMs, C.door.humanForceBreakCooldownMs);
 });
 
-test('free Human Space and first-reveal protection follow their config switches', () => {
+test('free Human Space and PulseLock timing follow their own config switches', () => {
   const node = { id: 'door', x: 0, z: 0, rotation: 0, width: 1.2,
     initialState: 'CLOSED', connectedRoomA: 'a', connectedRoomB: 'b' };
   const doors = new DoorSystem([node], C.door.maxActiveLocks);
   const skill = new HumanDoorSkill(doors, C.door.humanForceBreakCooldownMs);
   const originalQuickOpen = C.door.humanFreeOpenClosedDoor;
-  const originalSafeReveal = C.pulseLock.firstRevealSafe;
   try {
     C.door.humanFreeOpenClosedDoor = false;
     assert.equal(skill.use(node.id, 'HUMAN', 'PLAYING'), 'INVALID_STATE');
     assert.equal(doors.get(node.id).state, 'CLOSED');
     doors.lock(node.id, 'DEEPSEEK');
-    const mines = new MinesweeperLockSystem(
-      doors, C.pulseLock.rows, C.pulseLock.cols, C.pulseLock.mines, () => 0);
-    C.pulseLock.firstRevealSafe = false;
-    assert.equal(mines.open(node.id, 'HUMAN', 'PLAYING'), true);
-    assert.equal(mines.reveal(0, 0, 'PLAYING'), 'FAILED');
+    const pulse = new PulseLockSystem(doors, C.pulseLock.timing);
+    assert.equal(pulse.open(node.id, 'HUMAN', 'PLAYING'), true);
+    pulse.advance(C.pulseLock.timing.targetCenters[0] * C.pulseLock.timing.travelMs, 'PLAYING');
+    assert.equal(pulse.press('PLAYING'), 'CORE_COMPLETE');
   } finally {
     C.door.humanFreeOpenClosedDoor = originalQuickOpen;
-    C.pulseLock.firstRevealSafe = originalSafeReveal;
   }
 });
 

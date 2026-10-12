@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1990" height="440" viewBox="45 110 2000 450">
+  <defs>
+    <linearGradient id="backplate" x1="0" y1="0" x2="1" y2=".18">
+      <stop offset="0" stop-color="#b8e5f7" stop-opacity=".54"/>
+      <stop offset=".48" stop-color="#edf6fc" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#c8e6fa" stop-opacity=".5"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2=".22">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".96"/>
+      <stop offset=".42" stop-color="#f8fbfd" stop-opacity=".92"/>
+      <stop offset=".76" stop-color="#eaf5fc" stop-opacity=".88"/>
+      <stop offset="1" stop-color="#d9eefb" stop-opacity=".94"/>
+    </linearGradient>
+    <linearGradient id="softEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#8fcde9" stop-opacity=".24"/>
+    </linearGradient>
+  </defs>
+  <path d="M252 151 L1928 151 Q1990 151 1971 196 L1839 489 Q1822 531 1785 531 L103 531 Q71 531 85 494 L201 188 Q214 151 252 151Z" fill="url(#backplate)"/>
+  <path d="M291 126 L1941 156 Q1980 157 1963 191 L1808 508 Q1797 533 1768 533 L98 533 Q76 533 88 503 L248 166 Q261 126 291 126Z" fill="url(#face)"/>
+  <path d="M291 126 L1941 156 Q1980 157 1963 191 L1808 508 Q1797 533 1768 533 L98 533 Q76 533 88 503 L248 166 Q261 126 291 126Z" fill="none" stroke="url(#softEdge)" stroke-width="3"/>
+  <path d="M183 166 L77 376" fill="none" stroke="#72c9ee" stroke-opacity=".9" stroke-width="9" stroke-linecap="round"/>
+  <path d="M1935 271 L1848 455" fill="none" stroke="#78c9ef" stroke-opacity=".72" stroke-width="8" stroke-linecap="round"/>
+  <path d="M188 171 L83 378" fill="none" stroke="#e7f7ff" stroke-opacity=".84" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -65,8 +65,8 @@ export const LAYOUT_STATE_TEXT: Record<LayoutStateLabel, string> = {
   DEFAULT: '默认布局',
   CUSTOM: '自定义布局（尚未保存）',
   SAVED: '已保存',
-  UNSAVED: '未保存修改（与本地存档不同）',
-  IMPORT_FAILED: '导入失败',
+  UNSAVED: '未保存修改（与项目文件不同）',
+  IMPORT_FAILED: '保存或导入失败',
 };
 
 function fail(code: LayoutFailureCode, message: string): LayoutFailure {

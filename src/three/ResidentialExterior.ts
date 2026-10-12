@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { Room } from './map/apartmentMap.ts';
 import { buildCommunityCourt } from './CommunityCourtView.ts';
+import { buildGarageDriveway, garageDrivewayBounds } from './map/GarageGround.ts';
 
 /** Non-interactive street-block scenery. Never registered with collision or navigation.
  * The playable house sits inside a continuous modern residential block. Every frontage
@@ -78,7 +79,14 @@ export function buildResidentialExterior(parent: THREE.Group, rooms: readonly Ro
   slab('road-side-junction', sideLeft, sideRight, back - 11.5, back - 6.5, roadTop, 0x777e79);
   slab('road-side-south', sideLeft, sideRight, back - 6.5, front + 4, roadTop, 0x777e79);
   slab('road-service', streetLeft, sideLeft, back - 11.5, back - 6.5, roadTop, 0x818780);
-  slab('walk-home-front', streetLeft, sideLeft, front + .7, front + 4, walkTop, 0xd0c5ae);
+  const driveway = garageDrivewayBounds(rooms);
+  // Local curb cut only: the garage apron replaces this strip of front paving.
+  const frontageSlab = (name: string, minZ: number, maxZ: number, top: number, color: number) => {
+    if (!driveway) { slab(name, streetLeft, sideLeft, minZ, maxZ, top, color); return; }
+    slab(`${name}-west`, streetLeft, driveway.minX, minZ, maxZ, top, color);
+    slab(`${name}-east`, driveway.maxX, sideLeft, minZ, maxZ, top, color);
+  };
+  frontageSlab('walk-home-front', front + .7, front + 4, walkTop, 0xd0c5ae);
   slab('walk-east', right + 2.85, sideLeft, back - 3, front + .7, walkTop, 0xc7bea9);
   slab('walk-north', streetLeft, sideLeft, back - 6.5, back - 3, walkTop, 0xc9c1ad);
   slab('walk-north-residential', streetLeft, sideLeft - 2.7, back - 14.3, back - 11.5, walkTop, 0xc9c1ad);
@@ -87,7 +95,10 @@ export function buildResidentialExterior(parent: THREE.Group, rooms: readonly Ro
   slab('walk-neighbors', sideRight, sideRight + 2.3, streetBack, front + 4, walkTop, 0xc0b8a5);
   slab('walk-parking-front', sideRight + 2.3, streetRight, front + 2, front + 4, walkTop, 0xc0b8a5);
   const curbTop = -.005, curbWidth = .22;
-  slab('curb-home', streetLeft, sideLeft, front + 4 - curbWidth, front + 4, curbTop, 0xe1d5be);
+  frontageSlab('curb-home', front + 4 - curbWidth, front + 4, curbTop, 0xe1d5be);
+  buildGarageDriveway(root, rooms);
+  if (driveway) reservedSurfaces.push(rect('garage-driveway',
+    driveway.minX, driveway.maxX, driveway.minZ, driveway.maxZ));
   slab('curb-east', sideLeft - curbWidth, sideLeft, back - 6.5, front + 4 - curbWidth, curbTop, 0xded4bf);
   slab('curb-north', streetLeft, sideLeft - curbWidth, back - 6.5, back - 6.5 + curbWidth, curbTop, 0xded4bf);
   slab('curb-service-north', streetLeft, sideLeft - curbWidth, back - 11.5 - curbWidth, back - 11.5, curbTop, 0xded4bf);

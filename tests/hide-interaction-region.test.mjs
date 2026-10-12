@@ -1,6 +1,6 @@
+import { rectColliders } from '../src/three/map/MapEditModel.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Box3, Vector3 } from 'three';
 import { CollisionWorld } from '../src/three/CollisionWorld.ts';
 import { NavigationSystem } from '../src/systems/NavigationSystem.ts';
 import { DoorSystem } from '../src/systems/DoorSystem.ts';
@@ -21,24 +21,29 @@ import { rectBoundingAabb } from '../src/three/map/RotatedRect.ts';
 const furnitureById = new Map(FURNITURE.map(rect => [rect.id, rect]));
 const spotsById = new Map(HIDE_SPOTS.map(spot => [spot.id, spot]));
 
-// The parameters approved for DEV-A round 1, pinned independently of the source
-// file so an accidental edit of the authored data fails here.
+// Authored baseline, pinned independently of the source. On 2026-10-12 the user
+// confirmed the saved storage shelf's 60-degree half-angle; other defaults stay.
 const APPROVED_REGIONS = {
+  hide_north_balcony_carton: { shape: 'CIRCLE', radius: 1.2 },
+  hide_utility_carton: { shape: 'CIRCLE', radius: 1.2 },
   hide_main_bed: { shape: 'CIRCLE', radius: 2 },
   hide_second_bed: { shape: 'CIRCLE', radius: 2 },
   hide_main_wardrobe: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
   hide_closet: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
   hide_study_bookshelf: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
-  hide_storage_shelf: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
+  hide_storage_shelf: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 60 },
   hide_living_carton: { shape: 'CIRCLE', radius: 1.2 },
   hide_storage_carton: { shape: 'CIRCLE', radius: 1.2 },
+  hide_living_sofa: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
+  hide_dining_shelf: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
+  hide_second_wardrobe: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
+  hide_guest_bookshelf: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
+  hide_garage_cabinet: { shape: 'SECTOR', radius: 1.6, halfAngleDeg: 55 },
 };
 
 function apartment() {
-  const boxes = [...WALLS, ...FURNITURE].map(rect => new Box3(
-    new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-    new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2)));
-  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes);
+  const { boxes, oriented } = rectColliders([...WALLS, ...FURNITURE]);
+  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, boxes, oriented);
   return { collision,
     navigation: new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES),
     doors: new DoorSystem(DOOR_NODES, 3) };
@@ -60,14 +65,14 @@ function seamSetup() {
   return hideRegionSetup({ ...spot, x: own.x - 1, z: own.z }, FURNITURE);
 }
 
-test('every hide spot carries exactly the approved DEV-A interaction region', () => {
-  assert.equal(HIDE_SPOTS.length, 8);
+test('every hide spot carries exactly the confirmed authored interaction region', () => {
+  assert.equal(HIDE_SPOTS.length, 15);
   assert.deepEqual(Object.keys(APPROVED_REGIONS).sort(),
     HIDE_SPOTS.map(spot => spot.id).sort());
   for (const spot of HIDE_SPOTS) {
     assert.deepEqual({ ...spot.interactionRegion }, APPROVED_REGIONS[spot.id], spot.id);
   }
-  // Beds and cartons are circles, wardrobes and shelves are 55-degree sectors.
+  // Beds and cartons are circles; the other furniture uses authored sectors.
   for (const spot of HIDE_SPOTS) {
     const expected = spot.kind === 'BED' || spot.kind === 'CARTON' ? 'CIRCLE' : 'SECTOR';
     assert.equal(spot.interactionRegion.shape, expected, spot.id);
@@ -82,12 +87,14 @@ test('the region centre follows the bound furniture and never a stored coordinat
     assert.deepEqual(geometry.centre, { x: own.x, z: own.z }, spot.id);
     assert.deepEqual(geometry.anchor, { x: spot.x, z: spot.z }, spot.id);
     assert.equal(geometry.radius, spot.interactionRegion.radius);
-    // The authored `facing` points anchor -> centre; the sector axis is the
-    // opposite direction, so the two facts cannot drift apart silently. The
-    // authored value is rounded to four decimals, hence the 1e-4 tolerance.
-    assert.ok(Math.abs(wrapToPi(geometry.axisAngle - (spot.facing + Math.PI))) < 1e-4, spot.id);
+    // Facing is independently editable presentation data, not the sector axis.
+    const expectedAxis = Math.atan2(spot.z - own.z, spot.x - own.x);
+    assert.ok(Math.abs(wrapToPi(geometry.axisAngle - expectedAxis)) < 1e-12, spot.id);
+    assert.deepEqual(hideRegionGeometry({ ...spot, facing: spot.facing + 0.3 }, own),
+      geometry, `${spot.id}: facing must not change interaction geometry`);
     assert.equal(geometry.halfAngleRad,
-      spot.interactionRegion.shape === 'SECTOR' ? 55 * Math.PI / 180 : 0, spot.id);
+      spot.interactionRegion.shape === 'SECTOR'
+        ? APPROVED_REGIONS[spot.id].halfAngleDeg * Math.PI / 180 : 0, spot.id);
   }
   assert.equal(hideRegionSetup({ ...HIDE_SPOTS[0], furnitureId: 'nope' }, FURNITURE), null);
 });
@@ -324,7 +331,7 @@ test('region data validation reports every malformed case', () => {
 test('the DEV scene editor still round-trips anchors and gains no region editing', () => {
   const session = new MapEditSession();
   const anchors = draftSpotsToAnchors(session.hideSpotList());
-  assert.equal(anchors.length, 8);
+  assert.equal(anchors.length, 15);
   for (const anchor of anchors) {
     const authored = spotsById.get(anchor.id);
     assert.equal(anchor.x, authored.x);

@@ -8,7 +8,32 @@ import { DoorView } from '../src/three/DoorView.ts';
 import { DOOR_NODES, FURNITURE, ROOMS, WALLS } from '../src/three/map/apartmentMap.ts';
 import { buildApartment } from '../src/three/map/MapBuilder.ts';
 import { GAME_CONFIG as C } from '../src/config/gameConfig.ts';
-import { cameraRelativeDirection, positionCameraOnTarget } from '../src/three/CameraRelativeMovement.ts';
+import { cameraRelativeDirection, IsometricCameraOrbit, positionCameraOnTarget }
+  from '../src/three/CameraRelativeMovement.ts';
+
+test('four camera quarters preserve height, radius and screen-relative WASD', () => {
+  const offset = new THREE.Vector3(12, 14, 12);
+  const orbit = new IsometricCameraOrbit(offset);
+  const camera = new THREE.OrthographicCamera();
+  const initial = offset.clone();
+  for (let quarter = 0; quarter < 4; quarter++) {
+    orbit.turn(1);
+    orbit.update(400);
+    positionCameraOnTarget(camera, new THREE.Vector3(3, 0, -2), offset);
+    assert.ok(Math.abs(offset.y - 14) < 1e-9);
+    assert.ok(Math.abs(Math.hypot(offset.x, offset.z) - Math.hypot(12, 12)) < 1e-9);
+    const up = cameraRelativeDirection(camera, { x: 0, y: -1 });
+    const forward = camera.getWorldDirection(new THREE.Vector3());
+    assert.ok((up.x * forward.x + up.y * forward.z) /
+      Math.hypot(forward.x, forward.z) > 0.99);
+  }
+  assert.ok(offset.distanceTo(initial) < 1e-9);
+  orbit.turn(1);
+  orbit.update(180);
+  orbit.restore();
+  orbit.update(400);
+  assert.ok(offset.distanceTo(initial) < 1e-9);
+});
 
 test('presentation camera follows continuously, snaps lifecycle transitions, preserves input axes', () => {
   const follow = new GentleCameraFollow();
@@ -177,8 +202,16 @@ test('chibi anatomy increases head and limb volume without enlarging the actor f
   const body = avatar.root.getObjectByName('body');
   const head = avatar.root.getObjectByName('head');
   const arm = avatar.root.getObjectByName('leftArm');
-  assert.ok(head.children[0].geometry.parameters.width > body.children[0].geometry.parameters.width);
-  assert.ok(head.children[0].geometry.parameters.height >= .5);
+  const face = head.getObjectByName('face');
+  const hairCap = head.getObjectByName('hair-cap-volume');
+  const bodice = body.getObjectByName('maid-bodice');
+  face.geometry.computeBoundingBox();
+  bodice.geometry.computeBoundingBox();
+  assert.ok(face.geometry.boundingBox.max.x - face.geometry.boundingBox.min.x >
+    bodice.geometry.boundingBox.max.x - bodice.geometry.boundingBox.min.x);
+  assert.ok(face.geometry.boundingBox.max.y - face.geometry.boundingBox.min.y >= .5);
+  assert.equal(face.geometry.type, 'SphereGeometry');
+  assert.equal(hairCap.geometry.type, 'SphereGeometry');
   assert.ok(arm.children[0].geometry.parameters.width > .533 * .3);
   assert.deepEqual(actor.scale.toArray(), [1, 1, 1]);
   assert.equal(actor.geometry.parameters.width, .533);

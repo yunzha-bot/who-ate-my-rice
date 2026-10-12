@@ -260,8 +260,8 @@ test('no building footprint touches a road, sidewalk, curb, parking lot, greener
   assert.ok(reserved.some(m => m.name === 'parking-parcel'), 'parking lot not reserved');
   assert.ok(reserved.some(m => GREENERY_PATTERN.test(m.name) && !RESERVED_SURFACE_PATTERN.test(m.name)),
     'no greenery reserved');
-  assert.deepEqual(root.children.filter(m => /driveway/.test(m.name)).map(m => m.name), [],
-    'a parking driveway painting appeared; add it to RESERVED_SURFACE_PATTERN');
+  for (const driveway of root.children.filter(m => /driveway/.test(m.name)))
+    assert.ok(reserved.includes(driveway), `${driveway.name} must be reserved from building placement`);
 
   const obstacles = [
     ...reserved.map(m => [m.name, rectOf(m)]),

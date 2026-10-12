@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { ACTIVE_RICE_COUNT, DOOR_NODES, FURNITURE, HIDE_SPOTS,
   MAP_WIDTH, MAP_DEPTH, MIN_DOOR_WIDTH, PLAYER_DIAMETER, RICE_CANDIDATES,
-  ROOMS, ROUTE_LOOPS, SINGLE_DOOR_WIDTH, SPAWNS, WALL_HEIGHT, WALLS, selectRiceCandidates
+  ROOMS, ROUTE_LOOPS, SINGLE_DOOR_WIDTH, SPAWNS, WALL_HEIGHT, WALLS, OPEN_ROOM_CONNECTIONS, selectRiceCandidates
 } from '../src/three/map/apartmentMap.ts';
 import { GAME_CONFIG } from '../src/config/gameConfig.ts';
 import { RiceField } from '../src/systems/RiceField.ts';
@@ -10,7 +10,8 @@ import { RiceField } from '../src/systems/RiceField.ts';
 const roomIds = new Set(ROOMS.map(room => room.id));
 const byId = new Map(ROOMS.map(room => [room.id, room]));
 const edgeId = (a, b) => [a, b].sort().join(':');
-const edges = new Set(DOOR_NODES.map(door => edgeId(door.connectedRoomA, door.connectedRoomB)));
+const connections = [...DOOR_NODES, ...OPEN_ROOM_CONNECTIONS];
+const edges = new Set(connections.map(door => edgeId(door.connectedRoomA, door.connectedRoomB)));
 
 const free = (x, z) => {
   const radius = PLAYER_DIAMETER / 2;
@@ -19,7 +20,12 @@ const free = (x, z) => {
   const inDoor = DOOR_NODES.some(door => door.rotation === 0
     ? Math.abs(z - door.z) <= radius && Math.abs(x - door.x) < door.width / 2 - radius
     : Math.abs(x - door.x) <= radius && Math.abs(z - door.z) < door.width / 2 - radius);
-  return (inRoom || inDoor) && ![...WALLS, ...FURNITURE].some(rect =>
+  const inOpen = OPEN_ROOM_CONNECTIONS.some(c => {
+    const a=byId.get(c.connectedRoomA),b=byId.get(c.connectedRoomB);
+    return Math.abs(x-a.maxX)<=radius && a.maxX===b.minX &&
+      z>Math.max(a.minZ,b.minZ)+radius && z<Math.min(a.maxZ,b.maxZ)-radius;
+  });
+  return (inRoom || inDoor || inOpen) && ![...WALLS, ...FURNITURE].some(rect =>
     Math.abs(x - rect.x) <= rect.width / 2 + radius &&
     Math.abs(z - rect.z) <= rect.depth / 2 + radius);
 };
@@ -77,11 +83,11 @@ test('natural openings form three declared loops; no single doorway cuts the apa
     assert.ok(door.id && roomIds.has(door.connectedRoomA) && roomIds.has(door.connectedRoomB));
     assert.ok(door.width >= MIN_DOOR_WIDTH, door.id);
   }
-  assert.equal(edges.size, DOOR_NODES.length);
+  assert.equal(edges.size, DOOR_NODES.length + OPEN_ROOM_CONNECTIONS.length);
   const reachable = blocked => {
     const reached = new Set([SPAWNS.deepseek.roomId]);
     const queue = [SPAWNS.deepseek.roomId];
-    for (const current of queue) for (const door of DOOR_NODES) {
+    for (const current of queue) for (const door of connections) {
       if (edgeId(door.connectedRoomA, door.connectedRoomB) === blocked) continue;
       const next = door.connectedRoomA === current ? door.connectedRoomB
         : door.connectedRoomB === current ? door.connectedRoomA : null;

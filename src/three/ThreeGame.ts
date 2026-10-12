@@ -5,8 +5,10 @@ import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
 import { DoorSystem, doorIntersectsActor, distanceToDoorSegment, lockDoorFromCommand,
   type DoorActionResult, type NearbyDoor } from '../systems/DoorSystem';
+import { DeepSeekDoorLockPenalty } from '../systems/DeepSeekDoorLockPenalty';
 import { HumanDoorSkill } from '../systems/HumanDoorSkill';
-import { MinesweeperLockSystem, type MineEntry } from '../systems/MinesweeperLockSystem';
+import { PulseLockSystem, type PulseLockEntry } from '../systems/PulseLockSystem';
+import { PulseLockView } from './PulseLockView';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
 import { RuntimeDebugOverrides, type RuntimeParamChange }
@@ -30,6 +32,7 @@ import { SkillCooldown } from '../systems/SkillCooldown';
 import { deepseekLockGate, lockArmsPlayerCooldown, resolveQSkill }
   from '../systems/SkillGates';
 import { resolveInteractionIntent } from '../systems/HideInteractionArbitration';
+import { interactionPrompt } from './InteractionPrompt';
 import { nextDeepSeekVisualHeading, resolveDeepSeekVisualTarget, type DeepSeekVisualTarget }
   from '../systems/DeepSeekVisualTarget';
 import { HUMAN_SEARCH_CODE_TEXT, directionToHeadingRad, evaluateHumanSearch,
@@ -57,6 +60,7 @@ import { resolveCharacterAction } from '../systems/CharacterAction';
 import { NavigationSystem } from '../systems/NavigationSystem';
 import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
 import { DoorView } from './DoorView';
+import { InteriorShadowView, applyInteriorSunShadow, isCoveredInterior } from './InteriorShadowView';
 import { CharacterActionView } from './CharacterActionView';
 import { DebugDetailsPanel, escapeCandidateProperties,
   type DebugCategory, type DebugProperty } from './DebugDetailsPanel';
@@ -66,16 +70,17 @@ import { createRiceTraceView, syncRiceTraceView } from './RiceTraceView';
 import { SoundVisualView } from './SoundVisualView';
 import { resolveDirectControlSwitch, resolveRoundShortcut } from './RoundShortcuts';
 import { CaptureZoneView, isCaptureEligibleXZ, isInsideCaptureZoneXZ } from './CaptureZone';
-import { cameraRelativeDirection, positionCameraOnTarget } from './CameraRelativeMovement';
+import { cameraRelativeDirection, IsometricCameraOrbit, positionCameraOnTarget }
+  from './CameraRelativeMovement';
 import { GentleCameraFollow, HOME_PALETTE, homeFrustum } from './AlphaPresentation.ts';
 import { AlphaHudView } from './AlphaHudView.ts';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
+import { populateFactionMenu, REPORT_MARKUP, updateResultPortrait } from './GameUiLayout';
 import { buildApartment, type ApartmentBuild } from './map/MapBuilder';
 import { fitOrthographicSceneDepth } from './SceneCameraDepth';
 import { SceneEditor, type CommittedMap } from './SceneEditor';
 import { authoredMapSource, type MapSource } from './map/MapEditModel';
-import { browserLayoutStorage, layoutSignature, layoutSource, readSavedLayout,
-  type LayoutResult, type LayoutStorage } from './map/MapLayoutStore';
+import { layoutSignature, authoredLayoutDocument } from './map/MapLayoutStore';
 import { DevFreezeSystem } from '../systems/DevFreezeSystem';
 import { ACTIVE_RICE_COUNT, DEBUG_MAP, DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_WIDTH, MAP_DEPTH,
   ROOMS, SPAWNS, WALLS, roomAt, selectRiceCandidates,
@@ -104,6 +109,7 @@ export class ThreeGame {
   private input = new InputManager();
   private control = new LocalControl();
   private readonly cameraOffset = new THREE.Vector3(12, 14, 12);
+  private readonly cameraOrbit = new IsometricCameraOrbit(this.cameraOffset);
   private readonly sceneVisualBounds = new THREE.Box3();
   private readonly gentleCamera = new GentleCameraFollow();
   private readonly alphaHud: AlphaHudView;
@@ -113,6 +119,7 @@ export class ThreeGame {
     C.sprint.cooldownMs);
   private player: THREE.Mesh;
   private human: THREE.Mesh;
+  private readonly actorShadows = new InteriorShadowView();
   private playerAction: CharacterActionView;
   private humanAction: CharacterActionView;
   private captureZone: CaptureZoneView;
@@ -122,8 +129,7 @@ export class ThreeGame {
   private doorSystem = new DoorSystem(DOOR_NODES, C.door.maxActiveLocks);
   private humanDoorSkill = new HumanDoorSkill(
     this.doorSystem, C.door.humanForceBreakCooldownMs);
-  private minesweeper = new MinesweeperLockSystem(
-    this.doorSystem, C.pulseLock.rows, C.pulseLock.cols, C.pulseLock.mines);
+  private pulseLock = new PulseLockSystem(this.doorSystem, C.pulseLock.timing);
   private doorViews = new Map<string, DoorView>();
   private sound = new SoundEventSystem(this.runtime);
   private soundVisual: SoundVisualView | null = null;
@@ -135,7 +141,6 @@ export class ThreeGame {
   private lastStepMs: Record<Faction, number> = { HUMAN: -Infinity, DEEPSEEK: -Infinity };
   private lastRiceSoundMs = -Infinity;
   private doorStatusMessage = '';
-  private mineFailureRemainingMs = 0;
   private collision: CollisionWorld;
   private apartment: ApartmentBuild;
   private readonly devFreeze = new DevFreezeSystem();
@@ -148,6 +153,8 @@ export class ThreeGame {
   private deepseekAI: DeepSeekAIController;
   private humanStillness: HumanStillness;
   private deepseekAiWasActive = false;
+  private readonly deepseekDoorLockPenalty =
+    new DeepSeekDoorLockPenalty(C.deepseekAI.humanPlayerUnlockPenaltyMs);
   private aiLogCollector = new AILogCollector();
   private matchSetup: MatchSetup | null = null;
   private fixedMatchSeed: number | null = null;
@@ -163,10 +170,6 @@ export class ThreeGame {
   private mapFurniture: readonly Rect[] = FURNITURE;
   private hideSpots: readonly HideSpot[] = HIDE_SPOTS;
   private appliedMapSignature = '';
-  // DEV 场景编辑器 V2：本地布局存档的接口、开机恢复结果与已保存布局的签名。
-  // 恢复失败时保留原因（给 DEV 面板），地图一律回退到授权数据。
-  private layoutStorage: LayoutStorage | null = null;
-  private bootLayoutResult: LayoutResult | null = null;
   // S7C-2b：交给 DeepSeek AI 的**公开**藏身点快照 + 地图代次。快照只在
   // `rebuildApartment` 与构造时各建一次，AI 一见代次变化就作废手头的藏身计划。
   private deepseekHideMap: DeepSeekHideMapSnapshot | null = null;
@@ -237,9 +240,7 @@ export class ThreeGame {
   private pauseActions: HTMLElement;
   private resultActions: HTMLElement;
   private menu: HTMLElement;
-  private minePanel: HTMLElement;
-  private mineTitle: HTMLElement;
-  private mineGrid: HTMLElement;
+  private pulseLockView: PulseLockView;
   private frame = 0;
   private readonly debugPossessionEnabled = import.meta.env.DEV && C.development.factionSwitchEnabled;
 
@@ -265,16 +266,7 @@ export class ThreeGame {
     light.shadow.camera.top = MAP_DEPTH / 2;
     this.scene.add(light);
 
-    // DEV 场景编辑器 V2：开机先尝试恢复浏览器本地存档。只有通过结构、稳定 ID 与
-    // 完整几何 / 玩法校验（`validateEditedMap`）的存档才会生效；损坏、版本不符或
-    // 校验失败一律回退到授权地图，并把原因留给 DEV 面板 —— 绝不白屏。
-    this.layoutStorage = browserLayoutStorage();
-    this.bootLayoutResult = readSavedLayout(this.layoutStorage);
-    if (this.bootLayoutResult.ok) {
-      const restored = layoutSource(this.bootLayoutResult.document);
-      this.mapFurniture = restored.furniture;
-      this.hideSpots = restored.hideSpots;
-    }
+    // 家具与藏身锚点从项目布局文件载入，浏览器旧存档不覆盖项目布局。
     this.apartment = buildApartment(this.scene, {
       furniture: this.mapFurniture, hideSpots: this.hideSpots });
     this.sceneVisualBounds.setFromObject(this.apartment.root);
@@ -293,6 +285,7 @@ export class ThreeGame {
     DOOR_NODES.forEach((door, index) => {
       const view = new DoorView(door, index, DEBUG_MAP);
       this.scene.add(view.object);
+      applyInteriorSunShadow(view.object, isCoveredInterior(door.x, door.z));
       this.doorViews.set(door.id, view);
     });
     this.syncAllDoors();
@@ -303,6 +296,8 @@ export class ThreeGame {
       SPAWNS.human.x, actorHeight / 2, SPAWNS.human.z);
     this.playerAction = new CharacterActionView(this.player, 'DEEPSEEK');
     this.humanAction = new CharacterActionView(this.human, 'HUMAN');
+    this.actorShadows.add(this.player);
+    this.actorShadows.add(this.human);
     this.captureZone = new CaptureZoneView(this.human, this.runtime.captureRadius, actorHeight);
     // A radius change must invalidate progress accumulated under the old radius.
     this.devBBinding = new DevBRuntimeBinding(this.runtime, {
@@ -347,11 +342,9 @@ export class ThreeGame {
       getPhase: () => this.match.phase,
       // V2 布局持久化：会话从当前已应用地图开始，保存/导入走同一个存档接口。
       mapSource: this.appliedMapSource(),
-      layoutStorage: this.layoutStorage,
-      savedLayoutSignature: this.bootLayoutResult.ok
-        ? layoutSignature(this.bootLayoutResult.document) : null,
-      savedLayoutAt: this.bootLayoutResult.ok ? (this.bootLayoutResult.savedAt ?? null) : null,
-      savedLayoutError: this.bootLayoutMessage(),
+      savedLayoutSignature: layoutSignature(authoredLayoutDocument()),
+      savedLayoutAt: null,
+      savedLayoutError: null,
       onRebuild: map => this.rebuildApartment(map),
       // S7C-1B：新地图必须先通过「两个角色站位 + 藏身出口仍可站立」的预检，
       // 预检失败时编辑器直接拒绝应用，旧地图与旧藏身状态原样保留。
@@ -382,8 +375,7 @@ export class ThreeGame {
     this.alphaHud = new AlphaHudView(container);
     this.overlay = this.label(container, 'game-overlay');
     this.overlayText = this.label(this.overlay, 'overlay-text');
-    this.overlayText.innerHTML = '<span class="overlay-kicker">家里的小小追逐</span>' +
-      '<h1></h1><p></p><div class="overlay-stats"></div>';
+    this.overlayText.innerHTML = REPORT_MARKUP;
     this.overlayHeading = this.overlayText.querySelector('h1')!;
     this.overlaySummary = this.overlayText.querySelector('p')!;
     this.overlayStats = this.overlayText.querySelector('.overlay-stats')!;
@@ -418,42 +410,9 @@ export class ThreeGame {
     menuButton.addEventListener('click', () => this.returnToFactionSelect());
     this.resultActions.append(restartButton, menuButton);
     this.menu = this.label(container, 'faction-menu');
-    this.menu.innerHTML =
-      '<header class="menu-story"><span class="menu-eyebrow">THE LITTLE RICE CHASE / ALPHA</span>' +
-      '<h1>谁吃了<br><em>我的米？</em></h1><p class="menu-intro">一间暖暖的屋子。<br>五份米，两个各怀心思的人。</p></header>' +
-      '<fieldset class="faction-dock"><legend>今天，你站在哪一边？</legend>' +
-      '<label><input type="radio" name="faction" value="DEEPSEEK" checked>' +
-      '<span class="faction-number">01</span><span><strong>偷偷开饭</strong><small>DeepSeek 娘 · 吃完五份米</small></span></label>' +
-      '<label><input type="radio" name="faction" value="HUMAN">' +
-      '<span class="faction-number">02</span><span><strong>守住晚饭</strong><small>Human · 找到家里的小馋猫</small></span></label>' +
-      '<button type="button">确认阵营 <span aria-hidden="true">→</span></button></fieldset>' +
-      '<p class="menu-controls">WASD 移动 / E 交互 / Q 技能 / Esc 暂停</p>';
-    this.menu.querySelector('button')!.addEventListener('click', () => {
-      const selected = this.menu.querySelector<HTMLInputElement>('input[name="faction"]:checked');
-      if (selected) this.chooseFaction(selected.value as Faction);
-    });
-    this.minePanel = this.label(container, 'mine-panel');
-    this.mineTitle = this.label(this.minePanel, 'mine-title');
-    const closeMineButton = document.createElement('button');
-    closeMineButton.type = 'button';
-    closeMineButton.className = 'mine-close';
-    closeMineButton.setAttribute('aria-label', '关闭扫雷');
-    closeMineButton.textContent = '×';
-    closeMineButton.addEventListener('click', () => this.closeMinesweeper());
-    this.minePanel.append(closeMineButton);
-    this.mineGrid = this.label(this.minePanel, 'mine-grid');
-    this.mineGrid.addEventListener('click', event => {
-      const cell = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-index]');
-      if (cell) this.mineCellAction(Number(cell.dataset.index), false);
-    });
-    this.minePanel.addEventListener('contextmenu', event => {
-      event.preventDefault();
-      const cell = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-index]');
-      if (cell) this.mineCellAction(Number(cell.dataset.index), true);
-    });
-    const mineHelp = this.label(this.minePanel, 'mine-help');
-    mineHelp.textContent = '左键：翻开｜右键：标记｜Esc / ×：退出';
-    this.minePanel.hidden = true;
+    populateFactionMenu(this.menu, faction => this.chooseFaction(faction));
+    this.pulseLockView = new PulseLockView(container, C.pulseLock.timing,
+      () => this.closePulseLock());
     this.updateHud(this.nearestRice());
     this.clock.start();
     this.frame = requestAnimationFrame(this.tick);
@@ -488,7 +447,7 @@ export class ThreeGame {
 
   private setTemporaryInputTarget(faction: Faction): void {
     if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
-        this.minesweeper.isOpen || this.sceneEditor.isOpen ||
+        this.pulseLock.isOpen || this.sceneEditor.isOpen ||
         !this.control.setTemporaryInputTarget(faction)) return;
     this.input.clear();
     this.lastDeepseekVisualHeadingRad = null;
@@ -500,7 +459,7 @@ export class ThreeGame {
 
   private onActorClick = (event: MouseEvent): void => {
     if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
-        this.minesweeper.isOpen || this.sceneEditor.isOpen || event.button !== 0) return;
+        this.pulseLock.isOpen || this.sceneEditor.isOpen || event.button !== 0) return;
     const rect = this.renderer.domElement.getBoundingClientRect();
     const pointer = new THREE.Vector2(
       (event.clientX - rect.left) / rect.width * 2 - 1,
@@ -529,6 +488,7 @@ export class ThreeGame {
     for (const point of selected) {
       const view = new RiceView(C.rice.size / U, C.rice.color, C.rice.visual);
       view.position.set(point.x, 0, point.z);
+      applyInteriorSunShadow(view.object, isCoveredInterior(point.x, point.z));
       view.sync(this.rice.get(point.id)!.rice);
       this.scene.add(view.object);
       this.riceViews.set(point.id, view);
@@ -560,6 +520,23 @@ export class ThreeGame {
 
   private tick = (): void => {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, C.match.maxFrameDeltaMs);
+    const cameraEnabled = this.control.selectedFaction !== null &&
+      (this.match.phase === 'PLAYING' || this.sceneEditor.isOpen);
+    if (cameraEnabled && !document.activeElement?.matches('input, textarea, [contenteditable="true"]')) {
+      if (this.input.consumePress('KeyZ')) this.cameraOrbit.turn(1);
+      if (this.input.consumePress('KeyC')) this.cameraOrbit.turn(-1);
+      if (this.input.consumePress('KeyX')) this.cameraOrbit.restore();
+    } else {
+      this.input.consumePress('KeyZ');
+      this.input.consumePress('KeyC');
+      this.input.consumePress('KeyX');
+    }
+    this.cameraOrbit.update(deltaMs);
+    // Movement reads the live camera heading in this same frame, not last frame's heading.
+    if (cameraEnabled) {
+      if (this.sceneEditor.isOpen) this.followEditorCamera();
+      else this.followCamera();
+    }
     // DEV 双阵营冻结：the single timing seam. While frozen the gameplay delta is
     // zero, so no system advances and no timer or cooldown can expire during the
     // frozen real time; the clock keeps reading so a resume never jumps.
@@ -573,7 +550,7 @@ export class ThreeGame {
     const menuPressed = this.input.consumePress('KeyM');
     const controlSwitchPressed = this.input.consumePress('Tab');
     const shortcut = resolveRoundShortcut(this.match.phase,
-      C.development.directHotkeysEnabled && !this.minesweeper.isOpen && !frozen,
+      C.development.directHotkeysEnabled && !this.pulseLock.isOpen && !frozen,
       restartPressed, menuPressed);
     if (shortcut === 'RESTART') {
       this.restart();
@@ -583,7 +560,7 @@ export class ThreeGame {
       // The finished scene remains frozen until a global shortcut or button is used.
     } else if (this.match.phase !== 'FACTION_SELECT') {
       if (pausePressed) {
-        if (this.minesweeper.isOpen) this.closeMinesweeper();
+        if (this.pulseLock.isOpen) this.closePulseLock();
         else this.togglePause();
       }
       if (this.match.phase === 'READY') {
@@ -592,7 +569,7 @@ export class ThreeGame {
         const readyMs = this.devFreeze.readyDelta(deltaMs);
         if (readyMs > 0) this.match.advanceReady(readyMs);
       } else if (this.match.phase === 'PLAYING') {
-        if (!frozen && !this.minesweeper.isOpen && C.development.factionSwitchEnabled &&
+        if (!frozen && !this.pulseLock.isOpen && C.development.factionSwitchEnabled &&
             resolveDirectControlSwitch(this.match.phase,
               C.development.directHotkeysEnabled, controlSwitchPressed)) {
           this.control.toggleControlled();
@@ -611,6 +588,7 @@ export class ThreeGame {
     }
     const editorOpen = this.sceneEditor.isOpen;
     if (editorOpen && !this.editorOpenLast) {
+      if (this.pulseLock.isOpen) this.closePulseLock();
       const actor = this.control.selected(this.player, this.human);
       this.editorFocus.set(actor?.position.x ?? 0, 0, actor?.position.z ?? 0);
     } else if (!editorOpen && this.editorOpenLast) {
@@ -643,8 +621,11 @@ export class ThreeGame {
     // 玩家当前唯一白色交互轮廓：先同步既有 Human Q，再同步人工 DP 的视觉目标。
     this.syncPlayerFurnitureTarget();
     this.syncDeepSeekVisualTarget();
+    this.syncHideSpotIndicators();
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
+    this.apartment.interiorShadows.update();
+    this.actorShadows.update();
     fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
@@ -749,12 +730,6 @@ export class ThreeGame {
       hideSpots: this.hideSpots };
   }
 
-  // 开机恢复失败的原因；「没有本地存档」不是失败。
-  private bootLayoutMessage(): string | null {
-    const result = this.bootLayoutResult;
-    if (!result || result.ok || result.code === 'EMPTY') return null;
-    return `${result.code}：${result.message}`;
-  }
 
   private mapSignature(map: CommittedMap): string {
     const furniture = map.furniture.map(rect => `${rect.id}:${rect.x},${rect.z},` +
@@ -801,6 +776,7 @@ export class ThreeGame {
 
   private updatePlaying(deltaMs: number): void {
     this.sound.advance(deltaMs);
+    this.deepseekDoorLockPenalty.advance(deltaMs);
     // S7C-1B：两个 Q 技能的冷却与扇形特效都跑在正式玩法时间上，所以暂停与 DEV
     // 冻结期间不会推进；藏身事件每帧收集，供 DEV 面板与 AI JSON 使用。
     this.humanSearchCooldown.advance(deltaMs);
@@ -822,13 +798,8 @@ export class ThreeGame {
       this.perceptionGeometry);
     this.humanStillness.update(this.human.position, deltaMs);
     this.humanDoorSkill.advance(deltaMs, this.match.phase);
-    if (this.mineFailureRemainingMs > 0) {
-      this.mineFailureRemainingMs = Math.max(0, this.mineFailureRemainingMs - deltaMs);
-      if (this.mineFailureRemainingMs === 0 &&
-          this.doorStatusMessage === '破解失败：踩雷；再次按 E 生成新盘') {
-        this.doorStatusMessage = '';
-      }
-    }
+    this.pulseLock.advance(deltaMs, this.match.phase);
+    this.renderPulseLock();
     const local = cameraRelativeDirection(this.camera, this.input.localDirection());
     const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
@@ -902,6 +873,7 @@ export class ThreeGame {
           return !!node && canInteractWithDoorXZ(this.collision, this.player.position, node);
         },
         activeLockSlots: C.door.maxActiveLocks - this.doorSystem.activeLockedDoorCount,
+        humanPlayerUnlockPenaltyRemainingMs: this.deepseekDoorLockPenalty.remainingMs,
       });
       // S7C-2b：AI 的藏身请求与门 / 进食命令走同一条「AI 只发意图，游戏层裁决」
       // 通路。进入要过权威几何复核 + 一次性令牌；退出要过出口物理判据。
@@ -939,6 +911,7 @@ export class ThreeGame {
           C.door.interactionRange);
         this.applyDoorResult(id, result, 'DEEPSEEK');
         this.deepseekAI.onDoorLockResult(id, result);
+        this.deepseekDoorLockPenalty.onDeepSeekLockResult(id, result);
       }
       const dsRoom = roomAt(this.player.position.x, this.player.position.z);
       this.aiLogCollector.diffSnapshot({
@@ -1003,7 +976,7 @@ export class ThreeGame {
       if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek) {
         if (this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE'))
           this.aiLogCollector.recordSprintStart();
-      } else if (this.control.isControlling('HUMAN') && !this.minesweeper.isOpen) {
+      } else if (this.control.isControlling('HUMAN') && !this.pulseLock.isOpen) {
         const nearby = this.nearestInteractableDoor(this.human.position);
         if (nearby) {
           const result = this.humanDoorSkill.use(
@@ -1013,6 +986,7 @@ export class ThreeGame {
               this.doorStatusMessage = '强制破锁冷却中；普通门仍可快速打开';
             } else {
               this.applyDoorResult(nearby.door.id, result);
+              this.noteHumanPlayerUnlock(nearby.door.id, result);
             }
           }
         }
@@ -1163,7 +1137,7 @@ export class ThreeGame {
         riceCompleted: this.rice.completedCount,
       });
       this.rice.interrupt();
-      this.closeMinesweeper();
+      this.closePulseLock();
       this.releaseHide('ROUND_FINISHED');
       // S7C-2 修复轮 二：本帧的正式搜查很可能就是分出胜负的那一次（家具搜查命中
       // 会立即 forceCapture）。局终之后 `updatePlaying` 不再运行，如果不在这里
@@ -1191,7 +1165,10 @@ export class ThreeGame {
       interacting: this.control.isControlling('DEEPSEEK') &&
         (this.input.isHeld('KeyQ') || this.input.isHeld('KeyE')) &&
         !!this.nearestInteractableDoor(this.player.position),
-    }), deltaMs);
+    }), deltaMs, {
+      concealed: this.hide.isConcealed('DEEPSEEK'),
+      eating: riceState === 'EATING',
+    });
     this.humanAction.update(resolveCharacterAction({
       moving: humanMoved,
       running: humanMoved && aiEnabled && this.humanAI.state === 'CHASE',
@@ -1201,7 +1178,7 @@ export class ThreeGame {
       // 不参与命中判定，也不触发玩家 Q 的冷却。
       interacting: (aiEnabled && this.humanAI.unlockProgressMs > 0) ||
         (aiEnabled && this.humanAI.checkHidePhase === 'DWELL') ||
-        this.minesweeper.isOpen || (this.control.isControlling('HUMAN') &&
+        this.pulseLock.isOpen || (this.control.isControlling('HUMAN') &&
         this.input.isHeld('KeyE') && !!this.nearestInteractableDoor(this.human.position)),
     }), deltaMs);
   }
@@ -1219,11 +1196,11 @@ export class ThreeGame {
       return { doorOwnsInteraction: false, hideOwnsInteraction: false,
         humanMovementLocked: false };
     }
-    if (this.minesweeper.isOpen) {
-      this.input.consumePress('KeyE');
+    if (this.pulseLock.isOpen) {
+      if (this.input.consumePress('KeyE')) this.pressPulseLock();
       this.input.consumePress('KeyQ');
       return { doorOwnsInteraction: true, hideOwnsInteraction: false,
-        humanMovementLocked: true };
+        humanMovementLocked: this.pulseLock.movementLocked };
     }
     const nearby = this.nearestInteractableDoor(actor.position);
     const rice = faction === 'DEEPSEEK' ? this.nearestRice() : null;
@@ -1234,7 +1211,7 @@ export class ThreeGame {
       ? this.nearestHideCandidate(actor.position) : null;
     // E 只在这里仲裁一次：整局只会执行下面其中一个分支，不存在一次按键触发多种行为。
     const intent = resolveInteractionIntent({
-      minesweeperOpen: false,
+      pulseLockOpen: false,
       concealed,
       door: nearby ? { distance: nearby.distance } : null,
       rice: rice ? { distance: rice.range } : null,
@@ -1247,9 +1224,9 @@ export class ThreeGame {
     const interactPressed = this.input.consumePress('KeyE');
     if (interactPressed) {
       if (coreOwnsInteraction && nearby) {
-        if (this.minesweeper.open(nearby.door.id, faction, this.match.phase)) {
-          this.doorStatusMessage = '扫雷锁已打开：Human 暴露';
-          this.renderMinesweeper();
+        if (this.pulseLock.open(nearby.door.id, faction, this.match.phase)) {
+          this.doorStatusMessage = 'PulseLock 破解中：Human 暴露';
+          this.renderPulseLock();
         }
       } else if (intent === 'DOOR' && nearby) {
         const canClose = nearby.door.state !== 'OPEN' || this.canCloseDoor(nearby.definition.id);
@@ -1262,7 +1239,7 @@ export class ThreeGame {
       }
     }
     return { doorOwnsInteraction, hideOwnsInteraction,
-      humanMovementLocked: this.minesweeper.movementLocked };
+      humanMovementLocked: this.pulseLock.movementLocked };
   }
 
   // S7C-1B：Q 技能按阵营分流（本轮仅人工控制的角色会走到这里）。
@@ -1703,7 +1680,7 @@ export class ThreeGame {
     const door = this.nearestInteractableDoor(this.player.position);
     // 参数与 E 按键当帧的仲裁完全一致；朝向筛选只发生在其后。
     const intent = resolveInteractionIntent({
-      minesweeperOpen: this.minesweeper.isOpen,
+      pulseLockOpen: this.pulseLock.isOpen,
       concealed: this.hide.isConcealed('DEEPSEEK'),
       door: door ? { distance: door.distance } : null,
       rice: rice ? { distance: rice.range } : null,
@@ -2029,53 +2006,47 @@ export class ThreeGame {
           : 'E 开门';
     }
     this.skillHudNotice.textContent = this.hideNotice;
-    this.skillHud.hidden = false;
+    // Contextual E lives beside the actor; retain Q feedback and rejection notices.
+    const showQ = faction === 'HUMAN' && !!this.hideTargetSpotId &&
+      this.hideTargetLegal && !this.hideTargetExposedPriority;
+    const showBreak = faction === 'HUMAN' && door?.door.state === 'LOCKED';
+    if (showQ) this.skillHudState.textContent = this.humanSearchCooldown.ready
+      ? 'Q 搜查白色轮廓家具' : `Q 搜查冷却 ${Math.ceil(this.humanSearchCooldown.remainingSeconds)} 秒`;
+    if (showBreak) this.skillHudState.textContent = 'Space 强破门锁';
+    this.skillHudState.hidden = !showQ && !showBreak;
+    this.skillHud.hidden = phase !== 'PLAYING' || this.sceneEditor.isOpen ||
+      (!showQ && !showBreak && !this.hideNotice);
   }
 
-  private mineCellAction(index: number, flag: boolean): void {
-    if (!this.minesweeper.isOpen || this.match.phase !== 'PLAYING') return;
-    const doorId = this.minesweeper.openDoorId!;
-    const row = Math.floor(index / this.minesweeper.cols);
-    const col = index % this.minesweeper.cols;
-    const result = flag
-      ? this.minesweeper.toggleFlag(row, col, this.match.phase)
-      : this.minesweeper.reveal(row, col, this.match.phase);
-    if (result === 'UNLOCKED') {
-      this.applyDoorResult(doorId, 'UNLOCKED');
-    } else if (result === 'FAILED') {
-      this.doorStatusMessage = '破解失败：踩雷；再次按 E 生成新盘';
-      this.mineFailureRemainingMs = C.pulseLock.failureFeedbackMs;
+  private pressPulseLock(): void {
+    const doorId = this.pulseLock.openDoorId;
+    if (!doorId) return;
+    const result = this.pulseLock.press(this.match.phase);
+    if (result === 'COMPLETE') {
+      const doorResult = this.doorSystem.disableLock(doorId, 'HUMAN');
+      this.pulseLock.close();
+      this.applyDoorResult(doorId, doorResult);
+      this.noteHumanPlayerUnlock(doorId, doorResult);
+    } else if (result === 'MISS') {
+      this.doorStatusMessage = '脉冲未命中，当前锁芯重试';
+    } else if (result === 'CORE_COMPLETE') {
+      this.doorStatusMessage = '锁芯破解成功';
     }
-    this.renderMinesweeper();
-    this.updateHud(this.nearestRice());
+    this.renderPulseLock();
   }
 
-  private closeMinesweeper(): void {
-    this.minesweeper.close();
-    this.renderMinesweeper();
-    if (this.doorStatusMessage === '扫雷锁已打开：Human 暴露') {
+  private closePulseLock(): void {
+    this.pulseLock.close();
+    this.renderPulseLock();
+    if (this.doorStatusMessage === 'PulseLock 破解中：Human 暴露') {
       this.doorStatusMessage = '';
     }
   }
 
-  private renderMinesweeper(): void {
-    const doorId = this.minesweeper.openDoorId;
-    const board = doorId ? this.minesweeper.get(doorId)?.board : null;
-    this.minePanel.hidden = !board;
-    if (!board) return;
-    this.mineTitle.textContent = `PulseLock / 门锁破解｜${doorId}｜雷：${this.minesweeper.mines}`;
-    this.mineGrid.style.setProperty('--mine-cols', String(this.minesweeper.cols));
-    this.mineGrid.replaceChildren(...board.cells.map((cell, index) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.dataset.index = String(index);
-      button.className = `mine-cell${cell.revealed ? ' revealed' : ''}`;
-      button.textContent = cell.revealed
-        ? cell.mine ? '✹' : cell.adjacentMineCount ? String(cell.adjacentMineCount) : ''
-        : cell.flagged ? '🚩' : '';
-      button.setAttribute('aria-label', `第 ${Math.floor(index / this.minesweeper.cols) + 1} 行第 ${index % this.minesweeper.cols + 1} 列`);
-      return button;
-    }));
+  private renderPulseLock(): void {
+    const doorId = this.pulseLock.openDoorId;
+    this.pulseLockView.update(doorId ? this.pulseLock.get(doorId) ?? null : null,
+      this.pulseLock.coreCount, doorId);
   }
 
   private nearestInteractableDoor(position: THREE.Vector3): NearbyDoor | null {
@@ -2124,6 +2095,13 @@ export class ThreeGame {
       : '附近没有可操作的门';
   }
 
+  private noteHumanPlayerUnlock(id: string, result: DoorActionResult): void {
+    if (this.deepseekDoorLockPenalty.onHumanPlayerUnlock(id, result)) {
+      this.doorStatusMessage = `DeepSeek 娘锁门冷却 +10 秒：剩余 ` +
+        `${(this.deepseekDoorLockPenalty.remainingMs / 1000).toFixed(1)} 秒`;
+    }
+  }
+
   private syncDoor(id: string): void {
     const state = this.doorSystem.get(id)!;
     const view = this.doorViews.get(id)!;
@@ -2144,7 +2122,7 @@ export class ThreeGame {
   private togglePause(): void {
     if (this.match.pause()) {
       this.rice.interrupt();
-      this.closeMinesweeper();
+      this.closePulseLock();
       // 藏身状态本身在暂停期间保留；只有表现层的扇形特效需要安全清掉。
       this.hideSearchView.reset();
       this.input.clear();
@@ -2160,7 +2138,7 @@ export class ThreeGame {
   }
 
   private switchPrimaryFactionFromPause(): void {
-    if (this.match.phase !== 'PAUSED' || this.minesweeper.isOpen ||
+    if (this.match.phase !== 'PAUSED' || this.pulseLock.isOpen ||
         !this.debugPossessionEnabled || !this.control.switchPrimaryFaction()) return;
     this.input.clear();
     this.lastDeepseekVisualHeadingRad = null;
@@ -2223,10 +2201,10 @@ export class ThreeGame {
     if (!this.match.returnToFactionSelect()) return;
     this.resetRound();
     this.control.clear();
+    this.cameraOrbit.snapDefault();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
     this.resize();
-    this.menu.querySelector<HTMLInputElement>('input[value="DEEPSEEK"]')!.checked = true;
     this.menu.hidden = false;
     this.updateHud(this.nearestRice());
   }
@@ -2247,11 +2225,11 @@ export class ThreeGame {
     this.resetRice(this.matchSetup.rice);
     this.doorSystem.applyInitialStates(this.matchSetup.doorStates);
     this.humanDoorSkill.reset();
-    this.minesweeper.reset();
-    this.renderMinesweeper();
+    this.pulseLock.reset();
+    this.deepseekDoorLockPenalty.reset();
+    this.renderPulseLock();
     this.syncAllDoors();
     this.doorStatusMessage = '';
-    this.mineFailureRemainingMs = 0;
     this.player.position.set(this.matchSetup.deepseek.x, C.three.actorHeight / 2,
       this.matchSetup.deepseek.z);
     this.human.position.set(this.matchSetup.human.x, C.three.actorHeight / 2,
@@ -2351,19 +2329,25 @@ export class ThreeGame {
       concealed: hudFaction === 'DEEPSEEK' && this.hide.isConcealed('DEEPSEEK'),
       captureRatio: this.match.captureProgressMs / C.match.captureMs,
       riceRatio: hudFaction === 'DEEPSEEK' && this.deepseekVisualTarget.kind === 'RICE' && nearest
-        ? nearest.portion.rice.progressMs / nearest.portion.rice.maxProgressMs : null });
+        ? nearest.portion.rice.progressMs / nearest.portion.rice.maxProgressMs : null,
+      interaction: this.currentInteractionPrompt() });
     this.overlay.dataset.phase = phase;
+    this.overlay.dataset.faction = this.control.selectedFaction ?? 'DEEPSEEK';
     if (phase === 'PAUSED') {
-      this.overlayHeading.textContent = '歇一会儿。';
+      this.overlayHeading.textContent = 'PAUSE';
+      this.overlay.dataset.outcome = 'pause';
       this.overlaySummary.textContent = '游戏已暂停。饭还热着，准备好了就继续。';
       this.overlayStats.textContent = `${time} / 已吃完 ${this.rice.completedCount} 份米`;
     }
     else if (phase === 'FINISHED') {
       const result = this.match.result!;
-      this.overlayHeading.textContent = result.winner === 'DEEPSEEK' ? '吃饱，收工！' : '逮到小馋猫了。';
+      updateResultPortrait(this.overlay, result.winner);
+      const won = result.winner === this.control.selectedFaction;
+      this.overlayHeading.textContent = won ? 'WIN' : 'LOSE';
+      this.overlay.dataset.outcome = won ? 'win' : 'lose';
       this.overlaySummary.textContent = `${result.winner === 'DEEPSEEK' ? 'DeepSeek 娘' : '人类'}获胜 · ` +
         (result.reason === 'RICE_COMPLETED' ? '五份米都吃完了。' : '抓捕完成，晚饭保住了。');
-      this.overlayStats.textContent = `${time} / 大米 ${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}`;
+      this.overlayStats.textContent = `${hudFaction === 'DEEPSEEK' ? '01 / DeepSeek' : '02 / Human'} · ${time} · 大米 ${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}`;
     }
     this.pauseActions.hidden = phase !== 'PAUSED';
     this.resultActions.hidden = phase !== 'FINISHED';
@@ -2375,13 +2359,76 @@ export class ThreeGame {
     this.updateSkillHud();
   }
 
-  private mineHudEntry(): MineEntry | null {
+  /** Read-only projection of the current E target beside the controlled actor. */
+  private currentInteractionPrompt() {
+    const faction = this.control.controlledFaction;
+    const actor = this.control.controlled(this.player, this.human);
+    if (!faction || !actor || this.match.phase !== 'PLAYING' || this.sceneEditor.isOpen ||
+        this.devFreeze.isFrozen) return null;
+    const concealed = this.hide.isConcealed(faction);
+    const door = this.nearestInteractableDoor(actor.position);
+    const rice = faction === 'DEEPSEEK' ? this.nearestRice() : null;
+    const hideCandidate = !concealed ? this.hideTargetResolution(actor.position).target : null;
+    const hide = faction === 'DEEPSEEK' ? hideCandidate : null;
+    const direction = this.input.localDirection();
+    const canHide = !!hide?.legal && this.hide.state === 'OUTSIDE' &&
+      this.sprint.state === 'NORMAL' && this.match.captureProgressMs === 0;
+    const prompt = interactionPrompt({
+      playable: true, faction, pulseLockOpen: this.pulseLock.isOpen, concealed,
+      door: door ? { distance: door.distance } : null,
+      rice: rice ? { distance: rice.range } : null,
+      hide: hide ? { spotId: hide.spotId } : null,
+      doorState: door?.door.state ?? null,
+      activeLockCore: door?.door.state === 'LOCKED' && door.door.lockCoreState === 'ACTIVE',
+      canClose: !door || door.door.state !== 'OPEN' || this.canCloseDoor(door.definition.id),
+      canHide,
+      canEat: this.sprint.state === 'NORMAL',
+      exitBlocked: concealed && this.exitBlockedByHuman(),
+      riceInRange: !!rice && rice.range <= C.rice.interactionRange / U,
+      moving: direction.x !== 0 || direction.y !== 0,
+    });
+    // Human can see a hide point, but E remains unauthorized by HideSystem.
+    const shown = prompt ?? (hideCandidate ? {
+      label: '躲藏', detail: faction === 'HUMAN' ? '仅 DeepSeek 娘可用' :
+        !hideCandidate.legal ? '当前位置不可用' : '当前无法躲藏', blocked: true,
+    } : null);
+    if (!shown) return null;
+    const screen = actor.position.clone().add(new THREE.Vector3(0, 2.1, 0)).project(this.camera);
+    if (Math.abs(screen.x) > 1 || Math.abs(screen.y) > 1) return null;
+    return { ...shown, x: (screen.x + 1) * this.renderer.domElement.clientWidth / 2,
+      y: (1 - screen.y) * this.renderer.domElement.clientHeight / 2,
+      held: this.input.isHeld('KeyE') };
+  }
+
+  private syncHideSpotIndicators(): void {
+    const root = this.apartment.hideSpotIndicatorRoot;
+    const actor = this.control.controlled(this.player, this.human);
+    const faction = this.control.controlledFaction;
+    root.visible = this.match.phase === 'PLAYING' && !this.sceneEditor.isOpen && !!actor;
+    if (!root.visible || !actor || !faction) return;
+    const target = this.hideTargetResolution(actor.position).target;
+    for (const [id, ring] of this.apartment.hideSpotIndicators) {
+      const near = target?.spotId === id;
+      // Human's markers are uniformly disabled: occupancy must not reveal a concealed opponent.
+      const enabled = faction === 'DEEPSEEK' && this.hide.state === 'OUTSIDE' &&
+        this.sprint.state === 'NORMAL' && this.match.captureProgressMs === 0 &&
+        (this.hide.occupancyOf(id) === null) && (!near || !!target?.legal);
+      const ownExit = this.hide.isConcealed(faction) && this.hide.spotId === id;
+      const material = ring.material as THREE.MeshBasicMaterial;
+      material.color.setHex(ownExit || (near && enabled) ? 0x82e6ee :
+        enabled ? 0x8bcfd8 : 0x92a7aa);
+      material.opacity = ownExit || near ? 0.82 : enabled ? 0.38 : 0.3;
+      ring.scale.setScalar(ownExit || near ? 1.2 : 1);
+    }
+  }
+
+  private pulseHudEntry(): PulseLockEntry | null {
     const actor = this.control.controlled(this.player, this.human);
     if (actor && this.control.isControlling('HUMAN')) {
       const nearby = this.nearestInteractableDoor(actor.position);
-      if (nearby) return this.minesweeper.get(nearby.door.id) ?? null;
+      if (nearby) return this.pulseLock.get(nearby.door.id) ?? null;
     }
-    return this.minesweeper.entries.find(entry => entry.state === 'OPEN') ?? null;
+    return this.pulseLock.entries.find(entry => entry.doorId === this.pulseLock.openDoorId) ?? null;
   }
 
   private emitMovementSound(faction: Faction, before: THREE.Vector3,
@@ -2477,13 +2524,12 @@ export class ThreeGame {
     const risk = this.sprint.state === 'NORMAL'
       ? ratio >= C.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
       : this.sprint.riskMode === 'FALL_ON_END' ? 'RISK SPRINT' : 'SAFE SPRINT';
-    const mineEntry = this.mineHudEntry();
-    const mineDoor = mineEntry ? this.doorSystem.get(mineEntry.doorId) : null;
-    const mineStatus = !mineEntry ? '未开始'
-      : mineEntry.state === 'DISABLED' ? '锁芯已失效'
-        : mineEntry.state === 'FAILED' ? '破解失败，等待新盘'
-          : mineEntry.state === 'OPEN' ? '扫雷中：Human 暴露'
-            : mineEntry.board ? '盘面已保留' : '未开始';
+    const pulseEntry = this.pulseHudEntry();
+    const pulseDoor = pulseEntry ? this.doorSystem.get(pulseEntry.doorId) : null;
+    const pulseStatus = !pulseEntry ? '未开始'
+      : pulseDoor?.lockCoreState === 'DISABLED' ? '锁芯已失效'
+        : this.pulseLock.isOpen ? `破解中 ${pulseEntry.completed} / ${this.pulseLock.coreCount}`
+          : pulseEntry.completed ? `已完成 ${pulseEntry.completed} / ${this.pulseLock.coreCount}` : '未开始';
     const nearest = this.nearestRice();
     const currentRice = nearest?.portion.rice;
     const remainingRiceMs = currentRice
@@ -2656,6 +2702,10 @@ export class ThreeGame {
       {
         id: 'door-escape', title: 'Door Escape / 关门逃脱',
         properties: this.debugPossessionEnabled ? [
+          make('human-unlock-penalty', 'Human 玩家解除 AI 锁后的全门冷却',
+            this.deepseekDoorLockPenalty.ready ? '可再次锁门'
+              : `${(this.deepseekDoorLockPenalty.remainingMs / 1000).toFixed(1)} 秒`,
+            this.deepseekDoorLockPenalty.ready ? 'normal' : 'warning'),
           make('candidate', '最近评估候选门', this.deepseekAI.doorEscapeCandidateId ?? '无'),
           make('distance', '最近评估候选门距离', this.deepseekAI.doorEscapeDistance === null
             ? '无' : `${this.deepseekAI.doorEscapeDistance.toFixed(2)} 世界单位`),
@@ -2903,13 +2953,13 @@ export class ThreeGame {
           make('deepseek-controls', 'DeepSeek 操作', 'E 进食；移动时点 Space 冲刺'),
           make('door-controls', '门操作', this.control.isControlling('DEEPSEEK')
             ? `E 开/关｜Q 锁门｜锁 ${this.doorSystem.activeLockedDoorCount} / ${C.door.maxActiveLocks}`
-            : 'E 开/关或扫雷｜Space 普通门快开 / 锁门强破'),
+             : 'E 开/关或 PulseLock｜Space 普通门快开 / 锁门强破'),
           make('door-message', '门状态消息', this.doorStatusMessage || '无'),
           make('force-break', '强制破锁', this.humanDoorSkill.cooldownRemainingMs > 0
             ? `CD ${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)} 秒` : 'READY',
             this.humanDoorSkill.cooldownRemainingMs > 0 ? 'warning' : 'success'),
-          make('lock-core-mines', '锁芯 / 扫雷状态', `${mineDoor?.lockCoreState ?? 'ACTIVE'} / ${mineStatus}`,
-            mineDoor?.lockCoreState === 'DISABLED' ? 'success' : 'normal'),
+          make('lock-core-mines', '锁芯 / PulseLock 状态', `${pulseDoor?.lockCoreState ?? 'ACTIVE'} / ${pulseStatus}`,
+            pulseDoor?.lockCoreState === 'DISABLED' ? 'success' : 'normal'),
           make('capture-progress', '抓捕进度', `${(this.match.captureProgressMs / 1000).toFixed(2)} / ${(C.match.captureMs / 1000).toFixed(2)} 秒`),
           make('capture-zone', '抓捕区', this.captureZoneBlocked ? '有阻挡'
             : this.captureZoneActive ? '圈内' : '圈外'),
@@ -3199,7 +3249,10 @@ export class ThreeGame {
   }
 
   dispose(): void {
+    this.actorShadows.dispose();
+    this.apartment.interiorShadows.dispose();
     this.alphaHud.dispose();
+    this.pulseLockView.dispose();
     this.playerAction.dispose();
     this.humanAction.dispose();
     cancelAnimationFrame(this.frame);

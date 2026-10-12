@@ -50,7 +50,7 @@ export class DoorView {
       visual.leafDepth / 2 + .06);
     this.object.add(this.lockCore);
     this.lockCore.visible = false;
-    this.label = debug ? createLabel(`D${String(debugIndex + 1).padStart(2, '0')} CLOSED`) : null;
+    this.label = debug ? createLabel(`D${String(definition.debugNumber ?? debugIndex + 1).padStart(2, '0')} CLOSED`) : null;
     if (this.label) {
       this.label.position.set(visual.leafCenterX, visual.leafHeight + .45, 0);
       this.object.add(this.label);

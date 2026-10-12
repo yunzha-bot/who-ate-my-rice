@@ -48,6 +48,8 @@ export interface DeepSeekAIInput {
   canLockDoor?: (id: string) => boolean;
   /** Remaining Active Lock slots before a lock command would be rejected. */
   activeLockSlots?: number;
+  /** Remaining global lock penalty after the Human player defeats an AI lock. */
+  humanPlayerUnlockPenaltyRemainingMs?: number;
   visibleHuman?: Point | null;
   /** Supplied only while Human is currently visible; never a hidden position. */
   humanStillMs?: number;
@@ -2252,6 +2254,8 @@ export class DeepSeekAIController {
       this.doorLockDecision('DOOR_LOCK_SKIP', pendingId, reason);
       return null;
     };
+    if ((input.humanPlayerUnlockPenaltyRemainingMs ?? 0) > 0)
+      return reject('HUMAN_UNLOCK_PENALTY');
     if (!node || !door) return reject('DOOR_MISSING');
     if (door.state !== 'CLOSED') return reject('DOOR_REOPENED');
     const crossing = this.recentDoorCrossing.get(pendingId);

@@ -60,3 +60,25 @@ test('each rice view follows only its own persistent state and reset restores fu
   viewA.dispose();
   viewB.dispose();
 });
+
+test('open cloth sack and instanced grains follow real progress without changing the anchor', () => {
+  const rice = new RiceSystem('rice_test', 5_000, 400);
+  const view = new RiceView(.5, GAME_CONFIG.rice.color, visual);
+  view.sync(rice.rice);
+  const body = view.object.children[0], grains = view.object.getObjectByName('rice-grains');
+  assert.equal(body.geometry.parameters.openEnded, true);
+  assert.equal(body.children.length, 2, 'folded rim and solid sack bottom');
+  assert.equal(grains.isInstancedMesh, true);
+  assert.equal(grains.count, 84);
+  assert.equal(body.material.map.isDataTexture, true);
+  const texture = body.material.map;
+  let disposed = false; texture.addEventListener('dispose', () => { disposed = true; });
+  rice.update(2_900, true); view.sync(rice.rice);
+  assert.ok(grains.count > 0 && grains.count < 84);
+  assert.ok([...grains.instanceMatrix.array].every(Number.isFinite));
+  rice.update(5_000, true);view.sync(rice.rice);
+  assert.equal(grains.visible, false);assert.equal(grains.count, 0);
+  assert.equal(body.visible, true);
+  rice.reset();view.sync(rice.rice);assert.equal(grains.count,84);
+  view.dispose();assert.equal(disposed,true);
+});

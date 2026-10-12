@@ -49,8 +49,8 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
-| `C.humanAI.movementSpeedMultiplier` | 0.92 | 倍率；AI Human 在 Human 基础速度上的独立倍率，约降低 8% | 不影响玩家手动控制；巡逻、调查、追逐共用。 |
-| `C.humanAI.aiUnlockDurationMs` | 8,750 | 毫秒；AI 单次模拟破解锁芯的耗时（原 5,000 毫秒的 1.75 倍） | 只影响 AI，不影响玩家扫雷或强破冷却。 |
+| `C.humanAI.movementSpeedMultiplier` | 0.52 | 倍率；AI Human 在 Human 基础速度上的独立倍率，降低 48% | 2026-10-12 用户确认保留现值；不影响玩家手动控制；巡逻、调查、追逐共用。 |
+| `C.humanAI.aiUnlockDurationMs` | 8,750 | 毫秒；AI 单次模拟破解锁芯的耗时（原 5,000 毫秒的 1.75 倍） | 只影响 AI，不影响玩家 PulseLock 或强破冷却。 |
 | `C.humanAI.navCellSize` | 0.4 | 世界单位；XZ 寻路网格边长 | 改大可能漏掉门洞；改小会增加 A* 开销，须复测全图可达。 |
 | `C.humanAI.repathIntervalMs` | 500 | 毫秒；追逐时最长路径刷新间隔 | 太大可能跟丢移动目标。 |
 | `C.humanAI.waypointTolerance` | 0.25 | 世界单位；路径点到达容差 | 应与网格间距和角色步长一起调整，避免原地抖动。 |
@@ -130,7 +130,8 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.stationaryPassageCheckIntervalMs` | 500 | 毫秒；静止挡路条件的重查间隔 | 避免每帧运行多次 A*；数值越大，许可响应可能越慢。 |
 | `C.deepseekAI.doorEscapeMinHumanDistance` | 1.5 | 世界单位；EVADE 关门时与当前可见 Human 的最低间距 | 必须大于实际抓捕圈；太大会减少可用关门机会。 |
 | `C.deepseekAI.doorEscapeCrossingWindowMs` | 1,800 | 毫秒；实际通过门后可考虑关门的窗口 | 过长可能让 AI 返回已远离的门。 |
-| `C.deepseekAI.doorEscapeCooldownMs` | 5,000 | 毫秒；同门再次考虑关门的冷却 | Human 重新开门后 AI 不原地重复关门；暂停时冻结。 |
+| `C.deepseekAI.doorEscapeCooldownMs` | 20,000 | 毫秒；同门再次考虑关门的冷却 | Human 重新开门后 AI 不原地重复关门；暂停时冻结。 |
+| `C.deepseekAI.humanPlayerUnlockPenaltyMs` | 10,000 | 毫秒；Human 玩家成功解除一把 DeepSeek AI 的锁后，追加到 AI 全局锁门冷却的时长 | 可叠加：剩余 15 秒时再解除一把，变为 25 秒；暂停时冻结，AI 自主解锁不触发。 |
 
 ## 角色动作表现（S7A 占位接口）
 
@@ -162,20 +163,23 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.perception.traceVisual.footprintRadius` / `widthScale` / `lengthScale` | 0.18 / 0.7 / 1.45 | 世界单位 / 倍率；单个脚印形状 | 调尺寸后检查脚印与米袋、地面遮挡。 |
 | `C.perception.traceVisual.sideOffset` / `forwardOffset` / `groundOffset` | 0.14 / 0.07 / 0.075 | 世界单位；左右脚错位及离地高度 | 离地高度过低可能与地面闪烁。 |
 
-## Door、Human Force Break 与扫雷
+## Door、Human Force Break 与 PulseLock
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
 | `C.door.interactionRange` / `interactionEndInset` | 1.3 / 0.08 | 世界单位；可操作门距离和门段端点内缩 | 门交互仍要求可达、不可隔墙；修改需检查门框侧边。 |
 | `C.door.maxActiveLocks` | 3 | 把；**同时**有效的锁上限 | **不限制整局总次数**；破解/强破后释放一格，失效锁芯本局不能重锁。 |
 | `C.door.humanFreeOpenClosedDoor` | `true` | 开关；Human Space 免费快速打开普通 CLOSED 门 | 设为 `false` 会禁用该 Space 行为；E 普通开门不受影响。 |
-| `C.door.humanForceBreakCooldownMs` | 30,000 | 毫秒；Space 强破 LOCKED 门的冷却 | 不限制普通门快速开，也不限制 E 扫雷。 |
+| `C.door.humanForceBreakCooldownMs` | 30,000 | 毫秒；Space 强破 LOCKED 门的冷却 | 不限制普通门快速开，也不限制 E PulseLock。 |
 | `C.door.playerLockCooldownMs` | 20,000 | 毫秒；**DeepSeek 玩家**按 Q 主动锁门的冷却（S7C-1B） | 只有 `lock()` 真的返回 `LOCKED`（即门为 CLOSED、锁芯 ACTIVE、锁位未满）才开始计时；状态不允许、超距、锁位已满、锁芯失效都不消耗冷却。AI 的锁门走 `lockDoorFromCommand`，**不读**这个冷却。 |
 | `C.door.leafHeight` / `leafThickness` / `openAngle` | 1.2 / 0.16 / `Math.PI / 2` | 世界单位 / 世界单位 / 弧度；门叶几何 | 门厚会影响碰撞、视线和声音的门遮挡判定。 |
 | `C.door.colors.open` / `closed` / `locked` / `lockCore` / `lockCoreDisabled` | `0x6d8f73` / `0x8a644b` / `0xa0443f` / `0xffc247` / `0x565d63` | 颜色；灰盒门叶与锁芯状态 | 只改变显示，保持不同状态容易辨认。 |
-| `C.pulseLock.rows` / `cols` / `mines` | 4 / 4 / 3 | 行 / 列 / 颗；扫雷棋盘 | 雷数必须至少 1 且小于格数；修改后测试首次点击和胜利判定。 |
-| `C.pulseLock.firstRevealSafe` | `true` | 开关；首次揭格不放雷 | 改为 `false` 将允许首击踩雷，会改变当前已验收规则。 |
-| `C.pulseLock.failureFeedbackMs` | 1,500 | 毫秒；踩雷后的状态反馈时间 | 不影响门是否仍 LOCKED。 |
+| `C.pulseLock.rows` / `cols` / `mines` | 4 / 4 / 3 | 旧扫雷棋盘参数，当前正式玩家解锁不再读取 | 保留历史数值，不作为 PulseLock 时机判定。 |
+| `C.pulseLock.firstRevealSafe` / `failureFeedbackMs` | `true` / 1,500 | 旧扫雷首次安全与失败反馈参数，当前正式玩家解锁不再读取 | 保留历史数值，不影响门状态。 |
+| `C.pulseLock.timing.coreCount` | 3 | 每扇锁门依次完成的锁芯数 | 目前三个目标中心与锁芯一一对应。 |
+| `C.pulseLock.timing.travelMs` | 1,400 | 毫秒；脉冲从轨道一端到另一端 | 只改变玩家 E 破解时机，不改变 Human AI 解锁耗时。 |
+| `C.pulseLock.timing.targetWidth` / `targetCenters` | 0.20 / `[0.48, 0.56, 0.43]` | 轨道归一化位置与宽度 | 所有门使用相同目标区域，不影响门锁、导航或 AI。 |
+| `C.pulseLock.timing.feedbackMs` | 240 | 毫秒；成功 / 失手的纯视觉反馈 | 不改变 DoorSystem 状态。 |
 
 ## S7C-1B 藏身与 Q 技能（Human 扇形搜查 / DeepSeek 锁门）
 
@@ -280,6 +284,6 @@ DeepSeek 娘 AI 在 `EVADE` 中把「藏身」作为与逃跑并列的一个选�
 
 ## 留在源码内的常量
 
-地图米点、门、房间、墙和家具的具体坐标属于关卡内容，保留在 `src/three/map/apartmentMap.ts`。角色状态枚举、扫雷相邻格遍历、距离与角度计算、视觉 Mesh 分段和波纹动画形状属于规则或内部实现；它们不适合作为日常平衡数值。当前配置中心可调参与抽选的候选数量，**不能仅通过改配置增加第 15 个米点坐标**。
+地图米点、门、房间、墙和家具的具体坐标属于关卡内容，保留在 `src/three/map/apartmentMap.ts`。角色状态枚举、距离与角度计算、视觉 Mesh 分段和波纹动画形状属于规则或内部实现；它们不适合作为日常平衡数值。当前配置中心可调参与抽选的候选数量，**不能仅通过改配置增加第 15 个米点坐标**。
 
 当前默认参数保持 S6D 已有玩法手感；改变已人工验收的规则（例如 30% 冲刺风险、0.35 秒抓捕、首击安全或开发/正式进食时间）后，应重新进行相应 Gate 验收。

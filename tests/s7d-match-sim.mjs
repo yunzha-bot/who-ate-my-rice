@@ -1,4 +1,5 @@
 import { Box3, OrthographicCamera, Vector3 } from 'three';
+import { rectColliders } from '../src/three/map/MapEditModel.ts';
 import { GAME_CONFIG as C } from '../src/config/gameConfig.ts';
 import { effectiveSpeeds } from '../src/systems/DevBRuntimeBinding.ts';
 import { CollisionWorld, canInteractWithDoorXZ } from '../src/three/CollisionWorld.ts';
@@ -50,9 +51,7 @@ export const DELTA_MS = 50;
 const EPSILON = 1e-4;
 
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
-const BOXES = [...WALLS, ...FURNITURE].map(rect => new Box3(
-  new Vector3(rect.x - rect.width / 2, 0, rect.z - rect.depth / 2),
-  new Vector3(rect.x + rect.width / 2, rect.height, rect.z + rect.depth / 2)));
+const COLLIDERS = rectColliders([...WALLS, ...FURNITURE]);
 
 /** 与 `DoorView.closedCollisionBox()` 逐字相同的关闭门叶碰撞盒。 */
 function closedDoorBox(node) {
@@ -167,7 +166,8 @@ export function createMatchSim(options = {}) {
   // （与布局流不同源），并在报告里注明这是仿真器行为。
   const aiRandom = options.random ?? seededRandom((seed ^ 0x5bf03635) >>> 0);
 
-  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, BOXES);
+  const collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2,
+    COLLIDERS.boxes, COLLIDERS.oriented);
   const navigation = new NavigationSystem(collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
   const doorSystem = new DoorSystem(DOOR_NODES, C.door.maxActiveLocks);
   const geometry = new PerceptionGeometry(WALLS, DOOR_NODES, () => doorSystem.doors);

@@ -53,7 +53,7 @@
 ## 通用代码架构约束
 
 - **角色碰撞与移动**：角色使用 XZ Circle Footprint、环境使用 AABB，以 Circle-vs-AABB、Axis-Separated Movement 与 Wall Sliding 解析碰撞；Sprint 使用同一规则。**不要轻易恢复 Player Box / AABB Footprint**——方形碰撞体在门框与墙角斜向移动时容易卡脚。最终角色移动始终走 `CollisionWorld`，AI 不得瞬移或绕过实体碰撞。
-- **单一权威来源**：同一份事实只保留一处权威定义——地图数据以 `src/three/map/apartmentMap.ts` 为准（不在别处复制坐标表）；检查点与版本一律用 `git log -1` / `git ls-remote` 查询（不写死「当前」SHA）；可调数值见「统一数值管理规则」。
+- **单一权威来源**：地图房间、墙、门、米点与出生点以 `src/three/map/apartmentMap.ts` 为准；家具与躲藏锚点以该模块导入的 `src/three/map/sceneLayout.json` 为准。后续增改家具须读取并修改此 JSON，不在源码里复制坐标表。检查点与版本一律用 `git log -1` / `git ls-remote` 查询；可调数值见「统一数值管理规则」。
 - **系统职责边界**：门状态唯一来源是 `DoorSystem`；大米进度与进食规则由 `RiceField` / `RiceSystem` 持有；感知（声音、Vision / Last Seen、米痕）由 `PerceptionSystem` 负责；导航由 `NavigationSystem` 提供，但移动仍受 `CollisionWorld` 约束；两套 AI 不得私建第二套同类计时或直接判胜。
 
 ## 输入与暂停长期规则

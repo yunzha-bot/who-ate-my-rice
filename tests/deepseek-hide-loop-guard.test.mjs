@@ -72,9 +72,10 @@ test('退出后同一点进入再进冷却，下一次藏身必须换一个点�
   assert.notEqual(env.ai.hideSpotId, 'hide_living_carton');
   // 换一个没被冷却的点：仍然可以正常藏身（冷却不是「永久禁用」）。
   assert.equal(forceHide(env, second), true);
-  assert.equal(env.ai.hideSpotId, 'hide_study_bookshelf');
-  assert.deepEqual(env.ai.hideRecentSpotIds,
-    ['hide_living_carton', 'hide_study_bookshelf']);
+  const nextSpotId = env.ai.hideSpotId;
+  assert.ok(HIDE_SPOTS.some(spot => spot.id === nextSpotId));
+  assert.notEqual(nextSpotId, 'hide_living_carton');
+  assert.deepEqual(env.ai.hideRecentSpotIds, ['hide_living_carton', nextSpotId]);
 });
 
 test('权威层拒绝进入时写公开失败记忆：该点冷却、计数与事件都落位', () => {

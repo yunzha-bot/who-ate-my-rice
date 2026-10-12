@@ -3,7 +3,7 @@ import { MapEditSession, authoredMapSource, furnitureRect, sceneEditorEnabled,
   spotDraftToAnchor, type FurnitureDraft, type HideSpotDraft, type MapSource,
   type MapExportDocument } from './map/MapEditModel.ts';
 import { authoredLayoutDocument, importLayoutText, layoutSignature, layoutSource,
-  layoutStatus, writeSavedLayout, type LayoutStatus, type LayoutStorage }
+  layoutStatus, type LayoutStatus }
   from './map/MapLayoutStore.ts';
 import { degreesToRadians } from './map/RotatedRect.ts';
 import { SceneEditorView } from './SceneEditorView.ts';
@@ -38,13 +38,11 @@ export interface SceneEditorHooks {
   onFocus: (point: { x: number; z: number }) => void;
   onZoom: (direction: number) => void;
   onPan: (deltaX: number, deltaY: number) => void;
-  // V2 布局持久化：编辑会话的起点（开机时可能已经是恢复出来的本地布局）、
-  // 存档接口、当前存档签名，以及「恢复默认地图」的确认回调（测试可注入）。
+  // 编辑会话从当前项目布局开始；保存写入项目文件。
   mapSource?: MapSource;
-  layoutStorage?: LayoutStorage | null;
   savedLayoutSignature?: string | null;
   savedLayoutAt?: string | null;
-  // 开机恢复失败的原因（没有存档时由调用方传 null）；只用于 DEV 读数与面板。
+  // 最近一次加载失败的原因，只用于 DEV 读数与面板。
   savedLayoutError?: string | null;
   confirm?: (message: string) => boolean;
 }
@@ -79,7 +77,7 @@ export function sceneEditorRefusalNotice(phase: GamePhase, rejection: string): s
 }
 
 export const RESTORE_DEFAULT_CONFIRM =
-  '恢复默认地图将丢弃当前已应用的编辑（浏览器本地存档与已导出的 JSON 不会被删除）。确认继续？';
+  '恢复项目地图将丢弃当前未保存的编辑（项目布局文件与已导出的 JSON 不会被删除）。确认继续？';
 
 // DEV scene-editor orchestration: draft model + Three.js picking/preview view +
 // DOM panel. It never writes the authored map file and never mutates gameplay
@@ -93,11 +91,11 @@ export class SceneEditor {
   private regionPreviewVisible = true;
   private draggingId: string | null = null;
   private build: ApartmentBuild | null = null;
-  // V2：本地存档的签名与时间，以及最近一次导入 / 恢复的失败原因。存档签名只在
-  // 「开机恢复」与「保存成功」时更新，因此「未保存修改」是应用数据与存档的真实差异。
+  // 项目文件的布局签名与最近一次保存时间。
   private savedLayoutSignature: string | null;
   private savedLayoutAt: string | null;
   private lastLayoutError: string | null = null;
+  private projectRevision: string | null = null;
   message = '';
   lastRejection = '无';
 
@@ -107,7 +105,13 @@ export class SceneEditor {
     this.savedLayoutSignature = hooks.savedLayoutSignature ?? null;
     this.savedLayoutAt = hooks.savedLayoutAt ?? null;
     this.lastLayoutError = hooks.savedLayoutError ?? null;
+    window.addEventListener('beforeunload', event => {
+      if (!this.session.isDirty && !this.layoutStatus().pending) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
     const enabled = sceneEditorEnabled(hooks.developerMode, hooks.factionSwitchEnabled);
+    if (enabled) void this.loadProjectRevision();
     this.view = new SceneEditorView({
       camera: hooks.camera,
       dom: hooks.dom,
@@ -277,27 +281,53 @@ export class SceneEditor {
 
   get layoutError(): string | null { return this.lastLayoutError; }
 
-  // 保存的是「已应用」布局：有未应用草稿时先拒绝，绝不把半成品写进本地存档；
-  // `writeSavedLayout` 只在 setItem 真正成功后返回 ok，因此不会虚报保存成功。
-  saveLayout(): boolean {
+  private async loadProjectRevision(): Promise<void> {
+    try {
+      const response = await fetch('/__dev/scene-layout');
+      if (!response.ok) throw Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (typeof data.revision !== 'string') throw Error('开发服务器尚未启用项目布局保存接口');
+      this.projectRevision = data.revision;
+    } catch (error) {
+      this.lastLayoutError = `无法读取项目布局版本：${String(error)}`;
+    }
+  }
+
+  // 只保存已应用的地图；项目文件是跨浏览器、重启与 HMR 的权威家具排布。
+  async saveLayout(): Promise<boolean> {
     if (this.session.isDirty) {
       this.message = '保存被拒绝：还有未应用的草稿，请先点「应用编辑」再保存布局。';
       this.panel.showNotice(this.message);
       return false;
     }
-    const result = writeSavedLayout(this.hooks.layoutStorage ?? null, this.session.exportJson());
-    if (!result.ok) {
-      this.lastLayoutError = `${result.code}：${result.message}`;
-      this.message = `保存布局失败（${result.code}）：${result.message}`;
+    if (!this.projectRevision) await this.loadProjectRevision();
+    if (!this.projectRevision) {
+      this.message = this.lastLayoutError ?? '无法读取项目布局版本';
       this.panel.showNotice(this.message);
       return false;
     }
-    this.savedLayoutSignature = layoutSignature(result.envelope.document);
-    this.savedLayoutAt = result.envelope.savedAt;
-    this.lastLayoutError = null;
-    this.message = `已保存布局到浏览器本地存档：${result.envelope.savedAt}。`;
-    this.panel.showNotice(this.message);
-    return true;
+    const document = this.session.exportJson();
+    try {
+      const response = await fetch('/__dev/scene-layout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revision: this.projectRevision,
+          document }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error ?? `HTTP ${response.status}`);
+      this.projectRevision = result.revision;
+      this.savedLayoutSignature = layoutSignature(document);
+      this.savedLayoutAt = result.savedAt;
+      this.lastLayoutError = null;
+      this.message = '已保存布局到项目 src/three/map/sceneLayout.json。';
+      this.panel.showNotice(this.message);
+      return true;
+    } catch (error) {
+      this.lastLayoutError = String(error);
+      this.message = `保存布局失败：${String(error)}`;
+      this.panel.showNotice(this.message);
+      return false;
+    }
   }
 
   // 文件读取失败（包括用户选了非文本文件）也只报告，不改变当前地图。
@@ -324,7 +354,7 @@ export class SceneEditor {
     }
     if (!this.commitLayoutSource(layoutSource(result.document), '导入')) return false;
     this.message = `已导入布局：家具 ${result.document.furniture.length} 件 / ` +
-      `藏身点 ${result.document.hideSpots.length} 个；尚未写入本地存档。`;
+      `藏身点 ${result.document.hideSpots.length} 个；尚未保存到项目。`;
     this.panel.showNotice(this.message);
     return true;
   }
@@ -332,12 +362,12 @@ export class SceneEditor {
   restoreDefaultLayout(): boolean {
     const confirm = this.hooks.confirm ?? (message => window.confirm(message));
     if (!confirm(RESTORE_DEFAULT_CONFIRM)) {
-      this.message = '已取消恢复默认地图（本地存档与已导出的 JSON 备份都未改动）。';
+      this.message = '已取消恢复项目地图，项目文件未改动。';
       this.panel.showNotice(this.message);
       return false;
     }
     if (!this.commitLayoutSource(authoredMapSource(), '恢复默认地图')) return false;
-    this.message = '已恢复默认地图；本地存档与已导出的 JSON 备份保留，可再次保存覆盖。';
+    this.message = '已恢复项目地图；未保存前不会改动项目文件。';
     this.panel.showNotice(this.message);
     return true;
   }
@@ -376,7 +406,6 @@ export class SceneEditor {
       layout: this.layoutStatus(),
       layoutSavedAt: this.savedLayoutAt,
       layoutError: this.lastLayoutError,
-      layoutStorageAvailable: !!this.hooks.layoutStorage,
     });
   }
 
@@ -408,11 +437,10 @@ export class SceneEditor {
         tone: layout.label === 'IMPORT_FAILED' ? 'danger'
           : layout.label === 'UNSAVED' ? 'warning'
             : layout.label === 'SAVED' ? 'success' : 'normal' },
-      { label: '本地布局存档', value: this.savedLayoutAt
-        ? `已保存（${this.savedLayoutAt}）`
-        : (this.hooks.layoutStorage ? '无（尚未保存过）' : 'localStorage 不可用') },
-      { label: '未保存修改', value: layout.pending ? '是' : '否',
-        tone: layout.pending ? 'warning' : 'success' },
+      { label: '项目布局文件', value: this.savedLayoutAt
+        ? `已保存（${this.savedLayoutAt}）` : 'src/three/map/sceneLayout.json' },
+      { label: '未保存修改', value: layout.pending || this.session.isDirty ? '是' : '否',
+        tone: layout.pending || this.session.isDirty ? 'warning' : 'success' },
       { label: '最近导入 / 恢复失败', value: this.lastLayoutError ?? '无',
         tone: this.lastLayoutError ? 'danger' : 'normal' },
       { label: '事件计数',

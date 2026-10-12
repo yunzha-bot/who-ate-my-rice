@@ -171,14 +171,14 @@ test('AI unlock takes time, fails into a finite avoidance, and succeeds on a fre
   assert.equal(ai.targetDoorId, null);
 });
 
-test('AI movement uses a separate 0.92 multiplier; manual Human keeps its original speed', () => {
+test('AI movement uses the confirmed 0.52 multiplier; manual Human keeps its original speed', () => {
   const manualSpeed = GAME_CONFIG.player.speed / GAME_CONFIG.three.pixelsPerUnit *
     GAME_CONFIG.human.speedMultiplier;
-  assert.equal(GAME_CONFIG.humanAI.movementSpeedMultiplier, 0.92);
+  assert.equal(GAME_CONFIG.humanAI.movementSpeedMultiplier, 0.52);
   assert.equal(humanAiMovementSpeed(manualSpeed),
     manualSpeed * GAME_CONFIG.humanAI.movementSpeedMultiplier);
   assert.ok(Math.abs(manualSpeed - 4.14) < 1e-9);
-  assert.ok(Math.abs(humanAiMovementSpeed(manualSpeed) - 3.8088) < 1e-9);
+  assert.ok(Math.abs(humanAiMovementSpeed(manualSpeed) - 2.1528) < 1e-9);
   assert.equal(GAME_CONFIG.human.speedMultiplier, 1.08);
 });
 
