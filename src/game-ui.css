@@ -1,0 +1,182 @@
+/* 家居便签：游戏内界面与共享色彩；阵营页布局见 faction-menu.css。 */
+:root {
+  --game-paper: #faf7ef;
+  --game-ink: #293b40;
+  --game-muted: #6b7a79;
+  --game-blue: #5595a6;
+  --game-mint: #e4eee6;
+  --game-line: #394d4920;
+  --game-shadow: 0 14px 40px #253d4020;
+}
+
+/* 对局信息：上方身份标签，下方目标、饭碗和计时。 */
+.alpha-hud .alpha-score {
+  top: 24px; left: 24px; width: clamp(220px, 19vw, 280px); padding: 20px;
+  color: var(--game-ink); background: #faf7eff2; border: 1px solid #ffffffb0;
+  border-radius: 22px; box-shadow: var(--game-shadow); clip-path: none;
+}
+.alpha-hud[data-faction] :is(.alpha-faction, .alpha-rice, .rice-inventory, .match-clock) {
+  border: 0; border-image: none; clip-path: none; background: none; padding: 0; box-shadow: none;
+  color: var(--game-ink);
+}
+.alpha-hud[data-faction] .alpha-faction { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--game-blue); }
+.alpha-hud[data-faction='HUMAN'] .alpha-faction { color: #977548; }
+.alpha-hud .alpha-objective { margin: 10px 0 16px; padding: 0; background: none; clip-path: none; color: var(--game-ink); font-size: 21px; line-height: 1.35; letter-spacing: -.03em; }
+.alpha-hud .rice-inventory { gap: 8px; margin: 0 0 10px; }
+.alpha-hud .alpha-rice { margin: 0; font-size: 12px; font-weight: 500; }
+.alpha-hud .alpha-goal { display: block; color: var(--game-muted); font-size: 11px; line-height: 1.7; margin: 10px 0 16px; white-space: pre-line; }
+.alpha-hud[data-faction] .match-clock { display: flex; align-items: center; justify-content: space-between; width: 100%; margin: 0; padding-top: 12px; border-top: 1px solid var(--game-line); }
+.alpha-hud .match-clock small { margin: 0; font-size: 10px; color: var(--game-muted); }
+.alpha-hud .match-clock time { font-size: 23px; color: var(--game-ink); letter-spacing: -.04em; }
+.alpha-hud .movement-guide { left: 24px; bottom: 24px; border: 0; border-image: none; padding: 12px 16px; border-radius: 14px; color: #f7f5ed; background: #293b40ed; box-shadow: var(--game-shadow); font-size: 11px; }
+.alpha-hud .movement-guide b { color: #b2d8dc; }
+.alpha-hud .alpha-skills { right: 24px; bottom: 24px; gap: 8px; }
+.alpha-hud[data-faction] :is(.alpha-key, .alpha-cooldown) {
+  border: 1px solid #ffffffa0; border-image: none; border-radius: 15px; clip-path: none;
+  min-height: 56px; padding: 12px 16px; color: var(--game-ink); background: #faf7eff2;
+  box-shadow: 0 5px 18px #293b4015; font-size: 12px;
+}
+.alpha-hud .alpha-key > b { color: var(--game-blue); font-size: 24px; }
+.alpha-hud .alpha-key small { color: var(--game-muted); }
+.alpha-hud .alpha-cooldown { overflow: hidden; }
+.alpha-hud .alpha-cooldown::after { bottom: 0; height: 3px; background: var(--game-blue); }
+.alpha-hud .alpha-cooldown[data-ready='true'] { background: var(--game-mint); color: #3c6653; }
+.alpha-hud .world-interaction {
+  border: 1px solid #ffffffa0; border-image: none; border-radius: 12px; clip-path: none;
+  padding: 7px 10px 7px 7px; gap: 8px; background: #faf7eff7;
+  color: var(--game-ink); box-shadow: 0 4px 15px #293b4026;
+}
+.alpha-hud .world-interaction kbd { width: 25px; height: 25px; border: 0; border-radius: 7px; background: var(--game-blue); color: white; }
+.alpha-hud .world-interaction strong { font-size: 12px; font-weight: 600; }
+.alpha-hud .world-interaction[data-blocked='true'] { opacity: .65; }
+.alpha-hud .alpha-progress { left: 50%; bottom: 110px; padding: 12px 20px; border-radius: 14px; background: #293b40ef; color: var(--game-paper); box-shadow: var(--game-shadow); overflow: hidden; font-size: 13px; }
+.alpha-hud .alpha-progress::after { height: 3px; background: #a3d3be; }
+.alpha-hud .alpha-progress[data-danger='true']::after { background: #d8a47c; }
+.skill-hud { border: 0; border-radius: 12px; background: #293b40e8; color: var(--game-paper); box-shadow: var(--game-shadow); }
+.skill-hud-state { color: #b4dfcb; }
+.skill-hud-notice { color: #f0c398; }
+.alpha-hud .alpha-ready { text-shadow: 0 2px 8px #263d4080; }
+.alpha-hud .alpha-ready strong { color: #b4e5ef; font-weight: 600; }
+
+/* 暂停、设置与结算共用家居纸张质感；独立胜负色，不再使用Sheet角饰。 */
+.game-overlay:is([data-phase='PAUSED'], [data-outcome='win'], [data-outcome='lose']) {
+  --panel-accent: var(--game-blue);
+  border: 1px solid #ffffffb0; border-image: none; border-radius: 26px;
+  color: var(--game-ink); background: var(--game-paper); box-shadow: 0 24px 80px #22383e38;
+  font-size: 14px; outline: none;
+}
+.game-overlay[data-phase='PAUSED'] {
+  width: min(480px, calc(100vw - 40px)); padding: 30px;
+  max-height: calc(100dvh - 40px); box-shadow: 0 24px 80px #22383e38, 0 0 0 100vmax #233c4052;
+}
+.game-overlay .overlay-kicker { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: .13em; color: var(--game-muted); }
+.game-overlay .overlay-kicker::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--panel-accent); }
+.game-overlay[data-phase='PAUSED'] .overlay-text h1 { margin: 20px 0 12px; font-size: 38px; font-weight: 750; letter-spacing: -.04em; color: var(--game-ink); }
+.game-overlay .overlay-text p { color: var(--game-muted); font-size: 13px; line-height: 1.8; }
+.game-overlay .overlay-stats { border-color: var(--game-line); color: var(--game-muted); font-size: 12px; }
+.game-overlay .pause-actions { gap: 8px; margin-top: 20px; }
+.game-overlay :is(.pause-actions, .result-actions) button {
+  padding: 13px 18px; min-height: 48px; border-radius: 12px; border: 1px solid transparent;
+  color: white; background: var(--panel-accent); box-shadow: none; font-weight: 600;
+  transition: background-color .16s, transform .16s, box-shadow .16s;
+}
+.game-overlay :is(.pause-actions, .result-actions) button:not(:first-child) { color: var(--game-ink); background: #eeeee5; border-color: transparent; font-weight: 500; }
+.game-overlay :is(.pause-actions, .result-actions) button:hover { background: #dce9e5; color: var(--game-ink); box-shadow: 0 4px 12px #293b4012; transform: translateY(-1px); filter: none; }
+.game-overlay :is(.pause-actions, .result-actions) button:first-child:hover { background: #42798a; color: white; }
+.game-overlay :is(.pause-actions, .result-actions) button:active { transform: translateY(1px); box-shadow: none; }
+.game-overlay button:focus-visible, .game-overlay input:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 3px; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) {
+  position: fixed; top: 50%; left: 50%; bottom: auto; transform: translate(-50%, -50%);
+  width: min(840px, calc(100vw - 48px)); min-height: 460px; max-height: calc(100dvh - 48px);
+  padding: 38px; background: radial-gradient(ellipse at 100% 0%, #e2eee8, transparent 65%), var(--game-paper);
+}
+.game-overlay[data-outcome='win'] { --panel-accent: #628b73; }
+.game-overlay[data-outcome='lose'] { --panel-accent: #ad806b; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-text h1 { margin: 25px 0 18px; color: var(--panel-accent); font-size: clamp(62px, 7vw, 88px); letter-spacing: -.06em; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-text p { padding: 0; background: none; width: 57%; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-stats { width: 57%; padding: 16px 0; margin-top: 24px; background: none; border-bottom: 0; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .report-art { inset: -12px -20px -15px 57%; }
+.game-overlay .result-actions { margin-top: 24px; gap: 12px; }
+
+/* 原生声音设置控件，状态及持久化仍由原AudioSettingsView管理。 */
+.audio-settings { color: var(--game-ink); background: var(--game-paper); border: 1px solid var(--game-line); border-radius: 16px; box-shadow: var(--game-shadow); padding: 16px; }
+.audio-settings summary { cursor: pointer; color: var(--game-blue); font-weight: 600; }
+.game-overlay .audio-settings { padding: 8px 0 0; }
+.audio-settings label { grid-template-columns: minmax(0, 1fr) minmax(90px, 120px) 40px; align-items: center; min-height: 52px; border-bottom: 1px solid var(--game-line); font-size: 12px; gap: 12px; }
+.audio-settings output { color: var(--game-blue); font-size: 11px; font-variant-numeric: tabular-nums; }
+.audio-settings input { accent-color: var(--game-blue); }
+.audio-settings input[type='range'] { height: 5px; }
+.audio-settings input[type='checkbox'] { width: 18px; height: 18px; }
+.audio-settings button { border: 1px solid var(--game-line); border-radius: 10px; color: var(--game-ink); background: #eeeee5; padding: 10px 14px; }
+.audio-settings .audio-settings-back { background: var(--game-blue); color: white; border-color: transparent; }
+
+/* 门锁仍使用原有轨道位置和命中窗口，仅更换面板与轨道外观。 */
+.pulse-lock { border: 1px solid #ffffffb0; border-image: none; border-radius: 22px; padding: 22px; background: var(--game-paper); color: var(--game-ink); box-shadow: var(--game-shadow); }
+.pulse-lock::before, .pulse-lock-track::before { content: none; }
+.pulse-lock .pulse-lock-header { color: var(--game-muted); font-size: 10px; }
+.pulse-lock .pulse-lock-close { color: var(--game-muted); border: 0; border-radius: 8px; background: #eeeee5; }
+.pulse-lock .pulse-lock-progress { color: var(--game-ink); font-size: 19px; margin: 16px 0; }
+.pulse-lock .pulse-lock-track { background: #dce3df; border-radius: 5px; height: 5px; }
+.pulse-lock .pulse-lock-window { background: #b8d9c9; border: 1px solid #86b49e; border-radius: 5px; top: -6px; height: 17px; }
+.pulse-lock .pulse-lock-dot { border-radius: 50%; background: var(--game-blue); transform: translate(-50%, -50%); }
+.pulse-lock .pulse-lock-index { color: var(--game-muted); font-size: 14px; font-weight: 500; }
+.pulse-lock .pulse-lock-help { color: var(--game-muted); font-size: 11px; border-color: var(--game-line); }
+.pulse-lock .pulse-lock-row[data-feedback='MISS'] .pulse-lock-track { background: #d9aa93; }
+.pulse-lock .pulse-lock-done { color: #628b73; }
+
+/* 启动页保留简洁层级，配色与正式游戏一致。 */
+.startup-view { background: #edf0e8; color: var(--game-ink); }
+.startup-brand { color: var(--game-blue); font-weight: 600; }
+.startup-content h1 { color: var(--game-ink); font-weight: 700; letter-spacing: -.03em; }
+.startup-status { color: var(--game-ink); font-size: 16px; font-weight: 500; }
+.startup-detail, .startup-ready { color: var(--game-muted); }
+.startup-track { height: 4px; border-radius: 4px; background: #d3ddd5; }
+.startup-track i { background: var(--game-blue); border-radius: 4px; }
+.startup-content button { color: var(--game-ink); border-color: var(--game-line); border-radius: 10px; }
+
+@media (max-width: 1000px) {
+  .alpha-hud .alpha-score { top: 16px; left: 16px; width: 220px; padding: 16px; }
+  .alpha-hud .alpha-objective { font-size: 18px; }
+  .alpha-hud .alpha-skills { right: 16px; bottom: 16px; gap: 6px; }
+  .alpha-hud[data-faction] :is(.alpha-key, .alpha-cooldown) { padding: 10px 12px; font-size: 11px; }
+  .alpha-hud .movement-guide { left: 16px; bottom: 16px; }
+}
+@media (max-height: 700px) {
+  .game-overlay[data-phase='PAUSED'] { padding: 22px; }
+  .game-overlay .pause-actions { gap: 6px; margin-top: 12px; }
+  .game-overlay :is(.pause-actions, .result-actions) button { min-height: 42px; padding: 10px 16px; }
+  .audio-settings label { min-height: 42px; }
+}
+@media (max-width: 700px) {
+  .game-overlay:is([data-outcome='win'], [data-outcome='lose']) { padding: 24px; min-height: 400px; }
+  .game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-text p,
+  .game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-stats { width: 65%; }
+  .game-overlay .result-actions { gap: 8px; }
+  .alpha-hud .alpha-goal, .alpha-hud .movement-guide { display: none; }
+  .alpha-hud .alpha-score { width: 200px; padding: 14px; }
+  .alpha-hud .alpha-skills { flex-wrap: wrap; justify-content: flex-end; max-width: 90vw; }
+  .pulse-lock { right: 16px; width: min(330px, calc(100vw - 32px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .game-overlay button { transition: none !important; }
+}
+
+/* 紧凑HUD：两行信息条，去掉常驻教学和重复目标标题。 */
+.alpha-hud .alpha-score {
+  top: 18px; left: 18px; width: 310px; padding: 12px 15px;
+  display: grid; grid-template-columns: 1fr auto; gap: 8px 14px;
+  align-items: center; border-radius: 15px; background: #faf7efe8;
+}
+.alpha-hud[data-faction] .alpha-faction { grid-column: 1; font-size: 11px; letter-spacing: 0; }
+.alpha-hud .alpha-objective, .alpha-hud .alpha-goal { display: none; }
+.alpha-hud .rice-inventory { grid-column: 1; grid-row: 2; gap: 7px; margin: 0; }
+.alpha-hud[data-faction] .alpha-rice { grid-column: 2; grid-row: 2; font-size: 11px; white-space: nowrap; }
+.alpha-hud[data-faction] .match-clock { grid-column: 2; grid-row: 1; border: 0; padding: 0; width: auto; justify-content: flex-end; }
+.alpha-hud .match-clock small { display: none; }
+.alpha-hud .match-clock time { font-size: 18px; }
+@media (max-width: 700px) {
+  .alpha-hud .alpha-score { top: 12px; left: 12px; width: 285px; padding: 10px 12px; }
+}
+
+/* 暂停页只读难度信息；阵营页布局由 faction-menu.css 维护。 */
+.difficulty-status { font-size: 11px; line-height: 1.7; color: var(--game-blue); margin: 12px 0; }

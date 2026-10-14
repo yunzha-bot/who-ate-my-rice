@@ -185,6 +185,40 @@ test('a lock that makes every uncompleted rice unreachable is abandoned', () => 
   assert.equal(ai.doorLockPendingId, null);
 });
 
+test('one reachable indoor rice cannot justify sealing another unfinished rice outside', () => {
+  const base = makeNav();
+  const nav = { findPath(start, target, doors, avoid, cost, blocked) {
+    if (target.id === rice2.id && blocked?.has('D1')) return null;
+    return base.findPath(start, target, doors, avoid, cost, blocked);
+  } };
+  const ai = readyController(nav);
+  const doors = new DoorSystem([node], C.door.maxActiveLocks);
+  assert.equal(ai.evaluateEscapeLock(makeInput(doors), 0), null);
+  assert.equal(ai.doorLockSkipReason, 'REMAINING_RICE_UNREACHABLE');
+  assert.equal(ai.doorLockPendingId, null);
+  assert.equal(doors.get('D1').state, 'CLOSED');
+});
+
+test('lock safety includes existing locks, ignores completed rice, and retains legal locking', () => {
+  const calls = [];
+  const base = makeNav();
+  const nav = { findPath(start, target, doors, avoid, cost, blocked) {
+    if (target.id) calls.push({ id: target.id, blocked: [...blocked], states: doors });
+    if (target.id === rice2.id && doors.some(d => d.id === 'D2' && d.state === 'LOCKED')) return null;
+    return base.findPath(start, target, doors, avoid, cost, blocked);
+  } };
+  const ai = readyController(nav);
+  const doors = new DoorSystem([node], C.door.maxActiveLocks);
+  const input = makeInput(doors, { doors: [...doors.doors, { id: 'D2', state: 'LOCKED' }] });
+  assert.equal(ai.evaluateEscapeLock(input, 0), null);
+  assert.equal(ai.doorLockSkipReason, 'REMAINING_RICE_UNREACHABLE');
+  assert.deepEqual(calls.map(c => c.id), [rice1.id, rice2.id]);
+  assert.ok(calls.every(c => c.blocked.includes('D1') && c.states.some(d => d.id === 'D2' && d.state === 'LOCKED')));
+  ai.doorLockPendingId = 'D1';
+  ai.doorLockEvidence = { doorId: 'D1', deepseekSide: 1 };
+  assert.equal(ai.evaluateEscapeLock({ ...input, rice: [rice1, { ...rice2, completed: true }] }, 0), 'D1');
+});
+
 test('a blocked default exit is fine when an alternate escape route exists', () => {
   const nav = { findPath(start, target, _doors, _avoid, _lockedCost, blocked) {
     // D1 is blocked, but a route through another door D2 remains available.

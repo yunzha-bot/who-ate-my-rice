@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { GAME_CONFIG as C } from '../config/gameConfig';
+import { DIFFICULTY_COPY, resolveAiDifficulty, type Difficulty } from '../config/difficultyConfig.ts';
+import { DifficultyView } from './DifficultyView.ts';
 import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
@@ -74,6 +76,9 @@ import { cameraRelativeDirection, IsometricCameraOrbit, positionCameraOnTarget }
   from './CameraRelativeMovement';
 import { GentleCameraFollow, HOME_PALETTE, homeFrustum } from './AlphaPresentation.ts';
 import { AlphaHudView } from './AlphaHudView.ts';
+import { DISABLED_AUDIO_CUES, GameAudio, worldAudioGain, type AudioCue, type MusicCue } from './GameAudio';
+import { AudioSettingsView } from './AudioSettingsView';
+import { GameFeedback } from './GameFeedback';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { populateFactionMenu, REPORT_MARKUP, updateResultPortrait } from './GameUiLayout';
 import { buildApartment, type ApartmentBuild } from './map/MapBuilder';
@@ -132,6 +137,19 @@ export class ThreeGame {
   private pulseLock = new PulseLockSystem(this.doorSystem, C.pulseLock.timing);
   private doorViews = new Map<string, DoorView>();
   private sound = new SoundEventSystem(this.runtime);
+  private readonly audio = new GameAudio(typeof localStorage === 'undefined' ? null : localStorage);
+  private audioSettings!: AudioSettingsView;
+  private pauseSettingsOpen = false;
+  private pauseSettingsButton!: HTMLButtonElement;
+  private feedback!: GameFeedback;
+  private lastReadySeconds = 0;
+  private lastAudioPhase = 'FACTION_SELECT';
+  private lastAudioSuspended = false;
+  private lastChase = false;
+  private lastRiceActive: string | null = null;
+  private lastRiceCompleted = 0;
+  private lastSprintReadiness = this.sprint.readiness;
+  private lastQReady = true;
   private soundVisual: SoundVisualView | null = null;
   private traces = new RiceTraceSystem();
   private vision = new VisionSystem(this.runtime);
@@ -240,6 +258,9 @@ export class ThreeGame {
   private pauseActions: HTMLElement;
   private resultActions: HTMLElement;
   private menu: HTMLElement;
+  private readonly difficultyView: DifficultyView;
+  private difficulty: Difficulty = 'EASY';
+  private difficultyStatus: HTMLElement;
   private pulseLockView: PulseLockView;
   private frame = 0;
   private readonly debugPossessionEnabled = import.meta.env.DEV && C.development.factionSwitchEnabled;
@@ -312,7 +333,8 @@ export class ThreeGame {
       runtime: this.runtime,
       storage: devBPersistenceStorage(import.meta.env.DEV),
     });
-    if (this.devBPersistence.enabled) this.devBPersistence.applySaved('刷新页面后恢复');
+    // Read without applying: saved DEV presets must not silently override difficulty.
+    if (this.devBPersistence.enabled) this.devBPersistence.read();
     this.resetRice();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
@@ -379,18 +401,27 @@ export class ThreeGame {
     this.overlayHeading = this.overlayText.querySelector('h1')!;
     this.overlaySummary = this.overlayText.querySelector('p')!;
     this.overlayStats = this.overlayText.querySelector('.overlay-stats')!;
+    this.difficultyStatus = this.label(this.overlayText, 'difficulty-status');
     this.pauseActions = this.label(this.overlay, 'pause-actions');
     const continueButton = document.createElement('button');
     continueButton.type = 'button';
     continueButton.textContent = '继续游戏';
     continueButton.addEventListener('click', () => this.resumeFromPause());
+    this.pauseSettingsButton = document.createElement('button');
+    this.pauseSettingsButton.type = 'button';
+    this.pauseSettingsButton.textContent = '设置';
+    this.pauseSettingsButton.addEventListener('click', () => {
+      this.pauseSettingsOpen = true;
+      this.updateHud(this.nearestRice());
+      this.audioSettings.root.querySelector('input')?.focus();
+    });
     const pauseRestartButton = document.createElement('button');
     pauseRestartButton.type = 'button';
     pauseRestartButton.textContent = '重新开始';
     pauseRestartButton.addEventListener('click', () => this.restart());
     const pauseMenuButton = document.createElement('button');
     pauseMenuButton.type = 'button';
-    pauseMenuButton.textContent = '返回阵营选择';
+    pauseMenuButton.textContent = '返回主菜单';
     pauseMenuButton.addEventListener('click', () => this.returnToFactionSelect());
     const debugSwitchButton = document.createElement('button');
     debugSwitchButton.type = 'button';
@@ -398,7 +429,7 @@ export class ThreeGame {
     debugSwitchButton.hidden = !this.debugPossessionEnabled;
     debugSwitchButton.addEventListener('click', () => this.switchPrimaryFactionFromPause());
     this.pauseActions.append(
-      continueButton, pauseRestartButton, pauseMenuButton, debugSwitchButton);
+      continueButton, this.pauseSettingsButton, pauseRestartButton, pauseMenuButton, debugSwitchButton);
     this.resultActions = this.label(this.overlay, 'result-actions');
     const restartButton = document.createElement('button');
     restartButton.type = 'button';
@@ -411,8 +442,19 @@ export class ThreeGame {
     this.resultActions.append(restartButton, menuButton);
     this.menu = this.label(container, 'faction-menu');
     populateFactionMenu(this.menu, faction => this.chooseFaction(faction));
+    this.difficultyView = new DifficultyView(this.menu);
     this.pulseLockView = new PulseLockView(container, C.pulseLock.timing,
       () => this.closePulseLock());
+    this.audioSettings = new AudioSettingsView(container, this.audio, () => this.closePauseSettings());
+    this.feedback = new GameFeedback(container, this.camera);
+    this.audio.setMusic('menu');
+    container.addEventListener('pointerdown', this.onAudioGesture);
+    container.addEventListener('pointerover', this.onAudioHover);
+    container.addEventListener('click', this.onAudioClick);
+    window.addEventListener('keydown', this.onAudioGesture);
+    window.addEventListener('blur', this.onAudioFocus);
+    window.addEventListener('focus', this.onAudioFocus);
+    document.addEventListener('visibilitychange', this.onAudioFocus);
     this.updateHud(this.nearestRice());
     this.clock.start();
     this.frame = requestAnimationFrame(this.tick);
@@ -425,8 +467,84 @@ export class ThreeGame {
     return element;
   }
 
+  private onAudioGesture = (): void => { void this.audio.unlock(); };
+  private onAudioHover = (event: PointerEvent): void => {
+    if ((event.target as Element)?.closest('button')) this.audio.play('hover', 'ui', .45);
+  };
+  private onAudioClick = (event: MouseEvent): void => {
+    const button = (event.target as Element)?.closest('button');
+    if (!button) return;
+    const text = button.textContent ?? '';
+    const cue = /返回/.test(text) ? 'back' : /重新|再来/.test(text) ? 'restart'
+      : /DeepSeek|Human/.test(text) ? 'confirm' : 'click';
+    // Resume inside the user's gesture, before the first post-pause action sound.
+    this.syncAudio();
+    void this.audio.unlock().then(() => this.audio.play(cue, 'ui', .7));
+  };
+  private onAudioFocus = (): void => { this.syncAudio(); };
+
+  private showWorldFeedback(text: string, tone: 'good' | 'bad' | 'soft',
+    source: THREE.Vector3, rice = false): void {
+    const listener = this.control.selected(this.player, this.human)?.position;
+    if (!listener || this.perceptionGeometry.inspectVision(listener, source, 11).status !== 'VISIBLE') return;
+    if (source === this.player.position && this.hide.isConcealed('DEEPSEEK') &&
+        this.control.selectedFaction !== 'DEEPSEEK') return;
+    this.feedback.show(text, tone, source, rice);
+  }
+
+  private playWorld(cue: AudioCue, source: THREE.Vector3 | { x: number; z: number },
+    faction?: Faction): void {
+    if (DISABLED_AUDIO_CUES.includes(cue)) return;
+    if (faction === 'DEEPSEEK' && this.hide.isConcealed('DEEPSEEK') &&
+        this.control.selectedFaction !== 'DEEPSEEK') return;
+    const listener = this.control.selected(this.player, this.human)?.position;
+    if (!listener) return;
+    const sameActor = faction && faction === this.control.selectedFaction;
+    const level = sameActor ? .8 : worldAudioGain(
+      Math.hypot(listener.x - source.x, listener.z - source.z),
+      this.perceptionGeometry.soundFactor(listener, source));
+    this.audio.play(cue, 'sfx', level);
+  }
+
+  private syncAudio(): void {
+    const phase = this.match.phase;
+    const suspended = document.hidden || !document.hasFocus() || phase === 'PAUSED';
+    if (suspended !== this.lastAudioSuspended) {
+      this.lastAudioSuspended = suspended;
+      void this.audio.setSuspended(suspended);
+    }
+    if (phase !== this.lastAudioPhase) {
+      if (phase === 'READY') {
+        this.lastReadySeconds = Math.ceil(this.match.readyRemainingMs / 1000);
+        this.audio.play('countdown', 'ui');
+      }
+      if (phase === 'PLAYING' && this.lastAudioPhase === 'READY') {
+        this.audio.play('start', 'ui'); this.feedback.show('开始！', 'good');
+      }
+      if (phase === 'FINISHED') {
+        this.audio.stop('eat'); this.audio.stop('room');
+        this.audio.setMusic(null);
+        const won = this.match.result?.winner === this.control.selectedFaction;
+        this.audio.play(won ? 'victory' : 'defeat', 'ui');
+        this.feedback.show(won ? '胜利！' : '再接再厉', won ? 'good' : 'soft');
+      }
+      if (phase === 'FACTION_SELECT' || phase === 'READY') this.audio.setMusic('menu');
+      this.lastAudioPhase = phase;
+    }
+    if (phase !== 'PLAYING') return;
+    this.audio.loop('room', 'room', 'ambience', .35);
+    // Existing visible chase/capture facts only: no new AI detection and no hidden-location cue.
+    const observer = this.control.selectedFaction;
+    const chase = !!observer && this.vision.get(observer).visible &&
+      (this.captureZoneActive || (observer === 'DEEPSEEK' && this.humanAI.state === 'CHASE'));
+    if (chase !== this.lastChase) this.lastChase = chase;
+    const target: MusicCue = chase ? 'chase' : 'game';
+    this.audio.setMusic(target);
+  }
+
   private chooseFaction(faction: Faction): void {
     if (!this.match.beginFromFactionSelect()) return;
+    this.difficulty = this.difficultyView.value;
     this.control.choose(faction);
     this.resetRound();
     this.lastDeepseekVisualHeadingRad = null;
@@ -560,14 +678,21 @@ export class ThreeGame {
       // The finished scene remains frozen until a global shortcut or button is used.
     } else if (this.match.phase !== 'FACTION_SELECT') {
       if (pausePressed) {
-        if (this.pulseLock.isOpen) this.closePulseLock();
+        if (this.match.phase === 'PAUSED' && this.pauseSettingsOpen) this.closePauseSettings();
+        else if (this.pulseLock.isOpen) this.closePulseLock();
         else this.togglePause();
       }
       if (this.match.phase === 'READY') {
         // The pre-round countdown must keep advancing (see readyDelta): it is a
         // phase timer, not the gameplay delta the DEV freeze is allowed to gate.
         const readyMs = this.devFreeze.readyDelta(deltaMs);
-        if (readyMs > 0) this.match.advanceReady(readyMs);
+        if (readyMs > 0) {
+          this.match.advanceReady(readyMs);
+          const seconds = Math.ceil(this.match.readyRemainingMs / 1000);
+          if (seconds < this.lastReadySeconds && seconds > 0)
+            this.audio.play(seconds === 1 ? 'countdownLast' : 'countdown', 'ui');
+          this.lastReadySeconds = seconds;
+        }
       } else if (this.match.phase === 'PLAYING') {
         if (!frozen && !this.pulseLock.isOpen && C.development.factionSwitchEnabled &&
             resolveDirectControlSwitch(this.match.phase,
@@ -624,6 +749,7 @@ export class ThreeGame {
     this.syncHideSpotIndicators();
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
+    this.syncAudio();
     this.apartment.interiorShadows.update();
     this.actorShadows.update();
     fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
@@ -781,6 +907,13 @@ export class ThreeGame {
     // 冻结期间不会推进；藏身事件每帧收集，供 DEV 面板与 AI JSON 使用。
     this.humanSearchCooldown.advance(deltaMs);
     this.deepseekLockCooldown.advance(deltaMs);
+    const qReady = (this.control.selectedFaction === 'HUMAN'
+      ? this.humanSearchCooldown : this.deepseekLockCooldown).ready;
+    if (qReady && !this.lastQReady) {
+      this.audio.play('skillReady', 'ui', .55);
+      this.feedback.show('Q 技能就绪', 'good');
+    }
+    this.lastQReady = qReady;
     this.hideSearchView.advance(deltaMs);
     // 藏身事件无论 DeepSeek AI 是否在跑都要进日志时间线；冷却与特效都只随正式
     // 玩法时间推进（上面的 advance 调用）。S7C-2b 起 AI 自主藏身的请求 / 进入 /
@@ -970,12 +1103,19 @@ export class ThreeGame {
       ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
     if (deepseekCommand?.startSprint && !concealedDeepseek) {
       if (this.sprint.tryStart(activeDeepseekDirection, ratio,
-          `AI_${this.deepseekAI.sprintDecision}`)) this.aiLogCollector.recordSprintStart();
+          `AI_${this.deepseekAI.sprintDecision}`)) {
+        this.aiLogCollector.recordSprintStart();
+        this.playWorld('sprintStart', this.player.position, 'DEEPSEEK');
+        this.showWorldFeedback('冲刺', 'soft', this.player.position);
+      }
     }
     if (this.input.consumePress('Space')) {
       if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek) {
-        if (this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE'))
+        if (this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE')) {
           this.aiLogCollector.recordSprintStart();
+          this.playWorld('sprintStart', this.player.position, 'DEEPSEEK');
+          this.showWorldFeedback('冲刺', 'soft', this.player.position);
+        } else this.audio.play('skillUnavailable', 'ui', .6);
       } else if (this.control.isControlling('HUMAN') && !this.pulseLock.isOpen) {
         const nearby = this.nearestInteractableDoor(this.human.position);
         if (nearby) {
@@ -996,7 +1136,16 @@ export class ThreeGame {
     this.sprint.advance(deltaMs, activeDeepseekDirection);
     if (previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED') {
       this.sound.emit('FALL', this.player.position, 'DEEPSEEK');
+      this.playWorld('fall', this.player.position, 'DEEPSEEK');
+      this.playWorld('stun', this.player.position, 'DEEPSEEK');
+      this.showWorldFeedback('摔倒！', 'bad', this.player.position);
       this.aiLogCollector.recordFall();
+    }
+    if (previousSprintState === 'SPRINT_RUNNING' && this.sprint.state === 'NORMAL')
+      this.showWorldFeedback('冲刺结束', 'soft', this.player.position);
+    if (previousSprintState === 'STUNNED' && this.sprint.state === 'NORMAL') {
+      this.playWorld('recover', this.player.position, 'DEEPSEEK');
+      this.showWorldFeedback('恢复', 'good', this.player.position);
     }
     // 藏身中禁止移动（与 STUNNED 同构：位移强制为 0，不新增物理特性）。
     const movement = concealedDeepseek
@@ -1101,6 +1250,27 @@ export class ThreeGame {
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
       !doorInteraction.doorOwnsInteraction && !doorInteraction.hideOwnsInteraction &&
       inRange && direction.x === 0 && direction.y === 0);
+    const activeRice = this.rice.activeId && !this.rice.get(this.rice.activeId)?.rice.completed
+      ? this.rice.activeId : null;
+    if (activeRice !== this.lastRiceActive) {
+      if (this.lastRiceActive) {
+        this.audio.stop('eat');
+        if (!this.rice.get(this.lastRiceActive)?.rice.completed)
+          this.playWorld('eatInterrupt', this.player.position, 'DEEPSEEK');
+      }
+      if (activeRice) this.playWorld('eatStart', this.player.position, 'DEEPSEEK');
+      this.lastRiceActive = activeRice;
+    }
+    if (activeRice) {
+      const listener = this.control.selected(this.player, this.human)?.position;
+      const level = this.control.selectedFaction === 'DEEPSEEK' ? .6 : listener
+        ? worldAudioGain(distance(listener, this.player.position),
+          this.perceptionGeometry.soundFactor(listener, this.player.position)) * .6 : 0;
+      if (level > .02) {
+        this.audio.loop('eat', 'eatLoop', 'sfx', level);
+        this.audio.setLoopLevel('eat', level);
+      } else this.audio.stop('eat');
+    }
     for (const portion of this.rice.portions) {
       this.riceViews.get(portion.rice.id)!.sync(portion.rice);
       const position = this.riceViews.get(portion.rice.id)!.position;
@@ -1109,9 +1279,23 @@ export class ThreeGame {
       if (portion.rice.progressMs > (previousRice.get(portion.rice.id) ?? 0) &&
           this.sound.nowMs - this.lastRiceSoundMs >= C.perception.riceSoundIntervalMs) {
         this.sound.emit('RICE_EAT', position, 'DEEPSEEK');
+        if (this.control.selectedFaction === 'DEEPSEEK')
+          this.feedback.show('我吃', 'soft', position, true);
         this.lastRiceSoundMs = this.sound.nowMs;
       }
     }
+    if (this.rice.completedCount > this.lastRiceCompleted) {
+      this.playWorld('eatComplete', this.player.position, 'DEEPSEEK');
+      this.showWorldFeedback('吃完一份！', 'good', this.player.position, true);
+      this.lastRiceCompleted = this.rice.completedCount;
+    }
+    if (this.sprint.readiness === 'READY' && this.lastSprintReadiness !== 'READY') {
+      if (this.control.selectedFaction === 'DEEPSEEK') {
+        this.audio.play('skillReady', 'ui', .55);
+        this.feedback.show('冲刺就绪', 'good', this.player.position);
+      }
+    }
+    this.lastSprintReadiness = this.sprint.readiness;
     this.syncTraceViews();
     this.vision.update(0, this.human.position, this.player.position,
       this.perceptionGeometry);
@@ -1130,6 +1314,10 @@ export class ThreeGame {
     this.captureZone.setProgress(
       this.match.captureProgressMs, C.match.captureMs, this.captureZoneActive);
     if (this.match.result) {
+      if (this.match.result.reason === 'CAPTURED') {
+        this.playWorld('caught', this.player.position, 'DEEPSEEK');
+        this.showWorldFeedback('抓捕命中', 'bad', this.player.position);
+      }
       // S7D：结算信息进整局摘要（胜负 / 原因 / 时长 / 完成米数）。
       this.aiLogCollector.noteMatchResult({
         winner: this.match.result.winner, reason: this.match.result.reason,
@@ -1252,10 +1440,13 @@ export class ThreeGame {
         remainingSeconds: this.deepseekLockCooldown.remainingSeconds,
       });
       if (!gate.ok) {
+        this.audio.play('skillUnavailable', 'ui', .7);
+        this.feedback.show('技能不可用', 'bad');
         this.setHideNotice(gate.message ?? '锁门被拒绝');
         return;
       }
       const result = nearby ? this.doorSystem.lock(nearby.door.id, faction) : 'NOT_FOUND';
+      if (result === 'LOCKED') this.playWorld('skill', actor.position, faction);
       this.applyDoorResult(nearby?.door.id ?? null, result);
       if (lockArmsPlayerCooldown(result)) this.deepseekLockCooldown.arm();
       return;
@@ -1279,12 +1470,15 @@ export class ThreeGame {
     });
     this.lastPlayerQPlanReason = plan.reason;
     if (plan.kind === 'REJECT_COOLDOWN') {
+      this.audio.play('skillUnavailable', 'ui', .7);
+      this.feedback.show('技能冷却中', 'bad');
       this.setHideNotice(plan.message ?? '搜查被拒绝');
       return;
     }
     // 有效释放（对局中且不在冷却）就先开始计时：扇形命中、家具搜查、合法搜空与
     // 普通扇形空挥同样消耗这 12 秒冷却。
     if (plan.armsCooldown) this.humanSearchCooldown.arm();
+    if (plan.armsCooldown) this.playWorld('skill', actor.position, faction);
     if (plan.kind === 'FURNITURE' && pressResolution.pointedLegalTarget &&
         this.performFurnitureSearch(actor.position, pressResolution.pointedLegalTarget)) {
       return;
@@ -1360,6 +1554,8 @@ export class ThreeGame {
       },
     });
     if (resolution.code === 'HIT_CONCEALED') {
+      this.playWorld('capture', position, 'HUMAN');
+      this.feedback.show('抓到了！', 'good', position);
       this.humanSearchTargetKind = 'FURNITURE';
       this.furnitureSearchHitCount++;
       this.showSearchFurnitureFeedback(target.spotId);
@@ -1371,6 +1567,7 @@ export class ThreeGame {
       return true;
     }
     if (resolution.code === 'MISS_EMPTY') {
+      this.playWorld('search', position, 'HUMAN');
       this.humanSearchTargetKind = 'FURNITURE';
       this.setHideNotice(`家具搜查完成：「${label}」没有人，` +
         `Q 进入 ${(C.humanSearch.cooldownMs / 1000).toFixed(0)} 秒冷却`);
@@ -1437,10 +1634,13 @@ export class ThreeGame {
       },
     });
     if (result.outcome === 'MISS') {
+      this.playWorld('search', actor.position, 'HUMAN');
       this.setHideNotice(`搜查未命中：${HUMAN_SEARCH_CODE_TEXT[result.code]}`);
       return;
     }
     this.humanSearchHitCount++;
+    this.playWorld('capture', actor.position, 'HUMAN');
+    this.feedback.show('抓到了！', 'good', actor.position);
     if (result.outcome === 'FLUSH_CONCEALED') {
       this.showSearchFurnitureFeedback(result.spotId);
       this.releaseHide('SEARCHED');
@@ -1537,6 +1737,8 @@ export class ThreeGame {
         ? this.mapFurniture.find(rect => rect.id === spot.furnitureId) ?? null : null;
     };
     if (phase === 'DWELL' && spotId && stance) {
+      if (this.humanAiSearchFeedbackPhase !== 'DWELL')
+        this.playWorld('search', this.human.position, 'HUMAN');
       const furniture = furnitureFor(spotId);
       if (furniture) {
         this.hideSearchView.showAiInspection(
@@ -1803,6 +2005,7 @@ export class ThreeGame {
       }
       return;
     }
+    this.playWorld('search', this.human.position, 'HUMAN');
     // AI 侧的登记刻意只含公开安全字段（结果 + 计划瞄点 / 最终判定点）。
     this.humanAI.noteCheckHideResolution({
       spotId, result: resolution.hit ? 'HIT' : 'MISS', detail: resolution.detail,
@@ -1814,6 +2017,8 @@ export class ThreeGame {
       countsAsFormalCheck: resolution.countsAsFormalCheck,
     });
     if (resolution.hit) {
+      this.playWorld('capture', this.human.position, 'HUMAN');
+      this.showWorldFeedback('抓到了！', 'good', this.human.position);
       const realSpotId = this.hide.spotId;
       if (realSpotId) this.showSearchFurnitureFeedback(realSpotId);
       this.releaseHide('SEARCHED');
@@ -1838,6 +2043,8 @@ export class ThreeGame {
       sprintState: this.sprint.state,
     });
     if (result.ok) {
+      this.playWorld('hideEnter', position, 'DEEPSEEK');
+      this.feedback.show('已躲藏', 'soft', position);
       // 中断进食（保留原有进食进度语义），并把既有抓捕进度归零。
       this.rice.interrupt();
       this.match.captureProgressMs = 0;
@@ -1852,6 +2059,8 @@ export class ThreeGame {
     const overlap = this.exitBlockedByHuman();
     const result = this.hide.exit('PLAYER_E', { humanOverlap: overlap });
     if (result.ok) {
+      this.playWorld('hideExit', this.player.position, 'DEEPSEEK');
+      this.feedback.show('离开躲藏', 'soft', this.player.position);
       this.setHideNotice('已退出藏身：普通视觉与抓捕立刻恢复');
     } else {
       this.setHideNotice(result.code === 'HUMAN_BLOCKING'
@@ -1906,6 +2115,7 @@ export class ThreeGame {
       requestToken: token ?? Number.NaN,
     });
     if (result.ok) {
+      this.playWorld('hideEnter', this.player.position, 'DEEPSEEK');
       // 与玩家 E 完全同一套后果：中断进食（保留进度）并把既有抓捕进度归零。
       this.rice.interrupt();
       this.match.captureProgressMs = 0;
@@ -1930,6 +2140,7 @@ export class ThreeGame {
     const result = this.hide.exit('AI_EXIT', { humanOverlap: this.exitBlockedByHuman() });
     this.deepseekHideLastExitReason = result.ok ? 'AI_EXIT' : result.code;
     if (result.ok) {
+      this.playWorld('hideExit', this.player.position, 'DEEPSEEK');
       this.deepseekHideExitCount++;
       this.setHideNotice('AI 已自主退出藏身：继续找米');
     }
@@ -2022,14 +2233,21 @@ export class ThreeGame {
     const doorId = this.pulseLock.openDoorId;
     if (!doorId) return;
     const result = this.pulseLock.press(this.match.phase);
+    this.audio.play('pulseInput', 'ui', .55);
     if (result === 'COMPLETE') {
+      this.audio.play('pulseSuccess', 'ui');
+      this.feedback.show('解锁成功', 'good');
       const doorResult = this.doorSystem.disableLock(doorId, 'HUMAN');
       this.pulseLock.close();
       this.applyDoorResult(doorId, doorResult);
       this.noteHumanPlayerUnlock(doorId, doorResult);
     } else if (result === 'MISS') {
+      this.audio.play('pulseWrong', 'ui');
+      this.feedback.show('未命中', 'bad');
       this.doorStatusMessage = '脉冲未命中，当前锁芯重试';
     } else if (result === 'CORE_COMPLETE') {
+      this.audio.play('pulseCorrect', 'ui');
+      this.feedback.show('锁芯完成', 'good');
       this.doorStatusMessage = '锁芯破解成功';
     }
     this.renderPulseLock();
@@ -2079,7 +2297,20 @@ export class ThreeGame {
         result === 'FORCE_OPENED' || result === 'UNLOCKED' ? 'HUMAN'
           : actorOverride ?? this.control.controlledFaction;
       const door = this.doorSystem.definition(id);
-      if (door && sourceFaction) this.sound.emit(soundType, door, sourceFaction);
+      if (door && sourceFaction) {
+        this.sound.emit(soundType, door, sourceFaction);
+        const cue = result === 'OPENED' ? 'doorOpen' : result === 'CLOSED' ? 'doorClose'
+          : result === 'LOCKED' ? 'doorLock' : 'doorUnlock';
+        this.playWorld(cue, door, sourceFaction);
+        if (actorOverride === undefined && ['LOCKED', 'UNLOCKED', 'FORCE_OPENED'].includes(result))
+          this.feedback.show(result === 'LOCKED' ? '已上锁' : result === 'UNLOCKED'
+            ? '已解锁' : '强制开门', 'soft');
+      }
+    }
+    if (!['OPENED', 'CLOSED', 'LOCKED', 'UNLOCKED', 'FORCE_OPENED'].includes(result) &&
+        actorOverride === undefined) {
+      this.audio.play('doorFail', 'ui', .55);
+      this.feedback.show('操作失败', 'bad');
     }
     this.doorStatusMessage = result === 'OPENED' ? '门已打开'
       : result === 'CLOSED' ? '门已关闭'
@@ -2121,11 +2352,16 @@ export class ThreeGame {
 
   private togglePause(): void {
     if (this.match.pause()) {
+      this.pauseSettingsOpen = false;
       this.rice.interrupt();
       this.closePulseLock();
       // 藏身状态本身在暂停期间保留；只有表现层的扇形特效需要安全清掉。
       this.hideSearchView.reset();
       this.input.clear();
+      this.updateHud(this.nearestRice());
+      // 打开暂停时聚焦对话框；Tab后才在具体控件上显示键盘焦点。
+      this.overlay.tabIndex = -1;
+      this.overlay.focus({ preventScroll: true });
       return;
     }
     this.resumeFromPause();
@@ -2133,13 +2369,29 @@ export class ThreeGame {
 
   private resumeFromPause(): void {
     if (!this.match.resume()) return;
+    this.pauseSettingsOpen = false;
     this.input.clear();
     this.updateHud(this.nearestRice());
+  }
+
+  private closePauseSettings(): void {
+    this.pauseSettingsOpen = false;
+    this.input.clear();
+    this.updateHud(this.nearestRice());
+    this.pauseSettingsButton.focus();
+  }
+
+  private applyDifficulty(): void {
+    const ai = resolveAiDifficulty(this.difficulty, this.control.selectedFaction ?? 'DEEPSEEK');
+    this.humanAI.setDifficultyConfig(ai.humanAI);
+    this.deepseekAI.setDifficultyConfig(ai.deepseekAI);
+    this.runtime.setBaseValue('movement.humanAiMultiplier', ai.humanAI.movementSpeedMultiplier);
   }
 
   private switchPrimaryFactionFromPause(): void {
     if (this.match.phase !== 'PAUSED' || this.pulseLock.isOpen ||
         !this.debugPossessionEnabled || !this.control.switchPrimaryFaction()) return;
+    this.applyDifficulty();
     this.input.clear();
     this.lastDeepseekVisualHeadingRad = null;
     this.deepseekVisualTarget = { kind: 'NONE' };
@@ -2164,6 +2416,9 @@ export class ThreeGame {
         validation: this.matchSetup.validation,
       },
     } : undefined);
+    data.config = { deepseekAI: this.deepseekAI.difficultyConfig,
+      humanAI: this.humanAI.difficultyConfig, difficulty: this.difficulty,
+      humanAIMovementMultiplier: this.runtime.humanAIMovementMultiplier };
     const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const filename = `who-ate-my-rice-ai-log-${stamp}.json`;
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2192,6 +2447,7 @@ export class ThreeGame {
   private restart(): void {
     if (this.match.phase === 'FACTION_SELECT' || this.control.selectedFaction === null) return;
     this.match.reset();
+    this.pauseSettingsOpen = false;
     this.resetRound();
     this.followCamera();
     this.updateHud(this.nearestRice());
@@ -2199,6 +2455,7 @@ export class ThreeGame {
 
   private returnToFactionSelect(): void {
     if (!this.match.returnToFactionSelect()) return;
+    this.pauseSettingsOpen = false;
     this.resetRound();
     this.control.clear();
     this.cameraOrbit.snapDefault();
@@ -2210,12 +2467,22 @@ export class ThreeGame {
   }
 
   private resetRound(): void {
+    this.audio.reset();
+    this.audio.setMusic('menu');
+    this.feedback.clear();
+    this.lastAudioPhase = 'FACTION_SELECT';
+    this.lastChase = false;
+    this.lastReadySeconds = Math.ceil(this.match.readyRemainingMs / 1000);
+    this.lastRiceActive = null;
+    this.lastRiceCompleted = 0;
+    this.lastSprintReadiness = 'READY';
+    this.lastQReady = true;
     if (this.sceneEditor.isOpen) this.sceneEditor.close();
     this.devFreeze.reset();
-    // A new round/restart clears every temporary DEV-B override, then re-applies
-    // the saved DEV preset (if any) so a saved tuning session survives 重开 / 返回阵营.
+    // New matches use the selected difficulty. Saved DEV presets stay untouched;
+    // loading/editing a preset is an explicit debugging action for this round.
     this.devBBinding.resetForNewRound();
-    if (this.devBPersistence.enabled) this.devBPersistence.applySaved('新局开始');
+    this.applyDifficulty();
     this.editorOpenLast = false;
     this.devZoom = 1;
     this.sprint.reset();
@@ -2313,6 +2580,13 @@ export class ThreeGame {
 
   private updateHud(nearest: ReturnType<ThreeGame['nearestRice']>): void {
     const phase = this.match.phase;
+    this.overlay.dataset.difficulty = this.difficulty;
+    this.difficultyStatus.hidden = phase !== 'PAUSED';
+    this.difficultyStatus.textContent = `当前难度：${DIFFICULTY_COPY[this.difficulty].label}` +
+      (this.control.selectedFaction === 'DEEPSEEK'
+        ? ` · Human AI 移速倍率 ${this.runtime.humanAIMovementMultiplier.toFixed(2)}` : ' · DeepSeek AI') +
+      (this.runtime.overrideCount ? ` · DEV-B 调试覆盖 ${this.runtime.overrideCount} 项（可在 DEV-B 核查有效值）`
+        : ' · 难度基准（保存的 DEV-B 预设未自动应用）');
     const phaseText = phase === 'FACTION_SELECT' ? '选择阵营'
       : phase === 'READY' ? `准备：${Math.ceil(this.match.readyRemainingMs / 1000)} 秒`
       : phase === 'PLAYING' ? '对局中' : phase === 'PAUSED' ? '已暂停' : '已结束';
@@ -2349,7 +2623,23 @@ export class ThreeGame {
         (result.reason === 'RICE_COMPLETED' ? '五份米都吃完了。' : '抓捕完成，晚饭保住了。');
       this.overlayStats.textContent = `${hudFaction === 'DEEPSEEK' ? '01 / DeepSeek' : '02 / Human'} · ${time} · 大米 ${this.rice.completedCount} / ${ACTIVE_RICE_COUNT}`;
     }
-    this.pauseActions.hidden = phase !== 'PAUSED';
+    const settings = phase === 'PAUSED' && this.pauseSettingsOpen;
+    this.overlay.dataset.view = settings ? 'settings' : 'pause';
+    this.overlay.setAttribute('role', 'dialog');
+    this.overlay.setAttribute('aria-label', phase === 'PAUSED' ? (settings ? '声音设置' : '游戏暂停') : '对局结算');
+    this.overlayText.querySelector('.overlay-kicker')!.textContent = phase === 'PAUSED'
+      ? 'THE LITTLE RICE CHASE / PAUSE' : 'THE LITTLE RICE CHASE / REPORT';
+    if (settings) {
+      this.overlayHeading.textContent = '声音设置';
+      this.overlaySummary.textContent = '实时调节音量 · 自动保存 · ESC 返回上一级';
+    }
+    const settingsParent = phase === 'PAUSED' ? this.overlay : this.menu.querySelector('.menu-audio-slot')!;
+    if (this.audioSettings.root.parentElement !== settingsParent) {
+      settingsParent.append(this.audioSettings.root);
+      this.audioSettings.root.open = phase === 'PAUSED';
+    }
+    this.audioSettings.root.hidden = phase === 'PAUSED' ? !settings : phase !== 'FACTION_SELECT';
+    this.pauseActions.hidden = phase !== 'PAUSED' || settings;
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
     const controlledFaction = this.control.controlledFaction;
@@ -2437,6 +2727,7 @@ export class ThreeGame {
     const interval = sprinting ? C.perception.sprintStepIntervalMs : C.perception.footstepIntervalMs;
     if (this.sound.nowMs - this.lastStepMs[faction] < interval) return;
     this.sound.emit(sprinting ? 'SPRINT' : 'FOOTSTEP', after, faction);
+    this.playWorld(sprinting ? 'sprintStep' : 'step', after, faction);
     this.lastStepMs[faction] = this.sound.nowMs;
   }
 
@@ -2567,7 +2858,7 @@ export class ThreeGame {
             ? `${humanPath.index}/${humanPath.total} ${point(humanPath.waypoint)}` : '无'),
           make('lock-decision', '锁门决策 / 目标门', `${this.humanAI.lockDecision} / ${this.humanAI.targetDoorId ?? '无'}`),
           make('decision-reason', '选择原因', this.humanAI.decisionReason),
-          make('unlock-progress', '解锁进度', `${(this.humanAI.unlockProgressMs / 1000).toFixed(1)} / ${(C.humanAI.aiUnlockDurationMs / 1000).toFixed(1)} 秒`),
+          make('unlock-progress', '解锁进度', `${(this.humanAI.unlockProgressMs / 1000).toFixed(1)} / ${(this.humanAI.difficultyConfig.aiUnlockDurationMs / 1000).toFixed(1)} 秒`),
           make('force-break-cooldown', '强破 CD', `${(this.humanDoorSkill.cooldownRemainingMs / 1000).toFixed(1)} 秒`),
           make('search-room', '搜索区域', this.humanAI.searchTargetRoomId ?? '无'),
           make('hide-clue', 'AI 已知：米痕线索', `${this.humanAI.clueMemory.count()} 条` +
@@ -2624,7 +2915,7 @@ export class ThreeGame {
           make('hide-check-round', '本轮已开始 / 已正式执行（上限）　本次调查已执行',
             `${this.humanAI.checkHideRoundAttempts} / ${this.humanAI.checkHideRoundChecks}` +
             `（上限 ${this.humanAI.checkHideRoundBudget}）　` +
-            `${this.humanAI.checkHideInvestigationChecks}（上限 ${C.humanAI.searchRoomCount}）｜` +
+            `${this.humanAI.checkHideInvestigationChecks}（上限 ${this.humanAI.difficultyConfig.searchRoomCount}）｜` +
             `本轮开始过的家具 ${this.humanAI.checkHideAttemptedSpotId ?? '无'}｜` +
             `${this.humanAI.checkHideCheckedSpotIds.join('、') || '还没有检查过家具'}`),
           make('hide-check-aim', '计划瞄点 / 最终判定点（同一个点才算计划与执行一致）',
@@ -3249,6 +3540,17 @@ export class ThreeGame {
   }
 
   dispose(): void {
+    this.audio.dispose();
+    this.audioSettings.dispose();
+    this.feedback.dispose();
+    const container = this.renderer.domElement.parentElement;
+    container?.removeEventListener('pointerdown', this.onAudioGesture);
+    container?.removeEventListener('pointerover', this.onAudioHover);
+    container?.removeEventListener('click', this.onAudioClick);
+    window.removeEventListener('keydown', this.onAudioGesture);
+    window.removeEventListener('blur', this.onAudioFocus);
+    window.removeEventListener('focus', this.onAudioFocus);
+    document.removeEventListener('visibilitychange', this.onAudioFocus);
     this.actorShadows.dispose();
     this.apartment.interiorShadows.dispose();
     this.alphaHud.dispose();

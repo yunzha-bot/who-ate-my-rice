@@ -95,7 +95,7 @@ test('rice progress survives interruption and two rounds can end with different 
 });
 
 test('configured rice duration retains progress and completes in either timing mode', () => {
-  assert.equal(RICE_MAX_PROGRESS_MS.production, 60_000);
+  assert.equal(RICE_MAX_PROGRESS_MS.production, 30_000);
   assert.equal(RICE_MAX_PROGRESS_MS.development, 5_000);
   assert.equal(GAME_CONFIG.rice.maxProgressMs, RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE]);
 

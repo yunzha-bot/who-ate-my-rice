@@ -1,0 +1,96 @@
+/* S13：只覆盖暂停/声音设置与启动层，不改变已验收的阵营卡和结算。 */
+.world-interaction {
+  --interaction-offset-x: 30px;
+  --interaction-offset-y: -16px;
+  transform: translate(calc(-50% + var(--interaction-offset-x)),
+    calc(-100% + var(--interaction-offset-y)));
+}
+.world-interaction[data-visible='true'] {
+  transform: translate(calc(-50% + var(--interaction-offset-x)),
+    calc(-100% + var(--interaction-offset-y)));
+}
+.world-interaction[data-visible='false'] {
+  transform: translate(calc(-50% + var(--interaction-offset-x)),
+    calc(-100% + 3px + var(--interaction-offset-y)));
+}
+.game-overlay[data-phase='PAUSED'] {
+  position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%);
+  width: min(500px, calc(100vw - 40px)); max-height: calc(100dvh - 40px);
+  box-sizing: border-box; z-index: 150; padding: 18px;
+  box-shadow: 0 12px 40px #26303940, 0 0 0 100vmax #18262f66;
+  animation: s13-panel-in .18s ease-out;
+}
+/* 对局暂停/结算面板去掉重复Sheet装饰，保留简洁底色和文本布局。 */
+.game-overlay {
+  border: 0;
+  border-image: none;
+  box-shadow: 0 10px 32px rgb(32 39 45 / .16);
+}
+.game-overlay:is([data-phase='PAUSED'], [data-outcome='win'], [data-outcome='lose']) {
+  background: var(--ui-paper);
+}
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) {
+  /* 原Sheet的30px边框 + 4px内距改为等宽留白，保持内容位置。 */
+  padding: 34px;
+}
+.game-overlay::before,
+.game-overlay::after { content: none; background: none; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose'])::after { content: none; background: none; }
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-text p,
+.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-stats { background: var(--ui-panel); }
+.game-overlay :is(.pause-actions, .result-actions) button {
+  border: 1px solid var(--ui-line);
+  border-image: none;
+  box-shadow: none;
+  background: var(--ui-ink);
+  color: var(--ui-paper);
+  padding: 13px 17px;
+}
+.game-overlay :is(.pause-actions, .result-actions) button::after { content: none; background: none; }
+.game-overlay :is(.pause-actions, .result-actions) button:not(:first-child) { background: var(--ui-paper); color: var(--ui-ink); }
+.game-overlay :is(.pause-actions, .result-actions) button:hover {
+  border-image: none;
+  background: var(--ui-ice);
+  color: var(--ui-ink);
+  box-shadow: 0 3px 10px rgb(32 39 45 / .12);
+}
+.game-overlay[data-phase='PAUSED'] .overlay-text h1 { font-size: 32px; margin: 14px 0; letter-spacing: 0; }
+.game-overlay[data-phase='PAUSED'] .overlay-stats { margin-top: 10px; padding: 10px 0; }
+.game-overlay[data-view='settings'] .overlay-stats { display: none; }
+.game-overlay [hidden], .startup-view [hidden] { display: none !important; }
+.game-overlay .pause-actions { position: relative; z-index: 1; display: grid; gap: 10px; margin-top: 18px; }
+.game-overlay .pause-actions button { min-height: 44px; }
+.audio-settings { width: min(340px, calc(100vw - 48px)); box-sizing: border-box; z-index: 151; }
+.audio-settings label { display: grid; grid-template-columns: 1fr 110px 38px; gap: 8px; min-height: 32px; }
+.audio-settings input[type='range'] { width: 100%; cursor: pointer; }
+.audio-settings output { text-align: right; font-variant-numeric: tabular-nums; }
+.audio-settings label:has(input[type='checkbox']) { grid-template-columns: 1fr auto; }
+.audio-settings button { font: inherit; cursor: pointer; margin-top: 12px; min-height: 36px; }
+.audio-settings-back { display: none; }
+.game-overlay .audio-settings { position: relative; inset: auto; z-index: 1; width: 100%; padding: 8px 0; border: 0; background: none; box-shadow: none; }
+.game-overlay .audio-settings summary { display: none; }
+.game-overlay .audio-settings-back { display: block; width: 100%; }
+.audio-settings input:focus-visible { outline: 2px solid #65b9c9; outline-offset: 4px; }
+.startup-view { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
+  padding: 24px; color: #f4f1e9; background: #1c303a; transition: opacity .25s ease; text-align: center; }
+.startup-content { width: min(540px, 100%); }
+.startup-brand { color: #c9e5ea; font-size: 13px; font-weight: 700; letter-spacing: .18em; }
+.startup-content h1 { margin: 38px 0 30px; font-size: clamp(25px, 4vw, 34px); font-weight: 600; letter-spacing: .08em; }
+.startup-status { margin: 0; color: #f4f1e9; font-size: 19px; font-weight: 600; letter-spacing: .1em; }
+.startup-detail, .startup-ready { min-height: 1.4em; color: #b4c6ca; font-size: 12px; line-height: 1.7; }
+.startup-detail { margin: 24px 0 0; }
+.startup-ready { margin: 8px 0 0; }
+.startup-track { width: min(360px, 78vw); height: 3px; margin: 26px auto 0; background: #52666f; overflow: hidden; }
+.startup-track i { display: block; width: 35%; height: 100%; background: #65b9c9; animation: s13-loading 1.4s ease-in-out infinite alternate; }
+.startup-content button { padding: 8px 14px; margin-top: 22px; background: transparent; color: #f4f1e9; border: 1px solid #7f9da4; cursor: pointer; }
+.startup-complete { opacity: 0; pointer-events: none; }
+@keyframes s13-loading { to { transform: translateX(180%); } }
+@keyframes s13-panel-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 600px) {
+  .audio-settings label { grid-template-columns: 1fr 90px 36px; font-size: 12px; }
+  .game-overlay[data-phase='PAUSED'] { padding: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .startup-view { transition: none; }
+  .startup-track i, .game-overlay[data-phase='PAUSED'] { animation: none; }
+}

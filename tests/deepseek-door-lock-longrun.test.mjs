@@ -204,7 +204,7 @@ test('long run: cancel conditions never leave a pending behind', () => {
   assert.deepEqual(run.violations, []);
 });
 
-test('long run: locked doors never seal every remaining rice route', () => {
+test('long run: locked doors keep every remaining rice route reachable', () => {
   const run = createRun();
   for (let cycle = 0; cycle < 20; cycle++) {
     encounter(run);
@@ -215,7 +215,7 @@ test('long run: locked doors never seal every remaining rice route', () => {
   const reachable = [riceMid, riceLeft].filter(rice =>
     !!run.ai.navigation.findPath({ x: 1.4, z: 0 }, rice, run.system.doors,
       undefined, null, locked));
-  assert.ok(reachable.length >= 1, `all rice sealed behind ${[...locked].join(',')}`);
+  assert.equal(reachable.length, 2, `unfinished rice sealed behind ${[...locked].join(',')}`);
 });
 
 test('long run: lock log events are bounded and never repeat every frame', () => {

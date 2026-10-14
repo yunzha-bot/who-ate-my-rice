@@ -177,6 +177,14 @@ export class RuntimeDebugOverrides {
     return spec.base;
   }
 
+  /** Round-specific base, not a DEV override or stored preset. */
+  setBaseValue(id: string, value: number): void {
+    const spec = this.specs.get(id);
+    if (!spec || !Number.isFinite(value) || value < spec.min || value > spec.max)
+      throw new Error(`Invalid runtime base: ${id}`);
+    this.specs.set(id, { ...spec, base: value });
+  }
+
   set(id: string, raw: unknown): RuntimeParamResult {
     const spec = this.specs.get(id);
     if (!spec) return { ok: false, message: `未知参数：${id}` };

@@ -46,8 +46,8 @@ test('DeepSeek AI chooses shortest estimated completion, excluding completed ric
     rice('done', 0.5, 0, 5_000, true)];
   ai.update(input({ x: 0, z: 0 }, portions));
   assert.equal(ai.targetRiceId, 'partial');
-  assert.ok(ai.targetScoreMs > 0);
-  assert.ok(ai.targetScoreMs < 5_000);
+  assert.ok(ai.targetScoreMs > C.rice.maxProgressMs - 4_000);
+  assert.ok(ai.targetScoreMs < C.rice.maxProgressMs);
   portions[1].completed = true;
   ai.update(input({ x: 0, z: 0 }, portions));
   assert.equal(ai.targetRiceId, 'near');

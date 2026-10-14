@@ -20,7 +20,7 @@
 }
 
 /* Shared button surface: release always returns to its current hover/rest state. */
-:is(.faction-menu, .game-overlay, .pulse-lock) button {
+:is(.game-overlay, .pulse-lock) button {
   font: inherit;
   cursor: pointer;
   border-radius: 0;
@@ -28,254 +28,17 @@
   transition: transform var(--ui-motion) var(--ui-ease), box-shadow var(--ui-motion) var(--ui-ease),
     color var(--ui-motion), background-color var(--ui-motion);
 }
-:is(.faction-menu, .game-overlay, .pulse-lock) button:focus-visible {
+:is(.game-overlay, .pulse-lock) button:focus-visible {
   outline: 3px solid var(--ui-accent);
   outline-offset: 5px;
 }
-:is(.faction-menu, .game-overlay, .pulse-lock) button:disabled {
+:is(.game-overlay, .pulse-lock) button:disabled {
   opacity: .45;
   cursor: not-allowed;
 }
-:is(.faction-menu, .game-overlay, .alpha-hud, .pulse-lock)[hidden],
-:is(.pause-actions, .result-actions, .alpha-skills, .alpha-ready, .alpha-progress)[hidden],
-.alpha-hud [hidden], .game-overlay button[hidden] {
+:is(.game-overlay, .alpha-hud, .pulse-lock)[hidden], :is(.pause-actions, .result-actions, .alpha-skills, .alpha-ready, .alpha-progress)[hidden], .alpha-hud [hidden], .game-overlay button[hidden] {
   display: none;
 }
-
-/* A deliberately open centre lets the residential diorama remain the menu backdrop. */
-.faction-menu {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  max-height: none;
-  margin: 0;
-  padding: 0;
-  transform: none;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-  color: var(--ui-ink);
-  pointer-events: none;
-  overflow: auto;
-  animation: none;
-}
-.menu-story {
-  /* 首页标题面板调节：位置、尺寸、字号、间距；两条竖线共用同一水平坐标。 */
-  --title-panel-top: 8%;
-  --title-panel-left: 4%;
-  --title-panel-width: 28%;
-  --title-panel-min-height: 0px;
-  --title-font-size: clamp(44px, 4.6vw, 78px);
-  --title-margin-top: 24px;
-  --title-margin-bottom: 12px;
-  --subtitle-gap: 22px;
-  --subtitle-font-size: 13px;
-  --home-accent-x: -13px;
-  position: absolute;
-  top: var(--title-panel-top);
-  left: var(--title-panel-left);
-  width: var(--title-panel-width);
-  min-height: var(--title-panel-min-height);
-  padding: 24px 28px 22px;
-  background: none;
-  border: 0;
-  border-left: 0;
-  border-radius: 0;
-  isolation: isolate;
-  box-shadow: none;
-}
-.menu-story::before {
-  content: ''; position: absolute; z-index: -1; inset: -12px 12% -12px -18px;
-  background: var(--ui-panel);
-  clip-path: polygon(8% 0, 100% 0, 92% 78%, 76% 100%, 0 100%);
-}
-.menu-eyebrow, .menu-index, .menu-english, .faction-dock legend small {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .15em;
-}
-.menu-eyebrow { display: block; max-width: 85%; overflow-wrap: anywhere; color: var(--ui-slate); }
-.faction-menu h1 {
-  position: relative;
-  margin: var(--title-margin-top) 0 var(--title-margin-bottom);
-  font-size: var(--title-font-size);
-  line-height: 1.02;
-  font-weight: 900;
-  letter-spacing: -.065em;
-  color: var(--ui-ink);
-}
-.faction-menu h1::before {
-  content: '';
-  position: absolute;
-  top: 5px;
-  left: var(--home-accent-x);
-  width: 4px;
-  height: .80em;
-  background: var(--ui-accent);
-}
-.faction-menu h1 em { color: var(--ui-ink); font-style: normal; }
-.menu-english { max-width: 85%; margin: 0 0 var(--subtitle-gap); overflow-wrap: anywhere; letter-spacing: .22em; }
-.menu-intro {
-  position: relative;
-  margin: 0;
-  padding: 10px 12px;
-  width: fit-content;
-  max-width: 70%;
-  overflow-wrap: anywhere;
-  background: none;
-  border: 0;
-  font-size: var(--subtitle-font-size);
-  line-height: 1.8;
-  color: var(--ui-slate);
-}
-.menu-intro::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--home-accent-x);
-  width: 1px;
-  background: var(--ui-line);
-}
-.menu-index { display: block; max-width: 65%; margin-top: 12px; overflow-wrap: anywhere; color: var(--ui-slate); }
-.faction-dock {
-  position: absolute;
-  inset: 10% 4% auto auto;
-  width: 62%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-  align-items: stretch;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  pointer-events: auto;
-}
-.faction-dock legend {
-  width: fit-content;
-  padding: 10px 14px;
-  margin-bottom: 30px;
-  background: var(--ui-panel);
-  border-left: 5px solid var(--ui-ink);
-  clip-path: polygon(0 0, 100% 0, 94% 100%, 0 100%);
-  color: var(--ui-ink);
-  font-size: 22px;
-  letter-spacing: .06em;
-}
-.faction-dock legend small { display: block; margin-top: 4px; color: var(--ui-slate); }
-.faction-dock .faction-card {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
-  --side-accent: var(--ui-accent);
-  --side-paper: var(--ui-ice);
-  gap: 14px;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  height: clamp(340px, 60vh, 620px);
-  padding: 22px 20px;
-  text-align: left;
-  color: var(--ui-ink);
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  transform: none;
-  animation: none;
-}
-.faction-dock .faction-card:nth-of-type(2) { margin: 26px 0 0; --side-accent: var(--ui-human); --side-paper: var(--ui-warm); }
-.faction-card::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  background: var(--ui-panel);
-  border-left: 5px solid var(--side-accent);
-  clip-path: polygon(3% 0, 100% 0, 100% 83%, 94% 100%, 0 100%, 0 17%);
-  transition: background-color var(--ui-motion);
-}
-.faction-card::after {
-  content: ''; position: absolute; z-index: -2; inset: -7px 12px 5px -9px;
-  background: var(--ui-slate);
-  clip-path: polygon(5% 0, 92% 0, 100% 18%, 100% 100%, 0 100%, 0 14%);
-  transform: translate(5px, 9px);
-  transition: transform var(--ui-motion) var(--ui-ease);
-}
-.faction-dock .faction-card > span { margin: 0; }
-.faction-card .faction-number { position: relative; z-index: 2; width: fit-content; display: block; font-size: clamp(58px, 6vw, 98px); font-weight: 900; letter-spacing: -.09em; opacity: 1; line-height: .9; color: var(--ui-ink); border-bottom: 5px solid var(--side-accent); padding-bottom: 12px; transition: transform var(--ui-motion); }
-.faction-copy { position: static; display: block !important; }
-.faction-copy small { position: relative; z-index: 2; display: block; width: fit-content; background: transparent; margin: 12px 0 8px; font-size: 9px; letter-spacing: .1em; }
-.faction-copy strong { display: block; font-size: 28px; letter-spacing: -.03em; transition: transform var(--ui-motion); }
-.faction-dock .faction-copy > span { position: absolute; z-index: 2; bottom: 0; left: 0; width: 100%; min-height: 114px; padding: 14px 60px 14px 20px; display: block; margin: 0; background:var(--ui-panel); border-top: 1px solid var(--ui-line); font-size: 11px; line-height: 1.6; color: var(--ui-slate); clip-path: polygon(0 0, 100% 0, 100% 85%, 94% 100%, 0 100%); }
-.faction-copy b { display: block; margin-bottom: 4px; font-size: 18px; color: var(--ui-ink); }
-.faction-copy em { display: block; margin-top: 10px; font-size: 9px; letter-spacing: .1em; font-style: normal; }
-.faction-card .faction-arrow { position: absolute; z-index: 3; bottom: 18px; right: 8px; padding: 14px 12px; background: var(--side-accent); margin: 0; font-size: 28px; transition: transform var(--ui-motion), padding var(--ui-motion); }
-.faction-portrait { position: absolute; z-index: 1; right: -6%; bottom: 0; width: 93%; height: 110%; object-fit: contain; object-position: right bottom; pointer-events: none; user-select: none; transition: transform var(--ui-motion) var(--ui-ease); }
-.faction-card[data-faction="HUMAN"] .faction-portrait { width: 85%; right: -3%; height: 100%; }
-.faction-card:is(:hover, :focus-visible) .faction-portrait { transform: translate(3px, -4px); }
-.faction-copy strong {
-  --faction-name-bg-width: max(calc(100% + 34px), 180px);
-  --faction-name-bg-x: 0px;
-  --faction-name-bg-y: 0px;
-  --faction-name-bg-opacity: .94;
-  position: relative;
-  isolation: isolate;
-  z-index: 2;
-  width: fit-content;
-  padding: 3px 8px 3px 0;
-  background: transparent;
-}
-.faction-copy strong::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  left: calc(50% + var(--faction-name-bg-x));
-  top: calc(50% + var(--faction-name-bg-y));
-  width: var(--faction-name-bg-width);
-  aspect-ratio: 1990 / 440;
-  transform: translate(-50%, -50%);
-  background: url('/ui/faction-name-gradient-clean.png') center / 100% 100% no-repeat;
-  opacity: var(--faction-name-bg-opacity);
-  pointer-events: none;
-}
-/* Human 专属底板参数：宽度直接覆盖基础最小值；X 用来把底板左端收回卡片内。 */
-.faction-card[data-faction="HUMAN"] .faction-copy strong {
-  --faction-name-bg-width: 160px;
-  --faction-name-bg-x: 8px;
-}
-.faction-card[data-faction="DEEPSEEK"] .faction-copy strong {
-  --faction-name-bg-width: 180px;
-  --faction-name-bg-x: -4px;
-  font-size: 24px;
-}
-.faction-dock .faction-card:hover, .faction-dock .faction-card:focus-visible { transform: translate(-4px, -5px); box-shadow: none; filter: drop-shadow(5px 9px 2px rgb(32 39 45 / .22)); }
-.faction-card:is(:hover, :focus-visible)::before { background: color-mix(in srgb, var(--ui-panel) 88%, var(--side-paper)); }
-.faction-card:is(:hover, :focus-visible)::after { transform: translate(12px, 17px); }
-.faction-card:is(:hover, :focus-visible) .faction-number { transform: translateY(-3px); }
-.faction-card:is(:hover, :focus-visible) strong { transform: translateX(3px); }
-.faction-card:is(:hover, :focus-visible) .faction-arrow { transform: translateX(6px); padding-left: 19px; }
-.faction-dock .faction-card:active { transform: translate(2px, 1px); box-shadow: 1px 1px 0 var(--ui-ink); transition-duration: var(--ui-fast); }
-.menu-controls {
-  position: absolute;
-  left: 5%;
-  bottom: 4%;
-  margin: 0;
-  padding: 12px 16px;
-  border-left: 3px solid var(--ui-accent);
-  border-radius: 0;
-  background: var(--ui-ink);
-  color: var(--ui-paper);
-  font-size: 11px;
-  letter-spacing: .04em;
-  text-align: left;
-}
-.menu-controls > span { color: var(--ui-accent); margin-right: 15px; }
 
 /* HUD: objectives in the upper left; abilities in the lower right. */
 .alpha-hud { color: var(--ui-paper); }
@@ -510,40 +273,14 @@
 .world-interaction { box-shadow: 2px 2px 0 var(--ui-line); }
 
 @media (max-width: 1000px) {
-  .menu-story { --title-panel-top: 12%; --title-panel-left: 3%; --title-font-size: clamp(34px, 5vw, 44px); padding: 12px; }
-  .faction-dock { right: 4%; top: 12%; bottom: auto; width: 62%; gap: 14px; }
-  .faction-dock .faction-card { gap: 12px; padding: 18px 14px; }
-  .faction-copy strong { font-size: 22px; }
-  .faction-card[data-faction="DEEPSEEK"] .faction-copy strong { font-size: 20px; --faction-name-bg-width: 150px; --faction-name-bg-x: -2px; }
-  .faction-card[data-faction="HUMAN"] .faction-copy strong { --faction-name-bg-x: 23px; }
-  .faction-card .faction-number { font-size: 48px; }
   .alpha-score { top: 18px; left: 18px; width: 230px; padding: 14px 16px; }
   .alpha-key, .alpha-cooldown { padding: 10px 12px; font-size: 11px; }
 }
 @media (max-height: 680px) {
-  .menu-story { --title-panel-top: 10%; --title-font-size: clamp(30px, 4.3vw, 52px); --title-margin-top: 16px; --title-margin-bottom: 10px; padding: 16px 22px; }
-  .menu-index { display: none; }
-  .faction-dock { top: 10%; bottom: auto; gap: 14px; }
-  .faction-dock legend { margin-bottom: 16px; }
-  .faction-dock .faction-card { height: max(250px, calc(100vh - 225px)); }
-  .faction-copy em { display: none; }
-  .faction-dock .faction-copy > span { min-height: 90px; padding-top: 9px; padding-bottom: 9px; }
-  .faction-card .faction-number { font-size: 48px; }
   .game-overlay { top: 8%; bottom: 5%; max-height: 87%; padding: 22px; }
   .overlay-text h1 { font-size: 58px; }
 }
 @media (max-width: 650px) {
-  .menu-story { --title-panel-top: 5%; --title-panel-left: 5%; --title-panel-width: 90%; --title-font-size: 38px; --title-margin-top: 10px; --title-margin-bottom: 10px; padding: 16px; }
-  .menu-intro, .menu-index, .menu-english { display: none; }
-  .faction-dock { width: 90%; right: 5%; top: 150px; bottom: auto; gap: 12px; }
-  .faction-dock .faction-card { height: 310px; padding: 14px 12px; }
-  .faction-dock legend { font-size: 12px; margin-bottom: 10px; }
-  .faction-dock .faction-copy > span { margin: 0; padding: 10px 48px 10px 10px; font-size: 10px; }
-  .faction-copy b { font-size: 14px; }
-  .faction-copy em { display: none; }
-  .menu-controls { position: fixed; }
-  .menu-controls { font-size: 9px; bottom: 3%; }
-  .menu-controls > span { display: none; }
   .alpha-score { width: 190px; padding: 12px; }
   .alpha-objective { font-size: 18px; }
   .rice-inventory i { width: 16px; }
@@ -556,7 +293,6 @@
   .game-overlay:is([data-outcome="win"], [data-outcome="lose"]) .overlay-stats { width: 75%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .faction-menu button, .faction-portrait, .faction-card::before, .faction-card::after, .faction-card .faction-number, .faction-card strong, .faction-card .faction-arrow,
   .game-overlay button, .world-interaction, .world-interaction kbd, .pulse-lock button { transition: none; }
   .pulse-lock-row [class] { animation: none !important; }
 }

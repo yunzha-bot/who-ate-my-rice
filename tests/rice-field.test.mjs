@@ -100,6 +100,7 @@ test('a fresh round resets count, progress, completion and target state', () => 
 
 test('development and production rice durations remain available through one mode switch', () => {
   assert.equal(RICE_MAX_PROGRESS_MS.development, 5_000);
-  assert.equal(RICE_MAX_PROGRESS_MS.production, 60_000);
+  assert.equal(RICE_MAX_PROGRESS_MS.production, 30_000);
+  assert.equal(RICE_TIMING_MODE, 'production');
   assert.equal(GAME_CONFIG.rice.maxProgressMs, RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE]);
 });

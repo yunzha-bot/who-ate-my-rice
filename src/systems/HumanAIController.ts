@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from '../config/gameConfig.ts';
+import type { HumanAIConfig } from '../config/difficultyConfig.ts';
 import { distanceToDoorSegment, type DoorState } from './DoorSystem.ts';
 import type { HeardSound, LastSeen, RiceTrace } from './PerceptionSystem.ts';
 import { NavigationSystem, type NavStep } from './NavigationSystem.ts';
@@ -14,7 +15,7 @@ import { gateHideSearchByClues, gateLastSeenRoomSearch, rankHideSearchCandidates
   from './HideSearchCandidates.ts';
 import { planHideSearchStance, type HideSearchStance }
   from './HumanHideSearchStance.ts';
-import { CANDIDATE_TRY_LIMIT, STANCE_MAX_STALE_CANCELS } from './HumanSearchTuning.ts';
+import { STANCE_MAX_STALE_CANCELS } from './HumanSearchTuning.ts';
 import { evaluateHideStance } from './HumanHideSearchResolution.ts';
 
 export type HumanAIState = 'PATROL' | 'INVESTIGATE' | 'CHASE' | 'CAPTURE' |
@@ -133,6 +134,10 @@ export function shouldRunHumanAI(phase: GamePhase, selectedFaction: Faction | nu
 }
 
 export class HumanAIController {
+  private config: HumanAIConfig = GAME_CONFIG.humanAI;
+  get difficultyConfig(): HumanAIConfig { return this.config; }
+  /** Called only by the round lifecycle, before this controller advances. */
+  setDifficultyConfig(config: HumanAIConfig): void { this.config = config; }
   state: HumanAIState = 'PATROL';
   /** S7C-2 修复轮：上一状态（DEV / AI JSON 需要「当前状态 + 前一状态」）。 */
   previousState: HumanAIState = 'PATROL';
@@ -181,12 +186,12 @@ export class HumanAIController {
   checkHideSpotId: string | null = null;
   checkHideStance: HideSearchStance | null = null;
   checkHideDwellRemainingMs = 0;
-  readonly checkHideDwellMs = GAME_CONFIG.humanAI.searchDwellMs;
+  get checkHideDwellMs(): number { return this.config.searchDwellMs; }
   checkHideSource: HumanCheckHideSource | null = null;
   /**
    * 本轮**已经正式开始**的搜查尝试数（配额守卫）。
    * 它与 `checkHideRoundChecks`（本轮已经**正式执行**的搜查数）必须分开：
-   * 用户批准的规则是「每轮最多正式检查 1 件家具」，因此尝试配额仍是硬上限，
+   * 本局难度的 hideCheckMaxPerRound 同时约束尝试与执行，因此尝试配额仍是硬上限，
    * 但日志与 DEV 要能区分「开始过几次」与「真正执行过几次」。
    */
   checkHideRoundAttempts = 0;
@@ -194,7 +199,7 @@ export class HumanAIController {
   checkHideRoundChecks = 0;
   /** 本轮开始过的家具（DEV 观察用）。 */
   checkHideAttemptedSpotId: string | null = null;
-  readonly checkHideRoundBudget = GAME_CONFIG.humanAI.hideCheckMaxPerRound;
+  get checkHideRoundBudget(): number { return this.config.hideCheckMaxPerRound; }
   checkHideCheckedSpotIds: string[] = [];
   /** 同一次调查里已经正式检查过的家具数（上限复用 searchRoomCount）。 */
   checkHideInvestigationChecks = 0;
@@ -560,7 +565,7 @@ export class HumanAIController {
   }
 
   update(input: HumanAIInput): HumanAICommand {
-    const cfg = GAME_CONFIG.humanAI;
+    const cfg = this.config;
     const deltaMs = Math.max(0, input.deltaMs);
     this.forceBreakCooldownMs = input.forceBreakCooldownMs ?? 0;
     for (const [id, remaining] of this.failedDoorAvoidMs) {
@@ -594,7 +599,7 @@ export class HumanAIController {
       this.pendingLastSeenRoomSearch = false;
       if (this.state === 'PATROL') {
         // 本轮家具配额已经被同房间那一次用掉，因此这里**不**重开新一轮，
-        // 相邻房间分支不能靠换房间绕过「每轮最多 1 件家具」。
+        // 相邻房间分支不能靠换房间绕过本局难度配额。
         this.beginSearch(input, this.lastSeenRoomAttempted);
       }
     }
@@ -730,7 +735,7 @@ export class HumanAIController {
         this.searchDwellRemainingMs -= deltaMs;
         if (this.searchDwellRemainingMs <= 0) this.advanceSearch(input);
         else {
-          // 「有限搜索」：搜索房间里若有公开藏身点，这一轮最多转去检查 1 件家具。
+          // 「有限搜索」：搜索房间里若有公开藏身点，共享本局难度的家具配额。
           this.tryStartSearchRoomHideCheck(input);
           return this.command(0, 0, null);
         }
@@ -852,7 +857,7 @@ export class HumanAIController {
       for (const door of doors) {
         if (door.state === 'LOCKED' &&
             (this.unlockFailures.get(door.id) ?? 0) >=
-              GAME_CONFIG.humanAI.aiUnlockMaxAttempts) blocked.add(door.id);
+              this.config.aiUnlockMaxAttempts) blocked.add(door.id);
       }
     }
     const reachable = (unvisitedOnly: boolean): { room: Room; path: NavStep[] | null }[] =>
@@ -902,7 +907,7 @@ export class HumanAIController {
   }
 
   private chooseRoute(input: HumanAIInput, goal: Point, avoid?: Point): NavStep[] {
-    const cfg = GAME_CONFIG.humanAI;
+    const cfg = this.config;
     const detour = this.navigation.findPath(input.human, goal, input.doors, avoid);
     if (!input.doors.some(door => door.state === 'LOCKED')) {
       this.unlockingDoorId = null;
@@ -927,7 +932,8 @@ export class HumanAIController {
     const baseHumanSpeed = (this.tuning?.playerSpeedPx ?? GAME_CONFIG.player.speed) /
       GAME_CONFIG.three.pixelsPerUnit *
       (this.tuning?.humanSpeedMultiplier ?? GAME_CONFIG.human.speedMultiplier);
-    const speed = humanAiMovementSpeed(baseHumanSpeed, this.tuning?.humanAIMovementMultiplier);
+    const speed = humanAiMovementSpeed(baseHumanSpeed,
+      this.tuning?.humanAIMovementMultiplier ?? this.config.movementSpeedMultiplier);
     const travelMs = (path: NavStep[] | null): number => {
       if (!path) return Infinity;
       let length = distance(input.human, path[0]);
@@ -972,7 +978,7 @@ export class HumanAIController {
 
   private updateUnlock(id: string, deltaMs: number,
     input: HumanAIInput): HumanAICommand {
-    const cfg = GAME_CONFIG.humanAI;
+    const cfg = this.config;
     if (this.unlockingDoorId !== id) this.unlockProgressMs = 0;
     this.unlockingDoorId = id;
     this.unlockProgressMs = Math.min(cfg.aiUnlockDurationMs,
@@ -1008,14 +1014,14 @@ export class HumanAIController {
     }
     this.searchTargets = this.rooms
       .filter(room => room.id !== origin?.id &&
-        distance(anchor, room) <= GAME_CONFIG.humanAI.searchRadius &&
+        distance(anchor, room) <= this.config.searchRadius &&
         (neighbors.has(room.id) || !neighbors.size) &&
         this.navigation.findPath(input.human, room, input.doors) !== null)
       .sort((a, b) => distance(anchor, a) - distance(anchor, b))
-      .slice(0, GAME_CONFIG.humanAI.searchRoomCount);
+      .slice(0, this.config.searchRoomCount);
     this.searchIndex = 0;
     this.searchElapsedMs = 0;
-    // S7C-2：新的 SEARCH 轮 = 新的「每轮最多 1 件家具」配额。
+    // S7C-2：新的 SEARCH 轮重开本局难度的家具配额。
     // 修复轮 二：如果这一轮配额已经被「最后目击房间」那一次用掉，就不能重开，
     // 否则同房间 + 相邻房间两条分支会绕过次数上限。调查级预算始终保留。
     if (!continueRound) this.beginRound();
@@ -1029,7 +1035,7 @@ export class HumanAIController {
     if (!room) return;
     this.searchTargetRoomId = room.id;
     this.setTarget({ x: room.x, z: room.z }, room.id);
-    this.searchDwellRemainingMs = GAME_CONFIG.humanAI.searchDwellMs;
+    this.searchDwellRemainingMs = this.config.searchDwellMs;
   }
 
   private advanceSearch(input: HumanAIInput): void {
@@ -1048,7 +1054,7 @@ export class HumanAIController {
   }
 
   private setTarget(target: Point, roomId: string | null): void {
-    if (!this.target || distance(this.target, target) > GAME_CONFIG.humanAI.navCellSize ||
+    if (!this.target || distance(this.target, target) > this.config.navCellSize ||
         this.targetRoomId !== roomId) {
       this.repathRemainingMs = 0;
       this.unlockingDoorId = null;
@@ -1253,7 +1259,7 @@ export class HumanAIController {
     this.setState('INVESTIGATE', 'TRACE_FOUND');
     this.searchAnchor = { x: anchor.x, z: anchor.z };
     this.setTarget(anchor, this.roomFor(anchor)?.id ?? null);
-    this.dwellRemainingMs = GAME_CONFIG.humanAI.investigationDwellMs;
+    this.dwellRemainingMs = this.config.investigationDwellMs;
     return true;
   }
 
@@ -1313,7 +1319,7 @@ export class HumanAIController {
    * 的公开藏身家具，但同房间 ≠ 必定搜查：仍要走公开门槛（Last Seen 有效 + 房间
    * 内确有公开藏身点）、候选排序、合法站位与可达性。
    *
-   * 每轮仍然最多正式检查 1 件家具：这一次尝试与随后的相邻房间搜索共用同一轮配额
+   * 这一次尝试与随后的相邻房间搜索共用本局难度的同一轮配额
    * （`beginSearch(input, continueRound = true)`）。
    */
   private tryStartLastSeenRoomHideCheck(input: HumanAIInput): boolean {
@@ -1350,9 +1356,8 @@ export class HumanAIController {
    */
   private tryStartHideCheck(input: HumanAIInput, source: HumanCheckHideSource,
     spots: readonly HideSpot[] = this.map.hideSpots): boolean {
-    const cfg = GAME_CONFIG.humanAI;
-    // 尝试配额与本轮执行配额都必须可用：用户批准的规则是「每轮最多正式检查
-    // 1 件家具」，因此「已经走过去一次」同样算用掉了这一轮，避免中断后无谓重试
+    const cfg = this.config;
+    // 尝试配额与本轮执行配额都必须可用；已经走过去一次同样消耗本局难度配额，避免中断后无谓重试
     // 同一件家具（也不会因此反复跑 A*）。
     if (this.checkHideRoundAttempts >= this.checkHideRoundBudget) {
       this.setGiveUp('ROUND_BUDGET_USED',
@@ -1420,7 +1425,7 @@ export class HumanAIController {
           : '当前没有任何公开藏身点数据');
       return false;
     }
-    const tries = Math.min(CANDIDATE_TRY_LIMIT, report.candidates.length);
+    const tries = Math.min(this.config.searchRoomCount, report.candidates.length);
     let lastCode: HumanCheckGiveUpReason = 'NO_LEGAL_STANCE';
     let lastDetail = '候选家具都没有合法搜查站位';
     for (let index = 0; index < tries; index++) {
@@ -1443,7 +1448,7 @@ export class HumanAIController {
     return false;
   }
 
-  /** 「有限搜索」：搜索房间里有公开藏身点时的家具检查（每轮最多 1 件）。 */
+  /** 「有限搜索」：搜索房间里有公开藏身点时的家具检查（共享本局难度配额）。 */
   private tryStartSearchRoomHideCheck(input: HumanAIInput): boolean {
     if (this.checkHideRoundAttempts >= this.checkHideRoundBudget) return false;
     if (this.checkHideRoundChecks >= this.checkHideRoundBudget) return false;
@@ -1572,12 +1577,12 @@ export class HumanAIController {
     this.pushHumanSearchEvent('HUMAN_HIDE_SEARCH_MISS', spotId, spotId,
       { ...this.checkHidePublicDetail(), result: 'MISS' });
     this.checkHideFailureMs.set(spotId,
-      GAME_CONFIG.humanAI.hideCheckFailureCooldownMs);
+      this.config.hideCheckFailureCooldownMs);
     if (!this.checkHideCheckedSpotIds.includes(spotId))
       this.checkHideCheckedSpotIds.push(spotId);
     this.checkHideGiveUpCode = 'CHECK_DONE';
     this.checkHideGiveUpDetail = `${spotId} 搜空，` +
-      `${(GAME_CONFIG.humanAI.hideCheckFailureCooldownMs / 1000).toFixed(0)} 秒内不再检查它`;
+      `${(this.config.hideCheckFailureCooldownMs / 1000).toFixed(0)} 秒内不再检查它`;
     if (source === 'SEARCH') {
       // 回到同一次有限搜索的剩余房间；「本轮已检查家具数」保持为 1，不会连查第二件。
       this.pendingSearchResume = true;
@@ -1604,7 +1609,7 @@ export class HumanAIController {
    *
    * 刻意**不动**两处计数，原因都写在代码里：
    *   - 本轮家具配额（`checkHideRoundAttempts` / `checkHideRoundChecks`）保持「已用」，
-   *     这就是「每轮最多正式检查 1 件家具」的落实方式；无条件清零等于允许立刻重搜，
+   *     这就是本局难度配额的落实方式；无条件清零等于允许立刻重搜，
    *     正是本轮要修掉的绕过路径。真正的新公开线索会通过 `beginInvestigation()`
    *     正常开启新的一轮。
    *   - 调查级预算（`investigationSource` / 本次调查已检查件数 / 已花时间）保留，
@@ -1664,7 +1669,7 @@ export class HumanAIController {
    *
    * 它们不是搜空：不写公开失败记忆、不触发 6 秒家具冷却、不计入「真正完成的正式
    * 检查」。同时**不退还**本轮家具配额——否则反复发出非法请求再取消就能绕过
-   * 「每轮最多正式检查 1 件家具」。新的公开线索会通过 `beginInvestigation()`
+   * 本局难度的家具配额。新的公开线索会通过 `beginInvestigation()`
    * 正常开启新的一轮，届时配额自然重置。
    */
   cancelIncompleteCheckHide(code: string, detail: string): void {
@@ -1715,7 +1720,7 @@ export class HumanAIController {
     if (!stance) return false;
     return evaluateHideStance({ stancePoint: stance.stancePoint, plannedHeadingRad: null,
       humanPosition: human, humanHeadingRad: 0,
-      waypointTolerance: GAME_CONFIG.humanAI.waypointTolerance,
+      waypointTolerance: this.config.waypointTolerance,
       contactEpsilon: GAME_CONFIG.collision.contactEpsilon }).stanceHeld;
   }
 
@@ -1735,12 +1740,12 @@ export class HumanAIController {
     if (!stance) return this.command(0, 0, null, null, null, heading);
     this.checkHideApproachSteps++;
     const remaining = distance(input.human, stance.stancePoint);
-    if (this.approachAnchorDistance - remaining >= GAME_CONFIG.humanAI.stuckProgressEpsilon) {
+    if (this.approachAnchorDistance - remaining >= this.config.stuckProgressEpsilon) {
       this.approachAnchorDistance = remaining;
       this.approachStuckMs = 0;
     } else {
       this.approachStuckMs += deltaMs;
-      if (this.approachStuckMs >= GAME_CONFIG.humanAI.stuckRepathMs) {
+      if (this.approachStuckMs >= this.config.stuckRepathMs) {
         this.approachStuckMs = 0;
         this.abortCheckHide('NO_ROUTE', '最终接近受阻：真实碰撞下无法再靠近规划站位');
         this.checkHideInvestigationEndReason = 'CHECK_HIDE_STANCE_UNREACHABLE';
@@ -1817,12 +1822,12 @@ export class HumanAIController {
       this.progressAnchorDistance = remaining;
       this.stuckMs = 0;
     } else if (this.progressAnchorDistance - remaining >=
-        GAME_CONFIG.humanAI.stuckProgressEpsilon) {
+        this.config.stuckProgressEpsilon) {
       this.progressAnchorDistance = remaining;
       this.stuckMs = 0;
     } else {
       this.stuckMs += deltaMs;
-      if (this.stuckMs >= GAME_CONFIG.humanAI.stuckRepathMs) {
+      if (this.stuckMs >= this.config.stuckRepathMs) {
         this.avoidedWaypoint = { x: waypoint.x, z: waypoint.z };
         this.repathRemainingMs = 0;
         this.stuckMs = 0;

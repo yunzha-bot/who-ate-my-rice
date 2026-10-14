@@ -81,7 +81,10 @@ export interface AILogExport {
   formatVersion: string;
   exportedAt: string;
   matchDurationMs: number;
-  config: { deepseekAI: typeof GAME_CONFIG.deepseekAI };
+  config: { deepseekAI: import('../config/difficultyConfig.ts').DeepSeekAIConfig;
+    humanAI?: import('../config/difficultyConfig.ts').HumanAIConfig;
+    difficulty?: import('../config/difficultyConfig.ts').Difficulty;
+    humanAIMovementMultiplier?: number };
   matchSeed?: number;
   matchSetup?: {
     deepseek: { id: string; roomId: string; x: number; z: number };

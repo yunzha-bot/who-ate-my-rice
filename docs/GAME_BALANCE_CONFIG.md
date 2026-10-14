@@ -2,14 +2,20 @@
 
 当前 Web / Three.js 灰盒版本的可调玩法数值统一放在 [`src/config/gameConfig.ts`](../src/config/gameConfig.ts)。下表里的 `C` 均表示 `GAME_CONFIG`。时间变量以 `Ms` 结尾时单位为毫秒，1 秒 = 1,000 毫秒；世界单位指 3D 场景的 XZ 地面坐标。改完配置后运行 `npm test`、`npm run build`，再对受影响玩法做人工验收。
 
+2026-10-14 当前规则：本表的 AI 列记录 `GAME_CONFIG` 基础值（EASY），NORMAL/HARD 仅按玩家阵营覆盖对手的11个批准字段，完整档位表与接入说明见 [难度配置](DIFFICULTY_DESIGN.md)。正式游戏实际使用30秒/份；DEV-B保存预设保留但不再在刷新／新局自动应用，只能手动加载。有效值优先级为本局显式DEV覆盖＞本局难度＞GAME_CONFIG基础值，不能只看本表默认值。
+
+此前 [结构审计与平衡准备](CODEBASE_BALANCE_AUDIT.md) 的226项读取目录、38项DEV覆盖及填写表是调整前快照，不代表本轮的进食模式或自动恢复行为；其他未授权数值保持不变。
+
+听觉生效时机待决策：9项声音 `range` 实际在每次分析时读取，因此改变范围会影响存量事件（现有测试同样要求）；DEV元数据和旧设计写“仅新事件”，与运行矛盾。`strength`／`lifetimeMs` 则确实按生成快照。本轮只记录，未修源码／测试或选择新语义，详见审计A15。
+
 ## 开发与正式进食时间
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
-| `RICE_MAX_PROGRESS_MS.production` | 60,000 | 毫秒；每份米正式进食时间 | 正式规则为 60 秒，发布前复测。 |
+| `RICE_MAX_PROGRESS_MS.production` | 30,000 | 毫秒；每份米正式进食进度 | 所有难度一致，不含开始／恢复时400ms准备。 |
 | `RICE_MAX_PROGRESS_MS.development` | 5,000 | 毫秒；开发测试时间 | 仅为频繁测试提速。 |
-| `RICE_TIMING_MODE` | `development` | 模式；决定 `C.rice.maxProgressMs` | Beta / Release Candidate 前切换为 `production`。 |
-| `C.rice.maxProgressMs` | 5,000 | 毫秒；运行时每份米最大进度 | 从上述模式自动得出，不要另设第二个进食时长。 |
+| `RICE_TIMING_MODE` | `production` | 模式；决定 `C.rice.maxProgressMs` | 不随Vite dev/build自动变化；仅显式开发测试才能选择5秒。 |
+| `C.rice.maxProgressMs` | 30,000 | 毫秒；运行时每份米最大进度 | 从上述模式自动得出，RiceField、HUD比例和AI估时读取同一进度。 |
 
 当前没有对局倒计时或“开发/正式不同对局时限”的运行规则；`GameStateSystem.elapsedMs` 只累计已进行时间。不能只填写一个配置值就得到限时胜负，需要另行设计与实现该玩法。
 
@@ -17,7 +23,7 @@
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
-| `C.player.size` / `C.human.size` | 32 / 32 | 像素；占位体尺寸 | 改动视觉体型时检查逻辑碰撞圆，不要假设两者自动相等。 |
+| `C.player.size` / `C.human.size` | 32 / 32 | 像素；占位体尺寸 | 当前两角色的代理宽度共用 `player.size`；`human.size` 未见运行读取。正式 GLB 显示尺寸独立，不能据此推断模型或逻辑碰撞圆同比变化。 |
 | `C.player.speed` | 230 | 像素/秒；DeepSeek 基础移动速度 | 运行时除以 `C.three.pixelsPerUnit`。 |
 | `C.three.pixelsPerUnit` | 60 | 像素/世界单位；角色速度、米袋尺寸与进食距离的换算基准 | 地图坐标仍按世界单位绘制，修改会同时改变多套尺寸关系，需全面验收。 |
 | `C.human.speedMultiplier` | 1.08 | 倍率；Human（包括玩家手动控制）的基础速度 | 改动后重新测试追逐与抓捕胜率。 |
@@ -101,7 +107,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.deepseekAI.escapeLoopMinDistanceGain` | 1 | 世界单位；重访区域应取得的最小安全距离增益 | 未达到时触发一次跨区域重新决策。 |
 | `C.deepseekAI.escapeNearScoreBand` | 0.8 | 评分；允许随机挑选的近最高分区间 | 明显低分或危险候选不参与随机选择。 |
 | `C.deepseekAI.safeObservationMs` | 2,500 | 毫秒；缺少可用威胁方位时的持续观察时间 | 已知威胁方位且拉开距离时，可提前进入移动恢复。 |
-| `C.deepseekAI.soundCautionStrength` | 0.045 | 最终可听强度；弱声音仍阻止脱险的阈值 | 低于此值的远处声音不阻止恢复。 |
+| `C.deepseekAI.soundCautionStrength` | 0.045 | 保留字段；**当前未见运行读取** | `assessThreat` 对弱声音实际使用 `perception.minimumAudibleStrength`，高威胁使用 `soundEvadeStrength`；修改此保留字段不能据此声称改变恢复行为，不擅自接回 AI。 |
 | `C.deepseekAI.dangerRiceAvoidMs` | 3,000 | 毫秒；暂避已知威胁附近米堆或其路径 | 不清除已有进食进度；仅逃跑后生效。 |
 | `C.deepseekAI.dangerRouteRadius` | 3 | 世界单位；米堆或路径靠近最后威胁点的判定半径 | 过大可能使多个米堆暂不可选。 |
 | `C.deepseekAI.safeWaitFailureThreshold` | 2 | 次；同一米堆与入口重复遭遇目视危险后的安全等待门槛 | 只阻止无条件重闯；Human 变化或出现安全路线时重新评估。 |
@@ -149,7 +155,7 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
 | `C.rice.candidateCount` | 14 | 处；地图中参与随机抽选的前 N 个候选米点 | 坐标仍在 `src/three/map/apartmentMap.ts`；超过已绘制的 14 处会报错，新增坐标不能只改配置。 |
-| `C.rice.activeCount` | 5 | 份；每局从候选池中无重复激活的米数 | 必须在 1 到候选池大小之间；全部吃完即胜利。 |
+| `C.rice.activeCount` | 5 | 份；每局从候选池中无重复激活的米数 | 必须在 1 到候选池大小之间；全部吃完即胜利。HUD 与结算仍有固定“五份米”文案，若批准改份数须同步文案和回归；本轮保持5。 |
 | `C.rice.prepareMs` | 400 | 毫秒；开始/恢复进食的准备阶段 | 准备阶段不计入正式进食进度。 |
 | `C.rice.interactionRange` | 60 | 像素；靠近米的交互范围 | 运行时除以 `C.three.pixelsPerUnit`，目前等于 1 世界单位。 |
 | `C.rice.size` / `color` | 30 / `0xf2e5bc` | 像素 / 颜色；米袋占位体 | 只影响显示尺寸和颜色。 |
@@ -172,11 +178,11 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.door.humanFreeOpenClosedDoor` | `true` | 开关；Human Space 免费快速打开普通 CLOSED 门 | 设为 `false` 会禁用该 Space 行为；E 普通开门不受影响。 |
 | `C.door.humanForceBreakCooldownMs` | 30,000 | 毫秒；Space 强破 LOCKED 门的冷却 | 不限制普通门快速开，也不限制 E PulseLock。 |
 | `C.door.playerLockCooldownMs` | 20,000 | 毫秒；**DeepSeek 玩家**按 Q 主动锁门的冷却（S7C-1B） | 只有 `lock()` 真的返回 `LOCKED`（即门为 CLOSED、锁芯 ACTIVE、锁位未满）才开始计时；状态不允许、超距、锁位已满、锁芯失效都不消耗冷却。AI 的锁门走 `lockDoorFromCommand`，**不读**这个冷却。 |
-| `C.door.leafHeight` / `leafThickness` / `openAngle` | 1.2 / 0.16 / `Math.PI / 2` | 世界单位 / 世界单位 / 弧度；门叶几何 | 门厚会影响碰撞、视线和声音的门遮挡判定。 |
-| `C.door.colors.open` / `closed` / `locked` / `lockCore` / `lockCoreDisabled` | `0x6d8f73` / `0x8a644b` / `0xa0443f` / `0xffc247` / `0x565d63` | 颜色；灰盒门叶与锁芯状态 | 只改变显示，保持不同状态容易辨认。 |
+| `C.door.leafHeight` / `leafThickness` / `openAngle` | 1.2 / 0.16 / `Math.PI / 2` | 世界单位 / 世界单位 / 弧度；逻辑碰撞高度／门厚／OPEN显示转角 | `leafHeight` 用于闭门碰撞盒，可见高度来自 `HOME_COMPOSITION.doorVisualHeight`；门厚影响碰撞、视线与声音遮挡。OPEN门逻辑不随转角新增半开碰撞。 |
+| `C.door.colors.open` / `closed` / `locked` / `lockCore` / `lockCoreDisabled` | `0x6d8f73` / `0x8a644b` / `0xa0443f` / `0xffc247` / `0x565d63` | 颜色；旧门叶与当前锁芯显示 | `open` / `locked` 未见运行读取；`closed` 仅构造初始化，正常 `sync` 后门叶使用住宅木色常量；两种锁芯色仍实际读取。 |
 | `C.pulseLock.rows` / `cols` / `mines` | 4 / 4 / 3 | 旧扫雷棋盘参数，当前正式玩家解锁不再读取 | 保留历史数值，不作为 PulseLock 时机判定。 |
 | `C.pulseLock.firstRevealSafe` / `failureFeedbackMs` | `true` / 1,500 | 旧扫雷首次安全与失败反馈参数，当前正式玩家解锁不再读取 | 保留历史数值，不影响门状态。 |
-| `C.pulseLock.timing.coreCount` | 3 | 每扇锁门依次完成的锁芯数 | 目前三个目标中心与锁芯一一对应。 |
+| `C.pulseLock.timing.coreCount` | 3 | 每扇锁门依次完成的锁芯数；当前结构固定3 | 构造校验明确拒绝非3值，并要求 `targetCenters.length` 相等；不能只填新芯数就认为可正常启动。 |
 | `C.pulseLock.timing.travelMs` | 1,400 | 毫秒；脉冲从轨道一端到另一端 | 只改变玩家 E 破解时机，不改变 Human AI 解锁耗时。 |
 | `C.pulseLock.timing.targetWidth` / `targetCenters` | 0.20 / `[0.48, 0.56, 0.43]` | 轨道归一化位置与宽度 | 所有门使用相同目标区域，不影响门锁、导航或 AI。 |
 | `C.pulseLock.timing.feedbackMs` | 240 | 毫秒；成功 / 失手的纯视觉反馈 | 不改变 DoorSystem 状态。 |

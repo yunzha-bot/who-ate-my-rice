@@ -8,12 +8,12 @@ import { createMatchSim, DELTA_MS } from './s7d-match-sim.mjs';
 // 这是逻辑层整局仿真（无渲染、无 DOM、固定 50 ms 帧步长），复用生产系统与两套 AI
 // 的同一批源码；它不是浏览器实机，也不是真人试玩。
 //
-// 帧数上限 = 150 秒游戏时间（3000 帧），远超实测所需的 40～75 秒。
+// 原轨迹夹具显式使用开发5秒进食，保留原150秒预算；正式30秒由难度回归验证。
 
 const CAP_FRAMES = 3000;
 
 function play(seed, playerFaction, policy) {
-  const sim = createMatchSim({ seed, playerFaction, policy });
+  const sim = createMatchSim({ seed, playerFaction, policy, riceTimingMode: 'development' });
   return sim.run(CAP_FRAMES);
 }
 

@@ -413,7 +413,7 @@ test('辅助函数：一致性比较与存档时间显示', () => {
   assert.equal(formatDevBSavedAt('not-a-date'), 'not-a-date');
 });
 
-test('源码不变量：ThreeGame 只在 DEV 构建接入，并在新局恢复预设', () => {
+test('源码不变量：DEV预设保留但不能自动覆盖新局难度', () => {
   const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
   assert.ok(source.includes('devBPersistenceStorage(import.meta.env.DEV)'),
     'storage 必须由 import.meta.env.DEV 决定（生产构建拿不到）');
@@ -425,9 +425,11 @@ test('源码不变量：ThreeGame 只在 DEV 构建接入，并在新局恢复�
   assert.ok(resetStart > 0);
   const reset = source.slice(resetStart, source.indexOf('private updateHud(', resetStart));
   assert.ok(reset.includes('this.devBBinding.resetForNewRound()'));
-  assert.ok(reset.includes("this.devBPersistence.applySaved('新局开始')"));
-  assert.ok(reset.indexOf('resetForNewRound()') < reset.indexOf('applySaved('),
-    '必须先清掉本局临时覆盖，再恢复预设');
+  assert.equal(reset.includes('applySaved('), false, '新局不得静默加载DEV预设');
+  assert.ok(source.includes('resolveAiDifficulty(this.difficulty'));
+  assert.ok(reset.indexOf('resetForNewRound()') < reset.indexOf('applyDifficulty()'),
+    '先清本局调试覆盖，再设难度基准');
+  assert.ok(source.includes('this.devBPersistence.read()'), '保存预设仍被读取和保留');
 
   const debug = readFileSync(new URL('../src/three/DevBDebug.ts', import.meta.url), 'utf8');
   assert.ok(debug.includes('persistence?: DevBParamPersistence | null'));

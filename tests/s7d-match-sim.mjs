@@ -1,6 +1,7 @@
 import { Box3, OrthographicCamera, Vector3 } from 'three';
 import { rectColliders } from '../src/three/map/MapEditModel.ts';
-import { GAME_CONFIG as C } from '../src/config/gameConfig.ts';
+import { GAME_CONFIG as C, RICE_MAX_PROGRESS_MS, RICE_TIMING_MODE } from '../src/config/gameConfig.ts';
+import { resolveAiDifficulty } from '../src/config/difficultyConfig.ts';
 import { effectiveSpeeds } from '../src/systems/DevBRuntimeBinding.ts';
 import { CollisionWorld, canInteractWithDoorXZ } from '../src/three/CollisionWorld.ts';
 import { isCaptureEligibleXZ, isInsideCaptureZoneXZ } from '../src/three/CaptureZone.ts';
@@ -155,6 +156,7 @@ export const PLAYER_POLICIES = {
  * 便于测试与批量脚本各自取用。
  */
 export function createMatchSim(options = {}) {
+  const difficulty = options.difficulty ?? 'EASY';
   const seed = options.seed ?? 1;
   const playerFaction = options.playerFaction ?? 'HUMAN';
   const policyName = options.policy ?? 'idle';
@@ -187,7 +189,7 @@ export function createMatchSim(options = {}) {
   const setup = createMatchSetup(seed, collision, navigation,
     C.matchRandom.maxAttempts, HIDE_SPOTS);
   const rice = new RiceField(setup.rice.map(rice => rice.id),
-    C.rice.maxProgressMs, C.rice.prepareMs);
+    RICE_MAX_PROGRESS_MS[options.riceTimingMode ?? RICE_TIMING_MODE], C.rice.prepareMs);
   doorSystem.applyInitialStates(setup.doorStates);
   const syncDoorCollision = () => {
     for (const door of doorSystem.doors) {
@@ -220,6 +222,9 @@ export function createMatchSim(options = {}) {
 
   const deepseekAI = new DeepSeekAIController(navigation, DOOR_NODES, ROOMS, aiRandom);
   const humanAI = new HumanAIController(navigation, ROOMS, DOOR_NODES, aiRandom);
+  const aiConfig = resolveAiDifficulty(difficulty, playerFaction);
+  humanAI.setDifficultyConfig(aiConfig.humanAI);
+  deepseekAI.setDifficultyConfig(aiConfig.deepseekAI);
   let deepseekHideMap = rebuildHideMap();
   humanAI.rebindMap(humanAiSnapshot(), false);
 
@@ -702,7 +707,7 @@ export function createMatchSim(options = {}) {
       : sprint.movementDirection(activeDeepseekDirection);
     const speed = effectiveSpeeds({ playerSpeedPx: C.player.speed,
       humanSpeedMultiplier: C.human.speedMultiplier,
-      humanAIMovementMultiplier: C.humanAI.movementSpeedMultiplier }).player /
+      humanAIMovementMultiplier: aiConfig.humanAI.movementSpeedMultiplier }).player /
       C.three.pixelsPerUnit * (sprint.state === 'SPRINT_RUNNING'
         ? C.sprint.speedMultiplier : 1);
     const oldDeepseek = deepseek.clone();
@@ -776,10 +781,10 @@ export function createMatchSim(options = {}) {
     }
     const baseHumanSpeed = effectiveSpeeds({ playerSpeedPx: C.player.speed,
       humanSpeedMultiplier: C.human.speedMultiplier,
-      humanAIMovementMultiplier: C.humanAI.movementSpeedMultiplier }).human /
+      humanAIMovementMultiplier: aiConfig.humanAI.movementSpeedMultiplier }).human /
       C.three.pixelsPerUnit;
     const humanSpeed = aiHumanDirection
-      ? humanAiMovementSpeed(baseHumanSpeed, C.humanAI.movementSpeedMultiplier)
+      ? humanAiMovementSpeed(baseHumanSpeed, aiConfig.humanAI.movementSpeedMultiplier)
       : baseHumanSpeed;
     const activeHumanDirection = aiHumanDirection ?? playerDirection;
     const oldHuman = human.clone();

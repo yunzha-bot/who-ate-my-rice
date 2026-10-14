@@ -2,7 +2,17 @@ import { ThreeGame } from './three/ThreeGame';
 import './style.css';
 import './industrial-ui.css';
 import './sheet-ui.css';
+import './s13-ui.css';
+import './game-ui.css';
+import './faction-menu.css';
+import { StartupView } from './three/StartupView';
+import { mountMenuCredits } from './three/MenuCreditsView';
+import packageInfo from '../package.json?raw';
 
 const container = document.querySelector<HTMLElement>('#app');
 if (!container) throw new Error('Game container #app was not found');
+const startup = new StartupView(container);
 new ThreeGame(container);
+const factionMenu = container.querySelector<HTMLElement>('.faction-menu');
+if (factionMenu) mountMenuCredits(factionMenu, JSON.parse(packageInfo).version);
+void startup.prepared();

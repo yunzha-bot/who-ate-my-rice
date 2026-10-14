@@ -1,10 +1,10 @@
 export const RICE_MAX_PROGRESS_MS = {
-  production: 60_000, // 正式设计值：60 秒
+  production: 30_000, // 正式进食进度：30 秒／份，所有难度一致。
   development: 5_000, // 仅供开发阶段频繁测试
 } as const;
 
-// Beta / Release Candidate 前改为 'production'，恢复正式 60 秒规则。
-export const RICE_TIMING_MODE: keyof typeof RICE_MAX_PROGRESS_MS = 'development';
+// 正常游戏固定选择正式时间；5 秒仅在显式开发测试切换时使用。
+export const RICE_TIMING_MODE: keyof typeof RICE_MAX_PROGRESS_MS = 'production';
 
 export const GAME_CONFIG = {
   backgroundColor: '#858b91',

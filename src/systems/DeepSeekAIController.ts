@@ -1,4 +1,5 @@
 import { GAME_CONFIG } from '../config/gameConfig.ts';
+import type { DeepSeekAIConfig } from '../config/difficultyConfig.ts';
 import { distanceToDoorSegment, type DoorState } from './DoorSystem.ts';
 import type { HeardSound, LastSeen, PerceptionGeometry, SoundType } from './PerceptionSystem.ts';
 import type { SprintState } from './SprintSystem.ts';
@@ -137,6 +138,10 @@ export function shouldRunDeepSeekAI(phase: GamePhase, selectedFaction: Faction |
 
 /** Chooses goals and submits actions; RiceField and CollisionWorld own the rules. */
 export class DeepSeekAIController {
+  private config: DeepSeekAIConfig = GAME_CONFIG.deepseekAI;
+  get difficultyConfig(): DeepSeekAIConfig { return this.config; }
+  /** Called only by the round lifecycle, before this controller advances. */
+  setDifficultyConfig(config: DeepSeekAIConfig): void { this.config = config; }
   state: DeepSeekAIState = 'SEEK_RICE';
   targetRiceId: string | null = null;
   targetScoreMs: number | null = null;
@@ -361,7 +366,7 @@ export class DeepSeekAIController {
    * 「谁在哪个家具里」这类真值，只能知道自己这次请求成没成。
    */
   onHideResult(spotId: string, result: string): void {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     this.hideEnterPending = false;
     if (result === 'ENTERED') {
       this.hidePhase = 'CONCEALED';
@@ -420,7 +425,7 @@ export class DeepSeekAIController {
       this.hideExitCount++;
       this.hideLastExitReason = reason;
       this.recordHideEvent('HIDE_AI_EXITED', reason, spotId);
-      if (spotId) this.setHideCooldown(spotId, GAME_CONFIG.deepseekAI.hideReenterCooldownMs,
+      if (spotId) this.setHideCooldown(spotId, this.config.hideReenterCooldownMs,
         'REENTER_COOLDOWN');
     }
     this.hidePhase = 'NONE';
@@ -596,14 +601,14 @@ export class DeepSeekAIController {
 
   update(input: DeepSeekAIInput): DeepSeekAICommand {
     this.noMovementReason = 'NONE';
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     const deltaMs = Math.max(0, input.deltaMs);
     this.elapsedMs += deltaMs;
     this.trackDoorCrossings(input);
     this.doorEscapeCooldownRemainingMs = Math.max(0,
       this.doorEscapeCooldownRemainingMs - deltaMs);
     this.doorLockWindowRemainingMs = this.doorLockPendingSinceMs === null ? 0 :
-      Math.max(0, GAME_CONFIG.deepseekAI.doorEscapeCrossingWindowMs -
+      Math.max(0, this.config.doorEscapeCrossingWindowMs -
         (this.elapsedMs - this.doorLockPendingSinceMs));
     const crossedAt = this.doorEscapeLastCrossedId === null ? undefined :
       this.recentDoorCrossing.get(this.doorEscapeLastCrossedId);
@@ -800,7 +805,7 @@ export class DeepSeekAIController {
     // now. It still invalidates an OLD permit, never a newly eligible event.
     return changed && (this.passageActive || this.curiosityBypassActive ||
       this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE' ||
-      input.humanStillMs < GAME_CONFIG.deepseekAI.curiosityStillMs);
+      input.humanStillMs < this.config.curiosityStillMs);
   }
 
   private knownHumanPosition(input: DeepSeekAIInput): Point | null {
@@ -817,7 +822,7 @@ export class DeepSeekAIController {
       ? input.heardHuman : input.heardHumanDanger;
     if (!heard || heard.event.sourceFaction !== 'HUMAN' ||
         heard.remainingMs <= 0 ||
-        heard.audibleStrength < GAME_CONFIG.deepseekAI.soundEvadeStrength)
+        heard.audibleStrength < this.config.soundEvadeStrength)
       return false;
     // A door being operated is audible information, not proof that a
     // stationary Human is pursuing. Door state/path safety is checked
@@ -827,7 +832,7 @@ export class DeepSeekAIController {
 
   get passageAvoidRadius(): number {
     return this.effectiveCaptureRadius +
-      GAME_CONFIG.deepseekAI.stationaryPassageSafetyMargin;
+      this.config.stationaryPassageSafetyMargin;
   }
 
   private pathClearOfHuman(path: readonly Point[], human: Point, radius: number): boolean {
@@ -848,7 +853,7 @@ export class DeepSeekAIController {
     const path = this.path.length ? this.path :
       this.navigation.findPath(input.deepseek, rice, input.doors);
     if (!path?.length) return;
-    const radius = GAME_CONFIG.deepseekAI.dangerRouteRadius;
+    const radius = this.config.dangerRouteRadius;
     if (distance(rice, input.visibleHuman) > radius &&
         this.pathClearOfHuman([input.deepseek, ...path, rice], input.visibleHuman,
           radius)) return;
@@ -858,7 +863,7 @@ export class DeepSeekAIController {
     const count = (this.dangerousEntryFailures.get(key) ?? 0) + 1;
     this.dangerousEntryFailures.set(key, count);
     this.safeWaitFailureCount = count;
-    if (count >= GAME_CONFIG.deepseekAI.safeWaitFailureThreshold) {
+    if (count >= this.config.safeWaitFailureThreshold) {
       this.safeWaitRiceId = rice.id;
       this.safeWaitEntryId = entryId;
       this.safeWaitReason = 'REPEATED_DANGEROUS_ENTRY';
@@ -884,7 +889,7 @@ export class DeepSeekAIController {
     this.path = [];
     this.pathIndex = 0;
     this.retryRemainingMs = 0;
-    this.safeWaitRemainingMs = GAME_CONFIG.deepseekAI.safeWaitRecheckMs;
+    this.safeWaitRemainingMs = this.config.safeWaitRecheckMs;
     this.safeWaitReason = 'REPEATED_DANGEROUS_ENTRY';
     this.lastSelectionReason = `SAFE_WAIT_${riceId}`;
     this.lastTransitionReason = 'REPEATED_DANGEROUS_ENTRY_SAFE_WAIT';
@@ -915,7 +920,7 @@ export class DeepSeekAIController {
     }
     if (this.safeWaitRemainingMs > 0) {
       if (this.safeWaitObservation && this.path.length && !input.visibleHuman) {
-        if (distance(input.deepseek, this.safeWaitObservation) > GAME_CONFIG.deepseekAI.waypointTolerance)
+        if (distance(input.deepseek, this.safeWaitObservation) > this.config.waypointTolerance)
           return this.followPath(input, this.safeWaitObservation);
         this.safeWaitObservation = null;
         this.path = [];
@@ -924,7 +929,7 @@ export class DeepSeekAIController {
       this.noMovementReason = 'SAFE_WAIT_RECHECK';
       return this.command();
     }
-    this.safeWaitRemainingMs = GAME_CONFIG.deepseekAI.safeWaitRecheckMs;
+    this.safeWaitRemainingMs = this.config.safeWaitRecheckMs;
     const knownHuman = this.knownHumanPosition(input) ?? this.threatEstimate;
     // Recheck geometry against remembered information, not hidden live data.
     // Reach only a safe observation prefix; no eating permission until fresh sight.
@@ -933,7 +938,7 @@ export class DeepSeekAIController {
       const index = plan?.path.findIndex(point =>
         input.geometry!.visible(point, knownHuman, this.effectiveVisionRange)) ?? -1;
       if (plan && index >= 0 && distance(input.deepseek, plan.path[index]) >
-          GAME_CONFIG.deepseekAI.waypointTolerance) {
+          this.config.waypointTolerance) {
         this.safeWaitObservation = { ...plan.path[index] };
         this.path = plan.path.slice(0, index + 1);
         this.pathIndex = 0;
@@ -953,7 +958,7 @@ export class DeepSeekAIController {
           const path = this.navigation.findPath(input.deepseek, candidate, input.doors);
           return path?.length && (!knownHuman || this.pathClearOfHuman(
             [input.deepseek, ...path, candidate], knownHuman,
-            GAME_CONFIG.deepseekAI.dangerRouteRadius))
+            this.config.dangerRouteRadius))
             ? { rice: candidate, path,
               score: this.score(input.deepseek, candidate, path) } : null;
         }).filter((candidate): candidate is NonNullable<typeof candidate> =>
@@ -979,9 +984,9 @@ export class DeepSeekAIController {
       return this.command();
     }
     if (knownHuman && (distance(rice, knownHuman) <=
-        GAME_CONFIG.deepseekAI.dangerRouteRadius ||
+        this.config.dangerRouteRadius ||
         !this.pathClearOfHuman([input.deepseek, ...path, rice], knownHuman,
-          GAME_CONFIG.deepseekAI.dangerRouteRadius))) {
+          this.config.dangerRouteRadius))) {
       this.safeWaitReason = 'RICE_OR_ROUTE_STILL_DANGEROUS';
       this.noMovementReason = 'SAFE_WAIT_THREAT_PERSISTS';
       return this.command();
@@ -1004,7 +1009,7 @@ export class DeepSeekAIController {
   }
 
   private tryStartPassage(input: DeepSeekAIInput, dangerousSound: boolean): void {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     const human = input.visibleHuman;
     if (!human) { this.passageGateReason = 'NO_VISIBLE_HUMAN'; return; }
     const retryingSafeWait = this.state === 'SAFE_WAIT' &&
@@ -1148,9 +1153,9 @@ export class DeepSeekAIController {
         return this.command();
       }
       if (distance(input.deepseek, this.curiosityTarget) <=
-          GAME_CONFIG.deepseekAI.curiosityApproachTolerance) {
+          this.config.curiosityApproachTolerance) {
         this.state = 'CURIOUS_OBSERVE';
-        this.curiosityObserveRemainingMs = GAME_CONFIG.deepseekAI.curiosityObserveMs;
+        this.curiosityObserveRemainingMs = this.config.curiosityObserveMs;
         this.path = [];
         this.pathIndex = 0;
         this.lastTransitionReason = 'SAFE_OBSERVATION_POINT_REACHED';
@@ -1248,7 +1253,7 @@ export class DeepSeekAIController {
     this.passageRouteSafe = false;
     this.curiosityTarget = null;
     this.curiosityObserveRemainingMs = 0;
-    this.curiosityCooldownRemainingMs = GAME_CONFIG.deepseekAI.curiosityCooldownMs;
+    this.curiosityCooldownRemainingMs = this.config.curiosityCooldownMs;
     this.path = [];
     this.pathIndex = 0;
     this.state = 'SEEK_RICE';
@@ -1256,7 +1261,7 @@ export class DeepSeekAIController {
   }
 
   private tryStartCuriosity(input: DeepSeekAIInput, threat: ThreatAssessment): boolean {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     if (!input.visibleHuman || threat.level !== 'CAUTION' ||
         this.state === 'EVADE' || this.state === 'RECOVER' ||
         input.sprintState !== 'NORMAL' ||
@@ -1305,7 +1310,7 @@ export class DeepSeekAIController {
   }
 
   private curiosityPathIsSafe(path: readonly NavStep[], human: Point): boolean {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     for (let index = 0; index < path.length; index++) {
       if (distance(path[index], human) < cfg.curiositySafeDistance) return false;
       if (index === 0) continue;
@@ -1325,7 +1330,7 @@ export class DeepSeekAIController {
   private updateCuriosity(input: DeepSeekAIInput, deltaMs: number): DeepSeekAICommand {
     const human = this.knownHumanPosition(input);
     if (!human || !this.curiosityTarget) return this.command();
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     if (this.state === 'CURIOUS_APPROACH') {
       if (distance(input.deepseek, this.curiosityTarget) <= cfg.curiosityApproachTolerance) {
         this.state = 'CURIOUS_OBSERVE';
@@ -1383,7 +1388,7 @@ export class DeepSeekAIController {
     this.curiosityBypassActive = false;
     this.curiosityTarget = null;
     this.curiosityObserveRemainingMs = 0;
-    this.curiosityCooldownRemainingMs = GAME_CONFIG.deepseekAI.curiosityCooldownMs;
+    this.curiosityCooldownRemainingMs = this.config.curiosityCooldownMs;
     this.path = [];
     this.pathIndex = 0;
     if (this.state === 'CURIOUS_APPROACH' || this.state === 'CURIOUS_OBSERVE')
@@ -1391,7 +1396,7 @@ export class DeepSeekAIController {
   }
 
   private assessThreat(input: DeepSeekAIInput): ThreatAssessment {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     if (input.visibleHuman) {
       const sightDistance = distance(input.deepseek, input.visibleHuman);
       return { source: 'VISION',
@@ -1454,7 +1459,7 @@ export class DeepSeekAIController {
 
   private updateSafety(input: DeepSeekAIInput, threat: ThreatAssessment,
     deltaMs: number): DeepSeekAICommand {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     const approachSpeed = threat.visibleDistance !== null &&
       this.previousVisibleDistance !== null && deltaMs > 0
       ? (this.previousVisibleDistance - threat.visibleDistance) * 1000 / deltaMs : 0;
@@ -1649,7 +1654,7 @@ export class DeepSeekAIController {
 
   private recordHideSpotVisit(spotId: string): void {
     this.hideRecentSpots.push({ spotId, atMs: this.elapsedMs });
-    while (this.hideRecentSpots.length > GAME_CONFIG.deepseekAI.hideRecentSpotCount)
+    while (this.hideRecentSpots.length > this.config.hideRecentSpotCount)
       this.hideRecentSpots.shift();
     this.hideRecentSpotIds = this.hideRecentSpots.map(entry => entry.spotId);
   }
@@ -1724,7 +1729,7 @@ export class DeepSeekAIController {
     this.state = 'RECOVER';
     this.lastTransitionReason = 'HIDE_EXITED_RESUME_RICE';
     this.recoveryBlockReason = 'NONE';
-    this.recoverRemainingMs = GAME_CONFIG.deepseekAI.recoverMs;
+    this.recoverRemainingMs = this.config.recoverMs;
     this.escapeTarget = null;
     this.escapeRoomId = null;
     this.escapeGoalScore = null;
@@ -1770,7 +1775,7 @@ export class DeepSeekAIController {
    */
   private tryStartHide(input: DeepSeekAIInput, threat: ThreatAssessment,
     deltaMs: number): DeepSeekAICommand | null {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     this.hideEvaluateRemainingMs = Math.max(0, this.hideEvaluateRemainingMs - deltaMs);
     const ratio = input.riceProgressRatio ?? 0;
     if (ratio > this.lastHideProgressRatio + 1e-6) {
@@ -1904,7 +1909,7 @@ export class DeepSeekAIController {
       return this.command();
     }
     const arrived = distance(input.deepseek, stance) <=
-      GAME_CONFIG.deepseekAI.waypointTolerance + GAME_CONFIG.collision.contactEpsilon;
+      this.config.waypointTolerance + GAME_CONFIG.collision.contactEpsilon;
     if (arrived) {
       if (!this.hideEnterPending) {
         this.hideEnterPending = true;
@@ -1939,7 +1944,7 @@ export class DeepSeekAIController {
 
   private updateConcealed(input: DeepSeekAIInput, threat: ThreatAssessment,
     deltaMs: number): DeepSeekAICommand {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     this.hideConcealedMs += deltaMs;
     this.hideRecheckRemainingMs = Math.max(0, this.hideRecheckRemainingMs - deltaMs);
     this.hideExitRetryRemainingMs = Math.max(0, this.hideExitRetryRemainingMs - deltaMs);
@@ -1977,7 +1982,7 @@ export class DeepSeekAIController {
    */
   private evaluateHideExit(input: DeepSeekAIInput,
     threat: ThreatAssessment): { ok: boolean; code: string; reason: string } {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     if (this.hideConcealedMs < cfg.hideMinConcealMs) {
       return { ok: false, code: 'MIN_CONCEAL_MS', reason: '最短藏身时间未到' };
     }
@@ -2058,7 +2063,7 @@ export class DeepSeekAIController {
   }
 
   private evaluateEscapeDoor(input: DeepSeekAIInput): string | null {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     const candidates = input.doors.filter(door => door.state === 'OPEN')
       .map(door => ({ door, node: this.doorNodes.get(door.id) }))
       .filter((item): item is { door: DoorState; node: DoorNode } => !!item.node)
@@ -2127,7 +2132,7 @@ export class DeepSeekAIController {
     this.doorEscapeLastResult = `${id}:${result}`;
     // A failed close also waits briefly, rather than attempting every frame.
     this.closedDoorAt.set(id, this.elapsedMs);
-    this.doorEscapeCooldownRemainingMs = GAME_CONFIG.deepseekAI.doorEscapeCooldownMs;
+    this.doorEscapeCooldownRemainingMs = this.config.doorEscapeCooldownMs;
     this.doorDecision(result === 'CLOSED' ? 'DOOR_ESCAPE_CLOSE' :
       'DOOR_ESCAPE_FAILED', id, result);
     // 3B-1 fix: a successful self-initiated close inside its crossing window
@@ -2137,7 +2142,7 @@ export class DeepSeekAIController {
     // no pending vs pending-without-evidence vs pending established.
     const crossing = this.recentDoorCrossing.get(id);
     const inWindow = crossing !== undefined &&
-      this.elapsedMs - crossing <= GAME_CONFIG.deepseekAI.doorEscapeCrossingWindowMs;
+      this.elapsedMs - crossing <= this.config.doorEscapeCrossingWindowMs;
     if (result === 'CLOSED') {
       this.doorEscapeCloseCount += 1;
       this.doorLockLastCloseId = id;
@@ -2178,14 +2183,14 @@ export class DeepSeekAIController {
   private recentlySelfClosedDoors(): Set<string> {
     const blocked = new Set<string>();
     for (const [id, at] of this.closedDoorAt)
-      if (this.elapsedMs - at < GAME_CONFIG.deepseekAI.doorEscapeCooldownMs) blocked.add(id);
+      if (this.elapsedMs - at < this.config.doorEscapeCooldownMs) blocked.add(id);
     return blocked;
   }
 
   private isRecentlySelfClosed(id: string): boolean {
     const at = this.closedDoorAt.get(id);
     return at !== undefined &&
-      this.elapsedMs - at < GAME_CONFIG.deepseekAI.doorEscapeCooldownMs;
+      this.elapsedMs - at < this.config.doorEscapeCooldownMs;
   }
 
   /** Drops the continuous action before evaluation and records the reason. */
@@ -2235,7 +2240,7 @@ export class DeepSeekAIController {
    * Any failure clears the pending so the same continuous action never retries.
    */
   private evaluateEscapeLock(input: DeepSeekAIInput, approachSpeed: number): string | null {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     const pendingId = this.doorLockPendingId;
     if (!pendingId) return null;
     // One lock attempt per continuous action: if a pending somehow survives an
@@ -2302,13 +2307,14 @@ export class DeepSeekAIController {
     const routeAfterLock = this.navigation.findPath(input.deepseek,
       this.escapeTarget, input.doors, undefined, null, blocked);
     if (!routeAfterLock?.length) return reject('ESCAPE_ROUTE_USES_DOOR');
-    // Temporary avoidance is not completion: at least one uncompleted rice must
-    // stay reachable, so the AI cannot seal off every future target.
-    const riceReachable = input.rice.some(rice =>
-      !rice.completed &&
+    // Check every unfinished target against current locks plus this proposed
+    // lock. One indoor rice is not enough: after eating it, the AI would remain
+    // trapped behind its own locks with no legal route to the other portions.
+    const riceReachability = input.rice.filter(rice => !rice.completed).map(rice =>
       !!this.navigation.findPath(input.deepseek, rice, input.doors, undefined,
         null, blocked)?.length);
-    if (!riceReachable) return reject('ALL_RICE_UNREACHABLE');
+    if (!riceReachability.some(Boolean)) return reject('ALL_RICE_UNREACHABLE');
+    if (!riceReachability.every(Boolean)) return reject('REMAINING_RICE_UNREACHABLE');
     this.doorLockUsedEvidence = usedCloseSideEvidence;
     this.doorLockDecision('DOOR_LOCK_EVALUATE', pendingId, usedCloseSideEvidence
       ? 'LOCK_WITH_CLOSE_SIDE_EVIDENCE' : 'LOCK_WITH_CURRENT_SIGHT');
@@ -2321,7 +2327,7 @@ export class DeepSeekAIController {
     this.state = 'RECOVER';
     this.loopReplanPending = false;
     this.cancelPendingLock('RECOVERY_STARTED');
-    this.recoverRemainingMs = GAME_CONFIG.deepseekAI.recoverMs;
+    this.recoverRemainingMs = this.config.recoverMs;
     this.lastTransitionReason = 'SAFE_SEPARATION_RECOVER';
     this.recoveryBlockReason = 'NONE';
     this.avoidUnsafeRiceRoute(input);
@@ -2351,7 +2357,7 @@ export class DeepSeekAIController {
       this.path = this.navigation.findPath(input.deepseek, target, input.doors) ?? [];
       this.pathIndex = 0;
       if (!this.path.length) {
-        this.avoidedRiceMs.set(target.id, GAME_CONFIG.deepseekAI.retryMs);
+        this.avoidedRiceMs.set(target.id, this.config.retryMs);
         this.clearTarget('RECOVERY_ROUTE_INVALID');
         this.state = 'RECOVER';
       }
@@ -2391,11 +2397,11 @@ export class DeepSeekAIController {
       if (rice.completed) continue;
       const path = this.navigation.findPath(input.deepseek, rice, input.doors);
       const dangerous = distance(rice, this.threatEstimate) <=
-        GAME_CONFIG.deepseekAI.dangerRouteRadius ||
+        this.config.dangerRouteRadius ||
         !!path?.some(step => distance(step, this.threatEstimate!) <=
-          GAME_CONFIG.deepseekAI.dangerRouteRadius);
+          this.config.dangerRouteRadius);
       if (dangerous)
-        this.avoidedRiceMs.set(rice.id, GAME_CONFIG.deepseekAI.dangerRiceAvoidMs);
+        this.avoidedRiceMs.set(rice.id, this.config.dangerRiceAvoidMs);
     }
     if (this.targetRiceId && this.avoidedRiceMs.has(this.targetRiceId)) {
       this.clearTarget('THREAT_ON_RICE_ROUTE');
@@ -2411,9 +2417,9 @@ export class DeepSeekAIController {
     return pending.some(rice => {
       const path = this.navigation.findPath(input.deepseek, rice, input.doors);
       return !!path?.length && distance(rice, this.threatEstimate!) >=
-        GAME_CONFIG.deepseekAI.visionEvadeDistance &&
+        this.config.visionEvadeDistance &&
         path.every(step => distance(step, this.threatEstimate!) >=
-          GAME_CONFIG.deepseekAI.visionEvadeDistance);
+          this.config.visionEvadeDistance);
     });
   }
 
@@ -2423,7 +2429,7 @@ export class DeepSeekAIController {
       position.z >= candidate.minZ && position.z <= candidate.maxZ) ??
       this.rooms.find(candidate => candidate.id === this.escapeRoomId &&
         this.escapeTarget && distance(position, this.escapeTarget) <=
-          GAME_CONFIG.deepseekAI.escapeGoalTolerance);
+          this.config.escapeGoalTolerance);
     if (!room || room.id === this.currentEscapeRoomId) return;
     this.currentEscapeRoomId = room.id;
     if (!this.threatEstimate) return;
@@ -2433,17 +2439,17 @@ export class DeepSeekAIController {
       .find(item => item.roomId === room.id);
     this.recentEscapeVisits.push(visit);
     this.recentEscapeVisits = this.recentEscapeVisits.slice(
-      -GAME_CONFIG.deepseekAI.escapeRecentVisitCount);
+      -this.config.escapeRecentVisitCount);
     if (highThreat && earlier && this.recentEscapeVisits.length >= 3 &&
         visit.separation < earlier.separation +
-          GAME_CONFIG.deepseekAI.escapeLoopMinDistanceGain) {
+          this.config.escapeLoopMinDistanceGain) {
       this.localLoopTriggered = true;
       this.loopReplanPending = true;
     }
   }
 
   private recentVisitPenalty(roomId: string): number {
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     return this.recentEscapeVisits.filter(visit => visit.roomId === roomId)
       .reduce((sum, visit) => sum + cfg.escapeRecentVisitPenalty *
         (1 - (this.elapsedMs - visit.atMs) / cfg.escapeVisitMemoryMs), 0);
@@ -2453,7 +2459,7 @@ export class DeepSeekAIController {
     avoidCurrentRoom = false, preferFresh = false, allowRecentlyClosed = false): void {
     if (!this.threatEstimate) return;
     this.lastEscapeDecisionReason = reason;
-    const cfg = GAME_CONFIG.deepseekAI;
+    const cfg = this.config;
     // Never plan an escape that immediately undoes a door we just shut. If that
     // leaves no route at all, fall back once to using it: re-opening a door is
     // still better than standing still in front of a pursuer.
@@ -2592,7 +2598,7 @@ export class DeepSeekAIController {
       this.safeWaitObservation ? this.threatEstimate : null;
     while (this.pathIndex < this.path.length &&
         distance(input.deepseek, this.path[this.pathIndex]) <=
-        GAME_CONFIG.deepseekAI.waypointTolerance) {
+        this.config.waypointTolerance) {
       const next = this.path[this.pathIndex + 1] ?? goal;
       if (passageHuman && distanceToXZSegment(passageHuman, input.deepseek, next) <
           this.passageAvoidRadius) break;
@@ -2650,7 +2656,7 @@ export class DeepSeekAIController {
         return false;
       }
       this.state = 'RESELECT';
-      this.retryRemainingMs = GAME_CONFIG.deepseekAI.retryMs;
+      this.retryRemainingMs = this.config.retryMs;
       this.lastSelectionReason = input.rice.every(rice => rice.completed)
         ? 'ALL_RICE_COMPLETE' : 'NO_REACHABLE_RICE';
       return false;
@@ -2690,14 +2696,14 @@ export class DeepSeekAIController {
       this.progressAnchorDistance = remaining;
       this.stalledMs = 0;
     } else if (this.progressAnchorDistance - remaining >=
-        GAME_CONFIG.deepseekAI.stuckProgressEpsilon) {
+        this.config.stuckProgressEpsilon) {
       this.progressAnchorDistance = remaining;
       this.stalledMs = 0;
       this.stalledRepaths = 0;
-    } else if ((this.stalledMs += deltaMs) >= GAME_CONFIG.deepseekAI.stuckRepathMs) {
+    } else if ((this.stalledMs += deltaMs) >= this.config.stuckRepathMs) {
       this.stalledRepaths++;
       if (this.passageActive) {
-        if (this.stalledRepaths >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
+        if (this.stalledRepaths >= this.config.maxStuckRepathsPerTarget) {
           this.finishPassage('PASSAGE_PATH_STALLED');
           this.enterEvade('VISION');
         } else {
@@ -2718,7 +2724,7 @@ export class DeepSeekAIController {
         // S7C-2b：走位到藏身点的卡路处理必须有界——允许换一条路，超过上限就
         // 放弃这个点并回到 EVADE，绝不无限重寻路。
         this.hidePathStalls++;
-        if (this.hidePathStalls >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
+        if (this.hidePathStalls >= this.config.maxStuckRepathsPerTarget) {
           this.abortHidePlan('TRAVEL_STALLED');
         } else {
           this.avoidedWaypoint = { x: waypoint.x, z: waypoint.z };
@@ -2730,7 +2736,7 @@ export class DeepSeekAIController {
         return;
       }
       if (this.state === 'EVADE') {
-        if (this.stalledRepaths >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget) {
+        if (this.stalledRepaths >= this.config.maxStuckRepathsPerTarget) {
           this.avoidedEscapeRoomId = this.escapeRoomId;
           this.escapeTarget = null;
           this.escapeRoomId = null;
@@ -2746,9 +2752,9 @@ export class DeepSeekAIController {
         this.resetPathProgress();
         return;
       }
-      if (this.stalledRepaths >= GAME_CONFIG.deepseekAI.maxStuckRepathsPerTarget &&
+      if (this.stalledRepaths >= this.config.maxStuckRepathsPerTarget &&
           this.targetRiceId) {
-        this.avoidedRiceMs.set(this.targetRiceId, GAME_CONFIG.deepseekAI.retryMs);
+        this.avoidedRiceMs.set(this.targetRiceId, this.config.retryMs);
         this.clearTarget('PATH_STALLED_RESELECT');
       } else {
         this.avoidedWaypoint = { x: waypoint.x, z: waypoint.z };

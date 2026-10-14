@@ -73,17 +73,6 @@ canvas { display: block; }
 .pause-actions button, .result-actions button {
   min-width: 220px; padding: 9px 14px; cursor: pointer;
 }
-.faction-menu {
-  position: absolute; z-index: 10; top: 16px; left: 16px;
-  min-width: 260px; padding: 22px;
-  background: #30343a; color: white;
-  display: grid; gap: 14px;
-  box-shadow: 0 10px 30px #0005;
-}
-.faction-menu[hidden] { display: none; }
-.faction-menu h1 { margin: 0; font-size: 22px; }
-.faction-menu label { cursor: pointer; }
-.faction-menu button { padding: 8px 14px; cursor: pointer; }
 /* DEV two-faction freeze button and freeze state */
 .details-freeze[hidden], .details-freeze-state[hidden] { display: none; }
 .details-freeze[aria-pressed="true"] { border-color: #e5c56f; color: #f0dda0; }
@@ -264,31 +253,14 @@ body.scene-editor-open .debug-panel { right: 366px; }
 
 /* Alpha presentation: scoped to player UI; editor / DEV styling is untouched. */
 body { background: #e5ded0; color: #493e32; }
-.faction-menu { top: 50%; left: 5vw; transform: translateY(-50%);
-  width: min(360px, 42vw); max-height: 94vh; overflow: auto; padding: 28px;
-  gap: 12px; border: 1px solid #fff8e6; border-radius: 24px;
-  color: #493e32; background: #fffaeeef; box-shadow: 0 20px 60px #57432b26;
-  animation: home-arrive .3s ease-out; }
-.menu-eyebrow { font-size: 10px; letter-spacing: .13em; color: #88745c; }
-.faction-menu h1 { font-size: clamp(32px, 4vw, 54px); line-height: 1.1; letter-spacing: -.04em; }
-.faction-menu h1 em { font-style: normal; color: #b57843; }
-.faction-menu h2 { font-size: 12px; margin: 10px 0 0; color: #88745c; }
-.menu-intro { margin: 2px 0 8px; color: #88745c; font-size: 14px; }
-.faction-menu label { display: flex; align-items: center; gap: 10px; padding: 12px;
-  border: 1px solid #ddcfb8; border-radius: 12px; transition: background .15s, border-color .15s; }
-.faction-menu label:has(input:checked) { background: #eaf0e4; border-color: #839e78; }
-.faction-menu label strong, .faction-menu label small { display: block; }
-.faction-menu label small { margin-top: 4px; font-size: 11px; color: #7c705f; }
-.faction-menu input { accent-color: #64835a; }
-.faction-menu button, .pause-actions button, .result-actions button {
+.pause-actions button, .result-actions button {
   border: 1px solid #89704e; border-radius: 12px; padding: 12px 18px;
   background: #698661; color: #fffcef; font: 600 15px system-ui, sans-serif;
   box-shadow: 0 3px 0 #506749; transition: filter .12s, transform .12s; }
-.faction-menu button:hover, .pause-actions button:hover, .result-actions button:hover { filter: brightness(1.09); }
-.faction-menu button:active, .pause-actions button:active, .result-actions button:active { transform: translateY(2px); box-shadow: none; }
-.faction-menu button:focus-visible, .pause-actions button:focus-visible, .result-actions button:focus-visible {
+.pause-actions button:hover, .result-actions button:hover { filter: brightness(1.09); }
+.pause-actions button:active, .result-actions button:active { transform: translateY(2px); box-shadow: none; }
+.pause-actions button:focus-visible, .result-actions button:focus-visible {
   outline: 3px solid #bb8b4f; outline-offset: 3px; }
-.menu-controls { color: #8c7a65; font-size: 10px; text-align: center; margin: 5px 0 0; }
 .game-overlay { width: min(390px, 92vw); max-height: 94vh; overflow: auto;
   padding: 30px; border: 1px solid #fff9e9; border-radius: 24px;
   background: #fff9eeef; color: #4c4033; box-shadow: 0 24px 100px #30231350;
@@ -335,7 +307,6 @@ body { background: #e5ded0; color: #493e32; }
 .skill-hud-notice:empty { display: none; }
 @keyframes home-arrive { from { opacity: 0; margin-top: 8px; } to { opacity: 1; margin-top: 0; } }
 @media (max-width: 800px) {
-  .faction-menu { width: min(330px, 90vw); left: 4vw; padding: 20px; }
   .alpha-score { top: 46px; left: 10px; gap: 12px; padding: 8px 12px; }
   .alpha-goal { top: 105px; left: 10px; }
   .alpha-skills { gap: 4px; }
@@ -343,39 +314,12 @@ body { background: #e5ded0; color: #493e32; }
   .alpha-key small { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .faction-menu { animation: none; }
-  .faction-menu button, .pause-actions button, .result-actions button { transition: none; }
+  .pause-actions button, .result-actions button { transition: none; }
 }
 
 /* Residential diorama composition. Formal UI has independent screen zones. */
 #app::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
   box-shadow: inset 0 0 100px #554d3420; border: 12px solid #f3efe130; }
-.faction-menu { inset: 0; transform: none; width: auto; max-height: none; padding: 0;
-  overflow: hidden; display: block; border: 0; border-radius: 0; box-shadow: none;
-  background: linear-gradient(90deg, #eee9dbe8 0%, #eee9db70 27%, transparent 52%);
-  pointer-events: none; }
-.menu-story { position: absolute; left: 5vw; top: 11vh; width: 36vw; }
-.menu-eyebrow { display: block; color: #6d7867; letter-spacing: .17em; font-size: 11px; }
-.faction-menu h1 { margin: 26px 0 20px; font-size: clamp(48px, 6.2vw, 96px);
-  font-weight: 850; line-height: 1.04; letter-spacing: -.07em; color: #3f493d; }
-.faction-menu h1 em { color: #a77048; }
-.menu-intro { font-size: 15px; line-height: 1.9; color: #77776a; padding-left: 16px; border-left: 2px solid #9aab8e; }
-.faction-dock { position: absolute; left: 5vw; right: 5vw; bottom: 8vh; display: flex;
-  gap: 12px; align-items: stretch; padding: 0; margin: 0; border: 0; pointer-events: auto; }
-.faction-dock legend { padding: 0 0 14px; color: #59634f; font-size: 13px; letter-spacing: .12em; }
-.faction-menu label { flex: 1; max-width: 340px; padding: 22px 24px; border-radius: 3px;
-  background: #f7f5eade; border: 1px solid #bcbcae; box-shadow: 0 5px 20px #3842310a; }
-.faction-menu label:has(input:checked) { background: #536b59; border-color: #536b59; color: #fffbed; }
-.faction-menu label:has(input:checked) small { color: #e0e5d9; }
-.faction-menu label:focus-within { outline: 2px solid #a77048; outline-offset: 3px; }
-.faction-menu label strong { font-size: 21px; letter-spacing: .05em; }
-.faction-menu label small { font-size: 12px; margin-top: 7px; }
-.faction-number { font-size: 37px; font-weight: 300; opacity: .5; margin-right: 8px; }
-.faction-menu input { width: 14px; accent-color: #a77048; }
-.faction-dock button { align-self: stretch; min-width: 185px; margin-left: auto;
-  border-radius: 3px; background: #a97047; box-shadow: none; border: 0; font-size: 18px; }
-.faction-dock button span { display: inline-block; margin-left: 28px; font-size: 28px; }
-.menu-controls { position: absolute; left: 5vw; bottom: 2vh; margin: 0; text-align: left; letter-spacing: .08em; }
 .home-masthead { position: absolute; left: 30px; top: 26px; display: flex; flex-direction: column;
   gap: 5px; color: #4b5647; letter-spacing: .08em; }
 .home-masthead span { font-weight: 800; font-size: 19px; }
@@ -432,23 +376,12 @@ body { background: #e5ded0; color: #493e32; }
 .pause-actions, .result-actions { margin-top: 35px; justify-content: stretch; }
 .pause-actions button, .result-actions button { min-width: 0; border-radius: 3px; text-align: left; }
 @media (max-width: 1000px) {
-  .menu-story { top: 8vh; }
-  .faction-menu h1 { font-size: 55px; }
-  .faction-menu label { padding: 15px; }
-  .faction-number { display: none; }
-  .faction-dock button { min-width: 150px; }
   .alpha-score { width: 160px; left: 15px; padding: 15px 12px; }
   .alpha-objective { font-size: 19px; }
   .alpha-skills { right: 15px; }
   .alpha-key, .alpha-cooldown { padding: 10px; font-size: 10px; }
 }
 @media (max-width: 650px) {
-  .menu-story { top: 5vh; width: 70vw; }
-  .menu-intro { display: none; }
-  .faction-dock { flex-wrap: wrap; }
-  .faction-menu label { min-width: 40%; }
-  .faction-menu label strong { font-size: 16px; }
-  .faction-dock button { width: 100%; padding: 10px; }
   .alpha-score { top: 95px; width: 130px; }
   .alpha-goal { display: none; }
   .alpha-objective { font-size: 16px; }
@@ -456,4 +389,30 @@ body { background: #e5ded0; color: #493e32; }
   .rice-inventory i { width: 15px; height: 21px; }
   .movement-guide { display: none; }
   .game-overlay { width: 85vw; }
+}
+.audio-settings { position: fixed; right: 18px; top: 18px; z-index: 45; width: 210px;
+  padding: 8px 12px; color: #263039; background: rgba(251, 250, 244, .94);
+  border-left: 3px solid #65b9c9; box-shadow: 0 3px 12px #28343c35; font: 13px sans-serif; }
+.audio-settings[hidden] { display: none; }
+.audio-settings summary { cursor: pointer; font-weight: 600; }
+.audio-settings label { display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; margin-top: 9px; }
+.audio-settings input[type=range] { width: 112px; accent-color: #65b9c9; }
+.audio-settings input[type=checkbox] { accent-color: #65b9c9; }
+.game-feedback { position: fixed; inset: 0; pointer-events: none; z-index: 24; overflow: hidden; }
+.game-feedback-item { position: absolute; transform: translate(-50%, -50%);
+  padding: 3px 8px; border-radius: 12px; color: #263039;
+  background: #f8f7eecc; font: 600 13px sans-serif;
+  animation: game-feedback-pop .8s ease-out forwards; white-space: nowrap; }
+.game-feedback-item.good { color: #277e8c; }
+.game-feedback-item.bad { color: #a65346; }
+.game-feedback-grain { position: absolute; width: 5px; height: 10px;
+  border-radius: 70%; background: #fff7df; animation: game-feedback-grain .55s ease-out forwards; }
+@keyframes game-feedback-pop { from { opacity: 0; transform: translate(-50%, -35%) scale(.85); }
+  25% { opacity: 1; transform: translate(-50%, -55%) scale(1.04); }
+  to { opacity: 0; transform: translate(-50%, -105%) scale(1); } }
+@keyframes game-feedback-grain { to { opacity: 0; transform: translate(12px, -28px) rotate(35deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .game-feedback-item { animation: none; }
+  .game-feedback-grain { display: none; }
 }
