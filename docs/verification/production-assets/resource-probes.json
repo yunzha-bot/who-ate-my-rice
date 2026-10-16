@@ -1,0 +1,34 @@
+[
+  {
+    "file": "assets/characters/deepseek/deepseek_animated_v1.glb",
+    "devStatus": 206,
+    "devMagic": "glTF",
+    "productionStatus": 200,
+    "productionType": "text/html",
+    "note": "预览SPA可能回HTML，状态200不表示GLB存在；正常游戏不请求这些URL"
+  },
+  {
+    "file": "assets/characters/deepseek/deepseek_animated_v2.glb",
+    "devStatus": 206,
+    "devMagic": "glTF",
+    "productionStatus": 200,
+    "productionType": "text/html",
+    "note": "预览SPA可能回HTML，状态200不表示GLB存在；正常游戏不请求这些URL"
+  },
+  {
+    "file": "assets/characters/deepseek/deepseek_animated_v3.glb",
+    "devStatus": 206,
+    "devMagic": "glTF",
+    "productionStatus": 200,
+    "productionType": "text/html",
+    "note": "预览SPA可能回HTML，状态200不表示GLB存在；正常游戏不请求这些URL"
+  },
+  {
+    "file": "assets/characters/deepseek/deepseek_animated_v4.glb",
+    "devStatus": 206,
+    "devMagic": "glTF",
+    "productionStatus": 200,
+    "productionType": "text/html",
+    "note": "预览SPA可能回HTML，状态200不表示GLB存在；正常游戏不请求这些URL"
+  }
+]

@@ -1,0 +1,330 @@
+[
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "phase": "before-paired",
+    "url": "http://127.0.0.1:4173/",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "localUncompressedServer": true,
+    "networkEncodedBytesAtMenu": 16224265,
+    "startup": {
+      "readyMs": 3272.7999999523163,
+      "devicePixelRatio": 1,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (NVIDIA)",
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4173/assets/index-ym-WIra9.js",
+          "encodedBodySize": 363799,
+          "decodedBodySize": 1295995,
+          "transferSize": 364099,
+          "duration": 39.10000014305115
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/index-CrqVpTD3.css",
+          "encodedBodySize": 14053,
+          "decodedBodySize": 69771,
+          "transferSize": 14353,
+          "duration": 6.799999952316284
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+          "encodedBodySize": 12496972,
+          "decodedBodySize": 12496972,
+          "transferSize": 12497272,
+          "duration": 987.8000001907349
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/props/rice-bag/rice-bag.glb",
+          "encodedBodySize": 632704,
+          "decodedBodySize": 632704,
+          "transferSize": 633004,
+          "duration": 9.699999809265137
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/click.ogg",
+          "encodedBodySize": 4230,
+          "decodedBodySize": 4230,
+          "transferSize": 4530,
+          "duration": 11.099999904632568
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/countdown.ogg",
+          "encodedBodySize": 4182,
+          "decodedBodySize": 4182,
+          "transferSize": 4482,
+          "duration": 11
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/start.ogg",
+          "encodedBodySize": 5577,
+          "decodedBodySize": 5577,
+          "transferSize": 5877,
+          "duration": 11.200000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/menu.ogg",
+          "encodedBodySize": 67497,
+          "decodedBodySize": 67497,
+          "transferSize": 67797,
+          "duration": 11.299999952316284
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/game.ogg",
+          "encodedBodySize": 66253,
+          "decodedBodySize": 66253,
+          "transferSize": 66553,
+          "duration": 11.5
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/room.ogg",
+          "encodedBodySize": 45007,
+          "decodedBodySize": 45007,
+          "transferSize": 45307,
+          "duration": 18
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/ui/portraits/deepseek-normal.png",
+          "encodedBodySize": 2130874,
+          "decodedBodySize": 2130874,
+          "transferSize": 2131174,
+          "duration": 72.90000009536743
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/ui/portraits/human-guardian-v1.webp",
+          "encodedBodySize": 75696,
+          "decodedBodySize": 75696,
+          "transferSize": 75996,
+          "duration": 18.800000190734863
+        },
+        {
+          "url": "http://127.0.0.1:4173/ui/faction-name-gradient-clean.png",
+          "encodedBodySize": 313221,
+          "decodedBodySize": 313221,
+          "transferSize": 313521,
+          "duration": 18.200000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/favicon.ico",
+          "encodedBodySize": 0,
+          "decodedBodySize": 0,
+          "transferSize": 300,
+          "duration": 1.8999998569488525
+        }
+      ]
+    },
+    "frameSample": {
+      "frames": 627,
+      "durationMs": 9999.8,
+      "fps": 62.60125202504051,
+      "p50Ms": 13.899999999999636,
+      "p95Ms": 34.70000000000073,
+      "framesOver50Ms": 1,
+      "approxDrawCallsPerFrame": 518.194577352472,
+      "longTasks": [
+        {
+          "start": 60.5,
+          "duration": 712
+        },
+        {
+          "start": 785.1999998092651,
+          "duration": 777
+        },
+        {
+          "start": 1657.6999998092651,
+          "duration": 97
+        },
+        {
+          "start": 1892.6999998092651,
+          "duration": 121
+        },
+        {
+          "start": 2093.399999856949,
+          "duration": 133
+        },
+        {
+          "start": 2273.5,
+          "duration": 319
+        },
+        {
+          "start": 2784.5999999046326,
+          "duration": 173
+        },
+        {
+          "start": 3451.7999999523163,
+          "duration": 645
+        }
+      ]
+    },
+    "heapUsedAfterMenuAndGC": [
+      25287964,
+      25497404,
+      25574332,
+      25621524
+    ],
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "phase": "before-paired",
+    "url": "http://127.0.0.1:4173/",
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "localUncompressedServer": true,
+    "networkEncodedBytesAtMenu": 16224265,
+    "startup": {
+      "readyMs": 2713.5,
+      "devicePixelRatio": 1,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (NVIDIA)",
+      "requests": [
+        {
+          "url": "http://127.0.0.1:4173/assets/index-ym-WIra9.js",
+          "encodedBodySize": 363799,
+          "decodedBodySize": 1295995,
+          "transferSize": 364099,
+          "duration": 68.59999990463257
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/index-CrqVpTD3.css",
+          "encodedBodySize": 14053,
+          "decodedBodySize": 69771,
+          "transferSize": 14353,
+          "duration": 28.700000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+          "encodedBodySize": 12496972,
+          "decodedBodySize": 12496972,
+          "transferSize": 12497272,
+          "duration": 804.5999999046326
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/props/rice-bag/rice-bag.glb",
+          "encodedBodySize": 632704,
+          "decodedBodySize": 632704,
+          "transferSize": 633004,
+          "duration": 9
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/click.ogg",
+          "encodedBodySize": 4230,
+          "decodedBodySize": 4230,
+          "transferSize": 4530,
+          "duration": 10.600000143051147
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/countdown.ogg",
+          "encodedBodySize": 4182,
+          "decodedBodySize": 4182,
+          "transferSize": 4482,
+          "duration": 10.700000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/start.ogg",
+          "encodedBodySize": 5577,
+          "decodedBodySize": 5577,
+          "transferSize": 5877,
+          "duration": 10.599999904632568
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/menu.ogg",
+          "encodedBodySize": 67497,
+          "decodedBodySize": 67497,
+          "transferSize": 67797,
+          "duration": 17.200000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/game.ogg",
+          "encodedBodySize": 66253,
+          "decodedBodySize": 66253,
+          "transferSize": 66553,
+          "duration": 18.09999990463257
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/audio/room.ogg",
+          "encodedBodySize": 45007,
+          "decodedBodySize": 45007,
+          "transferSize": 45307,
+          "duration": 18.700000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/ui/portraits/deepseek-normal.png",
+          "encodedBodySize": 2130874,
+          "decodedBodySize": 2130874,
+          "transferSize": 2131174,
+          "duration": 36.299999952316284
+        },
+        {
+          "url": "http://127.0.0.1:4173/assets/ui/portraits/human-guardian-v1.webp",
+          "encodedBodySize": 75696,
+          "decodedBodySize": 75696,
+          "transferSize": 75996,
+          "duration": 18.699999809265137
+        },
+        {
+          "url": "http://127.0.0.1:4173/ui/faction-name-gradient-clean.png",
+          "encodedBodySize": 313221,
+          "decodedBodySize": 313221,
+          "transferSize": 313521,
+          "duration": 20.700000047683716
+        },
+        {
+          "url": "http://127.0.0.1:4173/favicon.ico",
+          "encodedBodySize": 0,
+          "decodedBodySize": 0,
+          "transferSize": 300,
+          "duration": 2.799999952316284
+        }
+      ]
+    },
+    "frameSample": {
+      "frames": 558,
+      "durationMs": 9992.899999999998,
+      "fps": 55.73957509831982,
+      "p50Ms": 13.900000000001455,
+      "p95Ms": 34.80000000000018,
+      "framesOver50Ms": 1,
+      "approxDrawCallsPerFrame": 518.15770609319,
+      "longTasks": [
+        {
+          "start": 101,
+          "duration": 663
+        },
+        {
+          "start": 776.2000000476837,
+          "duration": 628
+        },
+        {
+          "start": 1497.9000000953674,
+          "duration": 60
+        },
+        {
+          "start": 1654.6000001430511,
+          "duration": 84
+        },
+        {
+          "start": 1864.1000001430511,
+          "duration": 331
+        },
+        {
+          "start": 2838.100000143051,
+          "duration": 686
+        }
+      ]
+    },
+    "heapUsedAfterMenuAndGC": [
+      25289356,
+      25481816,
+      25496932,
+      25555684
+    ],
+    "errors": []
+  }
+]

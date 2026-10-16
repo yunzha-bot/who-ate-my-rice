@@ -380,7 +380,6 @@ export class AILogCollector {
   /** 上一条异常的种类，用来把「同一现象持续」折叠成一条带时长的记录。 */
   private openAnomaly: { kind: string; detail: string; state: string; sinceMs: number } | null =
     null;
-  private lastRiceProgressMs = 0;
   private riceCompletedCount = 0;
 
   startMatch(): void {
@@ -397,7 +396,6 @@ export class AILogCollector {
     this.anomalies.length = 0;
     this.openAnomaly = null;
     this.matchResult = null;
-    this.lastRiceProgressMs = 0;
     this.riceCompletedCount = 0;
     for (const key of Object.keys(this.counts) as (keyof AILogMatchCounts)[]) {
       this.counts[key] = 0;
@@ -444,7 +442,6 @@ export class AILogCollector {
   /** S7D：本局已吃到的大米数量（每帧同步，只有结算前的最终值会被导出）。 */
   recordRiceProgress(completed: number): void {
     this.riceCompletedCount = completed;
-    if (completed > 0) this.lastRiceProgressMs = this.nowMs - this.matchStartMs;
   }
 
   /** 藏身事件由 ThreeGame 每帧投放；不依赖 DeepSeek AI 是否在运行。 */

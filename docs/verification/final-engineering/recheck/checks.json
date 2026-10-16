@@ -1,0 +1,84 @@
+{
+  "date": "2026-10-15",
+  "tests": {
+    "total": 908,
+    "pass": 908,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0
+  },
+  "typescript": {
+    "command": "npx tsc --noEmit",
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "modules": 118,
+    "files": 84,
+    "bytes": 43163759,
+    "warning": "existing chunk exceeds 500 kB"
+  },
+  "implementation": {
+    "newSourceEdits": 0,
+    "priorPolicyPreserved": true,
+    "oldOriginalsUnchanged": true
+  },
+  "protection": {
+    "count": 522,
+    "unchanged": 522,
+    "logOldBytesUnchanged": true,
+    "candidatesB": 173,
+    "candidatesC": 46,
+    "privateDirectoriesRead": false
+  },
+  "browser": {
+    "normalCombinations": 24,
+    "productionFaultCases": 12,
+    "developmentFallbackCases": 4,
+    "cardHoverTenSecondCases": 8,
+    "normalErrors": [],
+    "consoleErrors": [
+      {
+        "browser": "chrome",
+        "environment": "dev",
+        "errors": []
+      },
+      {
+        "browser": "chrome",
+        "environment": "production",
+        "errors": []
+      },
+      {
+        "browser": "edge",
+        "environment": "dev",
+        "errors": []
+      },
+      {
+        "browser": "edge",
+        "environment": "production",
+        "errors": []
+      }
+    ],
+    "faultConsole": []
+  },
+  "standardEditor": {
+    "url": "http://127.0.0.1:5183/",
+    "command": "npm run dev -- --port 5183 --strictPort",
+    "originalConfigHashUnchanged": true,
+    "defaultBundledLoader": true,
+    "fullWatchers": true,
+    "postBackupsRestartAutomaticReconnectRefresh": true,
+    "fullServiceStopStart": true,
+    "portReleasedAfterStop": true,
+    "temporaryServerStopped": true,
+    "formalMapWritten": false,
+    "finalRevision": "845f0e863babb9539d64a6e4230ef5d88b2f13a3b66cb03e135055146437be67"
+  },
+  "git": {
+    "headUnchanged": true,
+    "indexEmpty": true,
+    "trackedDiffCheck": true,
+    "addCommitPushTag": false
+  }
+}

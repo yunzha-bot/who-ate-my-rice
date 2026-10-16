@@ -1,0 +1,154 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "width": 1920,
+    "height": 1080,
+    "cssViewportOnly": true,
+    "heading": 1.5707965226315732,
+    "targetHeading": 1.5707965226315752,
+    "overflow": false,
+    "status": {
+      "left": 822.0078125,
+      "right": 1097.9921875,
+      "top": 965,
+      "bottom": 994
+    },
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "markers": true
+  },
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "width": 1366,
+    "height": 768,
+    "cssViewportOnly": true,
+    "heading": 1.5707963565774623,
+    "targetHeading": 1.5707963565774608,
+    "overflow": false,
+    "status": {
+      "left": 545.0078125,
+      "right": 820.9921875,
+      "top": 653,
+      "bottom": 682
+    },
+    "innerWidth": 1366,
+    "innerHeight": 768,
+    "markers": true
+  },
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "width": 960,
+    "height": 540,
+    "cssViewportOnly": true,
+    "heading": 1.5707965226315732,
+    "targetHeading": 1.5707965226315752,
+    "overflow": false,
+    "status": {
+      "left": 342.0078125,
+      "right": 617.9921875,
+      "top": 425,
+      "bottom": 454
+    },
+    "innerWidth": 960,
+    "innerHeight": 540,
+    "markers": true
+  },
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "width": 800,
+    "height": 450,
+    "cssViewportOnly": true,
+    "heading": 1.5707962376493256,
+    "targetHeading": 1.5707962376493256,
+    "overflow": false,
+    "status": {
+      "left": 262.0078125,
+      "right": 537.9921875,
+      "top": 335,
+      "bottom": 364
+    },
+    "innerWidth": 800,
+    "innerHeight": 450,
+    "markers": true
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "width": 1920,
+    "height": 1080,
+    "cssViewportOnly": true,
+    "heading": 1.5707965226315732,
+    "targetHeading": 1.5707965226315752,
+    "overflow": false,
+    "status": {
+      "left": 822.0078125,
+      "right": 1097.9921875,
+      "top": 965,
+      "bottom": 994
+    },
+    "innerWidth": 1920,
+    "innerHeight": 1080,
+    "markers": true
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "width": 1366,
+    "height": 768,
+    "cssViewportOnly": true,
+    "heading": 1.5707963565774623,
+    "targetHeading": 1.5707963565774608,
+    "overflow": false,
+    "status": {
+      "left": 545.0078125,
+      "right": 820.9921875,
+      "top": 653,
+      "bottom": 682
+    },
+    "innerWidth": 1366,
+    "innerHeight": 768,
+    "markers": true
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "width": 960,
+    "height": 540,
+    "cssViewportOnly": true,
+    "heading": 1.5707965226315732,
+    "targetHeading": 1.5707965226315752,
+    "overflow": false,
+    "status": {
+      "left": 342.0078125,
+      "right": 617.9921875,
+      "top": 425,
+      "bottom": 454
+    },
+    "innerWidth": 960,
+    "innerHeight": 540,
+    "markers": true
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "width": 800,
+    "height": 450,
+    "cssViewportOnly": true,
+    "heading": 1.5707962376493256,
+    "targetHeading": 1.5707962376493256,
+    "overflow": false,
+    "status": {
+      "left": 262.0078125,
+      "right": 537.9921875,
+      "top": 335,
+      "bottom": 364
+    },
+    "innerWidth": 800,
+    "innerHeight": 450,
+    "markers": true
+  }
+]

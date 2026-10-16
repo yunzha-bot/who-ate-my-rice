@@ -1,0 +1,20 @@
+{
+  "before": {
+    "tests": 937,
+    "pass": 936,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 52642.2817,
+    "failure": "tests/difficulty.test.mjs:263; NORMAL/20276765: MOVE_TO_RICE; PLAYING != FINISHED"
+  },
+  "after": {
+    "tests": 941,
+    "pass": 940,
+    "fail": 1,
+    "cancelled": 0,
+    "skipped": 0,
+    "duration_ms": 55118.449,
+    "failure": "tests/difficulty.test.mjs:263; NORMAL/20276765: MOVE_TO_RICE; PLAYING != FINISHED"
+  }
+}

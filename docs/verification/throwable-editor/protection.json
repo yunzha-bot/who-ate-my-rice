@@ -1,0 +1,20 @@
+{
+  "compared": 324,
+  "changed": [
+    "src/config/gameConfig.ts",
+    "src/systems/ThrowableSystem.ts",
+    "src/three/SceneEditor.ts",
+    "src/three/SceneEditorPanel.ts",
+    "src/three/SceneEditorView.ts",
+    "src/three/ThreeGame.ts",
+    "src/three/ThrowableView.ts",
+    "tests/throwables.test.mjs"
+  ],
+  "missing": [],
+  "humanAppearanceRestoredExactly": true,
+  "onlyBalanceChange": "throwables.stunDurationMs: 2000 -> 3000",
+  "formalMapUnchanged": true,
+  "formalPropLayoutUnchanged": true,
+  "assetsAndAudioUnchanged": true,
+  "logPrefixPreserved": true
+}

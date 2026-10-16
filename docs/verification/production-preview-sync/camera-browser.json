@@ -1,0 +1,1698 @@
+[
+  {
+    "browser": "chrome",
+    "dev": false,
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "chrome",
+    "dev": false,
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "chrome",
+    "dev": true,
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:5173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12.000000000000002,
+      14,
+      -12
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "chrome",
+    "dev": true,
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:5173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12.000000000000002,
+      14,
+      -12
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "dev": false,
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "dev": false,
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "dev": true,
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:5173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12.000000000000002,
+      14,
+      -12
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "dev": true,
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:5173/",
+    "base": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterZ": [
+      12.000000000000002,
+      14,
+      -12
+    ],
+    "afterC": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "afterX": [
+      12,
+      14,
+      12.000000000000002
+    ],
+    "nativeMovement": true,
+    "props": [
+      {
+        "id": "throw_balcony_1",
+        "x": 2.764,
+        "z": -18.408
+      },
+      {
+        "id": "throw_balcony_2",
+        "x": -0.669,
+        "z": -18.312
+      },
+      {
+        "id": "throw_main_bedroom_1",
+        "x": -25.632,
+        "z": -3.084
+      },
+      {
+        "id": "throw_main_bedroom_2",
+        "x": -25.122,
+        "z": -5.513
+      },
+      {
+        "id": "throw_closet_1",
+        "x": -13.029,
+        "z": -7.399
+      },
+      {
+        "id": "throw_closet_2",
+        "x": -13.623,
+        "z": -11.974
+      },
+      {
+        "id": "throw_living_1",
+        "x": 2.442,
+        "z": -8.023
+      },
+      {
+        "id": "throw_living_2",
+        "x": -3.809,
+        "z": -11.385
+      },
+      {
+        "id": "throw_kitchen_1",
+        "x": 9.564,
+        "z": -9.032
+      },
+      {
+        "id": "throw_kitchen_2",
+        "x": 12.697,
+        "z": -11.986
+      },
+      {
+        "id": "throw_storage_1",
+        "x": 17.935,
+        "z": -11.235
+      },
+      {
+        "id": "throw_storage_2",
+        "x": 17.171,
+        "z": -4.597
+      },
+      {
+        "id": "throw_dining_1",
+        "x": 12.96,
+        "z": 0.491
+      },
+      {
+        "id": "throw_dining_2",
+        "x": 8.751,
+        "z": -0.33
+      },
+      {
+        "id": "throw_bathroom_1",
+        "x": -22.895,
+        "z": 2.142
+      },
+      {
+        "id": "throw_bathroom_2",
+        "x": -27.2,
+        "z": 1.3
+      },
+      {
+        "id": "throw_hall_1",
+        "x": -12.9,
+        "z": -2.7
+      },
+      {
+        "id": "throw_hall_2",
+        "x": -11.253,
+        "z": -0.039
+      },
+      {
+        "id": "throw_second_bedroom_1",
+        "x": -25.7,
+        "z": 7.8
+      },
+      {
+        "id": "throw_second_bedroom_2",
+        "x": -24.1,
+        "z": 7.8
+      },
+      {
+        "id": "throw_study_1",
+        "x": -13.675,
+        "z": 10.634
+      },
+      {
+        "id": "throw_study_2",
+        "x": -7.083,
+        "z": 11.847
+      },
+      {
+        "id": "throw_entry_1",
+        "x": 6.513,
+        "z": 8.819
+      },
+      {
+        "id": "throw_entry_2",
+        "x": -1.066,
+        "z": 10.695
+      },
+      {
+        "id": "throw_north_balcony_1",
+        "x": 11.686,
+        "z": -18.38
+      },
+      {
+        "id": "throw_north_balcony_2",
+        "x": 16.892,
+        "z": -17.791
+      },
+      {
+        "id": "throw_south_hall_1",
+        "x": 13.389,
+        "z": 16.13
+      },
+      {
+        "id": "throw_south_hall_2",
+        "x": 17.944,
+        "z": 12.686
+      },
+      {
+        "id": "throw_east_hall_1",
+        "x": 16.8,
+        "z": 2.1
+      },
+      {
+        "id": "throw_east_hall_2",
+        "x": 16.8,
+        "z": 5.7
+      },
+      {
+        "id": "throw_guest_room_1",
+        "x": 25.19,
+        "z": -6.224
+      },
+      {
+        "id": "throw_guest_room_2",
+        "x": 21.244,
+        "z": -10.44
+      },
+      {
+        "id": "throw_utility_1",
+        "x": 22.11,
+        "z": 0.414
+      },
+      {
+        "id": "throw_utility_2",
+        "x": 22.492,
+        "z": -1.337
+      },
+      {
+        "id": "throw_garage_1",
+        "x": 20.8,
+        "z": 5.3
+      },
+      {
+        "id": "throw_garage_2",
+        "x": 20.8,
+        "z": 9.7
+      }
+    ],
+    "pauseResume": true,
+    "errors": [],
+    "failed": []
+  }
+]

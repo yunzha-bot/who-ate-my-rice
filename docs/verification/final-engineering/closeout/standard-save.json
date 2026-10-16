@@ -1,0 +1,51 @@
+{
+  "phase": "save-final",
+  "url": "http://127.0.0.1:5183/",
+  "formalMapUnchanged": true,
+  "records": [
+    {
+      "browser": "Chrome",
+      "phase": "save-final",
+      "url": "http://127.0.0.1:5183/",
+      "id": "gym_treadmill",
+      "beforeX": 13.08,
+      "savedX": 13.09,
+      "postStatus": 200,
+      "revision": "cd116bc2cef8cbbf89a27ff9c8939104ee71f9cb1f5df74043ba6dcb253860eb",
+      "serviceRecovered": true,
+      "websocketConnected": true,
+      "automaticReloads": 1,
+      "refreshRestored": true,
+      "backupVerified": true,
+      "events": [
+        "{\"type\":\"connected\"}",
+        "{\"type\":\"connected\"}",
+        "{\"type\":\"connected\"}"
+      ],
+      "failures": [],
+      "errors": []
+    },
+    {
+      "browser": "Edge",
+      "phase": "save-final",
+      "url": "http://127.0.0.1:5183/",
+      "id": "gym_treadmill",
+      "beforeX": 13.09,
+      "savedX": 13.1,
+      "postStatus": 200,
+      "revision": "df2430eefefbf41db1ccacb898cb6f29bf9fc2ccdc7b58e07694a6f111a32cd2",
+      "serviceRecovered": true,
+      "websocketConnected": true,
+      "automaticReloads": 1,
+      "refreshRestored": true,
+      "backupVerified": true,
+      "events": [
+        "{\"type\":\"connected\"}",
+        "{\"type\":\"connected\"}",
+        "{\"type\":\"connected\"}"
+      ],
+      "failures": [],
+      "errors": []
+    }
+  ]
+}

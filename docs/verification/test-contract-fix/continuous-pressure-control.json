@@ -1,0 +1,216 @@
+{
+  "fixture": "NORMAL/20276765, continuous pursue for 12000 frames; no runtime modifications",
+  "samples": [
+    {
+      "frame": 100,
+      "phase": "PLAYING",
+      "position": {
+        "x": -12.656457459913108,
+        "z": 12.444425542226714
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 0
+    },
+    {
+      "frame": 700,
+      "phase": "PLAYING",
+      "position": {
+        "x": -6.8174168809754345,
+        "z": 12.057531272003189
+      },
+      "state": "EAT",
+      "progress": 28050
+    },
+    {
+      "frame": 1300,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.723819336935012,
+        "z": -2.0841668917211624
+      },
+      "state": "EAT",
+      "progress": 30600
+    },
+    {
+      "frame": 1900,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.999882414733687,
+        "z": -4.3225359751707275
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 60000
+    },
+    {
+      "frame": 2500,
+      "phase": "PLAYING",
+      "position": {
+        "x": 5.451160133306708,
+        "z": -16.748846872679103
+      },
+      "state": "EAT",
+      "progress": 84550
+    },
+    {
+      "frame": 3100,
+      "phase": "PLAYING",
+      "position": {
+        "x": -1.77186567517413,
+        "z": -6.454101005479426
+      },
+      "state": "EVADE",
+      "progress": 90000
+    },
+    {
+      "frame": 3700,
+      "phase": "PLAYING",
+      "position": {
+        "x": -11.155308419826712,
+        "z": -11.412723206252284
+      },
+      "state": "HIDE",
+      "progress": 95300
+    },
+    {
+      "frame": 4300,
+      "phase": "PLAYING",
+      "position": {
+        "x": -18.93432793880429,
+        "z": 12.79999999809705
+      },
+      "state": "RECOVER",
+      "progress": 95300
+    },
+    {
+      "frame": 4900,
+      "phase": "PLAYING",
+      "position": {
+        "x": 9.44613901848238,
+        "z": 2.4461342377062154
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 5500,
+      "phase": "PLAYING",
+      "position": {
+        "x": 15.55413652329005,
+        "z": 3.5982539007976184
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 6100,
+      "phase": "PLAYING",
+      "position": {
+        "x": 7.617754561081587,
+        "z": 2.421323971547487
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 6700,
+      "phase": "PLAYING",
+      "position": {
+        "x": -6.872532435878554,
+        "z": 1.6006577789791354
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 7300,
+      "phase": "PLAYING",
+      "position": {
+        "x": 5.472188295513353,
+        "z": 2.174042415760525
+      },
+      "state": "EVADE",
+      "progress": 95300
+    },
+    {
+      "frame": 7900,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.020232246881736,
+        "z": 8.62445481738985
+      },
+      "state": "RECOVER",
+      "progress": 95300
+    },
+    {
+      "frame": 8500,
+      "phase": "PLAYING",
+      "position": {
+        "x": 20.170579183565856,
+        "z": 2.400075089301115
+      },
+      "state": "RESELECT",
+      "progress": 95300
+    },
+    {
+      "frame": 9100,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.020481234983592,
+        "z": 8.624667767491882
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 9700,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.00470789363014,
+        "z": 7.841402153025985
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 10300,
+      "phase": "PLAYING",
+      "position": {
+        "x": 8.041683917414213,
+        "z": 2.7999440284270953
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 10900,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.102402914868,
+        "z": 8.797820462903587
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 11500,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.115468861836607,
+        "z": 8.338003698482318
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    },
+    {
+      "frame": 12000,
+      "phase": "PLAYING",
+      "position": {
+        "x": 16.16918116799483,
+        "z": 8.784414589023026
+      },
+      "state": "MOVE_TO_RICE",
+      "progress": 95300
+    }
+  ],
+  "outcome": "Still PLAYING while actively evading. Legal Human retreat, without changing AI/locks, gives 5/5 in the paired matrix."
+}

@@ -5,7 +5,7 @@ export const AUDIO_CUES = [
   'doorOpen', 'doorClose', 'doorLock', 'doorUnlock', 'doorFail',
   'pulseInput', 'pulseCorrect', 'pulseWrong', 'pulseSuccess',
   'skill', 'skillUnavailable', 'skillReady', 'hideEnter', 'hideExit', 'search',
-  'capture', 'caught', 'fall', 'stun', 'recover', 'victory', 'defeat', 'restart',
+  'capture', 'caught', 'fall', 'stun', 'recover', 'victory', 'defeat', 'restart', 'basinHit', 'deepseekCaughtDefeat',
   'menu', 'game', 'chase', 'room',
 ] as const;
 export type AudioCue = typeof AUDIO_CUES[number];
@@ -128,7 +128,8 @@ export class GameAudio {
     if (this.failed.has(cue)) return Promise.resolve(null);
     if (this.buffers.has(cue)) return Promise.resolve(this.buffers.get(cue)!);
     if (this.pending.has(cue)) return this.pending.get(cue)!;
-    const task = fetch(`${import.meta.env.BASE_URL}assets/audio/${cue}.ogg`)
+    const extension = cue === 'basinHit' || cue === 'deepseekCaughtDefeat' ? 'mp3' : 'ogg';
+    const task = fetch(`${import.meta.env.BASE_URL}assets/audio/${cue}.${extension}`)
       .then(response => {
         if (!response.ok) throw new Error(`audio ${cue}: HTTP ${response.status}`);
         return response.arrayBuffer();

@@ -243,8 +243,8 @@
     {
       "id": "entry_bench",
       "kind": "furniture",
-      "x": 7.5,
-      "z": 16.4,
+      "x": 5.1263494616526515,
+      "z": 8.549574067699204,
       "width": 1.4,
       "depth": 0.6,
       "height": 0.45,
@@ -553,12 +553,12 @@
     {
       "id": "entry_life_full_mirror",
       "kind": "furniture",
-      "x": 6.2,
-      "z": 16.5,
+      "x": 0.5061761506269677,
+      "z": 8.257093210509467,
       "width": 0.6,
       "depth": 0.25,
       "height": 1.6,
-      "rotation": 3.141592653589793
+      "rotation": 0
     },
     {
       "id": "guest_desk",
@@ -663,8 +663,8 @@
     {
       "id": "kitchen_trolley",
       "kind": "furniture",
-      "x": 15.45,
-      "z": -12,
+      "x": 13.766658953236014,
+      "z": -11.618942993512036,
       "width": 0.65,
       "depth": 1,
       "height": 0.78,
@@ -673,8 +673,8 @@
     {
       "id": "kitchen_bin",
       "kind": "furniture",
-      "x": 15.45,
-      "z": -10.7,
+      "x": 14.13302804607039,
+      "z": -10.239794320750772,
       "width": 0.45,
       "depth": 0.45,
       "height": 0.6,

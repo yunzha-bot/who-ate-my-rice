@@ -1,0 +1,2500 @@
+{
+  "method": "保守引用图＋加工脚本人工核对；网络记录另合并",
+  "edges": 1321,
+  "files": [
+    {
+      "file": "docs/verification/BALCONY/review.html",
+      "bytes": 1220,
+      "tracked": false,
+      "sha256": "9247962447f7be2201467c0815ea5ab7b97f848c3d01a6c96a4c02f996e4ab23",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/BATHROOM/review.html",
+      "bytes": 967,
+      "tracked": false,
+      "sha256": "47670d03223157b19c64c6da0c735f5229b87aafa28a495cd3af3ccff3cbe023",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/COVERED_INTERIOR/review.html",
+      "bytes": 1908,
+      "tracked": false,
+      "sha256": "66487bd34fd8edfb89d7a4df0fce1037dcef1bccc9e2df905e622c55a94b2f2a",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/DEEPSEEK_ANIMATION_STAGE4/preview.html",
+      "bytes": 3100,
+      "tracked": false,
+      "sha256": "c6a707c24a2bef4b1f95e8d64dfdf6cbf09bbd11b2d755a50cf3e5ff739ab204",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/DEEPSEEK_ANIMATION_STAGE4/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/DEV_SCENE_EDITOR_V2/browser-check.mjs",
+      "bytes": 20871,
+      "tracked": true,
+      "sha256": "519bf32e8d445906dd0cae404385657368b8eea4478cd4d63df7d84a65449fbb",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/DEV-B-PARAMS/browser-check.mjs",
+      "bytes": 19572,
+      "tracked": true,
+      "sha256": "67c012052f786558553b2cb8f0974c553cdd3ee0cb434fc08b723f750bc7b5ad",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/cfg-deepseek.js",
+      "bytes": 205,
+      "tracked": false,
+      "sha256": "4ef0d4cafda3e14ae1f2c5a807ae8fe880e1e1fec1ed62c85b802141aab0be84",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/cfg-human.js",
+      "bytes": 169,
+      "tracked": false,
+      "sha256": "184ec79385d94b3631d02468471395e0f85dcd54012892b226e9e95b5cde5895",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/export.js",
+      "bytes": 3211,
+      "tracked": false,
+      "sha256": "9f204adb9aac42916c58cd45cd26d2ae93cb359e4c7ec3aadf7cf82d65bf0469",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/menu-crop.html",
+      "bytes": 4245,
+      "tracked": true,
+      "sha256": "7c70b17f46bbb6fff78d335c3ebc2f3623963025f370d5aa87bc43024f759f3d",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/EAST_WING_EXPANSION/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p01-probe.js",
+      "bytes": 735,
+      "tracked": false,
+      "sha256": "0f5116001279842e8d76c335d474313abad71e67868b8bf8fbd3bb1b14c6c12f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p02-shotshape.js",
+      "bytes": 515,
+      "tracked": false,
+      "sha256": "fb35dc3b8691716626c15ea9b27f6c3450c4a66039a1bc27012519d30f9c124f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p03-viewport.js",
+      "bytes": 717,
+      "tracked": false,
+      "sha256": "617117ed4997affcd7759e74be7a1c4a28590b4e83477a2282ced7c037614a3d",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p04-sweep.js",
+      "bytes": 1584,
+      "tracked": false,
+      "sha256": "705ff42def65ea9a583a3ed10b2bc5a8d9a5805cd6cdc1c3a93c0cdc0031582a",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p05-shotdiag.js",
+      "bytes": 1272,
+      "tracked": false,
+      "sha256": "aaaea0d0b9e72229e281fb3922db901ed607fab6a9ba9e23931c2eb1653b2743",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p06-clickdiag.js",
+      "bytes": 1781,
+      "tracked": false,
+      "sha256": "ba5ceffa91d3798795b47259d6ce0a559090ba1876bac4ccb1c78bce41e46d73",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p07-sweep.js",
+      "bytes": 2192,
+      "tracked": false,
+      "sha256": "be5ea16aded8693a5ef29b79f35a93867afd7b585c627be1f368c6932103718a",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p08-retry.js",
+      "bytes": 1564,
+      "tracked": false,
+      "sha256": "fdb726c6e8bbd807c6ea49c7cc382674829bb45c9269a56c3783b812eb0a7d64",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p09-rooms.js",
+      "bytes": 2132,
+      "tracked": false,
+      "sha256": "8bf72fbceeab5e80c66dd1027538638d523038b38a541da0153cbe51214b0d3b",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p10-menucrop.js",
+      "bytes": 1402,
+      "tracked": false,
+      "sha256": "1ff7975c10e74730e0936b0620e8770c1e46aef51969d2ddcfe49231eb331443",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p11-realmenu.js",
+      "bytes": 2068,
+      "tracked": false,
+      "sha256": "3c739dffd93ce1d0ce3f67eaaeb4a1dafa7b62ec83380de9cb26034e3202c924",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p12-start-human.js",
+      "bytes": 4755,
+      "tracked": false,
+      "sha256": "62ac90ebea26e4c7f2eff9b3d81e845b2357a951b4cf6633de9d6e1d3651217a",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p13-fps.js",
+      "bytes": 671,
+      "tracked": false,
+      "sha256": "ef1db322a05ddcefb86da6a22f394036828b4f7cd56e3965d7512f41cbf4143e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p14-fps-size.js",
+      "bytes": 971,
+      "tracked": false,
+      "sha256": "3d11862ed1427249141f19354067fc06518dbd9987dc8d1a57e0f7a759226311",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p16-devdom.js",
+      "bytes": 1063,
+      "tracked": false,
+      "sha256": "ee04af026f769f9dc357b15c9b148341b5510c798bd8d277ac598e9110f2e18f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p17-panelcost.js",
+      "bytes": 1881,
+      "tracked": false,
+      "sha256": "4b291e4c7a79b580664cddfa812091f723a3d3a3cbeeffb53ebc0cd1a7be598e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/p19-console.js",
+      "bytes": 472,
+      "tracked": false,
+      "sha256": "7e47534ce656a89b554b5d8f768dcf83c387a93df6063aec808b1859217d752b",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/poll.js",
+      "bytes": 3880,
+      "tracked": false,
+      "sha256": "42fe52f03658e8ddba9e3dc3f64806c86e1cc1656f5190815666585ec69ab82d",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/poll2.js",
+      "bytes": 4589,
+      "tracked": false,
+      "sha256": "ce045965377f864556b72a9ed5a25b5387a7dd8e19c06dade720fa374dbce14e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/poll3.js",
+      "bytes": 4471,
+      "tracked": false,
+      "sha256": "f2341703886783ce90518c6929f308a6c6af93ad06adbd0a9b3a75bd72103dc5",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/rooms.html",
+      "bytes": 3616,
+      "tracked": true,
+      "sha256": "8e1a1b945d184b5d1547e2d7cda23b981eb8f5b989cefdabe39a2a62aa89d3c2",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/EAST_WING_EXPANSION/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/scan-rice.mjs",
+      "bytes": 1565,
+      "tracked": false,
+      "sha256": "cde70ee15b25404f9bf870ef7560ed0f423f6540df39dd23bf48fd3c8699b34f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/EAST_WING_EXPANSION/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/start-deepseek.js",
+      "bytes": 6611,
+      "tracked": false,
+      "sha256": "776e04ee5db4ee42778422ddb5cba5a82d399ec17231b55af5d0cd8c52dceda2",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EAST_WING_EXPANSION/start.js",
+      "bytes": 5868,
+      "tracked": false,
+      "sha256": "1f1998c4aeb8672aafa777eb190ad9890ace6a2254c5b06e399948a19435f329",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/ENTRY/review.html",
+      "bytes": 1018,
+      "tracked": false,
+      "sha256": "429c9a7e81965d4b6f1b7c4a5619efa8ea52d0a5f20e1e34a4649c4a15e080ab",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EXTERIOR_GEOMETRY/review.html",
+      "bytes": 3073,
+      "tracked": true,
+      "sha256": "bdc5e076c3430ebdfef3ea2ba20fa0a29eb6d3b5df5a13be20e3c457a0d9755b",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/EAST_WING_EXPANSION/README.md",
+        "docs/verification/EXTERIOR_GEOMETRY/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/EXTERIOR_SHADOW/review.html",
+      "bytes": 2880,
+      "tracked": false,
+      "sha256": "6a996e812f7beb07c05bfdafbf10ee0f5412a34e82e039a457ecb22894128f38",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/HOME_GYM/review.html",
+      "bytes": 1553,
+      "tracked": false,
+      "sha256": "96cf519b52236e242e1c1f870453d68a8920bbc8740dba7c2c2ce49555df895c",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/INDUSTRIAL_UI/preview.html",
+      "bytes": 973,
+      "tracked": false,
+      "sha256": "48632a08b0aba94814e383252d4de271d0639f20646207acf7d479dbfc480dba",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/INDUSTRIAL_UI/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/KITCHEN/review.html",
+      "bytes": 980,
+      "tracked": false,
+      "sha256": "d53c4bb78b86c229b6e7eb4a596dcda14523bba3651f431fade45157907a4bb9",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/MAIN_BEDROOM/review.html",
+      "bytes": 1311,
+      "tracked": false,
+      "sha256": "2a80b9ef6dbb0e09df52ccc04dbd0aab96b8efd296802deb9bfeb0db20cf3517",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/MAP_SCALE_UP/p01-views.js",
+      "bytes": 2108,
+      "tracked": false,
+      "sha256": "1548405a4b81e5fda4dff533e9f131a31326e8b3361e5c859ea52b023869e5c5",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/MAP_SCALE_UP/p02-plans.js",
+      "bytes": 1458,
+      "tracked": false,
+      "sha256": "c6c44d0d3ae29be252017d8ab49e5d0cc384871de95a4e080a9acafeee7eb5ad",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/MAP_SCALE_UP/plan.html",
+      "bytes": 11146,
+      "tracked": true,
+      "sha256": "54d0f86176742237d30d58bcf206fbfc4fd7e4b2597fcd749aa4620b0db25982",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/MAP_SCALE_UP/view.html",
+      "bytes": 3658,
+      "tracked": true,
+      "sha256": "215a14f242ada2b6ddb7c2d10a38176f282eef17c73543dd200e9632c4ce6063",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/NORTH_BALCONY/review.html",
+      "bytes": 997,
+      "tracked": false,
+      "sha256": "5eb089e83320295591583c551f0df3405edff3e35901508ec75abe80989c447d",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/PLAYER-SOUND-VISUAL-DISABLE/browser-check.mjs",
+      "bytes": 16667,
+      "tracked": true,
+      "sha256": "2f760ab382a4fc9db9c1cfd99e9440332fd09182f1b998bfea5c639c4cd97f3e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/RESIDENTIAL_FURNITURE_V1/view.html",
+      "bytes": 3864,
+      "tracked": false,
+      "sha256": "805c7e15d94fe57a14efc5e9390b45b2deff0185a3c50ad8c9bcdc05acf69180",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/RESIDENTIAL_FURNITURE_V3/audit.mjs",
+      "bytes": 2443,
+      "tracked": false,
+      "sha256": "7e6fe6876588dd2686b50f19730cde10c50823f5f40529585a7c0f1baa8eabf5",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/RESIDENTIAL_FURNITURE_V3/view.html",
+      "bytes": 4615,
+      "tracked": false,
+      "sha256": "34ed54630987c7395f32be6b19cb4523b9e9a34ff865de442ad4f604b7ab3533",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7C-2-r2/browser-check.mjs",
+      "bytes": 19120,
+      "tracked": true,
+      "sha256": "d7c1379d7f0f87435343686f2fbf0b46816e54ed459d95d7788982f56616e239",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/AGENT_LOG.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7C-2-r3/browser-check.mjs",
+      "bytes": 22882,
+      "tracked": true,
+      "sha256": "ea46e316219b5ca455828ea34bc222a27169c0637400b9a2ce91d1df6c41292f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7C-2-r4/browser-check.mjs",
+      "bytes": 28799,
+      "tracked": true,
+      "sha256": "44d3a08c3325b838d8b4475a18aa61bb9629ba997c2f095de993d1de532d1b4f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/AGENT_LOG.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7C-2b/browser-check.mjs",
+      "bytes": 18488,
+      "tracked": true,
+      "sha256": "feefbfdb2c053068becb5e87261dda975d257485a17a5c62fc2853e21d6f8776",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/verification/S7C-2b/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/analyze-match.mjs",
+      "bytes": 2849,
+      "tracked": true,
+      "sha256": "cb92d91ecf0f412fb808beb3275a75dbc9957a25f2d3c2719f7ff82d79d4ef7e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/S7D_ALPHA_FULL_MATCH_DESIGN.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/browser-check.mjs",
+      "bytes": 16516,
+      "tracked": true,
+      "sha256": "1e758993c4e22764771c914b8a488ee9e69cb9e39c935de0fd242187dbfe98f3",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/AGENT_LOG.md",
+        "docs/S7D_ALPHA_FULL_MATCH_DESIGN.md",
+        "docs/verification/S7D/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/diagnose-hide-lock.mjs",
+      "bytes": 2285,
+      "tracked": true,
+      "sha256": "a0e6f8599483a3abe6427e95953f1d47c2d224904846aa6d813ecc2223269d9f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/diagnose-safewait.mjs",
+      "bytes": 3506,
+      "tracked": true,
+      "sha256": "d98f44f7410f88e4f8d09ed7f2ea4a9d3f3b26e9f9c2d60f7af41f32e97e24d9",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/S7D_ALPHA_FULL_MATCH_DESIGN.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/probe-dom.mjs",
+      "bytes": 3147,
+      "tracked": true,
+      "sha256": "265337a0a2f23bc4d5b2f1771aeb3cc57fbca61f73ecccfa65a6cbdfbba8d43e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/robustness-sweep.mjs",
+      "bytes": 2067,
+      "tracked": true,
+      "sha256": "f0ccca37ea22eb37868c52afea50438484dfcc24a2462055f7dd9243a2c79f9d",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/S7D_ALPHA_FULL_MATCH_DESIGN.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/run-match-batch.mjs",
+      "bytes": 7714,
+      "tracked": true,
+      "sha256": "8aae63809b7b89dc2e805ef3a9aee21431fb8405d88257326a8ce82c8476ccf8",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/S7D_ALPHA_FULL_MATCH_DESIGN.md",
+        "docs/verification/S7D/README.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/S7D/smoke-sim.mjs",
+      "bytes": 1289,
+      "tracked": true,
+      "sha256": "50802ef752b4f2940972ff341394d07a5f9b38031d79492eba91d46291116224",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/backup.html",
+      "bytes": 588,
+      "tracked": false,
+      "sha256": "186c8a578957c0a103087bb7e5a3254525ea3bbb863f3f826bd511c3eb8ad49e",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/index.html",
+      "bytes": 306,
+      "tracked": false,
+      "sha256": "808f53687c55f9ca4dc317da82484ed2617b2fa9076c7dd44632bdc1e7e29c18",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/legacy-seed.html",
+      "bytes": 281,
+      "tracked": false,
+      "sha256": "268866aadbfb9c0735dfb44fa01eabdd476b89f1c5f5a4d196e2aa26325591bd",
+      "category": "需要动态验证",
+      "scope": "隔离副本备用夹具",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/legacy.json",
+      "bytes": 63189,
+      "tracked": false,
+      "sha256": "31b56f53d0dd03cd095181a3e433b7e1c84f2a46203a64bec136a7db2f5730a9",
+      "category": "需要动态验证",
+      "scope": "隔离副本备用夹具",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/package.json",
+      "bytes": 434,
+      "tracked": false,
+      "sha256": "76b2d2f8b511e2a97879d6d2cab914b173bd5432cca94388b0cab3418c5b8ce9",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/config/gameConfig.ts",
+      "bytes": 17204,
+      "tracked": false,
+      "sha256": "e447a6d6a383385e461e41467ba80fea5aa606a4607852ed0244d38a209f1c41",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/AILogCollector.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBRuntimeBinding.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DoorSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanDoorSkill.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanSearchSkill.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanSearchTuning.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanStillness.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/MatchRandom.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/NavigationSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PerceptionSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RuntimeDebugOverrides.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AISafetyPathView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CollisionWorld.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/HideSearchView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/apartmentMap.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapApplicationPrecheck.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RiceTraceView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SoundVisualView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/controllers/.gitkeep",
+      "bytes": 0,
+      "tracked": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "category": "高置信未参与当前运行",
+      "scope": "目录占位",
+      "evidence": "0字节，不是运行资源；保留空目录的Git用途不等于代码运行用途",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/industrial-ui.css",
+      "bytes": 27810,
+      "tracked": false,
+      "sha256": "d083def945af7480954f19c9de7911903c7c498e90b4bc779a3bdaadd4331c6e",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/main.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/main.ts",
+      "bytes": 284,
+      "tracked": false,
+      "sha256": "f7d66cb8e40191b7c5df721e5c4366906b7bc2f640c75e27643e34f4e3d676b7",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/index.html"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/rain-ui.css",
+      "bytes": 16805,
+      "tracked": false,
+      "sha256": "adcd64c09949eefbb9e233eaadc3cf46d64772937713681283aed997d11cb1da",
+      "category": "高置信未参与当前运行",
+      "scope": "历史UI",
+      "evidence": "不在当前入口/测试图；旧CSS未载入，旧UI当前引用使用其他正式文件；需结合网络记录",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/sheet-ui.css",
+      "bytes": 6612,
+      "tracked": false,
+      "sha256": "bf283df86c2d64eae87cb7f6808a4c6a6f7ba48c59878ea5e15d6e198e020462",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/main.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/style.css",
+      "bytes": 29958,
+      "tracked": false,
+      "sha256": "ac843264d0fa7bb50349bab65cbf7f51de889d4a6aa5c70ba1e34d59fa1d13dc",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/main.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/.gitkeep",
+      "bytes": 0,
+      "tracked": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "category": "高置信未参与当前运行",
+      "scope": "目录占位",
+      "evidence": "0字节，不是运行资源；保留空目录的Git用途不等于代码运行用途",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/AILogCollector.ts",
+      "bytes": 27839,
+      "tracked": false,
+      "sha256": "eb4f95821692f6d07d29c35d8360d876d794a559f40358029e8e6e644372000d",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/CharacterAction.ts",
+      "bytes": 1087,
+      "tracked": false,
+      "sha256": "65bdb109769e728519b265062f86cc42efb6c9d81c29c3d1a61c04126bb9bcf4",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DeepSeekAnimation.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+      "bytes": 129355,
+      "tracked": false,
+      "sha256": "e52e8ad6f0fa7fa9426242e03e17b4d95add096ba59451ddb5065282071b89bd",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AISafetyPathView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekDoorLockPenalty.ts",
+      "bytes": 1237,
+      "tracked": false,
+      "sha256": "546638bac61bfbc93b66a0d11c19bdf0527d1b3be7753eefb10d46d120c984db",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+      "bytes": 14893,
+      "tracked": false,
+      "sha256": "0c6b1e5bda25b5d850cf7bc496b0a57d3067f9a758c24de072b82e975d6a8034",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideResolution.ts",
+      "bytes": 6586,
+      "tracked": false,
+      "sha256": "3d39214c0b827df22c67fb5768d13b58a06e8426c6796d1134a715135d70c011",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekVisualTarget.ts",
+      "bytes": 2714,
+      "tracked": false,
+      "sha256": "321ba4424ca59a4b22ee4f5701ef2fc1b35558aa348779f68fb4fed4d02a67de",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBHelpText.ts",
+      "bytes": 24702,
+      "tracked": false,
+      "sha256": "4846ca239db449b340c28add69ad9b923ff55e6df883551c843ddb8cb6b84f5a",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBObserver.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBPanel.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBObserver.ts",
+      "bytes": 25626,
+      "tracked": false,
+      "sha256": "92ba644f1d4a2010777237e75ccab045e186877a13d0a6152cc240bcc5dc9b81",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBDebug.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBPanel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBParamPersistence.ts",
+      "bytes": 6517,
+      "tracked": false,
+      "sha256": "2afbaed5be77d0ca88e2b44e70b22a571663e83c3cdff6b847fff1a82e6fe55c",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBDebug.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBPanel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBParamStore.ts",
+      "bytes": 10770,
+      "tracked": false,
+      "sha256": "71b6f96fa14d3c1581609d4e00c18dc2fcd7d8167b72bdf97d7822cd1d46d6c0",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBParamPersistence.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBRuntimeBinding.ts",
+      "bytes": 2934,
+      "tracked": false,
+      "sha256": "7283052132a025991de3dac0ba0f169aea48568ff46fa03bae2d14060e65dae8",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevFreezeSystem.ts",
+      "bytes": 6884,
+      "tracked": false,
+      "sha256": "3dd7f868471e5ab010cf43e0f207ecfe37c163e37b4d06288a905261d363f9b9",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DoorSystem.ts",
+      "bytes": 6592,
+      "tracked": false,
+      "sha256": "065c42380ab17612799d07d395beb4f62c0d6b749685f39e175d5fda2f5bdc0f",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanDoorSkill.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/MatchRandom.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/NavigationSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PerceptionSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PulseLockSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CollisionWorld.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/GameStateSystem.ts",
+      "bytes": 2918,
+      "tracked": false,
+      "sha256": "877af61f91765982673a929e7132e45fd475425a195ab9ae967bc850aa1c14c5",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevFreezeSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanDoorSkill.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PulseLockSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RoundShortcuts.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideInteractionArbitration.ts",
+      "bytes": 1986,
+      "tracked": false,
+      "sha256": "cf13283171153a32b5a58874ecf281d078381306f4d44025eab85bf455d85cd6",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekVisualTarget.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/InteractionPrompt.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+      "bytes": 12766,
+      "tracked": false,
+      "sha256": "cf2709124502e661f78854919fa14a3367c4d78083be6e75b943a7398d35e9c9",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSystem.ts",
+      "bytes": 11950,
+      "tracked": false,
+      "sha256": "5f0aea91360b33ce5f8ed635eb6c89044564939ea1488247d40f20efbea344c3",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideTargetResolution.ts",
+      "bytes": 11792,
+      "tracked": false,
+      "sha256": "1592fd10ce05b8ea5c5c561448a6328da7c207dbf896a5d429c01310521869fb",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekVisualTarget.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+      "bytes": 89461,
+      "tracked": false,
+      "sha256": "0c8099c52ad07deebe89fec0296bbd66e2ffd9e99cef0b5c9e019eb38b7b2e11",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBRuntimeBinding.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanDoorSkill.ts",
+      "bytes": 1410,
+      "tracked": false,
+      "sha256": "26b81df755b274d8e36057743a05526dbff6a2215a75c26e19bdb36f10a2f6a0",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchResolution.ts",
+      "bytes": 20528,
+      "tracked": false,
+      "sha256": "80754fcb3b7bf650a6c6fcb2965b3165a6aac3bd901354c74ce00a756ea9c955",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+      "bytes": 8105,
+      "tracked": false,
+      "sha256": "57e819d7d2380c1e84cfe2be0fbbb3e8522a74b128ab3c95c6cb44ba92674d00",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanSearchSkill.ts",
+      "bytes": 9902,
+      "tracked": false,
+      "sha256": "0c954eb4fa348b75275edd693768ab097e7e9f35059872459ec484358f73cb0f",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/HideSearchView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanSearchTuning.ts",
+      "bytes": 8716,
+      "tracked": false,
+      "sha256": "8887a9245bf7ba43d301bcaa059b30128c5f97a890fef4066319ae08684a36f9",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanTraceTracking.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceTraceClues.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanStillness.ts",
+      "bytes": 863,
+      "tracked": false,
+      "sha256": "ab83bec8de01c0333f81edee203f17c2cc7f32c450cb843e06e9f71a3ca45a13",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanTraceTracking.ts",
+      "bytes": 7454,
+      "tracked": false,
+      "sha256": "5341c5bc0948fa20088325fa9d54d0fc09a5f95b45b37fbfc69b946b908036d7",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/MatchRandom.ts",
+      "bytes": 7439,
+      "tracked": false,
+      "sha256": "f0a04fe02da7caaae945c479e620917eb7a537cd4d1c94107a0c893822ca77aa",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/NavigationSystem.ts",
+      "bytes": 10963,
+      "tracked": false,
+      "sha256": "40fcf8ce1c6a37db380c881d364fe6b0e0dfc40ccdce3c984f5fa1352df61b6c",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/MatchRandom.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AISafetyPathView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PerceptionSystem.ts",
+      "bytes": 14509,
+      "tracked": false,
+      "sha256": "1f1b0d0d3a2a714c2414b37f6c0a023c2d9aee833098aadd5a44016734ed82fa",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceTraceClues.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RuntimeDebugOverrides.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RiceTraceView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SoundVisualView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PulseLockSystem.ts",
+      "bytes": 4551,
+      "tracked": false,
+      "sha256": "0848cd4f8ee06a765e32623a72102040a484bf0b513ac5cf288fce0fc0e17223",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/PulseLockView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceField.ts",
+      "bytes": 1947,
+      "tracked": false,
+      "sha256": "4691c6425e29ac7f88fac5964e2fff9c1bf724936bfe5b9d4dfbc21bbfb28acf",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceSystem.ts",
+      "bytes": 2105,
+      "tracked": false,
+      "sha256": "39049b242eea738df8816e5dc42077d7093b22f5f06d25c56a7ed5e293a8f6d8",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceField.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RiceView.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceTraceClues.ts",
+      "bytes": 6126,
+      "tracked": false,
+      "sha256": "4b30bfae126538321aac1016dc055ce7960e3dfe6ce61e4d8ba540954b415450",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanTraceTracking.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RuntimeDebugOverrides.ts",
+      "bytes": 11943,
+      "tracked": false,
+      "sha256": "5638d74ee76fd431074cb19f261e1f5d0967db139d8bd8ca0672881027eb4fbc",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBHelpText.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBParamPersistence.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBParamStore.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBRuntimeBinding.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBDebug.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBPanel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/SkillCooldown.ts",
+      "bytes": 1118,
+      "tracked": false,
+      "sha256": "875eae4a4a585f432b5e292d24a979aabda4f4010687e088acc157911edde0c3",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/SkillGates.ts",
+      "bytes": 1755,
+      "tracked": false,
+      "sha256": "f08fbd84071fe6be51c4a0eae56368231628f3d4e1aa9b8ada74e5e9d4e0040d",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideTargetResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/SprintSystem.ts",
+      "bytes": 3685,
+      "tracked": false,
+      "sha256": "5b7faca7d0496677a219cfb8a72e70d62c1c9cf3db78ef3356b9678766673666",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CameraRelativeMovement.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/InputManager.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/LocalControl.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AISafetyPathView.ts",
+      "bytes": 2872,
+      "tracked": false,
+      "sha256": "a68c812b9eccab2d2785dde5bc0142fa50208d1a9c39d0fc1806282b059b03fd",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaHudView.ts",
+      "bytes": 8119,
+      "tracked": false,
+      "sha256": "0d46d64b851ebcce338db91332f042ab2d4d1debed7d98f4ede8ee3db0560304",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaPresentation.ts",
+      "bytes": 24144,
+      "tracked": false,
+      "sha256": "d00e47c491b1d2363b60c38e1bb67da4dae2bbece8464ed48ec826b63ee880a5",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaHudView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorVisualGeometry.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CameraRelativeMovement.ts",
+      "bytes": 993,
+      "tracked": false,
+      "sha256": "12ee6f217bf1a75246cc12f85c1c3cd9f2aabb98266f086d3b630d402fdfd64a",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CaptureZone.ts",
+      "bytes": 3037,
+      "tracked": false,
+      "sha256": "b8968f2a0a9a555c83be66f0a5cd015af21d64ad55619e279725b7b9e96b62c2",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts",
+      "bytes": 9978,
+      "tracked": false,
+      "sha256": "79188b39846acea8049e4158f99645315824a6d04fd51460ee84a7f5ad0efee2",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CollisionWorld.ts",
+      "bytes": 11803,
+      "tracked": false,
+      "sha256": "c519a1a6d165df0190cde5e9649d33cd9a72ba79a3bb8a8c6d0f628c03c8f9f0",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/MatchRandom.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/NavigationSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapApplicationPrecheck.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CommunityCourtView.ts",
+      "bytes": 7285,
+      "tracked": false,
+      "sha256": "1a9cbc4567f7b53cfff6599b03b64b10348baa0c384118f2c085c9f39709236b",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ResidentialExterior.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DebugDetailsPanel.ts",
+      "bytes": 18456,
+      "tracked": false,
+      "sha256": "c30c2104351e20c2a4be60a34c815b982da1b77503d051c0086dc5348cc54695",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DeepSeekAnimation.ts",
+      "bytes": 3638,
+      "tracked": false,
+      "sha256": "3ea4da9e7118326a05a3352e39950514ad41d5f839827d6f60b77c858d1f16b0",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DeepSeekGlbModel.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DeepSeekGlbModel.ts",
+      "bytes": 2985,
+      "tracked": false,
+      "sha256": "211babc2442619f4e9f11e3c3dadd6984fa0214ee76fce9778a24865166e1da7",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaPresentation.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DeepSeekHairMotion.ts",
+      "bytes": 7000,
+      "tracked": false,
+      "sha256": "5fdf3c46ff8ab53c702172494c5d070c382cc589f10963bb0bc2efbcfba391d9",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DeepSeekMaidModel.ts",
+      "bytes": 9052,
+      "tracked": false,
+      "sha256": "e2c74fa093d8893edfc2c67ebbddfe89f2d908ada3f642c9a86467557090f853",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaPresentation.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBDebug.ts",
+      "bytes": 7176,
+      "tracked": false,
+      "sha256": "ebce3b5e7b6f85bee99b479e806a845863e43429ee87fd287b459b6299e15c94",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBPanel.ts",
+      "bytes": 24139,
+      "tracked": false,
+      "sha256": "5d1dc4173267cfe582ab37fd9dabd8fde9b915f00a8e1ddfdeac4d8a7063cb64",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBDebug.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBView.ts",
+      "bytes": 12963,
+      "tracked": false,
+      "sha256": "1884895311a56fa656de49fc36bebafdc25d0dc3083814969d4d8d3c65dcbb32",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBDebug.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorView.ts",
+      "bytes": 5829,
+      "tracked": false,
+      "sha256": "956141122828df4572784c89c9b09fcdc5fae594fbc2864e7a5a4f0f7970dbdb",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorVisualGeometry.ts",
+      "bytes": 985,
+      "tracked": false,
+      "sha256": "1258c35299354c5b844a1db5f9c41cd13fbe0d6112623a10a342bcfce11fd9bf",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/GameUiLayout.ts",
+      "bytes": 3523,
+      "tracked": false,
+      "sha256": "1d43f3d52f5fae0c09f58c3b528fe745a71cbfaa8c0202bcb219059a694fe715",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/HideSearchView.ts",
+      "bytes": 19320,
+      "tracked": false,
+      "sha256": "98d37fd956c6b122f93e61a396692a03bfe66844ee29f62ff740c324d741a1ad",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/InputManager.ts",
+      "bytes": 2251,
+      "tracked": false,
+      "sha256": "0fe605b6767b84d4d2752804ca6500dedabc24a0763f887eaae06350a5f0bff4",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/InteractionPrompt.ts",
+      "bytes": 1730,
+      "tracked": false,
+      "sha256": "903af50881dc363247844741a5a8474f4954620251a62167d0cb07a191b99cc0",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaHudView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/LocalControl.ts",
+      "bytes": 2616,
+      "tracked": false,
+      "sha256": "16ea259f28e588ac62ceeaa454eddd5f970cd08fa21ca6dd5d3ae6130b08c22e",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PerceptionSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/SkillGates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CharacterActionView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/GameUiLayout.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/apartmentMap.ts",
+      "bytes": 19653,
+      "tracked": false,
+      "sha256": "022154bd0b6fccf79a75f81d19f31abd73e4635c8ceaee8951d5e3bfcd89c91c",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekVisualTarget.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DevBObserver.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DoorSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideTargetResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanAIController.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanSearchSkill.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanStillness.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanTraceTracking.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/MatchRandom.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/NavigationSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/PerceptionSystem.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/RiceTraceClues.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AISafetyPathView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/AlphaPresentation.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CollisionWorld.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DevBView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/DoorView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/HideSearchView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/ClosedExteriorDoors.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapApplicationPrecheck.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapLayoutStore.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/RotatedRect.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ResidentialExterior.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SoundVisualView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/ClosedExteriorDoors.ts",
+      "bytes": 2326,
+      "tracked": false,
+      "sha256": "110733979a84b23535a512d1028e01917e8694cd9c7333ad70715a4675b57b8c",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+      "bytes": 15533,
+      "tracked": false,
+      "sha256": "1ed963f5f24d2907453dd651d8a31f7d371404ba415611c0264c68c9488290f8",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekHideResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/DeepSeekVisualTarget.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideTargetResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorPanel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapApplicationPrecheck.ts",
+      "bytes": 3321,
+      "tracked": false,
+      "sha256": "9dc7570974f1100c07b640091fff0700f279f2867c5521cace68b2032a7f5d3b",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts",
+      "bytes": 12208,
+      "tracked": false,
+      "sha256": "d81e118354990da9433502c2bd90e592f677edf32ce3de6709409cb2246cb0cd",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorView.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+      "bytes": 43691,
+      "tracked": false,
+      "sha256": "1923d7435cd8999dc6b4f79f6546a329ffd43ee6a387f139976846152e64cdc1",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapApplicationPrecheck.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapLayoutStore.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorPanel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/vite.config.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapLayoutStore.ts",
+      "bytes": 20172,
+      "tracked": false,
+      "sha256": "8e92eee9b51f68405da7575b9a5957b857dfde3853f471d250e8ad4a5c2f102c",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorPanel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/vite.config.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/RotatedRect.ts",
+      "bytes": 11196,
+      "tracked": false,
+      "sha256": "ab60b942da03a4dedd8ad2b30000a8992dcaa66c0b32bf2e400daec79a0c6718",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HideSearchCandidates.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchResolution.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanHideSearchStance.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/systems/HumanSearchSkill.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/CollisionWorld.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/HideInteractionRegion.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapEditModel.ts",
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/sceneLayout.json",
+      "bytes": 20805,
+      "tracked": false,
+      "sha256": "69d157b81b53fd5f8cb84cde8d8d1edf37f8bb5f02008381774b1943482e70d9",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/apartmentMap.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/PulseLockView.ts",
+      "bytes": 3211,
+      "tracked": false,
+      "sha256": "a97660d691d9977131ace1dadb563139e682412442ab0f3d260bd0644248c1d1",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ResidentialExterior.ts",
+      "bytes": 30186,
+      "tracked": false,
+      "sha256": "cc7bb144db13cdb4ae22527ca93026c0d5a36818021c954a37fae551361b9997",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/map/MapBuilder.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RiceTraceView.ts",
+      "bytes": 1412,
+      "tracked": false,
+      "sha256": "6f63bcfafe880a49d374a4e860ca91be28de209bab31a10e247f255ab6ba659f",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RiceView.ts",
+      "bytes": 3515,
+      "tracked": false,
+      "sha256": "36e4d032c7a49f5537b9e6c60359832e5e25d3ff74e3d9bb93740d8572bc270f",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/RoundShortcuts.ts",
+      "bytes": 612,
+      "tracked": false,
+      "sha256": "b67948f77f767906d8d1bc9dadb8fc9a07d7f4cab61f83e6faca7b652372e5be",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneCameraDepth.ts",
+      "bytes": 1501,
+      "tracked": false,
+      "sha256": "90e602e22dda43ffd737cc97fe24188112be97a82fae3a99c51f9b78c9e52470",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts",
+      "bytes": 24064,
+      "tracked": false,
+      "sha256": "8c85d1516aadc07e27c06c1816886271d06fce952868f0ecf63d25110887fd08",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorPanel.ts",
+      "bytes": 23510,
+      "tracked": false,
+      "sha256": "92c4c682f072f5192135aaa88b0170f7d2724090bbd2c535e46484c7aaa82c38",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditorView.ts",
+      "bytes": 19455,
+      "tracked": false,
+      "sha256": "7b4a6000da960c408c1d03a346b382fbb3228e34a2633453cc5a84dc1b37407c",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SceneEditor.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/SoundVisualView.ts",
+      "bytes": 7148,
+      "tracked": false,
+      "sha256": "5fdd0f1e2253c00d6762e9db10854fe9208c821bc451170dedbb3e2e7bb6032d",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/three/ThreeGame.ts",
+      "bytes": 179015,
+      "tracked": false,
+      "sha256": "fc8850f6a0fb3588e600604955f129121883376a623e7101cbe381fa54f9b5c4",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [
+        "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/main.ts"
+      ],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/src/types/.gitkeep",
+      "bytes": 0,
+      "tracked": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "category": "高置信未参与当前运行",
+      "scope": "目录占位",
+      "evidence": "0字节，不是运行资源；保留空目录的Git用途不等于代码运行用途",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/tsconfig.json",
+      "bytes": 338,
+      "tracked": false,
+      "sha256": "41cbca0346b03759e145543bdf4459f804286654fe23a98c47b26f892b19364f",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SCENE_LAYOUT_PERSISTENCE/test-copy/vite.config.ts",
+      "bytes": 2917,
+      "tracked": false,
+      "sha256": "b5eeb406b84948f42d6f097a98b3532f9ba5746e25f999aa15bc08e97a00856f",
+      "category": "明确使用中",
+      "scope": "仅历史隔离副本",
+      "evidence": "隔离副本index/main/Vite/config依赖图可达，不属于正式生产入口",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SECOND_BEDROOM/review.html",
+      "bytes": 1254,
+      "tracked": false,
+      "sha256": "73b5f3839353d70c9f5205103d181f2022206b53e0b8cb7de074b0c5088953d2",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/SHADOW_CORRECTION/review.html",
+      "bytes": 1468,
+      "tracked": false,
+      "sha256": "1e9d52f857104662809f0179f4a251837fc12dfdb08a20687ebf82e8b3f7b0ef",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [
+        "docs/AGENT_LOG.md"
+      ],
+      "baselineInDist": false
+    },
+    {
+      "file": "docs/verification/STORAGE_VISUAL/review.html",
+      "bytes": 1861,
+      "tracked": false,
+      "sha256": "4d93e078679c4827f120297c6e9f8e2dd10658a2fc1829beb66b00009b07f08f",
+      "category": "需要动态验证",
+      "scope": "手工验收/探针",
+      "evidence": "根构建不收录；可能由人或旧脚本单独执行，不安全自动运行可能改存档的脚本",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "public/assets/ui/portraits/deepseek-rice-v1.webp",
+      "bytes": 213776,
+      "tracked": true,
+      "sha256": "1c97d96cbf0d683a354a129ce4d64f41999c46c4865274d1889309c54fbcd004",
+      "category": "高置信未参与当前运行",
+      "scope": "历史UI",
+      "evidence": "不在当前入口/测试图；旧CSS未载入，旧UI当前引用使用其他正式文件；需结合网络记录",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/maps/.gitkeep",
+      "bytes": 0,
+      "tracked": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "category": "高置信未参与当前运行",
+      "scope": "目录占位",
+      "evidence": "0字节，不是运行资源；保留空目录的Git用途不等于代码运行用途",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/components/blue-strip.png",
+      "bytes": 13316,
+      "tracked": true,
+      "sha256": "e6fc2df89b6afb1f785509256f7e926f904e3d3d77e06200b2ff5d720cab8a35",
+      "category": "明确使用中",
+      "scope": "离线UI加工",
+      "evidence": "extract-ui-sheets.py的CROPS输出；main/compact/button原图还用于生成stretch组件",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/components/button-shell.png",
+      "bytes": 35693,
+      "tracked": true,
+      "sha256": "be98abedc2cffaa564d16a2afe4811a6ddc6b7c64e81e24e399a58430c98168e",
+      "category": "明确使用中",
+      "scope": "离线UI加工",
+      "evidence": "extract-ui-sheets.py的CROPS输出；main/compact/button原图还用于生成stretch组件",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/components/header-strip.png",
+      "bytes": 39726,
+      "tracked": true,
+      "sha256": "733b1c58e457d843b23e0c6480968646387e3cf4e14554eb054c3a8a9ef7fc36",
+      "category": "明确使用中",
+      "scope": "离线UI加工",
+      "evidence": "extract-ui-sheets.py的CROPS输出；main/compact/button原图还用于生成stretch组件",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/faction-name-gradient-clean.svg",
+      "bytes": 1816,
+      "tracked": true,
+      "sha256": "8a284bee9882295d20e0b840442d306ed94774c92bf07323cb98b06e1ab5d4ef",
+      "category": "高置信未参与当前运行",
+      "scope": "历史UI",
+      "evidence": "不在当前入口/测试图；旧CSS未载入，旧UI当前引用使用其他正式文件；需结合网络记录",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/faction-name-gradient.png",
+      "bytes": 1668139,
+      "tracked": true,
+      "sha256": "1e3be331f9690f526011f3d98559deca823ea4605354f847fd317481353e8bac",
+      "category": "高置信未参与当前运行",
+      "scope": "历史UI",
+      "evidence": "不在当前入口/测试图；旧CSS未载入，旧UI当前引用使用其他正式文件；需结合网络记录",
+      "directReferences": [],
+      "documentation": [
+        "docs/ASSET_PROVENANCE.md",
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/panels/compact-shell.png",
+      "bytes": 57863,
+      "tracked": true,
+      "sha256": "8db950f10aa0c9319fd5638a1c8631d9888db04ae8edd6dd7dd183a0dead75a5",
+      "category": "明确使用中",
+      "scope": "离线UI加工",
+      "evidence": "extract-ui-sheets.py的CROPS输出；main/compact/button原图还用于生成stretch组件",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "public/ui/panels/main-shell.png",
+      "bytes": 154709,
+      "tracked": true,
+      "sha256": "37c54a31081c89f108684f79e03e7e270d1e24df474bc5323ad44b7de59fc08f",
+      "category": "明确使用中",
+      "scope": "离线UI加工",
+      "evidence": "extract-ui-sheets.py的CROPS输出；main/compact/button原图还用于生成stretch组件",
+      "directReferences": [],
+      "documentation": [
+        "docs/PRE_S13_SNAPSHOT_REVIEW.md"
+      ],
+      "baselineInDist": true
+    },
+    {
+      "file": "src/controllers/.gitkeep",
+      "bytes": 0,
+      "tracked": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "category": "高置信未参与当前运行",
+      "scope": "目录占位",
+      "evidence": "0字节，不是运行资源；保留空目录的Git用途不等于代码运行用途",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    },
+    {
+      "file": "src/types/.gitkeep",
+      "bytes": 0,
+      "tracked": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "category": "高置信未参与当前运行",
+      "scope": "目录占位",
+      "evidence": "0字节，不是运行资源；保留空目录的Git用途不等于代码运行用途",
+      "directReferences": [],
+      "documentation": [],
+      "baselineInDist": false
+    }
+  ]
+}

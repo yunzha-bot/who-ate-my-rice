@@ -1,0 +1,33 @@
+{
+  "phase": "restart-final",
+  "url": "http://127.0.0.1:5183/",
+  "formalMapUnchanged": true,
+  "records": [
+    {
+      "browser": "Chrome",
+      "phase": "restart-final",
+      "url": "http://127.0.0.1:5183/",
+      "x": 13.1,
+      "revision": "df2430eefefbf41db1ccacb898cb6f29bf9fc2ccdc7b58e07694a6f111a32cd2",
+      "afterFullServerRestart": true,
+      "events": [
+        "{\"type\":\"connected\"}"
+      ],
+      "failures": [],
+      "errors": []
+    },
+    {
+      "browser": "Edge",
+      "phase": "restart-final",
+      "url": "http://127.0.0.1:5183/",
+      "x": 13.1,
+      "revision": "df2430eefefbf41db1ccacb898cb6f29bf9fc2ccdc7b58e07694a6f111a32cd2",
+      "afterFullServerRestart": true,
+      "events": [
+        "{\"type\":\"connected\"}"
+      ],
+      "failures": [],
+      "errors": []
+    }
+  ]
+}

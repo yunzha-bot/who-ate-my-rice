@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-15",
+  "npmTest": {
+    "command": "npm test",
+    "exitCode": 0,
+    "tests": 890,
+    "pass": 890,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "durationMs": 61181.0997
+  },
+  "typescript": {
+    "command": "npx tsc --noEmit",
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "modules": 117,
+    "warning": "existing chunk larger than 500 kB",
+    "outputFiles": 86,
+    "bytes": 67570763
+  },
+  "diff": "see final report: tracked and each proposed untracked text checked without staging",
+  "isolatedProbeNotes": [
+    {
+      "attempt": 1,
+      "result": "temporary harness assertion used position.x instead of actual source/draft x; no game code changed; formal map unchanged"
+    },
+    {
+      "attempt": 2,
+      "result": "Chrome save/reload passed; Edge observed module requests cancelled around save/reload; final harness assertion failed; formal map unchanged"
+    },
+    {
+      "attempt": 3,
+      "result": "configuration runner watches sceneLayout.json through config dependencies and restarts server on save; transient ERR_SOCKET_NOT_CONNECTED/ERR_CONNECTION_REFUSED; no pageerror; formal map unchanged"
+    },
+    {
+      "attempt": 4,
+      "result": "load original copied config once with original save plugin; disable configuration-module watching only in temporary harness, preserve source HMR; both browsers real POST/backups/reload passed without request failures"
+    }
+  ],
+  "limits": [
+    "normal development server configuration auto-restart after actual save was not revalidated against formal map",
+    "native zoom, human listening, full natural matches, long-term memory and hardware FPS not rerun"
+  ],
+  "gitWrites": false
+}

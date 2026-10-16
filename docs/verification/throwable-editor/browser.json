@@ -1,0 +1,66 @@
+[
+  {
+    "browser": "chrome",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "checks": [
+      "VASE native pickup/aim/cancel/throw single use",
+      "BOX native pickup/aim/cancel/throw single use",
+      "BASIN native pickup/aim/cancel/throw pause + walk + reuse",
+      "native throw hits active NPC, fall/stun immobilizes and recovers",
+      "receiving-player fixture: movement/E/Q/Space/F suppressed, 3000ms configured stun and recovery",
+      "restart resets all 36 props"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "chrome",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "checks": [
+      "VASE native pickup/aim/cancel/throw single use",
+      "BOX native pickup/aim/cancel/throw single use",
+      "BASIN native pickup/aim/cancel/throw pause + walk + reuse",
+      "native throw hits active NPC, fall/stun immobilizes and recovers",
+      "receiving-player fixture: movement/E/Q/Space/F suppressed, 3000ms configured stun and recovery",
+      "restart resets all 36 props"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "checks": [
+      "VASE native pickup/aim/cancel/throw single use",
+      "BOX native pickup/aim/cancel/throw single use",
+      "BASIN native pickup/aim/cancel/throw pause + walk + reuse",
+      "native throw hits active NPC, fall/stun immobilizes and recovers",
+      "receiving-player fixture: movement/E/Q/Space/F suppressed, 3000ms configured stun and recovery",
+      "restart resets all 36 props"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "checks": [
+      "VASE native pickup/aim/cancel/throw single use",
+      "BOX native pickup/aim/cancel/throw single use",
+      "BASIN native pickup/aim/cancel/throw pause + walk + reuse",
+      "native throw hits active NPC, fall/stun immobilizes and recovers",
+      "receiving-player fixture: movement/E/Q/Space/F suppressed, 3000ms configured stun and recovery",
+      "restart resets all 36 props"
+    ],
+    "errors": [],
+    "failed": []
+  }
+]

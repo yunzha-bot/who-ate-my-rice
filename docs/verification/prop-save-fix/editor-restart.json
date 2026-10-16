@@ -1,0 +1,28 @@
+[
+  {
+    "browser": "chrome",
+    "phase": "restart",
+    "url": "http://127.0.0.1:5183/",
+    "errors": [],
+    "failed": [],
+    "events": [
+      "{\"type\":\"connected\"}"
+    ],
+    "fullServerRestartRestored": true,
+    "x": -6.36,
+    "formalFilesUnchanged": true
+  },
+  {
+    "browser": "edge",
+    "phase": "restart",
+    "url": "http://127.0.0.1:5183/",
+    "errors": [],
+    "failed": [],
+    "events": [
+      "{\"type\":\"connected\"}"
+    ],
+    "fullServerRestartRestored": true,
+    "x": -6.36,
+    "formalFilesUnchanged": true
+  }
+]

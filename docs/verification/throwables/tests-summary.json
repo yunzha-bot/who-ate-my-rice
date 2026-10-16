@@ -1,0 +1,20 @@
+{
+  "before": {
+    "tests": 915,
+    "pass": 915,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 68107.3057
+  },
+  "final": {
+    "tests": 932,
+    "pass": 932,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 57549.4468
+  }
+}

@@ -219,6 +219,8 @@ export class SceneEditorPanel {
 
   get isOpen(): boolean { return !this.panel.hidden; }
 
+  appendExtension(element: HTMLElement): void { this.panel.insertBefore(element, this.search); }
+
   setOpen(open: boolean): void {
     this.panel.hidden = !open;
     this.launch.setAttribute('aria-pressed', String(open));
@@ -259,7 +261,7 @@ export class SceneEditorPanel {
     }
     this.markSelection();
     this.renderDetail(session);
-    this.renderStatus(session, state);
+    this.renderStatus(state);
   }
 
   dispose(): void {
@@ -480,7 +482,7 @@ export class SceneEditorPanel {
     return fragment;
   }
 
-  private renderStatus(session: MapEditSession, state: SceneEditorPanelState): void {
+  private renderStatus(state: SceneEditorPanelState): void {
     const lines = [
       `双阵营：${state.freezeState}（${state.freezeReason}）`,
       `草稿状态：${state.draftStatus}｜已应用编辑：${state.appliedCount}`,

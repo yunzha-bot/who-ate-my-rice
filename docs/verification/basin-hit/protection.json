@@ -1,0 +1,21 @@
+{
+  "compared": 328,
+  "changed": [
+    "src/systems/ThrowableSystem.ts",
+    "src/three/GameAudio.ts",
+    "src/three/ThreeGame.ts",
+    "tests/game-audio.test.mjs",
+    "tests/throwables.test.mjs"
+  ],
+  "missing": [],
+  "oldOggFilesUnchanged": 37,
+  "userLayoutsAndHoldPositionUnchanged": true,
+  "configAiModelsUnchanged": true,
+  "logPrefixPreserved": true,
+  "asset": {
+    "file": "public/assets/audio/basinHit.mp3",
+    "bytes": 26381,
+    "sha256": "b04405c3f3c9d4546a2d60003879c278d99ae48fcca8c4f2b93433112fdff79d",
+    "originalUnmodified": true
+  }
+}

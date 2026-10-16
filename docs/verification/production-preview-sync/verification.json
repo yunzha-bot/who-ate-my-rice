@@ -1,0 +1,29 @@
+{
+  "compared": 330,
+  "snapshotNote": "Taken after adding the failing regression, before runtime implementation",
+  "changed": [
+    "src/three/ThreeGame.ts"
+  ],
+  "missing": [],
+  "configAiLayoutsAssetsUnchanged": true,
+  "authoredPropsMatchAll8BrowserSessions": true,
+  "audioFilesSynced": 39,
+  "productionCameraKeysAbsent": true,
+  "logPrefixPreserved": true,
+  "productionJs": "index-BKlcUlW_.js",
+  "tests": {
+    "total": 949,
+    "pass": 949,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "productionTools": 5,
+    "typecheck": "pass",
+    "build": "pass"
+  },
+  "browsers": {
+    "chromeAndEdgeCameraChecks": 8,
+    "productionBasinHitChecks": 4
+  },
+  "deployment": "local production preview 4173 only; no Git push or public deployment"
+}

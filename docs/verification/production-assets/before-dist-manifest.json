@@ -1,0 +1,572 @@
+{
+  "totalBytes": 117535171,
+  "fileCount": 90,
+  "totals": {
+    "models": {
+      "count": 8,
+      "bytes": 87507068
+    },
+    "images": {
+      "count": 39,
+      "bytes": 28264649
+    },
+    "audio": {
+      "count": 37,
+      "bytes": 399664
+    },
+    "video": {
+      "count": 0,
+      "bytes": 0
+    },
+    "code": {
+      "count": 3,
+      "bytes": 1360191
+    },
+    "other": {
+      "count": 3,
+      "bytes": 3599
+    }
+  },
+  "files": [
+    {
+      "file": "dist/assets/audio/back.ogg",
+      "bytes": 4372,
+      "sha256": "8e9de91bc7e42206aef936b527cbb1034f439a1f6b7d442d3b0d375706ca8e7d",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/capture.ogg",
+      "bytes": 5198,
+      "sha256": "af28e6188e28475db9f148c85d190c389410880dbfa2d127d38e6c948e5f1e01",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/caught.ogg",
+      "bytes": 5721,
+      "sha256": "de2aee8c92b414251b1e94b2ce7a50e1ae2a621bb25e149cfec51ccb3d9497a3",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/chase.ogg",
+      "bytes": 55990,
+      "sha256": "1bac512b19996e740a41e732bbf56fbcff6e78ac499cd67536f362f881028cee",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/click.ogg",
+      "bytes": 4230,
+      "sha256": "ab6ccb8ee012b6bb801cbeeab35947acf07f9b0676af5b27b1c6500856157547",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/confirm.ogg",
+      "bytes": 4742,
+      "sha256": "f732fc65539480404498fa3f8d9586c26fefc7843493f2215ac600081b960175",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/countdown.ogg",
+      "bytes": 4182,
+      "sha256": "e33cf9c35b65a12488e778ee122361c52888278e09c587c5913616fa3ccfbde3",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/countdownLast.ogg",
+      "bytes": 4798,
+      "sha256": "3828877a1d33a45c127f2c15f23cd6e36c8855a11f86c655eb04d9010df9c93b",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/defeat.ogg",
+      "bytes": 6898,
+      "sha256": "18619ccd8a1b709cb23647ae42743aee06fe67bb2fca0e687516c7aa024e1a1a",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/doorFail.ogg",
+      "bytes": 4493,
+      "sha256": "33d29e2ba62eacd1708c4c0676555f1cfcd67e736317764b3b1ecb87811b20e3",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/doorLock.ogg",
+      "bytes": 4445,
+      "sha256": "f1f616afd1de5e1df41675bb8d454592104c966d3c41c46c132babd473db5913",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/doorUnlock.ogg",
+      "bytes": 4909,
+      "sha256": "020b8f7d0afc8f689681586d22f9919f083b4d3df791e4690d6ee32d83c16a85",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/eatComplete.ogg",
+      "bytes": 5733,
+      "sha256": "58742dbc334f5282bc2beca02fa3b3469d5c05f1dfb9beae285670b214530e98",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/eatInterrupt.ogg",
+      "bytes": 4477,
+      "sha256": "87347d4d54b70b67df5ecdcc6a10e4c4274f6b06e64f008814141e0595bed1f7",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/eatLoop.ogg",
+      "bytes": 6474,
+      "sha256": "21544986e2c9e2e41b55212648036da218b3d51b3274f86e77948ae05d586409",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/eatStart.ogg",
+      "bytes": 4720,
+      "sha256": "beb87f2dfbd331b4c173689d9b4f9b3eaa75b36afdabee339c03e68ef695958f",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/error.ogg",
+      "bytes": 4611,
+      "sha256": "402d2bfd2345d2a08500d96aa483302a74d81330c6188ef6b4581dbbd1a3e542",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/fall.ogg",
+      "bytes": 5900,
+      "sha256": "87a072835762684b66ab98a5dec7bb86cd42adc9af91e01386d6c39623beece1",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/game.ogg",
+      "bytes": 66253,
+      "sha256": "8e6281961ec341bb031b63691400f33808e7dcd75a682b75dd4b20d96bfbe8f0",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/hideEnter.ogg",
+      "bytes": 4891,
+      "sha256": "ab936e366f04e397217bc66931de6f69d03e86a521611f47a67dbe7565ff6d41",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/hideExit.ogg",
+      "bytes": 4953,
+      "sha256": "45e830e9fb6c617874f21e6ea92c231991c7f65a6f5b8182a2507a868f2212ec",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/hover.ogg",
+      "bytes": 3906,
+      "sha256": "3a77556690426bb96ba14af83cca8bf88a2fb3352bd931d7838f76c2502affc4",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/menu.ogg",
+      "bytes": 67497,
+      "sha256": "db73583afd838170c1ff0f12ee5bcd6516ced55ef6fc0e11702e2935740f4f6c",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/pulseCorrect.ogg",
+      "bytes": 4300,
+      "sha256": "f575aaa1b76ca202534e47554731e01b3f4258d06a3df99d41bd097261fe5522",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/pulseInput.ogg",
+      "bytes": 3936,
+      "sha256": "5192fc4d5ef6f3aacc5dd3513442eb7b8e7d1fcdb4db96b207043c2b2d4e1327",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/pulseSuccess.ogg",
+      "bytes": 5518,
+      "sha256": "dbec56ccf4378c20c04d5bae7d065d0ef2e585bf69f006e29aa6870eaf09b58e",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/pulseWrong.ogg",
+      "bytes": 4576,
+      "sha256": "e4faf6bd5cd34f6bb8505cbb74d580670e38d90e4b2d81c6a07bda719be289de",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/recover.ogg",
+      "bytes": 4762,
+      "sha256": "043f6bdbcfc6cf8a7e94b669a76079de8bbbeafc8e411109da2a545da8e11180",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/restart.ogg",
+      "bytes": 4834,
+      "sha256": "8c838d46ada45b554f0a31169e0a2ae52df5add707711872c46cf4c5c5fea7a2",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/room.ogg",
+      "bytes": 45007,
+      "sha256": "338059b27b6b23b9d0a56300d24c85800c259325a6e7980a37e21c87bb54b3aa",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/search.ogg",
+      "bytes": 5501,
+      "sha256": "788c71199d4dda9a4b513ec4840afc7f72b53e5add22a74d00ad721124955bf0",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/skill.ogg",
+      "bytes": 5274,
+      "sha256": "ca745adf849b1c5d48c1d53e64da0d8792a2488f734520eb6c6b7aec5026de76",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/skillReady.ogg",
+      "bytes": 4589,
+      "sha256": "2244ef4b939a0da2635d3c03f14424853db6fbe8c216f659597aec5be7c5fb8e",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/skillUnavailable.ogg",
+      "bytes": 4456,
+      "sha256": "3912b82482d5168eae2b84b9db2cdfb7395a8b021abba4c88c86f734ebaf4b1c",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/start.ogg",
+      "bytes": 5577,
+      "sha256": "8e8b62cedc872b540b16063e3091c8ba3464914a0d5f4f6fada367cc970febb8",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/stun.ogg",
+      "bytes": 5105,
+      "sha256": "39ceeb96f49d303957cfb80f5812dbded024393189547844b091d450f65098bf",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/audio/victory.ogg",
+      "bytes": 6836,
+      "sha256": "405d355e820025c158487a377d2624be170c2d5bce7ef6eed94f77d9b6ca0457",
+      "type": "audio"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v1.glb",
+      "bytes": 12491168,
+      "sha256": "7692599cb940f1108e949ac68042edf972ead45468e5f27c2c537d1865f188ce",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v2.glb",
+      "bytes": 12491164,
+      "sha256": "086e856b8bbc1a5ad44b0cb2cd55724c4bc5b7ac3f6ec7d40224f890ae0f90ec",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v3.glb",
+      "bytes": 12491164,
+      "sha256": "a76ce05b692927e3d1d14aa08d7f8a88e808470dcd8b3cb5235e5a8dc297ee7b",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v4.glb",
+      "bytes": 12490912,
+      "sha256": "2f9e2b4d02367fa3a76f280fdd2b13c6767cc89421ad7db96c22346b56293906",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb",
+      "bytes": 12496972,
+      "sha256": "d4e67fff652aa42508311ab18422d33727c15e1b700f2daf0a6255f8651e5277",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "bytes": 12496972,
+      "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb",
+      "bytes": 11916012,
+      "sha256": "e32ac3ccc3253487ee7c026ad7887d1d7b0bee0c9088f48cce25637e1f2f7528",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/index-BxxTESvh.js",
+      "bytes": 1292515,
+      "sha256": "356ebb9f98cfc761d7e0b9d9ef5065a8c50b48937728e8c640a91eb567bf1746",
+      "type": "code"
+    },
+    {
+      "file": "dist/assets/index-CRuMYSHT.css",
+      "bytes": 67271,
+      "sha256": "67c2491bc22faf20d1c0eccbf8ad4774f1af856c25a0a622ce37a44a5d2ea0f1",
+      "type": "code"
+    },
+    {
+      "file": "dist/assets/props/rice-bag/rice-bag.glb",
+      "bytes": 632704,
+      "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/ui/portraits/deepseek-lose.png",
+      "bytes": 1849977,
+      "sha256": "342bd2920014406668dd8973d60a51243229b7b5e2309bec0fb1fc0a9bad5c22",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/deepseek-model-reference.png",
+      "bytes": 2055779,
+      "sha256": "48ad44812f373987a76a3191f375afa50fa36b660e66a9b7b0105a588a60b7b3",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/deepseek-normal.png",
+      "bytes": 2130874,
+      "sha256": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/deepseek-portrait-sheet.png",
+      "bytes": 2190023,
+      "sha256": "036dd3ded6ab02da0de1224288fb175780b7c430998b37e1b57a708fda76adc1",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/deepseek-rice-v1.webp",
+      "bytes": 213776,
+      "sha256": "1c97d96cbf0d683a354a129ce4d64f41999c46c4865274d1889309c54fbcd004",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/deepseek-win.png",
+      "bytes": 2229626,
+      "sha256": "0e0dcb6a78057e3eb1c39ec732f052d9dbfc03b7d1fb2eab1faaa0877e47ba79",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/human-guardian-v1.webp",
+      "bytes": 75696,
+      "sha256": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b",
+      "type": "images"
+    },
+    {
+      "file": "dist/assets/ui/portraits/README.md",
+      "bytes": 1344,
+      "sha256": "822a3c0608aff3e9156d3f8bd0655113fc7bb95c1a50020df9a4258e16163741",
+      "type": "other"
+    },
+    {
+      "file": "dist/index.html",
+      "bytes": 405,
+      "sha256": "a31b62c5b74a99620757197e80290ac99a844414e8776a3bdb695c3a78cab83b",
+      "type": "code"
+    },
+    {
+      "file": "dist/maps/.gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "type": "other"
+    },
+    {
+      "file": "dist/ui/components/blue-strip.png",
+      "bytes": 13316,
+      "sha256": "e6fc2df89b6afb1f785509256f7e926f904e3d3d77e06200b2ff5d720cab8a35",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/components/button-endcap.png",
+      "bytes": 16805,
+      "sha256": "8cfbd560655bd634e7d38f0ebdbe1bb6c2a2e0e2eb2f7bdcb357d4684c72c9aa",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/components/button-shell-stretch.png",
+      "bytes": 21978,
+      "sha256": "d65fc513326027835c8b936504cc2f06b5943299255c132740484ef5fad4558b",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/components/button-shell.png",
+      "bytes": 35693,
+      "sha256": "be98abedc2cffaa564d16a2afe4811a6ddc6b7c64e81e24e399a58430c98168e",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/components/dark-label.png",
+      "bytes": 14496,
+      "sha256": "1f271c39203b58983d5835ee4300c1eab20a88fee023c84533ecf4c2cd1e53b7",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/components/header-strip.png",
+      "bytes": 39726,
+      "sha256": "733b1c58e457d843b23e0c6480968646387e3cf4e14554eb054c3a8a9ef7fc36",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/faction-name-gradient-clean.png",
+      "bytes": 313221,
+      "sha256": "95a08c94c34d3ab7b80e57f3444299c8dd7fa26b8c84547d7c27e21c9ddf3cbe",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/faction-name-gradient-clean.svg",
+      "bytes": 1816,
+      "sha256": "8a284bee9882295d20e0b840442d306ed94774c92bf07323cb98b06e1ab5d4ef",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/faction-name-gradient.png",
+      "bytes": 1668139,
+      "sha256": "1e3be331f9690f526011f3d98559deca823ea4605354f847fd317481353e8bac",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/faction-warm.png",
+      "bytes": 28458,
+      "sha256": "7fd92e19984ba859b2fd038274969692592fd778dd239bec76cc192eeddf8d69",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/interaction-shell.png",
+      "bytes": 21384,
+      "sha256": "9505282ae8ce5eb62e47694db0ce84d8f0f2c9cb0dc79d18e0a0a5021f16abe4",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/rice-bowl.png",
+      "bytes": 11564,
+      "sha256": "054bf5d6fb44021f7a22be74f78933aa8574824eaca8df9c6029248264d87d7e",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/rice-shell.png",
+      "bytes": 32146,
+      "sha256": "a6f7f838e9de9af3c68d70c5fd1d143fb042c32ea26943af2209ea27d26ff7b0",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/skill-blue.png",
+      "bytes": 24784,
+      "sha256": "9596d84511631a28ecd17c24ab1fa9e0bb9498cd28c0bcd6f98342e7a66d2df1",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/skill-warm.png",
+      "bytes": 23069,
+      "sha256": "9245f8e6f01bed0701a3ef935d8016ed6d39133af9adaf44977a38626b181454",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/hud/timer-shell.png",
+      "bytes": 30570,
+      "sha256": "d55c01f449d9ca93c9a834a8efc8b10e51aefc452e292f2eff34aecd47e00454",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/compact-dots-upper.png",
+      "bytes": 429,
+      "sha256": "e6e7ac06d3f02a7dade981085925aac02aaff30afcb9880fa5035eb73fae69e0",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/compact-shell-stretch.png",
+      "bytes": 57714,
+      "sha256": "d175f154343f1b33e032a3bd94d12ca9d6ffcbcc6835ae5bb5f37627d327858f",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/compact-shell.png",
+      "bytes": 57863,
+      "sha256": "8db950f10aa0c9319fd5638a1c8631d9888db04ae8edd6dd7dd183a0dead75a5",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/main-dots-left.png",
+      "bytes": 2063,
+      "sha256": "e692188a6c1892894a1c92802eaf6d0f9fa02ff91c997169b6e0a9feb85605f0",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/main-dots-right.png",
+      "bytes": 943,
+      "sha256": "aea9e3d8a255132c315b3c6097633b8db5a05522f3b1f8c202e1c5c28d6ef501",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/main-shell-stretch.png",
+      "bytes": 153565,
+      "sha256": "3654e1282c3a1099e12763c26855fca7a53f98971ac2d4ead67224c7ae1cceb8",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/panels/main-shell.png",
+      "bytes": 154709,
+      "sha256": "37c54a31081c89f108684f79e03e7e270d1e24df474bc5323ad44b7de59fc08f",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/pulselock/track-shell.png",
+      "bytes": 20957,
+      "sha256": "e85d5fa7e02af1695402ac6c1861945f6f0d84f29e1091285f51f298dfeb3086",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/README.md",
+      "bytes": 2255,
+      "sha256": "c96598f2a4c2000c835ff254d3451ea5768acfd0941b471ba95dbbf980b4020a",
+      "type": "other"
+    },
+    {
+      "file": "dist/ui/screens/result-accent.png",
+      "bytes": 24110,
+      "sha256": "2fff98b4c3b1c107203ca79a4aa84eb8a0a22b6c02753c58b998cdcc22426c9a",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/sheet-a-pulselock.png",
+      "bytes": 2395390,
+      "sha256": "fcad647c247eb634c7aceca9f13fd1e3c10d8eed4914da73670bb4fe5ab5ae12",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/sheet-b-panels.png",
+      "bytes": 2441087,
+      "sha256": "4b1f9f82fe4256c6dcf53cc7265c3454f42da882c6c92ac2300699037582bf71",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/sheet-c-hud.png",
+      "bytes": 2200339,
+      "sha256": "28c2687cb7d573bb42288f9c7b897d99e72a90da0fffa7ae0bee46b52cb7bda2",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/sheet-d-menu-result.png",
+      "bytes": 2360797,
+      "sha256": "bf913a049b72dab563ab4851ac50537417416ccc52abfb620b15c3fb8d98c3ec",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/sheet-e-textures.png",
+      "bytes": 2404049,
+      "sha256": "bafc9ea7e3da48c2e54db1809c6e8bbb14ec1315f54b7544089e37b1d7084550",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/sheet-f-modern-textures.png",
+      "bytes": 2914858,
+      "sha256": "47c4708ce5d6b24d3d39d36698b2e22a9c33b901de83d5f62a933eb57a486097",
+      "type": "images"
+    },
+    {
+      "file": "dist/ui/textures/paper.png",
+      "bytes": 32860,
+      "sha256": "f827e72742a7824ee85fdc4fb834c854e4ec72e8f5f5a7acc4029e7568a0f663",
+      "type": "images"
+    }
+  ]
+}

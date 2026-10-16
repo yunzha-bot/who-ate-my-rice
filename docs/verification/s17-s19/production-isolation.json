@@ -1,0 +1,124 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/?dev=true&debug=true&seed=1",
+    "state": {
+      "tools": [
+        {
+          "key": "debugPanel",
+          "absent": true
+        },
+        {
+          "key": "sceneEditor",
+          "absent": true
+        },
+        {
+          "key": "devBDebug",
+          "absent": true
+        },
+        {
+          "key": "devBPersistence",
+          "absent": true
+        },
+        {
+          "key": "safetyPaths",
+          "absent": true
+        },
+        {
+          "key": "aiLogCollector",
+          "absent": true
+        },
+        {
+          "key": "devBBinding",
+          "absent": true
+        }
+      ],
+      "dom": 0,
+      "devReads": [],
+      "mapLabels": 0,
+      "anchorGizmos": 0,
+      "doorLabels": 0,
+      "hideIndicators": 15,
+      "fixedSeed": null,
+      "overrides": {},
+      "humanMultiplier": 0.78
+    },
+    "listeners": {
+      "beforeUnload": 0,
+      "canvasClick": 0
+    },
+    "debugKeysInert": true,
+    "tabPhase": "PAUSED",
+    "tabUsesNativeFocus": true,
+    "pauseButtons": 4,
+    "audioSliders": 5,
+    "devEndpoint": {
+      "getStatus": 200,
+      "contentType": "text/html",
+      "revisionApi": false,
+      "postOnFormalData": false
+    },
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/?dev=true&debug=true&seed=1",
+    "state": {
+      "tools": [
+        {
+          "key": "debugPanel",
+          "absent": true
+        },
+        {
+          "key": "sceneEditor",
+          "absent": true
+        },
+        {
+          "key": "devBDebug",
+          "absent": true
+        },
+        {
+          "key": "devBPersistence",
+          "absent": true
+        },
+        {
+          "key": "safetyPaths",
+          "absent": true
+        },
+        {
+          "key": "aiLogCollector",
+          "absent": true
+        },
+        {
+          "key": "devBBinding",
+          "absent": true
+        }
+      ],
+      "dom": 0,
+      "devReads": [],
+      "mapLabels": 0,
+      "anchorGizmos": 0,
+      "doorLabels": 0,
+      "hideIndicators": 15,
+      "fixedSeed": null,
+      "overrides": {},
+      "humanMultiplier": 0.78
+    },
+    "listeners": {
+      "beforeUnload": 0,
+      "canvasClick": 0
+    },
+    "debugKeysInert": true,
+    "tabPhase": "PAUSED",
+    "tabUsesNativeFocus": true,
+    "pauseButtons": 4,
+    "audioSliders": 5,
+    "devEndpoint": {
+      "getStatus": 200,
+      "contentType": "text/html",
+      "revisionApi": false,
+      "postOnFormalData": false
+    },
+    "errors": []
+  }
+]

@@ -1,0 +1,2808 @@
+[
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "environment": "dev",
+    "url": "http://127.0.0.1:5173/",
+    "combinations": [
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 17.800000000000004,
+        "z": -7.6,
+        "animation": "Idle",
+        "mixer": 0.04760000014305115,
+        "hairTime": 0.04760000014305115,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 11,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.78,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -0.1999999999999993,
+        "z": -16.4,
+        "animation": "Idle",
+        "mixer": 0.9149000000953676,
+        "hairTime": 0.007,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 35,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "HARD",
+        "humanSpeed": 0.95,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 17.800000000000004,
+        "z": 9.600000000000001,
+        "animation": "Idle",
+        "mixer": 1.5849000000953641,
+        "hairTime": 0.03490000009536743,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 47,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 13.800000000000004,
+        "z": 12.8,
+        "animation": "Walk",
+        "mixer": 2.21570000004768,
+        "hairTime": 0.022900000095367433,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 59,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.52,
+        "evade": 6,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 23.800000000000004,
+        "z": -0.3999999999999986,
+        "animation": "Walk",
+        "mixer": 2.9323999998569548,
+        "hairTime": 0.018799999952316286,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 71,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "HARD",
+        "humanSpeed": 0.52,
+        "evade": 7,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 13.800000000000004,
+        "z": -17.2,
+        "animation": "Walk",
+        "mixer": 3.5716000001430666,
+        "hairTime": 0.019100000143051146,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 83,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      }
+    ],
+    "layouts": [
+      {
+        "width": 1455,
+        "height": 818,
+        "scrollWidth": 1455,
+        "clientWidth": 1455,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875
+          },
+          {
+            "top": 827.1875,
+            "bottom": 897.1875
+          }
+        ]
+      },
+      {
+        "width": 800,
+        "height": 450,
+        "scrollWidth": 800,
+        "clientWidth": 800,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 153.5
+          },
+          {
+            "top": 181.5,
+            "bottom": 1267.5
+          },
+          {
+            "top": 1295.5,
+            "bottom": 1542.5
+          },
+          {
+            "top": 1570.5,
+            "bottom": 1692.09375
+          }
+        ]
+      },
+      {
+        "width": 480,
+        "height": 640,
+        "scrollWidth": 480,
+        "clientWidth": 480,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 189.09375
+          },
+          {
+            "top": 217.09375,
+            "bottom": 1249.75
+          },
+          {
+            "top": 1277.75,
+            "bottom": 1524.75
+          },
+          {
+            "top": 1552.75,
+            "bottom": 1694.140625
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "failures": [],
+    "editorExport": "who-ate-my-rice-map-2026-10-15T02-12-42.json",
+    "editorRevision": {
+      "revision": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8"
+    },
+    "devEditor": {
+      "rows": 125,
+      "draftRestore": true,
+      "unsavedSaveRejected": true,
+      "export": true,
+      "mapUnchanged": true
+    },
+    "requests": [
+      "/",
+      "/@vite/client",
+      "/src/main.ts",
+      "/src/three/ThreeGame.ts",
+      "/src/style.css",
+      "/src/industrial-ui.css",
+      "/src/sheet-ui.css",
+      "/src/s13-ui.css",
+      "/src/game-ui.css",
+      "/src/faction-menu.css",
+      "/src/three/StartupView.ts",
+      "/src/three/MenuCreditsView.ts",
+      "/package.json",
+      "/node_modules/vite/dist/client/env.mjs",
+      "/node_modules/.vite/deps/three.js",
+      "/node_modules/.vite/deps/chunk-HDEMVUAG.js",
+      "/src/config/gameConfig.ts",
+      "/src/config/difficultyConfig.ts",
+      "/src/three/DifficultyView.ts",
+      "/src/systems/GameStateSystem.ts",
+      "/src/systems/RiceField.ts",
+      "/src/systems/SprintSystem.ts",
+      "/src/systems/DoorSystem.ts",
+      "/src/systems/DeepSeekDoorLockPenalty.ts",
+      "/src/systems/HumanDoorSkill.ts",
+      "/src/systems/PulseLockSystem.ts",
+      "/src/three/PulseLockView.ts",
+      "/src/systems/PerceptionSystem.ts",
+      "/src/systems/RuntimeDebugOverrides.ts",
+      "/src/systems/DevBRuntimeBinding.ts",
+      "/src/systems/DevBParamPersistence.ts",
+      "/src/systems/DevBParamStore.ts",
+      "/src/three/DevBDebug.ts",
+      "/src/systems/HumanAIController.ts",
+      "/src/systems/DeepSeekAIController.ts",
+      "/src/systems/AILogCollector.ts",
+      "/src/systems/MatchRandom.ts",
+      "/src/systems/HideSystem.ts",
+      "/src/systems/SkillCooldown.ts",
+      "/src/systems/SkillGates.ts",
+      "/src/systems/HideInteractionArbitration.ts",
+      "/src/three/InteractionPrompt.ts",
+      "/src/systems/DeepSeekVisualTarget.ts",
+      "/src/systems/HumanSearchSkill.ts",
+      "/src/systems/HumanHideSearchResolution.ts",
+      "/src/systems/HideTargetResolution.ts",
+      "/src/systems/RiceTraceClues.ts",
+      "/src/systems/DeepSeekHideCandidates.ts",
+      "/src/systems/DeepSeekHideResolution.ts",
+      "/src/three/HideSearchView.ts",
+      "/src/three/map/MapApplicationPrecheck.ts",
+      "/src/three/AISafetyPathView.ts",
+      "/src/systems/HumanStillness.ts",
+      "/src/systems/CharacterAction.ts",
+      "/src/systems/NavigationSystem.ts",
+      "/src/three/CollisionWorld.ts",
+      "/src/three/DoorView.ts",
+      "/src/three/InteriorShadowView.ts",
+      "/src/three/CharacterActionView.ts",
+      "/src/three/DebugDetailsPanel.ts",
+      "/src/three/InputManager.ts",
+      "/src/three/RiceView.ts",
+      "/src/three/RiceTraceView.ts",
+      "/src/three/SoundVisualView.ts",
+      "/src/three/RoundShortcuts.ts",
+      "/src/three/CaptureZone.ts",
+      "/src/three/CameraRelativeMovement.ts",
+      "/src/three/AlphaPresentation.ts",
+      "/src/three/AlphaHudView.ts",
+      "/src/three/GameAudio.ts",
+      "/src/three/AudioSettingsView.ts",
+      "/src/three/GameFeedback.ts",
+      "/src/three/LocalControl.ts",
+      "/src/three/GameUiLayout.ts",
+      "/src/three/DevBHumanHideObservation.ts",
+      "/src/three/map/MapBuilder.ts",
+      "/src/three/SceneCameraDepth.ts",
+      "/src/three/SceneEditor.ts",
+      "/src/three/map/MapEditModel.ts",
+      "/src/three/map/MapLayoutStore.ts",
+      "/src/systems/DevFreezeSystem.ts",
+      "/src/three/map/apartmentMap.ts",
+      "/src/systems/RiceSystem.ts",
+      "/src/systems/DevBObserver.ts",
+      "/src/three/DevBPanel.ts",
+      "/src/three/DevBView.ts",
+      "/src/systems/HumanTraceTracking.ts",
+      "/src/systems/HideSearchCandidates.ts",
+      "/src/systems/HumanHideSearchStance.ts",
+      "/src/systems/HumanSearchTuning.ts",
+      "/src/three/map/HideInteractionRegion.ts",
+      "/src/three/map/RotatedRect.ts",
+      "/src/three/DoorVisualGeometry.ts",
+      "/src/three/DeepSeekGlbModel.ts",
+      "/src/three/DeepSeekAnimation.ts",
+      "/src/three/DeepSeekHairMotion.ts",
+      "/src/three/RiceBagModel.ts",
+      "/node_modules/.vite/deps/three_addons_utils_BufferGeometryUtils__js.js",
+      "/src/three/DeepSeekMaidModel.ts",
+      "/src/three/StorageFurnitureVisual.ts",
+      "/src/three/LaundryFurnitureVisual.ts",
+      "/src/three/SecondBedroomVisual.ts",
+      "/src/three/KitchenFurnitureVisual.ts",
+      "/src/three/BalconyFurnitureVisual.ts",
+      "/src/three/MainBedroomVisual.ts",
+      "/src/three/EntryFurnitureVisual.ts",
+      "/src/three/BathroomFurnitureVisual.ts",
+      "/src/three/HomeGymVisual.ts",
+      "/src/three/map/ClosedExteriorDoors.ts",
+      "/src/three/map/GarageGround.ts",
+      "/src/three/ResidentialExterior.ts",
+      "/src/three/SceneEditorView.ts",
+      "/src/three/SceneEditorPanel.ts",
+      "/src/three/map/sceneLayout.json",
+      "/src/systems/DevBHelpText.ts",
+      "/node_modules/.vite/deps/three_addons_loaders_GLTFLoader__js.js",
+      "/node_modules/.vite/deps/three_addons_utils_SkeletonUtils__js.js",
+      "/node_modules/.vite/deps/chunk-RPFTELOG.js",
+      "/src/three/CommunityCourtView.ts",
+      "/node_modules/.vite/deps/chunk-5HKOGOUH.js",
+      "/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "/assets/props/rice-bag/rice-bag.glb",
+      "/__dev/scene-layout",
+      "/assets/audio/click.ogg",
+      "/assets/audio/countdown.ogg",
+      "/assets/audio/start.ogg",
+      "/assets/audio/menu.ogg",
+      "/assets/audio/game.ogg",
+      "/assets/audio/room.ogg",
+      "/assets/ui/portraits/deepseek-normal.png",
+      "/assets/ui/portraits/human-guardian-v1.webp",
+      "/ui/faction-name-gradient-clean.png",
+      "/assets/audio/hover.ogg",
+      "/assets/audio/confirm.ogg",
+      "/ui/hud/rice-bowl.png",
+      "/assets/audio/countdownLast.ogg",
+      "/assets/audio/back.ogg"
+    ],
+    "modelHashes": [
+      {
+        "url": "http://127.0.0.1:5173/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026"
+      }
+    ],
+    "responses": [
+      {
+        "url": "http://127.0.0.1:5173/",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/main.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/@vite/client",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/style.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/industrial-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/sheet-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/s13-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/game-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/faction-menu.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/MenuCreditsView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/package.json?import&raw",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/StartupView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/ThreeGame.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-HDEMVUAG.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DifficultyView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/GameStateSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DoorSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/config/difficultyConfig.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/SprintSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RiceField.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/config/gameConfig.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekDoorLockPenalty.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanDoorSkill.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/PulseLockSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/PulseLockView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/PerceptionSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RuntimeDebugOverrides.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBRuntimeBinding.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBParamPersistence.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBParamStore.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBDebug.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanAIController.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/AILogCollector.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/MatchRandom.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/SkillCooldown.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/SkillGates.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideInteractionArbitration.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/InteractionPrompt.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekVisualTarget.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanSearchSkill.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekAIController.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanHideSearchResolution.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideTargetResolution.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RiceTraceClues.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekHideCandidates.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekHideResolution.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/HideSearchView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapApplicationPrecheck.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AISafetyPathView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanStillness.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/CharacterAction.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/NavigationSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CollisionWorld.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DoorView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/InteriorShadowView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CharacterActionView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DebugDetailsPanel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/InputManager.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RiceTraceView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RiceView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SoundVisualView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RoundShortcuts.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CaptureZone.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CameraRelativeMovement.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AlphaHudView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AlphaPresentation.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/GameAudio.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AudioSettingsView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/GameFeedback.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/LocalControl.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/GameUiLayout.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBHumanHideObservation.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapBuilder.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneCameraDepth.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneEditor.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapLayoutStore.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevFreezeSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapEditModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/apartmentMap.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RiceSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBObserver.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBPanel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanTraceTracking.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideSearchCandidates.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanHideSearchStance.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanSearchTuning.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/HideInteractionRegion.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DoorVisualGeometry.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekGlbModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/RotatedRect.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekAnimation.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekHairMotion.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RiceBagModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three_addons_utils_BufferGeometryUtils__js.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekMaidModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/StorageFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/LaundryFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SecondBedroomVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/KitchenFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/BalconyFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/MainBedroomVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/EntryFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/BathroomFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/ClosedExteriorDoors.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/GarageGround.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneEditorView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneEditorPanel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/ResidentialExterior.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/HomeGymVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/sceneLayout.json?import",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBHelpText.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three_addons_utils_SkeletonUtils__js.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three_addons_loaders_GLTFLoader__js.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-RPFTELOG.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CommunityCourtView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-5HKOGOUH.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/ui/portraits/deepseek-normal.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/ui/portraits/human-guardian-v1.webp",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/ui/faction-name-gradient-clean.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/props/rice-bag/rice-bag.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/__dev/scene-layout",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/hover.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/ui/hud/rice-bowl.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/confirm.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/countdownLast.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/__dev/scene-layout",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/back.ogg",
+        "status": 200
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "environment": "production",
+    "url": "http://127.0.0.1:4173/",
+    "combinations": [
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 11.800000000000004,
+        "z": -8.799999999999999,
+        "animation": "Idle",
+        "mixer": 0.049299999952316285,
+        "hairTime": 0.049299999952316285,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 11,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.78,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -11.399999999999999,
+        "z": -8.399999999999999,
+        "animation": "Idle",
+        "mixer": 0.7862000000476841,
+        "hairTime": 0.049999999999999996,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 23,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "HARD",
+        "humanSpeed": 0.95,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -20.2,
+        "z": 12.8,
+        "animation": "Idle",
+        "mixer": 1.4445000002384163,
+        "hairTime": 0.05570000004768372,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 35,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 23.800000000000004,
+        "z": -0.3999999999999986,
+        "animation": "Idle",
+        "mixer": 2.0932000002861004,
+        "hairTime": 0.023400000095367433,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 47,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.52,
+        "evade": 6,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -0.1999999999999993,
+        "z": -3.1999999999999993,
+        "animation": "Idle",
+        "mixer": 2.7659000003337955,
+        "hairTime": 0,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 59,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "HARD",
+        "humanSpeed": 0.52,
+        "evade": 7,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 11.800000000000004,
+        "z": -8.799999999999999,
+        "animation": "Walk",
+        "mixer": 3.392600000143071,
+        "hairTime": 0.0225,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 71,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      }
+    ],
+    "layouts": [
+      {
+        "width": 1455,
+        "height": 818,
+        "scrollWidth": 1455,
+        "clientWidth": 1455,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875
+          },
+          {
+            "top": 827.1875,
+            "bottom": 897.1875
+          }
+        ]
+      },
+      {
+        "width": 800,
+        "height": 450,
+        "scrollWidth": 800,
+        "clientWidth": 800,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 153.5
+          },
+          {
+            "top": 181.5,
+            "bottom": 1267.5
+          },
+          {
+            "top": 1295.5,
+            "bottom": 1542.5
+          },
+          {
+            "top": 1570.5,
+            "bottom": 1692.09375
+          }
+        ]
+      },
+      {
+        "width": 480,
+        "height": 640,
+        "scrollWidth": 480,
+        "clientWidth": 480,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 189.09375
+          },
+          {
+            "top": 217.09375,
+            "bottom": 1249.75
+          },
+          {
+            "top": 1277.75,
+            "bottom": 1524.75
+          },
+          {
+            "top": 1552.75,
+            "bottom": 1694.140625
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "failures": [],
+    "requests": [
+      "/",
+      "/assets/index-BxxTESvh.js",
+      "/assets/index-CRuMYSHT.css",
+      "/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "/assets/props/rice-bag/rice-bag.glb",
+      "/assets/audio/click.ogg",
+      "/assets/audio/countdown.ogg",
+      "/assets/audio/start.ogg",
+      "/assets/audio/menu.ogg",
+      "/assets/audio/game.ogg",
+      "/assets/audio/room.ogg",
+      "/assets/ui/portraits/deepseek-normal.png",
+      "/assets/ui/portraits/human-guardian-v1.webp",
+      "/ui/faction-name-gradient-clean.png",
+      "/assets/audio/hover.ogg",
+      "/assets/audio/confirm.ogg",
+      "/ui/hud/rice-bowl.png",
+      "/assets/audio/countdownLast.ogg",
+      "/assets/audio/back.ogg"
+    ],
+    "modelHashes": [
+      {
+        "url": "http://127.0.0.1:4173/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026"
+      }
+    ],
+    "responses": [
+      {
+        "url": "http://127.0.0.1:4173/",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/index-CRuMYSHT.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/index-BxxTESvh.js",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/ui/portraits/deepseek-normal.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/ui/portraits/human-guardian-v1.webp",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/ui/faction-name-gradient-clean.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/props/rice-bag/rice-bag.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/hover.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/ui/hud/rice-bowl.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/confirm.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/countdownLast.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/back.ogg",
+        "status": 200
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "environment": "dev",
+    "url": "http://127.0.0.1:5173/",
+    "combinations": [
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 13.800000000000004,
+        "z": -17.2,
+        "animation": "Idle",
+        "mixer": 0.059800000190734864,
+        "hairTime": 0.059800000190734864,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 11,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.78,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -11.399999999999999,
+        "z": 2,
+        "animation": "Idle",
+        "mixer": 0.8791000001430515,
+        "hairTime": 0.016200000047683717,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "chase",
+        "loops": [
+          "room"
+        ],
+        "started": 35,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "HARD",
+        "humanSpeed": 0.95,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -21.4,
+        "z": 3.6000000000000014,
+        "animation": "Idle",
+        "mixer": 1.5092999999523156,
+        "hairTime": 0.007,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 50,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 17.800000000000004,
+        "z": -7.6,
+        "animation": "Walk",
+        "mixer": 2.1786999998092638,
+        "hairTime": 0.030700000047683713,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 62,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.52,
+        "evade": 6,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 11.400000000000006,
+        "z": 3.200000000000003,
+        "animation": "Walk",
+        "mixer": 2.870399999856957,
+        "hairTime": 0.007,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 74,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "HARD",
+        "humanSpeed": 0.52,
+        "evade": 7,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 13.800000000000004,
+        "z": 12.8,
+        "animation": "Walk",
+        "mixer": 3.509799999952334,
+        "hairTime": 0.0215,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 86,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      }
+    ],
+    "layouts": [
+      {
+        "width": 1455,
+        "height": 818,
+        "scrollWidth": 1455,
+        "clientWidth": 1455,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875
+          },
+          {
+            "top": 827.1875,
+            "bottom": 897.1875
+          }
+        ]
+      },
+      {
+        "width": 800,
+        "height": 450,
+        "scrollWidth": 800,
+        "clientWidth": 800,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 153.5
+          },
+          {
+            "top": 181.5,
+            "bottom": 1267.5
+          },
+          {
+            "top": 1295.5,
+            "bottom": 1542.5
+          },
+          {
+            "top": 1570.5,
+            "bottom": 1692.09375
+          }
+        ]
+      },
+      {
+        "width": 480,
+        "height": 640,
+        "scrollWidth": 480,
+        "clientWidth": 480,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 189.09375
+          },
+          {
+            "top": 217.09375,
+            "bottom": 1249.75
+          },
+          {
+            "top": 1277.75,
+            "bottom": 1524.75
+          },
+          {
+            "top": 1552.75,
+            "bottom": 1694.140625
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "failures": [],
+    "editorExport": "who-ate-my-rice-map-2026-10-15T02-13-53.json",
+    "editorRevision": {
+      "revision": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8"
+    },
+    "devEditor": {
+      "rows": 125,
+      "draftRestore": true,
+      "unsavedSaveRejected": true,
+      "export": true,
+      "mapUnchanged": true
+    },
+    "requests": [
+      "/",
+      "/@vite/client",
+      "/src/main.ts",
+      "/src/three/ThreeGame.ts",
+      "/src/style.css",
+      "/src/industrial-ui.css",
+      "/src/sheet-ui.css",
+      "/src/s13-ui.css",
+      "/src/game-ui.css",
+      "/src/faction-menu.css",
+      "/src/three/StartupView.ts",
+      "/src/three/MenuCreditsView.ts",
+      "/package.json",
+      "/node_modules/vite/dist/client/env.mjs",
+      "/node_modules/.vite/deps/three.js",
+      "/node_modules/.vite/deps/chunk-HDEMVUAG.js",
+      "/src/config/gameConfig.ts",
+      "/src/config/difficultyConfig.ts",
+      "/src/three/DifficultyView.ts",
+      "/src/systems/GameStateSystem.ts",
+      "/src/systems/RiceField.ts",
+      "/src/systems/SprintSystem.ts",
+      "/src/systems/DoorSystem.ts",
+      "/src/systems/DeepSeekDoorLockPenalty.ts",
+      "/src/systems/HumanDoorSkill.ts",
+      "/src/systems/PulseLockSystem.ts",
+      "/src/three/PulseLockView.ts",
+      "/src/systems/PerceptionSystem.ts",
+      "/src/systems/RuntimeDebugOverrides.ts",
+      "/src/systems/DevBRuntimeBinding.ts",
+      "/src/systems/DevBParamPersistence.ts",
+      "/src/systems/DevBParamStore.ts",
+      "/src/three/DevBDebug.ts",
+      "/src/systems/HumanAIController.ts",
+      "/src/systems/DeepSeekAIController.ts",
+      "/src/systems/AILogCollector.ts",
+      "/src/systems/MatchRandom.ts",
+      "/src/systems/HideSystem.ts",
+      "/src/systems/SkillCooldown.ts",
+      "/src/systems/SkillGates.ts",
+      "/src/systems/HideInteractionArbitration.ts",
+      "/src/three/InteractionPrompt.ts",
+      "/src/systems/DeepSeekVisualTarget.ts",
+      "/src/systems/HumanSearchSkill.ts",
+      "/src/systems/HumanHideSearchResolution.ts",
+      "/src/systems/HideTargetResolution.ts",
+      "/src/systems/RiceTraceClues.ts",
+      "/src/systems/DeepSeekHideCandidates.ts",
+      "/src/systems/DeepSeekHideResolution.ts",
+      "/src/three/HideSearchView.ts",
+      "/src/three/map/MapApplicationPrecheck.ts",
+      "/src/three/AISafetyPathView.ts",
+      "/src/systems/HumanStillness.ts",
+      "/src/systems/CharacterAction.ts",
+      "/src/systems/NavigationSystem.ts",
+      "/src/three/CollisionWorld.ts",
+      "/src/three/DoorView.ts",
+      "/src/three/InteriorShadowView.ts",
+      "/src/three/CharacterActionView.ts",
+      "/src/three/DebugDetailsPanel.ts",
+      "/src/three/InputManager.ts",
+      "/src/three/RiceView.ts",
+      "/src/three/RiceTraceView.ts",
+      "/src/three/SoundVisualView.ts",
+      "/src/three/RoundShortcuts.ts",
+      "/src/three/CaptureZone.ts",
+      "/src/three/CameraRelativeMovement.ts",
+      "/src/three/AlphaPresentation.ts",
+      "/src/three/AlphaHudView.ts",
+      "/src/three/GameAudio.ts",
+      "/src/three/AudioSettingsView.ts",
+      "/src/three/GameFeedback.ts",
+      "/src/three/LocalControl.ts",
+      "/src/three/GameUiLayout.ts",
+      "/src/three/DevBHumanHideObservation.ts",
+      "/src/three/map/MapBuilder.ts",
+      "/src/three/SceneCameraDepth.ts",
+      "/src/three/SceneEditor.ts",
+      "/src/three/map/MapEditModel.ts",
+      "/src/three/map/MapLayoutStore.ts",
+      "/src/systems/DevFreezeSystem.ts",
+      "/src/three/map/apartmentMap.ts",
+      "/src/systems/RiceSystem.ts",
+      "/src/systems/DevBObserver.ts",
+      "/src/three/DevBPanel.ts",
+      "/src/three/DevBView.ts",
+      "/src/systems/HumanTraceTracking.ts",
+      "/src/systems/HideSearchCandidates.ts",
+      "/src/systems/HumanHideSearchStance.ts",
+      "/src/systems/HumanSearchTuning.ts",
+      "/src/three/map/HideInteractionRegion.ts",
+      "/src/three/map/RotatedRect.ts",
+      "/src/three/DoorVisualGeometry.ts",
+      "/src/three/DeepSeekGlbModel.ts",
+      "/src/three/DeepSeekAnimation.ts",
+      "/src/three/DeepSeekHairMotion.ts",
+      "/src/three/RiceBagModel.ts",
+      "/node_modules/.vite/deps/three_addons_utils_BufferGeometryUtils__js.js",
+      "/src/three/DeepSeekMaidModel.ts",
+      "/src/three/StorageFurnitureVisual.ts",
+      "/src/three/LaundryFurnitureVisual.ts",
+      "/src/three/SecondBedroomVisual.ts",
+      "/src/three/KitchenFurnitureVisual.ts",
+      "/src/three/BalconyFurnitureVisual.ts",
+      "/src/three/MainBedroomVisual.ts",
+      "/src/three/EntryFurnitureVisual.ts",
+      "/src/three/BathroomFurnitureVisual.ts",
+      "/src/three/HomeGymVisual.ts",
+      "/src/three/map/ClosedExteriorDoors.ts",
+      "/src/three/map/GarageGround.ts",
+      "/src/three/ResidentialExterior.ts",
+      "/src/three/SceneEditorView.ts",
+      "/src/three/SceneEditorPanel.ts",
+      "/src/three/map/sceneLayout.json",
+      "/src/systems/DevBHelpText.ts",
+      "/node_modules/.vite/deps/three_addons_loaders_GLTFLoader__js.js",
+      "/node_modules/.vite/deps/three_addons_utils_SkeletonUtils__js.js",
+      "/node_modules/.vite/deps/chunk-RPFTELOG.js",
+      "/src/three/CommunityCourtView.ts",
+      "/node_modules/.vite/deps/chunk-5HKOGOUH.js",
+      "/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "/assets/props/rice-bag/rice-bag.glb",
+      "/__dev/scene-layout",
+      "/assets/audio/click.ogg",
+      "/assets/audio/countdown.ogg",
+      "/assets/audio/start.ogg",
+      "/assets/audio/menu.ogg",
+      "/assets/audio/game.ogg",
+      "/assets/audio/room.ogg",
+      "/assets/ui/portraits/deepseek-normal.png",
+      "/assets/ui/portraits/human-guardian-v1.webp",
+      "/ui/faction-name-gradient-clean.png",
+      "/assets/audio/hover.ogg",
+      "/assets/audio/confirm.ogg",
+      "/ui/hud/rice-bowl.png",
+      "/assets/audio/countdownLast.ogg",
+      "/assets/audio/back.ogg",
+      "/assets/audio/chase.ogg"
+    ],
+    "modelHashes": [
+      {
+        "url": "http://127.0.0.1:5173/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026"
+      }
+    ],
+    "responses": [
+      {
+        "url": "http://127.0.0.1:5173/",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/main.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/@vite/client",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/industrial-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/style.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/s13-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/sheet-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/game-ui.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/faction-menu.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/StartupView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/MenuCreditsView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/package.json?import&raw",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/vite/dist/client/env.mjs",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/ThreeGame.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DifficultyView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/config/difficultyConfig.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RiceField.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/GameStateSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/config/gameConfig.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/SprintSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekDoorLockPenalty.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanDoorSkill.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DoorSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/PulseLockView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/PulseLockSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/PerceptionSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBRuntimeBinding.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RuntimeDebugOverrides.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBParamPersistence.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBParamStore.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBDebug.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanAIController.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-HDEMVUAG.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/MatchRandom.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/SkillCooldown.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/AILogCollector.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/SkillGates.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekAIController.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/InteractionPrompt.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideInteractionArbitration.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekVisualTarget.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanSearchSkill.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanHideSearchResolution.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideTargetResolution.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RiceTraceClues.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekHideCandidates.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DeepSeekHideResolution.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapApplicationPrecheck.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AISafetyPathView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/HideSearchView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanStillness.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/CharacterAction.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CollisionWorld.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DoorView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/InteriorShadowView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/NavigationSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CharacterActionView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DebugDetailsPanel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/InputManager.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RiceView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RiceTraceView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SoundVisualView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RoundShortcuts.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CaptureZone.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CameraRelativeMovement.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AlphaPresentation.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AudioSettingsView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/GameAudio.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/AlphaHudView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/GameFeedback.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/LocalControl.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/GameUiLayout.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBHumanHideObservation.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapBuilder.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneCameraDepth.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneEditor.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevFreezeSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapLayoutStore.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/MapEditModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/apartmentMap.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/RiceSystem.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBObserver.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBPanel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HideSearchCandidates.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanHideSearchStance.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanSearchTuning.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DevBView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/HumanTraceTracking.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/HideInteractionRegion.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DoorVisualGeometry.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/RotatedRect.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekGlbModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekAnimation.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekHairMotion.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/RiceBagModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three_addons_utils_BufferGeometryUtils__js.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/DeepSeekMaidModel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/StorageFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/LaundryFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SecondBedroomVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/KitchenFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/MainBedroomVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/BalconyFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/EntryFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/BathroomFurnitureVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/HomeGymVisual.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/ClosedExteriorDoors.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/GarageGround.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/map/sceneLayout.json?import",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/ResidentialExterior.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneEditorPanel.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/SceneEditorView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/systems/DevBHelpText.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three_addons_utils_SkeletonUtils__js.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/three_addons_loaders_GLTFLoader__js.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-RPFTELOG.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/src/three/CommunityCourtView.ts",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/node_modules/.vite/deps/chunk-5HKOGOUH.js?v=3a67331d",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/ui/portraits/deepseek-normal.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/ui/portraits/human-guardian-v1.webp",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/ui/faction-name-gradient-clean.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/props/rice-bag/rice-bag.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/__dev/scene-layout",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/hover.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/ui/hud/rice-bowl.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/confirm.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/countdownLast.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/__dev/scene-layout",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/back.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:5173/assets/audio/chase.ogg",
+        "status": 200
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "environment": "production",
+    "url": "http://127.0.0.1:4173/",
+    "combinations": [
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 23.800000000000004,
+        "z": 11.600000000000001,
+        "animation": "Idle",
+        "mixer": 0.03939999985694885,
+        "hairTime": 0.03939999985694885,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 11,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.78,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 11.400000000000006,
+        "z": 3.200000000000003,
+        "animation": "Idle",
+        "mixer": 0.7361999998092654,
+        "hairTime": 0.007,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 23,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "HARD",
+        "humanSpeed": 0.95,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 11.400000000000006,
+        "z": 3.200000000000003,
+        "animation": "Idle",
+        "mixer": 1.4560999999046296,
+        "hairTime": 0.051200000047683714,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 35,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "EASY",
+        "humanSpeed": 0.52,
+        "evade": 5,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 23.800000000000004,
+        "z": -0.3999999999999986,
+        "animation": "Walk",
+        "mixer": 2.130499999999995,
+        "hairTime": 0.031200000047683717,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 47,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "NORMAL",
+        "humanSpeed": 0.52,
+        "evade": 6,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": 11.400000000000006,
+        "z": 3.200000000000003,
+        "animation": "Walk",
+        "mixer": 2.8145999999046403,
+        "hairTime": 0.007,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 59,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "HARD",
+        "humanSpeed": 0.52,
+        "evade": 7,
+        "rice": 5,
+        "riceMs": 30000,
+        "furniture": 110,
+        "hides": 15,
+        "skinned": 1,
+        "meshes": 1135,
+        "x": -0.1999999999999993,
+        "z": -3.1999999999999993,
+        "animation": "Walk",
+        "mixer": 3.439599999666232,
+        "hairTime": 0.007099999904632569,
+        "hairJoints": 6,
+        "audioState": "running",
+        "music": "game",
+        "loops": [
+          "room",
+          "music"
+        ],
+        "started": 71,
+        "moved": true,
+        "animationAdvanced": true,
+        "audioStarted": true,
+        "pauseResume": true,
+        "settings": true
+      }
+    ],
+    "layouts": [
+      {
+        "width": 1455,
+        "height": 818,
+        "scrollWidth": 1455,
+        "clientWidth": 1455,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875
+          },
+          {
+            "top": 827.1875,
+            "bottom": 897.1875
+          }
+        ]
+      },
+      {
+        "width": 800,
+        "height": 450,
+        "scrollWidth": 800,
+        "clientWidth": 800,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 153.5
+          },
+          {
+            "top": 181.5,
+            "bottom": 1267.5
+          },
+          {
+            "top": 1295.5,
+            "bottom": 1542.5
+          },
+          {
+            "top": 1570.5,
+            "bottom": 1692.09375
+          }
+        ]
+      },
+      {
+        "width": 480,
+        "height": 640,
+        "scrollWidth": 480,
+        "clientWidth": 480,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 189.09375
+          },
+          {
+            "top": 217.09375,
+            "bottom": 1249.75
+          },
+          {
+            "top": 1277.75,
+            "bottom": 1524.75
+          },
+          {
+            "top": 1552.75,
+            "bottom": 1694.140625
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "consoleErrors": [],
+    "failures": [],
+    "requests": [
+      "/",
+      "/assets/index-BxxTESvh.js",
+      "/assets/index-CRuMYSHT.css",
+      "/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "/assets/props/rice-bag/rice-bag.glb",
+      "/assets/audio/click.ogg",
+      "/assets/audio/countdown.ogg",
+      "/assets/audio/start.ogg",
+      "/assets/audio/menu.ogg",
+      "/assets/audio/game.ogg",
+      "/assets/audio/room.ogg",
+      "/assets/ui/portraits/deepseek-normal.png",
+      "/assets/ui/portraits/human-guardian-v1.webp",
+      "/ui/faction-name-gradient-clean.png",
+      "/assets/audio/hover.ogg",
+      "/assets/audio/confirm.ogg",
+      "/ui/hud/rice-bowl.png",
+      "/assets/audio/countdownLast.ogg",
+      "/assets/audio/back.ogg"
+    ],
+    "modelHashes": [
+      {
+        "url": "http://127.0.0.1:4173/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026"
+      }
+    ],
+    "responses": [
+      {
+        "url": "http://127.0.0.1:4173/",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/index-CRuMYSHT.css",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/index-BxxTESvh.js",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/ui/portraits/deepseek-normal.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/ui/portraits/human-guardian-v1.webp",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/ui/faction-name-gradient-clean.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/props/rice-bag/rice-bag.glb",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/click.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/menu.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/countdown.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/start.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/game.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/room.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/hover.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/ui/hud/rice-bowl.png",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/confirm.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/countdownLast.ogg",
+        "status": 200
+      },
+      {
+        "url": "http://127.0.0.1:4173/assets/audio/back.ogg",
+        "status": 200
+      }
+    ]
+  }
+]

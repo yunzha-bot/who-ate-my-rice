@@ -1,0 +1,254 @@
+[
+  {
+    "id": "throw_balcony_1",
+    "roomId": "balcony",
+    "kind": "VASE",
+    "x": 2.764,
+    "z": -18.408
+  },
+  {
+    "id": "throw_balcony_2",
+    "roomId": "balcony",
+    "kind": "BOX",
+    "x": -0.669,
+    "z": -18.312
+  },
+  {
+    "id": "throw_main_bedroom_1",
+    "roomId": "main_bedroom",
+    "kind": "VASE",
+    "x": -25.632,
+    "z": -3.084
+  },
+  {
+    "id": "throw_main_bedroom_2",
+    "roomId": "main_bedroom",
+    "kind": "BOX",
+    "x": -25.122,
+    "z": -5.513
+  },
+  {
+    "id": "throw_closet_1",
+    "roomId": "closet",
+    "kind": "BOX",
+    "x": -13.029,
+    "z": -7.399
+  },
+  {
+    "id": "throw_closet_2",
+    "roomId": "closet",
+    "kind": "BASIN",
+    "x": -13.623,
+    "z": -11.974
+  },
+  {
+    "id": "throw_living_1",
+    "roomId": "living",
+    "kind": "VASE",
+    "x": 2.442,
+    "z": -8.023
+  },
+  {
+    "id": "throw_living_2",
+    "roomId": "living",
+    "kind": "BOX",
+    "x": -3.809,
+    "z": -11.385
+  },
+  {
+    "id": "throw_kitchen_1",
+    "roomId": "kitchen",
+    "kind": "BASIN",
+    "x": 9.564,
+    "z": -9.032
+  },
+  {
+    "id": "throw_kitchen_2",
+    "roomId": "kitchen",
+    "kind": "BOX",
+    "x": 12.697,
+    "z": -11.986
+  },
+  {
+    "id": "throw_storage_1",
+    "roomId": "storage",
+    "kind": "BOX",
+    "x": 17.935,
+    "z": -11.235
+  },
+  {
+    "id": "throw_storage_2",
+    "roomId": "storage",
+    "kind": "BASIN",
+    "x": 17.171,
+    "z": -4.597
+  },
+  {
+    "id": "throw_dining_1",
+    "roomId": "dining",
+    "kind": "VASE",
+    "x": 12.96,
+    "z": 0.491
+  },
+  {
+    "id": "throw_dining_2",
+    "roomId": "dining",
+    "kind": "BOX",
+    "x": 8.751,
+    "z": -0.33
+  },
+  {
+    "id": "throw_bathroom_1",
+    "roomId": "bathroom",
+    "kind": "BASIN",
+    "x": -22.895,
+    "z": 2.142
+  },
+  {
+    "id": "throw_bathroom_2",
+    "roomId": "bathroom",
+    "kind": "BOX",
+    "x": -27.2,
+    "z": 1.3
+  },
+  {
+    "id": "throw_hall_1",
+    "roomId": "hall",
+    "kind": "BOX",
+    "x": -12.9,
+    "z": -2.7
+  },
+  {
+    "id": "throw_hall_2",
+    "roomId": "hall",
+    "kind": "BASIN",
+    "x": -11.253,
+    "z": -0.039
+  },
+  {
+    "id": "throw_second_bedroom_1",
+    "roomId": "second_bedroom",
+    "kind": "VASE",
+    "x": -25.7,
+    "z": 7.8
+  },
+  {
+    "id": "throw_second_bedroom_2",
+    "roomId": "second_bedroom",
+    "kind": "BOX",
+    "x": -24.1,
+    "z": 7.8
+  },
+  {
+    "id": "throw_study_1",
+    "roomId": "study",
+    "kind": "BOX",
+    "x": -13.675,
+    "z": 10.634
+  },
+  {
+    "id": "throw_study_2",
+    "roomId": "study",
+    "kind": "BASIN",
+    "x": -7.083,
+    "z": 11.847
+  },
+  {
+    "id": "throw_entry_1",
+    "roomId": "entry",
+    "kind": "VASE",
+    "x": 6.513,
+    "z": 8.819
+  },
+  {
+    "id": "throw_entry_2",
+    "roomId": "entry",
+    "kind": "BOX",
+    "x": -1.066,
+    "z": 10.695
+  },
+  {
+    "id": "throw_north_balcony_1",
+    "roomId": "north_balcony",
+    "kind": "VASE",
+    "x": 11.686,
+    "z": -18.38
+  },
+  {
+    "id": "throw_north_balcony_2",
+    "roomId": "north_balcony",
+    "kind": "BOX",
+    "x": 16.892,
+    "z": -17.791
+  },
+  {
+    "id": "throw_south_hall_1",
+    "roomId": "south_hall",
+    "kind": "BOX",
+    "x": 13.389,
+    "z": 16.13
+  },
+  {
+    "id": "throw_south_hall_2",
+    "roomId": "east_hall",
+    "kind": "BASIN",
+    "x": 17.944,
+    "z": 12.686
+  },
+  {
+    "id": "throw_east_hall_1",
+    "roomId": "east_hall",
+    "kind": "BOX",
+    "x": 16.8,
+    "z": 2.1
+  },
+  {
+    "id": "throw_east_hall_2",
+    "roomId": "east_hall",
+    "kind": "BASIN",
+    "x": 16.8,
+    "z": 5.7
+  },
+  {
+    "id": "throw_guest_room_1",
+    "roomId": "guest_room",
+    "kind": "VASE",
+    "x": 25.19,
+    "z": -6.224
+  },
+  {
+    "id": "throw_guest_room_2",
+    "roomId": "guest_room",
+    "kind": "BOX",
+    "x": 21.244,
+    "z": -10.44
+  },
+  {
+    "id": "throw_utility_1",
+    "roomId": "utility",
+    "kind": "BASIN",
+    "x": 22.11,
+    "z": 0.414
+  },
+  {
+    "id": "throw_utility_2",
+    "roomId": "utility",
+    "kind": "BOX",
+    "x": 22.492,
+    "z": -1.337
+  },
+  {
+    "id": "throw_garage_1",
+    "roomId": "garage",
+    "kind": "BASIN",
+    "x": 20.8,
+    "z": 5.3
+  },
+  {
+    "id": "throw_garage_2",
+    "roomId": "garage",
+    "kind": "BOX",
+    "x": 20.8,
+    "z": 9.7
+  }
+]

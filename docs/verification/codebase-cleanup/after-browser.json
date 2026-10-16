@@ -1,0 +1,1144 @@
+[
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "url": "http://127.0.0.1:5173/",
+    "menu": [
+      {
+        "width": 1455,
+        "height": 818,
+        "scrollWidth": 1455,
+        "clientWidth": 1455,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875,
+            "width": 900,
+            "height": 93.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875,
+            "width": 900,
+            "height": 513
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875,
+            "width": 900,
+            "height": 97
+          },
+          {
+            "top": 827.1875,
+            "bottom": 897.1875,
+            "width": 1455,
+            "height": 70
+          }
+        ]
+      },
+      {
+        "width": 1067,
+        "height": 600,
+        "scrollWidth": 1067,
+        "clientWidth": 1067,
+        "areas": [
+          {
+            "top": 32,
+            "bottom": 112.9375,
+            "width": 900,
+            "height": 80.9375
+          },
+          {
+            "top": 140.9375,
+            "bottom": 653.9375,
+            "width": 900,
+            "height": 513
+          },
+          {
+            "top": 681.9375,
+            "bottom": 778.9375,
+            "width": 900,
+            "height": 97
+          },
+          {
+            "top": 806.9375,
+            "bottom": 876.9375,
+            "width": 1067,
+            "height": 70
+          }
+        ]
+      },
+      {
+        "width": 800,
+        "height": 450,
+        "scrollWidth": 800,
+        "clientWidth": 800,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 153.5,
+            "width": 752,
+            "height": 129.5
+          },
+          {
+            "top": 181.5,
+            "bottom": 1267.5,
+            "width": 480,
+            "height": 1086
+          },
+          {
+            "top": 1295.5,
+            "bottom": 1542.5,
+            "width": 752,
+            "height": 247
+          },
+          {
+            "top": 1570.5,
+            "bottom": 1692.09375,
+            "width": 800,
+            "height": 121.59375
+          }
+        ]
+      },
+      {
+        "width": 480,
+        "height": 640,
+        "scrollWidth": 480,
+        "clientWidth": 480,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 189.09375,
+            "width": 448,
+            "height": 165.09375
+          },
+          {
+            "top": 217.09375,
+            "bottom": 1249.75,
+            "width": 448,
+            "height": 1032.65625
+          },
+          {
+            "top": 1277.75,
+            "bottom": 1524.75,
+            "width": 448,
+            "height": 247
+          },
+          {
+            "top": 1552.75,
+            "bottom": 1694.140625,
+            "width": 480,
+            "height": 141.390625
+          }
+        ]
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "scrollWidth": 1920,
+        "clientWidth": 1920,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875,
+            "width": 900,
+            "height": 93.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875,
+            "width": 900,
+            "height": 513
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875,
+            "width": 900,
+            "height": 97
+          },
+          {
+            "top": 1010,
+            "bottom": 1080,
+            "width": 1920,
+            "height": 70
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "logs": [],
+    "combos": [
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "EASY",
+        "humanMultiplier": 0.52,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": -20.2,
+          "z": -6.399999999999999
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "NORMAL",
+        "humanMultiplier": 0.78,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 17.800000000000004,
+          "z": 9.600000000000001
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "HARD",
+        "humanMultiplier": 0.95,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 13.800000000000004,
+          "z": 12.8
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "EASY",
+        "humanMultiplier": 0.52,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 4.600000000000001,
+          "z": 12
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "NORMAL",
+        "humanMultiplier": 0.52,
+        "evade": 6,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 23.800000000000004,
+          "z": 11.600000000000001
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "HARD",
+        "humanMultiplier": 0.52,
+        "evade": 7,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 11.400000000000006,
+          "z": 3.200000000000003
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      }
+    ],
+    "pause": {
+      ".game-overlay": {
+        "display": "block",
+        "position": "fixed",
+        "width": "480px",
+        "height": "568.859px",
+        "padding": "30px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "21px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgb(250, 247, 239)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "26px",
+        "box-shadow": "rgba(34, 56, 62, 0.22) 0px 24px 80px 0px, rgba(35, 60, 64, 0.32) 0px 0px 0px 1366px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "hidden auto",
+        "transform": "matrix(1, 0, 0, 1, -240, -284.43)",
+        "z-index": "150"
+      },
+      ".pause-actions": {
+        "display": "grid",
+        "position": "relative",
+        "width": "418px",
+        "height": "277px",
+        "padding": "0px",
+        "margin": "20px 0px 0px",
+        "gap": "8px",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "21px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "0px none rgb(41, 59, 64)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "1"
+      },
+      ".pause-actions button": {
+        "display": "block",
+        "position": "relative",
+        "width": "418px",
+        "height": "49px",
+        "padding": "13px 18px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "14px",
+        "font-weight": "600",
+        "line-height": "21px",
+        "color": "rgb(255, 255, 255)",
+        "background-color": "rgb(85, 149, 166)",
+        "background-image": "none",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "border-radius": "12px",
+        "box-shadow": "none",
+        "outline": "rgb(255, 255, 255) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".overlay-kicker": {
+        "display": "flex",
+        "position": "static",
+        "width": "418px",
+        "height": "15px",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "8px",
+        "font-size": "10px",
+        "font-weight": "400",
+        "line-height": "15px",
+        "color": "rgb(107, 122, 121)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "0px none rgb(107, 122, 121)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(107, 122, 121) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".overlay-stats": {
+        "display": "block",
+        "position": "static",
+        "width": "418px",
+        "height": "40px",
+        "padding": "10px 0px",
+        "margin": "10px 0px 0px",
+        "gap": "normal",
+        "font-size": "12px",
+        "font-weight": "400",
+        "line-height": "18px",
+        "color": "rgb(107, 122, 121)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(107, 122, 121) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".alpha-score": {
+        "display": "grid",
+        "position": "absolute",
+        "width": "310px",
+        "height": "auto",
+        "padding": "12px 15px",
+        "margin": "0px",
+        "gap": "8px 14px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(250, 247, 239, 0.91)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "15px",
+        "box-shadow": "rgba(37, 61, 64, 0.125) 0px 14px 40px 0px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".pulse-lock": {
+        "display": "none",
+        "position": "absolute",
+        "width": "330px",
+        "height": "auto",
+        "padding": "22px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "19.5px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgb(250, 247, 239)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "22px",
+        "box-shadow": "rgba(37, 61, 64, 0.125) 0px 14px 40px 0px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "11"
+      }
+    },
+    "settings": {
+      ".game-overlay": {
+        "display": "block",
+        "position": "fixed",
+        "width": "480px",
+        "height": "707.859px",
+        "padding": "30px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "21px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgb(250, 247, 239)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "26px",
+        "box-shadow": "rgba(34, 56, 62, 0.22) 0px 24px 80px 0px, rgba(35, 60, 64, 0.32) 0px 0px 0px 1366px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "hidden auto",
+        "transform": "matrix(1, 0, 0, 1, -240, -353.93)",
+        "z-index": "150"
+      },
+      ".audio-settings": {
+        "display": "block",
+        "position": "relative",
+        "width": "418px",
+        "height": "476px",
+        "padding": "8px 0px 0px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "0px none rgb(41, 59, 64)",
+        "border-radius": "16px",
+        "box-shadow": "none",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "1"
+      },
+      ".audio-settings label": {
+        "display": "grid",
+        "position": "static",
+        "width": "418px",
+        "height": "52px",
+        "padding": "0px",
+        "margin": "9px 0px 0px",
+        "gap": "12px",
+        "font-size": "12px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".audio-settings input[type=\"range\"]": {
+        "display": "block",
+        "position": "static",
+        "width": "120px",
+        "height": "5px",
+        "padding": "0px",
+        "margin": "2px",
+        "gap": "normal",
+        "font-size": "13.3333px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(16, 16, 16)",
+        "background-color": "rgb(255, 255, 255)",
+        "background-image": "none",
+        "border": "0px none rgb(16, 16, 16)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(16, 16, 16) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".audio-settings-back": {
+        "display": "block",
+        "position": "static",
+        "width": "418px",
+        "height": "39px",
+        "padding": "10px 14px",
+        "margin": "12px 0px 0px",
+        "gap": "normal",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(255, 255, 255)",
+        "background-color": "rgb(85, 149, 166)",
+        "background-image": "none",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "border-radius": "10px",
+        "box-shadow": "none",
+        "outline": "rgb(255, 255, 255) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      }
+    },
+    "devB": {
+      "saved": {
+        "ok": true,
+        "applied": 1,
+        "message": "已保存 1 项调试参数到本地预设（2026-10-15 01:28:57）"
+      },
+      "preset": {
+        "ok": true,
+        "preset": {
+          "format": "who-ate-my-rice/dev-b-params",
+          "version": 1,
+          "savedAt": "2026-10-15T01:28:57.067Z",
+          "params": {
+            "movement.humanAiMultiplier": 0.61
+          }
+        }
+      }
+    },
+    "devBAfterReload": {
+      "before": 0.52,
+      "result": {
+        "ok": true,
+        "applied": 1,
+        "message": "已恢复本地预设的 1 项覆盖（验证隔离预设，保存于 2026-10-15 01:28:57）"
+      },
+      "loaded": 0.61
+    },
+    "disposal": {
+      "before": {
+        "listeners": 1,
+        "safetyLines": 2,
+        "rice": 5
+      },
+      "after": {
+        "listeners": 0,
+        "safetyLines": 0,
+        "rice": 0,
+        "apartmentAttached": false,
+        "canvasAttached": false,
+        "menuAttached": false
+      }
+    }
+  },
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "url": "http://127.0.0.1:5173/",
+    "menu": [
+      {
+        "width": 1455,
+        "height": 818,
+        "scrollWidth": 1455,
+        "clientWidth": 1455,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875,
+            "width": 900,
+            "height": 93.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875,
+            "width": 900,
+            "height": 513
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875,
+            "width": 900,
+            "height": 97
+          },
+          {
+            "top": 827.1875,
+            "bottom": 897.1875,
+            "width": 1455,
+            "height": 70
+          }
+        ]
+      },
+      {
+        "width": 1067,
+        "height": 600,
+        "scrollWidth": 1067,
+        "clientWidth": 1067,
+        "areas": [
+          {
+            "top": 32,
+            "bottom": 112.9375,
+            "width": 900,
+            "height": 80.9375
+          },
+          {
+            "top": 140.9375,
+            "bottom": 653.9375,
+            "width": 900,
+            "height": 513
+          },
+          {
+            "top": 681.9375,
+            "bottom": 778.9375,
+            "width": 900,
+            "height": 97
+          },
+          {
+            "top": 806.9375,
+            "bottom": 876.9375,
+            "width": 1067,
+            "height": 70
+          }
+        ]
+      },
+      {
+        "width": 800,
+        "height": 450,
+        "scrollWidth": 800,
+        "clientWidth": 800,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 153.5,
+            "width": 752,
+            "height": 129.5
+          },
+          {
+            "top": 181.5,
+            "bottom": 1267.5,
+            "width": 480,
+            "height": 1086
+          },
+          {
+            "top": 1295.5,
+            "bottom": 1542.5,
+            "width": 752,
+            "height": 247
+          },
+          {
+            "top": 1570.5,
+            "bottom": 1692.09375,
+            "width": 800,
+            "height": 121.59375
+          }
+        ]
+      },
+      {
+        "width": 480,
+        "height": 640,
+        "scrollWidth": 480,
+        "clientWidth": 480,
+        "areas": [
+          {
+            "top": 24,
+            "bottom": 189.09375,
+            "width": 448,
+            "height": 165.09375
+          },
+          {
+            "top": 217.09375,
+            "bottom": 1249.75,
+            "width": 448,
+            "height": 1032.65625
+          },
+          {
+            "top": 1277.75,
+            "bottom": 1524.75,
+            "width": 448,
+            "height": 247
+          },
+          {
+            "top": 1552.75,
+            "bottom": 1694.140625,
+            "width": 480,
+            "height": 141.390625
+          }
+        ]
+      },
+      {
+        "width": 1920,
+        "height": 1080,
+        "scrollWidth": 1920,
+        "clientWidth": 1920,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.1875,
+            "width": 900,
+            "height": 93.1875
+          },
+          {
+            "top": 161.1875,
+            "bottom": 674.1875,
+            "width": 900,
+            "height": 513
+          },
+          {
+            "top": 702.1875,
+            "bottom": 799.1875,
+            "width": 900,
+            "height": 97
+          },
+          {
+            "top": 1010,
+            "bottom": 1080,
+            "width": 1920,
+            "height": 70
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "logs": [],
+    "combos": [
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "EASY",
+        "humanMultiplier": 0.52,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": -0.1999999999999993,
+          "z": -16.4
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "NORMAL",
+        "humanMultiplier": 0.78,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": -11.399999999999999,
+          "z": -8.399999999999999
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "difficulty": "HARD",
+        "humanMultiplier": 0.95,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 11.800000000000004,
+          "z": -8.799999999999999
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "EASY",
+        "humanMultiplier": 0.52,
+        "evade": 5,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 23.800000000000004,
+          "z": -12
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "NORMAL",
+        "humanMultiplier": 0.52,
+        "evade": 6,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 11.400000000000006,
+          "z": 3.200000000000003
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      },
+      {
+        "faction": "HUMAN",
+        "difficulty": "HARD",
+        "humanMultiplier": 0.52,
+        "evade": 7,
+        "riceMs": 30000,
+        "riceCount": 5,
+        "position": {
+          "x": 11.800000000000004,
+          "z": -8.799999999999999
+        },
+        "skinnedMeshes": 1,
+        "moved": true,
+        "pauseSettings": true
+      }
+    ],
+    "pause": {
+      ".game-overlay": {
+        "display": "block",
+        "position": "fixed",
+        "width": "480px",
+        "height": "568.859px",
+        "padding": "30px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "21px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgb(250, 247, 239)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "26px",
+        "box-shadow": "rgba(34, 56, 62, 0.22) 0px 24px 80px 0px, rgba(35, 60, 64, 0.32) 0px 0px 0px 1366px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "hidden auto",
+        "transform": "matrix(1, 0, 0, 1, -240, -284.43)",
+        "z-index": "150"
+      },
+      ".pause-actions": {
+        "display": "grid",
+        "position": "relative",
+        "width": "418px",
+        "height": "277px",
+        "padding": "0px",
+        "margin": "20px 0px 0px",
+        "gap": "8px",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "21px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "0px none rgb(41, 59, 64)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "1"
+      },
+      ".pause-actions button": {
+        "display": "block",
+        "position": "relative",
+        "width": "418px",
+        "height": "49px",
+        "padding": "13px 18px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "14px",
+        "font-weight": "600",
+        "line-height": "21px",
+        "color": "rgb(255, 255, 255)",
+        "background-color": "rgb(85, 149, 166)",
+        "background-image": "none",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "border-radius": "12px",
+        "box-shadow": "none",
+        "outline": "rgb(255, 255, 255) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".overlay-kicker": {
+        "display": "flex",
+        "position": "static",
+        "width": "418px",
+        "height": "15px",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "8px",
+        "font-size": "10px",
+        "font-weight": "400",
+        "line-height": "15px",
+        "color": "rgb(107, 122, 121)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "0px none rgb(107, 122, 121)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(107, 122, 121) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".overlay-stats": {
+        "display": "block",
+        "position": "static",
+        "width": "418px",
+        "height": "40px",
+        "padding": "10px 0px",
+        "margin": "10px 0px 0px",
+        "gap": "normal",
+        "font-size": "12px",
+        "font-weight": "400",
+        "line-height": "18px",
+        "color": "rgb(107, 122, 121)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(107, 122, 121) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".alpha-score": {
+        "display": "grid",
+        "position": "absolute",
+        "width": "310px",
+        "height": "auto",
+        "padding": "12px 15px",
+        "margin": "0px",
+        "gap": "8px 14px",
+        "font-size": "16px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(250, 247, 239, 0.91)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "15px",
+        "box-shadow": "rgba(37, 61, 64, 0.125) 0px 14px 40px 0px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".pulse-lock": {
+        "display": "none",
+        "position": "absolute",
+        "width": "330px",
+        "height": "auto",
+        "padding": "22px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "19.5px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgb(250, 247, 239)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "22px",
+        "box-shadow": "rgba(37, 61, 64, 0.125) 0px 14px 40px 0px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "11"
+      }
+    },
+    "settings": {
+      ".game-overlay": {
+        "display": "block",
+        "position": "fixed",
+        "width": "480px",
+        "height": "707.859px",
+        "padding": "30px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "21px",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgb(250, 247, 239)",
+        "background-image": "none",
+        "border": "1px solid rgba(255, 255, 255, 0.69)",
+        "border-radius": "26px",
+        "box-shadow": "rgba(34, 56, 62, 0.22) 0px 24px 80px 0px, rgba(35, 60, 64, 0.32) 0px 0px 0px 1366px",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "hidden auto",
+        "transform": "matrix(1, 0, 0, 1, -240, -353.93)",
+        "z-index": "150"
+      },
+      ".audio-settings": {
+        "display": "block",
+        "position": "relative",
+        "width": "418px",
+        "height": "476px",
+        "padding": "8px 0px 0px",
+        "margin": "0px",
+        "gap": "normal",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "0px none rgb(41, 59, 64)",
+        "border-radius": "16px",
+        "box-shadow": "none",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "1"
+      },
+      ".audio-settings label": {
+        "display": "grid",
+        "position": "static",
+        "width": "418px",
+        "height": "52px",
+        "padding": "0px",
+        "margin": "9px 0px 0px",
+        "gap": "12px",
+        "font-size": "12px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(41, 59, 64)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "border": "",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(41, 59, 64) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".audio-settings input[type=\"range\"]": {
+        "display": "block",
+        "position": "static",
+        "width": "120px",
+        "height": "5px",
+        "padding": "0px",
+        "margin": "2px",
+        "gap": "normal",
+        "font-size": "13.3333px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(16, 16, 16)",
+        "background-color": "rgb(255, 255, 255)",
+        "background-image": "none",
+        "border": "0px none rgb(16, 16, 16)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "outline": "rgb(16, 16, 16) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      },
+      ".audio-settings-back": {
+        "display": "block",
+        "position": "static",
+        "width": "418px",
+        "height": "39px",
+        "padding": "10px 14px",
+        "margin": "12px 0px 0px",
+        "gap": "normal",
+        "font-size": "13px",
+        "font-weight": "400",
+        "line-height": "normal",
+        "color": "rgb(255, 255, 255)",
+        "background-color": "rgb(85, 149, 166)",
+        "background-image": "none",
+        "border": "1px solid rgba(0, 0, 0, 0)",
+        "border-radius": "10px",
+        "box-shadow": "none",
+        "outline": "rgb(255, 255, 255) none 3px",
+        "overflow": "visible",
+        "transform": "none",
+        "z-index": "auto"
+      }
+    },
+    "devB": {
+      "saved": {
+        "ok": true,
+        "applied": 1,
+        "message": "已保存 1 项调试参数到本地预设（2026-10-15 01:29:29）"
+      },
+      "preset": {
+        "ok": true,
+        "preset": {
+          "format": "who-ate-my-rice/dev-b-params",
+          "version": 1,
+          "savedAt": "2026-10-15T01:29:29.774Z",
+          "params": {
+            "movement.humanAiMultiplier": 0.61
+          }
+        }
+      }
+    },
+    "devBAfterReload": {
+      "before": 0.52,
+      "result": {
+        "ok": true,
+        "applied": 1,
+        "message": "已恢复本地预设的 1 项覆盖（验证隔离预设，保存于 2026-10-15 01:29:29）"
+      },
+      "loaded": 0.61
+    },
+    "disposal": {
+      "before": {
+        "listeners": 1,
+        "safetyLines": 2,
+        "rice": 5
+      },
+      "after": {
+        "listeners": 0,
+        "safetyLines": 0,
+        "rice": 0,
+        "apartmentAttached": false,
+        "canvasAttached": false,
+        "menuAttached": false
+      }
+    }
+  }
+]

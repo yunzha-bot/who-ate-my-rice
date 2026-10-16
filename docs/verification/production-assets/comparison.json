@@ -1,0 +1,36 @@
+{
+  "beforeBytes": 117535171,
+  "afterBytes": 67570763,
+  "removed": [
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v1.glb",
+      "bytes": 12491168,
+      "sha256": "7692599cb940f1108e949ac68042edf972ead45468e5f27c2c537d1865f188ce",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v2.glb",
+      "bytes": 12491164,
+      "sha256": "086e856b8bbc1a5ad44b0cb2cd55724c4bc5b7ac3f6ec7d40224f890ae0f90ec",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v3.glb",
+      "bytes": 12491164,
+      "sha256": "a76ce05b692927e3d1d14aa08d7f8a88e808470dcd8b3cb5235e5a8dc297ee7b",
+      "type": "models"
+    },
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v4.glb",
+      "bytes": 12490912,
+      "sha256": "2f9e2b4d02367fa3a76f280fdd2b13c6767cc89421ad7db96c22346b56293906",
+      "type": "models"
+    }
+  ],
+  "changed": [],
+  "added": [],
+  "protectedCount": 337,
+  "protectedChanged": [],
+  "firstRoundReportUnchanged": true,
+  "bCandidatesChanged": []
+}

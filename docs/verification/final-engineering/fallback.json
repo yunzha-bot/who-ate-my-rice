@@ -1,0 +1,82 @@
+[
+  {
+    "browser": "chrome",
+    "fallback": "v5",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "meshCount": 1,
+    "animations": 7,
+    "clip": "Idle",
+    "hashes": [
+      {
+        "file": "/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "file": "/assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb",
+        "sha256": "d4e67fff652aa42508311ab18422d33727c15e1b700f2daf0a6255f8651e5277"
+      }
+    ],
+    "errors": []
+  },
+  {
+    "browser": "chrome",
+    "fallback": "static",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "meshCount": 1,
+    "animations": 0,
+    "clip": null,
+    "hashes": [
+      {
+        "file": "/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "file": "/assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb",
+        "sha256": "e32ac3ccc3253487ee7c026ad7887d1d7b0bee0c9088f48cce25637e1f2f7528"
+      }
+    ],
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "fallback": "v5",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "meshCount": 1,
+    "animations": 7,
+    "clip": "Idle",
+    "hashes": [
+      {
+        "file": "/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "file": "/assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb",
+        "sha256": "d4e67fff652aa42508311ab18422d33727c15e1b700f2daf0a6255f8651e5277"
+      }
+    ],
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "fallback": "static",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "meshCount": 1,
+    "animations": 0,
+    "clip": null,
+    "hashes": [
+      {
+        "file": "/assets/props/rice-bag/rice-bag.glb",
+        "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+      },
+      {
+        "file": "/assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb",
+        "sha256": "e32ac3ccc3253487ee7c026ad7887d1d7b0bee0c9088f48cce25637e1f2f7528"
+      }
+    ],
+    "errors": []
+  }
+]

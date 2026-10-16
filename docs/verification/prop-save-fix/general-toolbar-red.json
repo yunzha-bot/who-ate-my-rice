@@ -1,0 +1,11 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:5183/",
+    "id": "throw_balcony_1",
+    "initialX": -6.4,
+    "requestedX": -6.39,
+    "afterGeneralApply": -6.4,
+    "afterSaveAndRefresh": -6.4
+  }
+]

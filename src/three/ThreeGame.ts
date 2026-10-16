@@ -13,7 +13,7 @@ import { PulseLockSystem, type PulseLockEntry } from '../systems/PulseLockSystem
 import { PulseLockView } from './PulseLockView';
 import { PerceptionGeometry, RiceTraceSystem, SoundEventSystem, VisionSystem,
   type SoundType } from '../systems/PerceptionSystem';
-import { RuntimeDebugOverrides, type RuntimeParamChange }
+import { RuntimeDebugOverrides }
   from '../systems/RuntimeDebugOverrides';
 import { DevBRuntimeBinding, effectiveSpeeds } from '../systems/DevBRuntimeBinding';
 import { DevBParamPersistence } from '../systems/DevBParamPersistence';
@@ -38,7 +38,7 @@ import { interactionPrompt } from './InteractionPrompt';
 import { nextDeepSeekVisualHeading, resolveDeepSeekVisualTarget, type DeepSeekVisualTarget }
   from '../systems/DeepSeekVisualTarget';
 import { HUMAN_SEARCH_CODE_TEXT, directionToHeadingRad, evaluateHumanSearch,
-  probeExposedFanTarget, wrapToPi, type ExposedFanProbe, type HumanSearchTarget }
+  probeExposedFanTarget, type ExposedFanProbe, type HumanSearchTarget }
   from '../systems/HumanSearchSkill';
 import { createHumanAiMapSnapshot, resolveHumanAiHideCheck,
   resolveHumanFurnitureSearch, HUMAN_HIDE_CHECK_CODE_TEXT,
@@ -78,9 +78,15 @@ import { GentleCameraFollow, HOME_PALETTE, homeFrustum } from './AlphaPresentati
 import { AlphaHudView } from './AlphaHudView.ts';
 import { DISABLED_AUDIO_CUES, GameAudio, worldAudioGain, type AudioCue, type MusicCue } from './GameAudio';
 import { AudioSettingsView } from './AudioSettingsView';
+import { MenuSettingsView } from './MenuSettingsView.ts';
 import { GameFeedback } from './GameFeedback';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
-import { populateFactionMenu, REPORT_MARKUP, updateResultPortrait } from './GameUiLayout';
+import { ThrowableSystem, type ThrowableSpawn, type ThrowActor, type ThrowPoint } from '../systems/ThrowableSystem.ts';
+import { ThrowableView, THROWABLE_NAMES } from './ThrowableView.ts';
+import throwableLayout from './map/throwableLayout.json';
+import { formatMatchTime, populateFactionMenu, populateRoundActions,
+  REPORT_MARKUP, updateResultPortrait } from './GameUiLayout';
+import { observeHumanHideSearch } from './DevBHumanHideObservation.ts';
 import { buildApartment, type ApartmentBuild } from './map/MapBuilder';
 import { fitOrthographicSceneDepth } from './SceneCameraDepth';
 import { SceneEditor, type CommittedMap } from './SceneEditor';
@@ -107,11 +113,13 @@ const PLAYER_SOUND_VISUAL_ENABLED: boolean = false;
 export class ThreeGame {
   private readonly runtime = new RuntimeDebugOverrides();
   private scene = new THREE.Scene();
-  private safetyPaths = new AISafetyPathView(this.scene, () => this.runtime.captureRadius);
+  private safetyPaths = import.meta.env.DEV ? new AISafetyPathView(this.scene, () => this.runtime.captureRadius) : null;
   private camera = new THREE.OrthographicCamera();
   private renderer = new THREE.WebGLRenderer({ antialias: true });
   private clock = new THREE.Clock();
   private input = new InputManager();
+  private readonly throwables = new ThrowableSystem(throwableLayout as ThrowableSpawn[]);
+  private readonly throwableView: ThrowableView;
   private control = new LocalControl();
   private readonly cameraOffset = new THREE.Vector3(12, 14, 12);
   private readonly cameraOrbit = new IsometricCameraOrbit(this.cameraOffset);
@@ -139,13 +147,13 @@ export class ThreeGame {
   private sound = new SoundEventSystem(this.runtime);
   private readonly audio = new GameAudio(typeof localStorage === 'undefined' ? null : localStorage);
   private audioSettings!: AudioSettingsView;
+  private menuSettings!: MenuSettingsView;
   private pauseSettingsOpen = false;
   private pauseSettingsButton!: HTMLButtonElement;
   private feedback!: GameFeedback;
   private lastReadySeconds = 0;
   private lastAudioPhase = 'FACTION_SELECT';
   private lastAudioSuspended = false;
-  private lastChase = false;
   private lastRiceActive: string | null = null;
   private lastRiceCompleted = 0;
   private lastSprintReadiness = this.sprint.readiness;
@@ -162,7 +170,7 @@ export class ThreeGame {
   private collision: CollisionWorld;
   private apartment: ApartmentBuild;
   private readonly devFreeze = new DevFreezeSystem();
-  private sceneEditor: SceneEditor;
+  private sceneEditor: SceneEditor | null = null;
   private readonly editorFocus = new THREE.Vector3();
   private editorOpenLast = false;
   private devZoom = 1;
@@ -173,7 +181,7 @@ export class ThreeGame {
   private deepseekAiWasActive = false;
   private readonly deepseekDoorLockPenalty =
     new DeepSeekDoorLockPenalty(C.deepseekAI.humanPlayerUnlockPenaltyMs);
-  private aiLogCollector = new AILogCollector();
+  private aiLogCollector = import.meta.env.DEV ? new AILogCollector() : null;
   private matchSetup: MatchSetup | null = null;
   private fixedMatchSeed: number | null = null;
   // S7C-1B：藏身状态机、两个 Q 技能冷却与扇形表现层。正式数值全部来自
@@ -233,7 +241,6 @@ export class ThreeGame {
   private hideTargetExposedPriority = false;
   private lastPlayerQPlanReason: PlayerQPlanReason | 'NONE' = 'NONE';
   private hideTargetCandidates = 0;
-  private furnitureSearchSpotId: string | null = null;
   private furnitureSearchCode: HumanFurnitureSearchCode | 'NONE' = 'NONE';
   private furnitureSearchDetail = '无';
   private furnitureSearchCount = 0;
@@ -246,10 +253,10 @@ export class ThreeGame {
   private skillHud!: HTMLElement;
   private skillHudState!: HTMLElement;
   private skillHudNotice!: HTMLElement;
-  private debugPanel: DebugDetailsPanel;
-  private devBDebug: DevBDebug;
-  private devBBinding: DevBRuntimeBinding;
-  private devBPersistence: DevBParamPersistence;
+  private debugPanel: DebugDetailsPanel | null = null;
+  private devBDebug: DevBDebug | null = null;
+  private devBBinding: DevBRuntimeBinding | null = null;
+  private devBPersistence: DevBParamPersistence | null = null;
   private overlay: HTMLElement;
   private overlayText: HTMLElement;
   private overlayHeading: HTMLElement;
@@ -263,6 +270,7 @@ export class ThreeGame {
   private difficultyStatus: HTMLElement;
   private pulseLockView: PulseLockView;
   private frame = 0;
+  private disposed = false;
   private readonly debugPossessionEnabled = import.meta.env.DEV && C.development.factionSwitchEnabled;
 
   constructor(container: HTMLElement) {
@@ -289,7 +297,8 @@ export class ThreeGame {
 
     // 家具与藏身锚点从项目布局文件载入，浏览器旧存档不覆盖项目布局。
     this.apartment = buildApartment(this.scene, {
-      furniture: this.mapFurniture, hideSpots: this.hideSpots });
+      furniture: this.mapFurniture, hideSpots: this.hideSpots,
+      debug: import.meta.env.DEV && DEBUG_MAP, editorTools: import.meta.env.DEV });
     this.sceneVisualBounds.setFromObject(this.apartment.root);
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
@@ -304,7 +313,7 @@ export class ThreeGame {
     this.deepseekAI.setRuntimeTuning(this.runtime);
     this.humanStillness = new HumanStillness(SPAWNS.human);
     DOOR_NODES.forEach((door, index) => {
-      const view = new DoorView(door, index, DEBUG_MAP);
+      const view = new DoorView(door, index, import.meta.env.DEV && DEBUG_MAP);
       this.scene.add(view.object);
       applyInteriorSunShadow(view.object, isCoveredInterior(door.x, door.z));
       this.doorViews.set(door.id, view);
@@ -321,71 +330,71 @@ export class ThreeGame {
     this.actorShadows.add(this.human);
     this.captureZone = new CaptureZoneView(this.human, this.runtime.captureRadius, actorHeight);
     // A radius change must invalidate progress accumulated under the old radius.
-    this.devBBinding = new DevBRuntimeBinding(this.runtime, {
-      gameState: this.match,
-      onCaptureRadius: radius => this.captureZone.setRadius(radius),
-    });
-    this.devBBinding.start();
-    // DEV-B 本地预设：**只有开发构建**才会拿到 storage（生产构建恒为 null，
-    // 既不显示入口也不读取/应用本地值）。恢复走 RuntimeDebugOverrides.restore()，
-    // 因此 DevBRuntimeBinding 的既有副作用（清空旧抓捕进度、同步抓捕圈）照常生效。
-    this.devBPersistence = new DevBParamPersistence({
-      runtime: this.runtime,
-      storage: devBPersistenceStorage(import.meta.env.DEV),
-    });
-    // Read without applying: saved DEV presets must not silently override difficulty.
-    if (this.devBPersistence.enabled) this.devBPersistence.read();
+    if (import.meta.env.DEV) {
+      this.devBBinding = new DevBRuntimeBinding(this.runtime, {
+        gameState: this.match,
+        onCaptureRadius: radius => this.captureZone.setRadius(radius),
+      });
+      this.devBBinding.start();
+      // Production never creates this storage path or reads DEV presets.
+      this.devBPersistence = new DevBParamPersistence({
+        runtime: this.runtime,
+        storage: devBPersistenceStorage(import.meta.env.DEV),
+      });
+      // Read without applying: saved presets must not silently override difficulty.
+      if (this.devBPersistence.enabled) this.devBPersistence.read();
+    }
     this.resetRice();
     this.camera.position.copy(this.cameraOffset);
     this.camera.lookAt(0, 0, 0);
     window.addEventListener('resize', this.resize);
     this.resize();
 
-    this.debugPanel = new DebugDetailsPanel(container, {
-      developerMode: import.meta.env.DEV,
-      onTemporaryControl: faction => this.setTemporaryInputTarget(faction),
-      onExportLog: () => this.exportAILog(),
-      onMatchSeed: value => this.setDevMatchSeed(value),
-      onToggleFreeze: () => this.toggleDevFreeze(),
-      onSafetyPaths: enabled => {
-        this.safetyPaths.enabled = enabled;
-        this.updatePerceptionHud();
-      },
-      onExpanded: () => this.updatePerceptionHud(),
-    });
-    this.sceneEditor = new SceneEditor({
-      container,
-      topRow: this.debugPanel.topRow,
-      camera: this.camera,
-      dom: this.renderer.domElement,
-      freeze: this.devFreeze,
-      developerMode: import.meta.env.DEV,
-      factionSwitchEnabled: C.development.factionSwitchEnabled,
-      getPhase: () => this.match.phase,
-      // V2 布局持久化：会话从当前已应用地图开始，保存/导入走同一个存档接口。
-      mapSource: this.appliedMapSource(),
-      savedLayoutSignature: layoutSignature(authoredLayoutDocument()),
-      savedLayoutAt: null,
-      savedLayoutError: null,
-      onRebuild: map => this.rebuildApartment(map),
-      // S7C-1B：新地图必须先通过「两个角色站位 + 藏身出口仍可站立」的预检，
-      // 预检失败时编辑器直接拒绝应用，旧地图与旧藏身状态原样保留。
-      onPrecheck: map => this.precheckMapEdit(map),
-      onFocus: point => this.editorFocus.set(point.x, 0, point.z),
-      onZoom: direction => this.zoomEditorCamera(direction),
-      onPan: (deltaX, deltaY) => this.panEditorCamera(deltaX, deltaY),
-    });
-    this.sceneEditor.setBuild(this.apartment);
-    this.devBDebug = new DevBDebug({
-      container,
-      topRow: this.debugPanel.topRow,
-      scene: this.scene,
-      runtime: this.runtime,
-      developerMode: this.debugPossessionEnabled,
-      persistence: this.devBPersistence,
-      collectObservation: () => this.collectDevBObservation(),
-      collectFrame: () => this.collectDevBFrame(),
-    });
+    if (import.meta.env.DEV) {
+      this.debugPanel = new DebugDetailsPanel(container, {
+        developerMode: import.meta.env.DEV,
+        onTemporaryControl: faction => this.setTemporaryInputTarget(faction),
+        onExportLog: () => this.exportAILog(),
+        onMatchSeed: value => this.setDevMatchSeed(value),
+        onToggleFreeze: () => this.toggleDevFreeze(),
+        onSafetyPaths: enabled => {
+          if (this.safetyPaths) this.safetyPaths.enabled = enabled;
+          this.updatePerceptionHud();
+        },
+        onExpanded: () => this.updatePerceptionHud(),
+      });
+      this.sceneEditor = new SceneEditor({
+        container,
+        topRow: this.debugPanel.topRow,
+        camera: this.camera,
+        dom: this.renderer.domElement,
+        freeze: this.devFreeze,
+        developerMode: import.meta.env.DEV,
+        factionSwitchEnabled: C.development.factionSwitchEnabled,
+        getPhase: () => this.match.phase,
+        mapSource: this.appliedMapSource(),
+        savedLayoutSignature: layoutSignature(authoredLayoutDocument()),
+        savedLayoutAt: null,
+        savedLayoutError: null,
+        onRebuild: map => this.rebuildApartment(map),
+        // Keep the existing actor/hide-exit precheck before applying any draft.
+        onPrecheck: map => this.precheckMapEdit(map),
+        onFocus: point => this.editorFocus.set(point.x, 0, point.z),
+        onZoom: direction => this.zoomEditorCamera(direction),
+        onPan: (deltaX, deltaY) => this.panEditorCamera(deltaX, deltaY),
+      });
+      this.sceneEditor.setBuild(this.apartment);
+      this.devBDebug = new DevBDebug({
+        container,
+        topRow: this.debugPanel.topRow,
+        scene: this.scene,
+        runtime: this.runtime,
+        developerMode: this.debugPossessionEnabled,
+        persistence: this.devBPersistence,
+        collectObservation: () => this.collectDevBObservation(),
+        collectFrame: () => this.collectDevBFrame(),
+      });
+    }
     if (this.debugPossessionEnabled) {
       this.renderer.domElement.addEventListener('click', this.onActorClick);
     }
@@ -403,50 +412,33 @@ export class ThreeGame {
     this.overlayStats = this.overlayText.querySelector('.overlay-stats')!;
     this.difficultyStatus = this.label(this.overlayText, 'difficulty-status');
     this.pauseActions = this.label(this.overlay, 'pause-actions');
-    const continueButton = document.createElement('button');
-    continueButton.type = 'button';
-    continueButton.textContent = '继续游戏';
-    continueButton.addEventListener('click', () => this.resumeFromPause());
-    this.pauseSettingsButton = document.createElement('button');
-    this.pauseSettingsButton.type = 'button';
-    this.pauseSettingsButton.textContent = '设置';
-    this.pauseSettingsButton.addEventListener('click', () => {
-      this.pauseSettingsOpen = true;
-      this.updateHud(this.nearestRice());
-      this.audioSettings.root.querySelector('input')?.focus();
-    });
-    const pauseRestartButton = document.createElement('button');
-    pauseRestartButton.type = 'button';
-    pauseRestartButton.textContent = '重新开始';
-    pauseRestartButton.addEventListener('click', () => this.restart());
-    const pauseMenuButton = document.createElement('button');
-    pauseMenuButton.type = 'button';
-    pauseMenuButton.textContent = '返回主菜单';
-    pauseMenuButton.addEventListener('click', () => this.returnToFactionSelect());
-    const debugSwitchButton = document.createElement('button');
-    debugSwitchButton.type = 'button';
-    debugSwitchButton.textContent = '开发调试：切换主控阵营';
-    debugSwitchButton.hidden = !this.debugPossessionEnabled;
-    debugSwitchButton.addEventListener('click', () => this.switchPrimaryFactionFromPause());
-    this.pauseActions.append(
-      continueButton, this.pauseSettingsButton, pauseRestartButton, pauseMenuButton, debugSwitchButton);
     this.resultActions = this.label(this.overlay, 'result-actions');
-    const restartButton = document.createElement('button');
-    restartButton.type = 'button';
-    restartButton.textContent = '再来一局';
-    restartButton.addEventListener('click', () => this.restart());
-    const menuButton = document.createElement('button');
-    menuButton.type = 'button';
-    menuButton.textContent = '返回阵营选择';
-    menuButton.addEventListener('click', () => this.returnToFactionSelect());
-    this.resultActions.append(restartButton, menuButton);
+    this.pauseSettingsButton = populateRoundActions(this.pauseActions, this.resultActions, {
+      resume: () => this.resumeFromPause(),
+      settings: () => {
+        this.pauseSettingsOpen = true;
+        this.updateHud(this.nearestRice());
+        this.audioSettings.root.querySelector('input')?.focus();
+      },
+      restart: () => this.restart(), menu: () => this.returnToFactionSelect(),
+      switchFaction: () => this.switchPrimaryFactionFromPause(),
+      developerMode: this.debugPossessionEnabled,
+    });
     this.menu = this.label(container, 'faction-menu');
     populateFactionMenu(this.menu, faction => this.chooseFaction(faction));
     this.difficultyView = new DifficultyView(this.menu);
     this.pulseLockView = new PulseLockView(container, C.pulseLock.timing,
       () => this.closePulseLock());
     this.audioSettings = new AudioSettingsView(container, this.audio, () => this.closePauseSettings());
+    this.menuSettings = new MenuSettingsView(this.menu, this.audioSettings.root);
     this.feedback = new GameFeedback(container, this.camera);
+    this.throwableView = new ThrowableView(this.renderer.domElement, this.scene, this.camera,
+      this.throwables, () => this.throwActors(), () => this.control.controlledFaction,
+      this.traceThrow, (faction, heading) => {
+        (faction === 'DEEPSEEK' ? this.playerAction : this.humanAction).faceHeading(heading);
+        this.feedback.show('投掷！', 'soft');
+      });
+    this.sceneEditor?.attachThrowables(throwableLayout as ThrowableSpawn[],this.throwables,this.throwableView);
     this.audio.setMusic('menu');
     container.addEventListener('pointerdown', this.onAudioGesture);
     container.addEventListener('pointerover', this.onAudioHover);
@@ -469,7 +461,10 @@ export class ThreeGame {
 
   private onAudioGesture = (): void => { void this.audio.unlock(); };
   private onAudioHover = (event: PointerEvent): void => {
-    if ((event.target as Element)?.closest('button')) this.audio.play('hover', 'ui', .45);
+    const button = (event.target as Element)?.closest('button');
+    // Delegated pointerover also bubbles when moving between one button's children.
+    if (!button || (event.relatedTarget instanceof Node && button.contains(event.relatedTarget))) return;
+    this.audio.play('hover', 'ui', .45);
   };
   private onAudioClick = (event: MouseEvent): void => {
     const button = (event.target as Element)?.closest('button');
@@ -481,7 +476,12 @@ export class ThreeGame {
     this.syncAudio();
     void this.audio.unlock().then(() => this.audio.play(cue, 'ui', .7));
   };
-  private onAudioFocus = (): void => { this.syncAudio(); };
+  private onAudioFocus = (): void => {
+    if ((document.hidden || !document.hasFocus()) && this.match.phase === 'PLAYING' &&
+        !this.sceneEditor?.isOpen && !this.devFreeze.isFrozen) this.togglePause();
+    // Refocusing never resumes a match without the player's explicit Continue.
+    this.syncAudio();
+  };
 
   private showWorldFeedback(text: string, tone: 'good' | 'bad' | 'soft',
     source: THREE.Vector3, rice = false): void {
@@ -525,7 +525,9 @@ export class ThreeGame {
         this.audio.stop('eat'); this.audio.stop('room');
         this.audio.setMusic(null);
         const won = this.match.result?.winner === this.control.selectedFaction;
-        this.audio.play(won ? 'victory' : 'defeat', 'ui');
+        const caughtDeepseek = !won && this.control.selectedFaction === 'DEEPSEEK' &&
+          this.match.result?.reason === 'CAPTURED';
+        this.audio.play(won ? 'victory' : caughtDeepseek ? 'deepseekCaughtDefeat' : 'defeat', 'ui');
         this.feedback.show(won ? '胜利！' : '再接再厉', won ? 'good' : 'soft');
       }
       if (phase === 'FACTION_SELECT' || phase === 'READY') this.audio.setMusic('menu');
@@ -537,7 +539,6 @@ export class ThreeGame {
     const observer = this.control.selectedFaction;
     const chase = !!observer && this.vision.get(observer).visible &&
       (this.captureZoneActive || (observer === 'DEEPSEEK' && this.humanAI.state === 'CHASE'));
-    if (chase !== this.lastChase) this.lastChase = chase;
     const target: MusicCue = chase ? 'chase' : 'game';
     this.audio.setMusic(target);
   }
@@ -565,7 +566,7 @@ export class ThreeGame {
 
   private setTemporaryInputTarget(faction: Faction): void {
     if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
-        this.pulseLock.isOpen || this.sceneEditor.isOpen ||
+        this.pulseLock.isOpen || this.sceneEditor?.isOpen ||
         !this.control.setTemporaryInputTarget(faction)) return;
     this.input.clear();
     this.lastDeepseekVisualHeadingRad = null;
@@ -577,7 +578,7 @@ export class ThreeGame {
 
   private onActorClick = (event: MouseEvent): void => {
     if (!this.debugPossessionEnabled || this.match.phase !== 'PLAYING' ||
-        this.pulseLock.isOpen || this.sceneEditor.isOpen || event.button !== 0) return;
+        this.pulseLock.isOpen || this.sceneEditor?.isOpen || event.button !== 0) return;
     const rect = this.renderer.domElement.getBoundingClientRect();
     const pointer = new THREE.Vector2(
       (event.clientX - rect.left) / rect.width * 2 - 1,
@@ -585,6 +586,22 @@ export class ThreeGame {
     const faction = pickActorFaction(this.camera, pointer, this.player, this.human);
     if (faction) this.setTemporaryInputTarget(faction);
   };
+
+  private traceThrow = (from: ThrowPoint, to: ThrowPoint, radius: number): number | null =>
+    this.collision.traceCircleXZ(from, to, radius);
+
+  private throwActors(): (ThrowActor & { heading: number })[] {
+    return (['DEEPSEEK', 'HUMAN'] as const).map(faction => {
+      const actor = faction === 'DEEPSEEK' ? this.player : this.human;
+      return { faction, x: actor.position.x, z: actor.position.z,
+        hidden: this.hide.isConcealed(faction),
+        canAct: this.match.phase === 'PLAYING' && !this.devFreeze.isFrozen &&
+          !this.sceneEditor?.isOpen && !this.pulseLock.isOpen &&
+          !this.throwables.isStunned(faction) && this.control.isControlling(faction) &&
+          (faction !== 'DEEPSEEK' || this.sprint.state !== 'STUNNED'),
+        heading: faction === 'DEEPSEEK' ? this.playerAction.headingRad : this.humanAction.headingRad };
+    });
+  }
 
   private box(w: number, h: number, d: number, color: number, x: number, y: number, z: number): THREE.Mesh {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
@@ -639,20 +656,23 @@ export class ThreeGame {
   private tick = (): void => {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, C.match.maxFrameDeltaMs);
     const cameraEnabled = this.control.selectedFaction !== null &&
-      (this.match.phase === 'PLAYING' || this.sceneEditor.isOpen);
-    if (cameraEnabled && !document.activeElement?.matches('input, textarea, [contenteditable="true"]')) {
-      if (this.input.consumePress('KeyZ')) this.cameraOrbit.turn(1);
-      if (this.input.consumePress('KeyC')) this.cameraOrbit.turn(-1);
-      if (this.input.consumePress('KeyX')) this.cameraOrbit.restore();
-    } else {
-      this.input.consumePress('KeyZ');
-      this.input.consumePress('KeyC');
-      this.input.consumePress('KeyX');
+      (this.match.phase === 'PLAYING' || this.sceneEditor?.isOpen);
+    // Camera-angle shortcuts are authoring tools, not production controls.
+    if (import.meta.env.DEV) {
+      if (cameraEnabled && !document.activeElement?.matches('input, textarea, [contenteditable="true"]')) {
+        if (this.input.consumePress('KeyZ')) this.cameraOrbit.turn(1);
+        if (this.input.consumePress('KeyC')) this.cameraOrbit.turn(-1);
+        if (this.input.consumePress('KeyX')) this.cameraOrbit.restore();
+      } else {
+        this.input.consumePress('KeyZ');
+        this.input.consumePress('KeyC');
+        this.input.consumePress('KeyX');
+      }
     }
     this.cameraOrbit.update(deltaMs);
     // Movement reads the live camera heading in this same frame, not last frame's heading.
     if (cameraEnabled) {
-      if (this.sceneEditor.isOpen) this.followEditorCamera();
+      if (this.sceneEditor?.isOpen) this.followEditorCamera();
       else this.followCamera();
     }
     // DEV 双阵营冻结：the single timing seam. While frozen the gameplay delta is
@@ -661,14 +681,14 @@ export class ThreeGame {
     const gameplayMs = this.devFreeze.gameplayDelta(this.match.phase, deltaMs);
     const frozen = this.devFreeze.isFrozen;
     this.input.setTabCaptureEnabled(
-      C.development.factionSwitchEnabled && C.development.directHotkeysEnabled &&
+      this.debugPossessionEnabled && C.development.directHotkeysEnabled &&
       this.match.phase === 'PLAYING' && !frozen);
     const pausePressed = this.input.consumePress('Escape');
     const restartPressed = this.input.consumePress('KeyR');
     const menuPressed = this.input.consumePress('KeyM');
     const controlSwitchPressed = this.input.consumePress('Tab');
     const shortcut = resolveRoundShortcut(this.match.phase,
-      C.development.directHotkeysEnabled && !this.pulseLock.isOpen && !frozen,
+      import.meta.env.DEV && C.development.directHotkeysEnabled && !this.pulseLock.isOpen && !frozen,
       restartPressed, menuPressed);
     if (shortcut === 'RESTART') {
       this.restart();
@@ -685,7 +705,7 @@ export class ThreeGame {
       if (this.match.phase === 'READY') {
         // The pre-round countdown must keep advancing (see readyDelta): it is a
         // phase timer, not the gameplay delta the DEV freeze is allowed to gate.
-        const readyMs = this.devFreeze.readyDelta(deltaMs);
+        const readyMs = this.devFreeze.readyDelta(document.hidden || !document.hasFocus() ? 0 : deltaMs);
         if (readyMs > 0) {
           this.match.advanceReady(readyMs);
           const seconds = Math.ceil(this.match.readyRemainingMs / 1000);
@@ -694,7 +714,7 @@ export class ThreeGame {
           this.lastReadySeconds = seconds;
         }
       } else if (this.match.phase === 'PLAYING') {
-        if (!frozen && !this.pulseLock.isOpen && C.development.factionSwitchEnabled &&
+        if (!frozen && !this.pulseLock.isOpen && this.debugPossessionEnabled &&
             resolveDirectControlSwitch(this.match.phase,
               C.development.directHotkeysEnabled, controlSwitchPressed)) {
           this.control.toggleControlled();
@@ -711,7 +731,7 @@ export class ThreeGame {
         }
       }
     }
-    const editorOpen = this.sceneEditor.isOpen;
+    const editorOpen = this.sceneEditor?.isOpen ?? false;
     if (editorOpen && !this.editorOpenLast) {
       if (this.pulseLock.isOpen) this.closePulseLock();
       const actor = this.control.selected(this.player, this.human);
@@ -727,20 +747,20 @@ export class ThreeGame {
       if (editorOpen) this.followEditorCamera();
       else this.followCamera(this.match.phase === 'PLAYING' && !frozen ? deltaMs : 0);
     }
-    if (editorOpen) this.sceneEditor.onFrame();
-    const showMapDebug = import.meta.env.DEV && (this.debugPanel.isExpanded || editorOpen);
+    if (editorOpen) this.sceneEditor?.onFrame();
+    const showMapDebug = import.meta.env.DEV && (!!this.debugPanel?.isExpanded || editorOpen);
     this.apartment.debugRoot.visible = showMapDebug;
     for (const view of this.doorViews.values()) view.setDebugVisible(showMapDebug);
     // DEV-B refresh uses the real frame delta so the debug view keeps working
     // while the gameplay freeze is active; it never advances gameplay itself.
-    this.devBDebug.onFrame(deltaMs);
+    this.devBDebug?.onFrame(deltaMs);
     // Keep diagnostic overlays out of the formal composition; settings and
     // runtime overrides remain intact and reappear when either DEV panel opens.
-    this.devBDebug.view.group.visible = import.meta.env.DEV &&
-      this.match.phase !== 'FACTION_SELECT' && (this.devBDebug.isOpen || this.debugPanel.isExpanded);
+    if (this.devBDebug) this.devBDebug.view.group.visible =
+      this.match.phase !== 'FACTION_SELECT' && (this.devBDebug.isOpen || !!this.debugPanel?.isExpanded);
     // The toolbar shows the live freeze state plus the most recent rejected
     // freeze action (for example resuming while the scene editor is open).
-    this.debugPanel.setFreezeState(frozen, this.devFreeze.lastRejection === '无'
+    this.debugPanel?.setFreezeState(frozen, this.devFreeze.lastRejection === '无'
       ? this.devFreeze.reasonLabel
       : `${this.devFreeze.reasonLabel}｜最近拒绝：${this.devFreeze.lastRejection}`);
     // 玩家当前唯一白色交互轮廓：先同步既有 Human Q，再同步人工 DP 的视觉目标。
@@ -752,6 +772,7 @@ export class ThreeGame {
     this.syncAudio();
     this.apartment.interiorShadows.update();
     this.actorShadows.update();
+    this.throwableView.sync();
     fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
@@ -762,14 +783,14 @@ export class ThreeGame {
   }
 
   private zoomEditorCamera(direction: number): void {
-    if (!this.sceneEditor.isOpen) return;
+    if (!this.sceneEditor?.isOpen) return;
     const factor = direction > 0 ? 1.15 : 1 / 1.15;
     this.devZoom = Math.min(2.5, Math.max(0.45, this.devZoom * factor));
     this.resize();
   }
 
   private panEditorCamera(deltaX: number, deltaY: number): void {
-    if (!this.sceneEditor.isOpen) return;
+    if (!this.sceneEditor?.isOpen) return;
     const worldPerPixel = (this.camera.right - this.camera.left) / Math.max(1, innerWidth);
     const forward = new THREE.Vector3();
     this.camera.getWorldDirection(forward);
@@ -789,9 +810,8 @@ export class ThreeGame {
       if (this.devFreeze.manualResume(this.match.phase)) this.input.clear();
       return;
     }
-    const seconds = Math.floor(this.match.elapsedMs / 1000);
-    const summary = `对局中 ${String(Math.floor(seconds / 60)).padStart(2, '0')}:` +
-      `${String(seconds % 60).padStart(2, '0')}｜米 ${this.rice.completedCount}/${ACTIVE_RICE_COUNT}｜` +
+    const summary = `对局中 ${formatMatchTime(this.match.elapsedMs)}｜米 ` +
+      `${this.rice.completedCount}/${ACTIVE_RICE_COUNT}｜` +
       `抓捕 ${(this.match.captureProgressMs / 1000).toFixed(2)}`;
     if (this.devFreeze.manualFreeze(this.match.phase, summary)) this.input.clear();
   }
@@ -802,7 +822,8 @@ export class ThreeGame {
   private rebuildApartment(map: CommittedMap): ApartmentBuild {
     this.apartment.dispose();
     this.apartment = buildApartment(this.scene, {
-      furniture: map.furniture, hideSpots: map.hideSpots });
+      furniture: map.furniture, hideSpots: map.hideSpots,
+      debug: import.meta.env.DEV && DEBUG_MAP, editorTools: import.meta.env.DEV });
     this.sceneVisualBounds.setFromObject(this.apartment.root);
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
@@ -901,6 +922,17 @@ export class ThreeGame {
   }
 
   private updatePlaying(deltaMs: number): void {
+    this.throwables.advanceTime(deltaMs);
+    const focusedControl = document.activeElement;
+    if (this.input.consumePress('KeyF') &&
+        !['ControlLeft','ControlRight','MetaLeft','MetaRight','AltLeft','AltRight'].some(key => this.input.isHeld(key)) &&
+        !(focusedControl?.matches('input,textarea,select,button,[contenteditable="true"]') &&
+          focusedControl.getClientRects().length > 0)) {
+      const actor = this.throwActors().find(a => a.faction === this.control.controlledFaction);
+      if (actor && this.throwables.pickup(actor, this.traceThrow)) {
+        this.feedback.show(`拾取${THROWABLE_NAMES[this.throwables.held(actor.faction)!.kind]}`, 'good');
+      }
+    }
     this.sound.advance(deltaMs);
     this.deepseekDoorLockPenalty.advance(deltaMs);
     // S7C-1B：两个 Q 技能的冷却与扇形特效都跑在正式玩法时间上，所以暂停与 DEV
@@ -918,10 +950,11 @@ export class ThreeGame {
     // 藏身事件无论 DeepSeek AI 是否在跑都要进日志时间线；冷却与特效都只随正式
     // 玩法时间推进（上面的 advance 调用）。S7C-2b 起 AI 自主藏身的请求 / 进入 /
     // 拒绝 / 退出 / 中止事件也追加到同一条时间线（不新建第二套数组）。
-    this.aiLogCollector.recordHideEvents([
-      ...this.hide.drainEvents(), ...this.deepseekAI.drainHideEvents()]);
+    const hideEvents = this.hide.drainEvents(), aiHideEvents = this.deepseekAI.drainHideEvents();
+    this.aiLogCollector?.recordHideEvents([...hideEvents, ...aiHideEvents]);
     // S7C-2：Human AI 的循迹 / 搜查事件同样进 AI JSON，且与 DeepSeek AI 是否在跑无关。
-    this.aiLogCollector.recordHumanSearchEvents(this.humanAI.drainHumanSearchEvents());
+    const searchEvents = this.humanAI.drainHumanSearchEvents();
+    this.aiLogCollector?.recordHumanSearchEvents(searchEvents);
     if (this.hideNoticeRemainingMs > 0) {
       this.hideNoticeRemainingMs = Math.max(0, this.hideNoticeRemainingMs - deltaMs);
       if (this.hideNoticeRemainingMs === 0) this.hideNotice = '';
@@ -936,6 +969,9 @@ export class ThreeGame {
     const local = cameraRelativeDirection(this.camera, this.input.localDirection());
     const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
+    const aimHeading = this.throwableView.heading('HUMAN');
+    if (aimHeading !== undefined)
+      this.lastHumanFacing = { x: Math.sin(aimHeading), y: Math.cos(aimHeading) };
     const doorInteraction = this.handleDoorInteractions();
     // 藏身状态可能在本帧刚刚切换（E 进入/退出、Q 搜查命中），因此门交互之后立刻
     // 同步感知与表现，再让移动、进食与抓捕读取同一个状态。S7C-2b 起 AI 自主进入 /
@@ -952,9 +988,9 @@ export class ThreeGame {
       this.control.selectedFaction, this.control.temporaryInputTarget,
       debug, this.debugPossessionEnabled);
     let deepseekCommand: DeepSeekAICommand | null = null;
-    this.aiLogCollector.advance(deltaMs, this.match.phase === 'PLAYING');
-    this.aiLogCollector.notePhase(this.match.phase);
-    if (deepseekAiEnabled) {
+    this.aiLogCollector?.advance(deltaMs, this.match.phase === 'PLAYING');
+    this.aiLogCollector?.notePhase(this.match.phase);
+    if (deepseekAiEnabled && !this.throwables.isStunned('DEEPSEEK')) {
       if (!this.deepseekAiWasActive) this.deepseekAI.resumeAfterManualControl();
       const sight = this.vision.get('DEEPSEEK');
       const heardHuman = this.sound.heardBy(this.player.position, 'DEEPSEEK',
@@ -1046,10 +1082,12 @@ export class ThreeGame {
         this.deepseekAI.onDoorLockResult(id, result);
         this.deepseekDoorLockPenalty.onDeepSeekLockResult(id, result);
       }
-      const dsRoom = roomAt(this.player.position.x, this.player.position.z);
-      this.aiLogCollector.diffSnapshot({
-        doorEscapeEvents: this.deepseekAI.drainDoorEscapeEvents(),
-        doorLockEvents: this.deepseekAI.drainDoorLockEvents(),
+      // Drain diagnostic queues even when production does not collect snapshots.
+      const doorEscapeEvents = this.deepseekAI.drainDoorEscapeEvents();
+      const doorLockEvents = this.deepseekAI.drainDoorLockEvents();
+      const dsRoom = this.aiLogCollector ? roomAt(this.player.position.x, this.player.position.z) : null;
+      this.aiLogCollector?.diffSnapshot({
+        doorEscapeEvents, doorLockEvents,
         state: this.deepseekAI.state,
         targetRiceId: this.deepseekAI.targetRiceId,
         threatLevel: this.deepseekAI.threatLevel,
@@ -1101,22 +1139,22 @@ export class ThreeGame {
     this.deepseekAiWasActive = deepseekAiEnabled;
     const activeDeepseekDirection = deepseekCommand
       ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
-    if (deepseekCommand?.startSprint && !concealedDeepseek) {
+    if (deepseekCommand?.startSprint && !concealedDeepseek && !this.throwables.isStunned('DEEPSEEK')) {
       if (this.sprint.tryStart(activeDeepseekDirection, ratio,
           `AI_${this.deepseekAI.sprintDecision}`)) {
-        this.aiLogCollector.recordSprintStart();
+        this.aiLogCollector?.recordSprintStart();
         this.playWorld('sprintStart', this.player.position, 'DEEPSEEK');
         this.showWorldFeedback('冲刺', 'soft', this.player.position);
       }
     }
     if (this.input.consumePress('Space')) {
-      if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek) {
+      if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek && !this.throwables.isStunned('DEEPSEEK')) {
         if (this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE')) {
-          this.aiLogCollector.recordSprintStart();
+          this.aiLogCollector?.recordSprintStart();
           this.playWorld('sprintStart', this.player.position, 'DEEPSEEK');
           this.showWorldFeedback('冲刺', 'soft', this.player.position);
         } else this.audio.play('skillUnavailable', 'ui', .6);
-      } else if (this.control.isControlling('HUMAN') && !this.pulseLock.isOpen) {
+      } else if (this.control.isControlling('HUMAN') && !this.pulseLock.isOpen && !this.throwables.isStunned('HUMAN')) {
         const nearby = this.nearestInteractableDoor(this.human.position);
         if (nearby) {
           const result = this.humanDoorSkill.use(
@@ -1139,7 +1177,7 @@ export class ThreeGame {
       this.playWorld('fall', this.player.position, 'DEEPSEEK');
       this.playWorld('stun', this.player.position, 'DEEPSEEK');
       this.showWorldFeedback('摔倒！', 'bad', this.player.position);
-      this.aiLogCollector.recordFall();
+      this.aiLogCollector?.recordFall();
     }
     if (previousSprintState === 'SPRINT_RUNNING' && this.sprint.state === 'NORMAL')
       this.showWorldFeedback('冲刺结束', 'soft', this.player.position);
@@ -1148,7 +1186,7 @@ export class ThreeGame {
       this.showWorldFeedback('恢复', 'good', this.player.position);
     }
     // 藏身中禁止移动（与 STUNNED 同构：位移强制为 0，不新增物理特性）。
-    const movement = concealedDeepseek
+    const movement = concealedDeepseek || this.throwables.isStunned('DEEPSEEK')
       ? { x: 0, y: 0 } : this.sprint.movementDirection(activeDeepseekDirection);
     const speed = effectiveSpeeds(this.runtime).player / U *
       (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
@@ -1168,7 +1206,7 @@ export class ThreeGame {
       this.perceptionGeometry);
     const aiEnabled = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
       this.control.temporaryInputTarget, debug, this.debugPossessionEnabled);
-    const aiCanAct = aiEnabled && !doorInteraction.humanMovementLocked;
+    const aiCanAct = aiEnabled && !doorInteraction.humanMovementLocked && !this.throwables.isStunned('HUMAN');
     let aiHumanDirection: { x: number; y: number } | null = null;
     if (aiCanAct) {
       if (!this.humanAiWasActive) this.humanAI.resumeAfterManualControl();
@@ -1219,20 +1257,31 @@ export class ThreeGame {
       if (command.checkHideSpotId) this.runHumanAiHideCheck(command.checkHideSpotId);
       aiHumanDirection = { x: command.direction.x, y: command.direction.z };
     }
-    this.humanAiWasActive = aiCanAct;
+    this.humanAiWasActive = aiCanAct || (aiEnabled && this.throwables.isStunned('HUMAN'));
     // S7C-2 修复轮 五：AI 搜查的可见反馈跟随 AI 自己公开的搜查状态（不参与判定）。
     this.syncHumanAiSearchFeedback(aiCanAct);
     const baseHumanSpeed = effectiveSpeeds(this.runtime).human / U;
     const humanSpeed = aiHumanDirection
       ? humanAiMovementSpeed(baseHumanSpeed, this.runtime.humanAIMovementMultiplier)
       : baseHumanSpeed;
-    const activeHumanDirection = doorInteraction.humanMovementLocked
+    const activeHumanDirection = doorInteraction.humanMovementLocked || this.throwables.isStunned('HUMAN')
       ? { x: 0, y: 0 } : aiHumanDirection ?? humanDirection;
     const oldHuman = this.human.position.clone();
     this.move(this.human, activeHumanDirection.x * humanSpeed * deltaMs / 1000,
       activeHumanDirection.y * humanSpeed * deltaMs / 1000);
     this.humanStillness.update(this.human.position, 0);
     this.emitMovementSound('HUMAN', oldHuman, this.human.position, false);
+    // Both actor positions now describe this frame, matching the projectile interval.
+    const throwHits = this.throwables.advanceFlights(deltaMs, this.throwActors(), this.traceThrow,
+      hit => { if(hit.kind === 'BASIN') this.playWorld('basinHit', hit, hit.victim); });
+    for (const faction of throwHits) {
+      if (faction === 'DEEPSEEK') this.rice.interrupt();
+      if (faction === 'HUMAN' && this.pulseLock.isOpen) this.closePulseLock();
+      if (faction === this.control.controlledFaction) this.throwableView.cancel();
+      const actor = faction === 'DEEPSEEK' ? this.player : this.human;
+      this.showWorldFeedback(`砸中！眩晕${C.throwables.stunDurationMs / 1000}秒`, 'bad', actor.position);
+      this.playWorld('fall', actor.position, faction);
+    }
     const nearest = this.nearestRice();
     const inRange = !!nearest && nearest.range <= C.rice.interactionRange / U;
     const aiRice = deepseekCommand?.eatRiceId
@@ -1244,12 +1293,12 @@ export class ThreeGame {
     this.rice.update(deltaMs,
       deepseekCommand ? aiInRange ? deepseekCommand.eatRiceId : null
         : inRange ? nearest!.id : null,
-      deepseekCommand ? aiInRange && this.sprint.state === 'NORMAL' &&
+      !this.throwables.isStunned('DEEPSEEK') && (deepseekCommand ? aiInRange && this.sprint.state === 'NORMAL' &&
         activeDeepseekDirection.x === 0 && activeDeepseekDirection.y === 0 :
       this.control.isControlling('DEEPSEEK') && !concealedDeepseek &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
       !doorInteraction.doorOwnsInteraction && !doorInteraction.hideOwnsInteraction &&
-      inRange && direction.x === 0 && direction.y === 0);
+      inRange && direction.x === 0 && direction.y === 0));
     const activeRice = this.rice.activeId && !this.rice.get(this.rice.activeId)?.rice.completed
       ? this.rice.activeId : null;
     if (activeRice !== this.lastRiceActive) {
@@ -1305,12 +1354,12 @@ export class ThreeGame {
     // 进度归零，因此不需要第二套抓捕规则。
     this.captureZoneBlocked = !concealedDeepseek && insideCaptureRadius &&
       this.collision.isLineBlockedXZ(this.human.position, this.player.position);
-    this.captureZoneActive = !concealedDeepseek && isCaptureEligibleXZ(
+    this.captureZoneActive = !this.throwables.isStunned('HUMAN') && !concealedDeepseek && isCaptureEligibleXZ(
       this.human.position, this.player.position, this.runtime.captureRadius, this.captureZoneBlocked);
     this.match.advancePlaying(deltaMs, this.captureZoneActive, this.rice.completed);
     // S7D：整局摘要的「完成的大米数量」与阶段都取同一帧的正式事实。
-    this.aiLogCollector.recordRiceProgress(this.rice.completedCount);
-    this.aiLogCollector.notePhase(this.match.phase);
+    this.aiLogCollector?.recordRiceProgress(this.rice.completedCount);
+    this.aiLogCollector?.notePhase(this.match.phase);
     this.captureZone.setProgress(
       this.match.captureProgressMs, C.match.captureMs, this.captureZoneActive);
     if (this.match.result) {
@@ -1319,7 +1368,7 @@ export class ThreeGame {
         this.showWorldFeedback('抓捕命中', 'bad', this.player.position);
       }
       // S7D：结算信息进整局摘要（胜负 / 原因 / 时长 / 完成米数）。
-      this.aiLogCollector.noteMatchResult({
+      this.aiLogCollector?.noteMatchResult({
         winner: this.match.result.winner, reason: this.match.result.reason,
         durationMs: this.match.result.elapsedMs,
         riceCompleted: this.rice.completedCount,
@@ -1331,9 +1380,10 @@ export class ThreeGame {
       // 会立即 forceCapture）。局终之后 `updatePlaying` 不再运行，如果不在这里
       // 再冲一次时间线，REQUEST / RESOLVE / HIT 与这次 HIDE_EXIT 就永远不会写进
       // AI JSON——真实日志里就会出现「有 DWELL 却没有结算码」的断点。
-      this.aiLogCollector.recordHideEvents([
-        ...this.hide.drainEvents(), ...this.deepseekAI.drainHideEvents()]);
-      this.aiLogCollector.recordHumanSearchEvents(this.humanAI.drainHumanSearchEvents());
+      const finalHideEvents = this.hide.drainEvents(), finalAiHideEvents = this.deepseekAI.drainHideEvents();
+      this.aiLogCollector?.recordHideEvents([...finalHideEvents, ...finalAiHideEvents]);
+      const finalSearchEvents = this.humanAI.drainHumanSearchEvents();
+      this.aiLogCollector?.recordHumanSearchEvents(finalSearchEvents);
     }
     // The action layer observes resolved gameplay; it never feeds back into movement or rules.
     const playerMoved = distance(oldDeepseek, this.player.position) > C.collision.contactEpsilon;
@@ -1342,8 +1392,8 @@ export class ThreeGame {
     this.playerAction.update(resolveCharacterAction({
       moving: playerMoved,
       running: this.sprint.state === 'SPRINT_RUNNING',
-      falling: previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED',
-      stunned: this.sprint.state === 'STUNNED',
+      falling: throwHits.includes('DEEPSEEK') || previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED',
+      stunned: this.throwables.isStunned('DEEPSEEK') || this.sprint.state === 'STUNNED',
       eating: riceState === 'PREPARING' || riceState === 'EATING',
       startled: this.match.captureProgressMs > 0,
       curiosityPeek: deepseekAiEnabled && this.deepseekAI.state === 'CURIOUS_OBSERVE' &&
@@ -1356,8 +1406,10 @@ export class ThreeGame {
     }), deltaMs, {
       concealed: this.hide.isConcealed('DEEPSEEK'),
       eating: riceState === 'EATING',
-    });
+    }, this.throwableView.heading('DEEPSEEK'));
     this.humanAction.update(resolveCharacterAction({
+      falling: throwHits.includes('HUMAN'),
+      stunned: this.throwables.isStunned('HUMAN'),
       moving: humanMoved,
       running: humanMoved && aiEnabled && this.humanAI.state === 'CHASE',
       capturing: this.captureZoneActive,
@@ -1368,7 +1420,7 @@ export class ThreeGame {
         (aiEnabled && this.humanAI.checkHidePhase === 'DWELL') ||
         this.pulseLock.isOpen || (this.control.isControlling('HUMAN') &&
         this.input.isHeld('KeyE') && !!this.nearestInteractableDoor(this.human.position)),
-    }), deltaMs);
+    }), deltaMs, undefined, this.throwableView.heading('HUMAN'));
   }
 
   private handleDoorInteractions(): {
@@ -1378,7 +1430,7 @@ export class ThreeGame {
   } {
     const faction = this.control.controlledFaction;
     const actor = this.control.controlled(this.player, this.human);
-    if (!faction || !actor) {
+    if (!faction || !actor || this.throwables.isStunned(faction)) {
       this.input.consumePress('KeyE');
       this.input.consumePress('KeyQ');
       return { doorOwnsInteraction: false, hideOwnsInteraction: false,
@@ -1519,7 +1571,6 @@ export class ThreeGame {
     });
     const label = this.hideSpots.find(spot => spot.id === target.spotId)?.label ?? target.spotId;
     this.furnitureSearchCount++;
-    this.furnitureSearchSpotId = target.spotId;
     this.furnitureSearchCode = resolution.code;
     this.furnitureSearchDetail = `${HUMAN_FURNITURE_SEARCH_CODE_TEXT[resolution.code]}｜` +
       `家具 ${resolution.furnitureId ?? '无'}｜瞄点 ${pointText(resolution.aimPoint)}｜` +
@@ -1527,7 +1578,7 @@ export class ThreeGame {
     // DEV 面板「Human Q 搜查：冷却 / 最近判定」也跟上这次家具搜查，避免显示上一次扇形结果。
     this.lastSearchCode = resolution.code;
     this.lastSearchDetail = this.furnitureSearchDetail;
-    this.aiLogCollector.recordPlayerSearchEvent({
+    this.aiLogCollector?.recordPlayerSearchEvent({
       type: resolution.code === 'HIT_CONCEALED' ? 'PLAYER_Q_FURNITURE_HIT'
         : resolution.code === 'MISS_EMPTY' ? 'PLAYER_Q_FURNITURE_MISS'
           : 'PLAYER_Q_FURNITURE_REJECTED',
@@ -1562,7 +1613,7 @@ export class ThreeGame {
       this.releaseHide('SEARCHED');
       this.setHideNotice(`家具搜查命中：已从「${label}」搜出藏身目标并立即抓捕`);
       // 复用 S7C-1B 的同一套正式结算，不新开胜负系统。
-      this.aiLogCollector.recordForcedCapture();
+      this.aiLogCollector?.recordForcedCapture();
       this.match.forceCapture();
       return true;
     }
@@ -1609,7 +1660,7 @@ export class ThreeGame {
         `${result.angleDeltaDeg.toFixed(1)}°`}`;
     // 玩家 Q 时间线：记下这次是「暴露目标优先」还是「没有目标可搜」的空挥，
     // 以及预检测与最终判定是否一致（两者同源，不一致即为缺陷信号）。
-    this.aiLogCollector.recordPlayerSearchEvent({
+    this.aiLogCollector?.recordPlayerSearchEvent({
       type: result.outcome === 'MISS' ? 'PLAYER_Q_FAN_MISS' : 'PLAYER_Q_FAN_HIT',
       reason: this.lastSearchDetail,
       spotId: result.spotId,
@@ -1649,7 +1700,7 @@ export class ThreeGame {
       this.setHideNotice('搜查命中：抓到未藏身的 DeepSeek 娘');
     }
     // 立即抓捕成功走正式结算路径（同一 GameStateSystem，不新开胜负系统）。
-    this.aiLogCollector.recordForcedCapture();
+    this.aiLogCollector?.recordForcedCapture();
     this.match.forceCapture();
   }
 
@@ -1871,7 +1922,7 @@ export class ThreeGame {
   /** 人工 DP 的唯一白色指向目标；E 的正式判定仍走 handleDoorInteractions()。 */
   private syncDeepSeekVisualTarget(): void {
     const playable = this.match.phase === 'PLAYING' && this.match.result === null &&
-      this.control.isControlling('DEEPSEEK') && !this.sceneEditor.isOpen;
+      this.control.isControlling('DEEPSEEK') && !this.sceneEditor?.isOpen;
     if (!playable) {
       this.deepseekVisualTarget = { kind: 'NONE' };
       if (!this.control.isControlling('HUMAN')) this.hideSearchView.clearPlayerTarget();
@@ -2023,7 +2074,7 @@ export class ThreeGame {
       if (realSpotId) this.showSearchFurnitureFeedback(realSpotId);
       this.releaseHide('SEARCHED');
       // 复用 S7C-1B 的正式结算：同一条抓捕路径、同一套胜负与 UI 结果。
-      this.aiLogCollector.recordForcedCapture();
+      this.aiLogCollector?.recordForcedCapture();
       this.match.forceCapture();
     }
     this.humanAI.onCheckHideResult(spotId, resolution.hit);
@@ -2225,7 +2276,7 @@ export class ThreeGame {
       ? 'Q 搜查白色轮廓家具' : `Q 搜查冷却 ${Math.ceil(this.humanSearchCooldown.remainingSeconds)} 秒`;
     if (showBreak) this.skillHudState.textContent = 'Space 强破门锁';
     this.skillHudState.hidden = !showQ && !showBreak;
-    this.skillHud.hidden = phase !== 'PLAYING' || this.sceneEditor.isOpen ||
+    this.skillHud.hidden = phase !== 'PLAYING' || !!this.sceneEditor?.isOpen ||
       (!showQ && !showBreak && !this.hideNotice);
   }
 
@@ -2285,7 +2336,7 @@ export class ThreeGame {
   private applyDoorResult(id: string | null, result: DoorActionResult,
     actorOverride?: Faction): void {
     // S7D：整局摘要只做计数，不复制门状态（门状态唯一来源仍是 DoorSystem）。
-    this.aiLogCollector.recordDoorResult(result);
+    this.aiLogCollector?.recordDoorResult(result);
     if (id && (result === 'OPENED' || result === 'CLOSED' ||
         result === 'LOCKED' || result === 'UNLOCKED' || result === 'FORCE_OPENED')) {
       this.syncDoor(id);
@@ -2351,6 +2402,7 @@ export class ThreeGame {
   }
 
   private togglePause(): void {
+    this.throwableView.cancel();
     if (this.match.pause()) {
       this.pauseSettingsOpen = false;
       this.rice.interrupt();
@@ -2404,6 +2456,7 @@ export class ThreeGame {
   }
 
   private exportAILog(): void {
+    if (!import.meta.env.DEV || !this.aiLogCollector) return;
     this.aiLogCollector.notePhase(this.match.phase);
     const data = this.aiLogCollector.export(this.matchSetup ? {
       matchSeed: this.matchSetup.seed,
@@ -2467,21 +2520,22 @@ export class ThreeGame {
   }
 
   private resetRound(): void {
+    this.throwables.reset();
+    this.throwableView.cancel();
     this.audio.reset();
     this.audio.setMusic('menu');
     this.feedback.clear();
     this.lastAudioPhase = 'FACTION_SELECT';
-    this.lastChase = false;
     this.lastReadySeconds = Math.ceil(this.match.readyRemainingMs / 1000);
     this.lastRiceActive = null;
     this.lastRiceCompleted = 0;
     this.lastSprintReadiness = 'READY';
     this.lastQReady = true;
-    if (this.sceneEditor.isOpen) this.sceneEditor.close();
+    if (this.sceneEditor?.isOpen) this.sceneEditor.close();
     this.devFreeze.reset();
     // New matches use the selected difficulty. Saved DEV presets stay untouched;
     // loading/editing a preset is an explicit debugging action for this round.
-    this.devBBinding.resetForNewRound();
+    this.devBBinding?.resetForNewRound();
     this.applyDifficulty();
     this.editorOpenLast = false;
     this.devZoom = 1;
@@ -2514,14 +2568,14 @@ export class ThreeGame {
     this.humanAiWasActive = false;
     this.deepseekAI.reset();
     this.deepseekAiWasActive = false;
-    this.aiLogCollector.startMatch();
+    this.aiLogCollector?.startMatch();
     // S7D：把本局的复现字段交给整局摘要（随机种子 / 玩家阵营 / 大米总数）。
-    this.aiLogCollector.noteMatchContext({
+    this.aiLogCollector?.noteMatchContext({
       seed: this.matchSetup.seed,
       playerFaction: this.control.selectedFaction,
       riceTotal: this.rice.portions.length,
     });
-    this.aiLogCollector.notePhase(this.match.phase);
+    this.aiLogCollector?.notePhase(this.match.phase);
     // S7C-1B：藏身状态、两个 Q 冷却与扇形特效都属于本局状态，重开/返回阵营页
     // 必须全部清空，不留下异常抓捕免疫或输入锁定。
     this.hide.reset();
@@ -2558,7 +2612,6 @@ export class ThreeGame {
     this.hideTargetExposedPriority = false;
     this.lastPlayerQPlanReason = 'NONE';
     this.hideTargetCandidates = 0;
-    this.furnitureSearchSpotId = null;
     this.furnitureSearchCode = 'NONE';
     this.furnitureSearchDetail = '无';
     this.furnitureSearchCount = 0;
@@ -2582,16 +2635,8 @@ export class ThreeGame {
     const phase = this.match.phase;
     this.overlay.dataset.difficulty = this.difficulty;
     this.difficultyStatus.hidden = phase !== 'PAUSED';
-    this.difficultyStatus.textContent = `当前难度：${DIFFICULTY_COPY[this.difficulty].label}` +
-      (this.control.selectedFaction === 'DEEPSEEK'
-        ? ` · Human AI 移速倍率 ${this.runtime.humanAIMovementMultiplier.toFixed(2)}` : ' · DeepSeek AI') +
-      (this.runtime.overrideCount ? ` · DEV-B 调试覆盖 ${this.runtime.overrideCount} 项（可在 DEV-B 核查有效值）`
-        : ' · 难度基准（保存的 DEV-B 预设未自动应用）');
-    const phaseText = phase === 'FACTION_SELECT' ? '选择阵营'
-      : phase === 'READY' ? `准备：${Math.ceil(this.match.readyRemainingMs / 1000)} 秒`
-      : phase === 'PLAYING' ? '对局中' : phase === 'PAUSED' ? '已暂停' : '已结束';
-    const seconds = Math.floor(this.match.elapsedMs / 1000);
-    const time = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+    this.difficultyStatus.textContent = `当前难度：${DIFFICULTY_COPY[this.difficulty].label}`;
+    const time = formatMatchTime(this.match.elapsedMs);
     const hudFaction = this.control.controlledFaction;
     this.alphaHud.update({ phase, faction: hudFaction, time,
       completed: this.rice.completedCount, total: ACTIVE_RICE_COUNT,
@@ -2610,7 +2655,7 @@ export class ThreeGame {
     if (phase === 'PAUSED') {
       this.overlayHeading.textContent = 'PAUSE';
       this.overlay.dataset.outcome = 'pause';
-      this.overlaySummary.textContent = '游戏已暂停。饭还热着，准备好了就继续。';
+      this.overlaySummary.textContent = '游戏已暂停。';
       this.overlayStats.textContent = `${time} / 已吃完 ${this.rice.completedCount} 份米`;
     }
     else if (phase === 'FINISHED') {
@@ -2633,6 +2678,7 @@ export class ThreeGame {
       this.overlayHeading.textContent = '声音设置';
       this.overlaySummary.textContent = '实时调节音量 · 自动保存 · ESC 返回上一级';
     }
+    if (phase !== 'FACTION_SELECT') this.menuSettings.close();
     const settingsParent = phase === 'PAUSED' ? this.overlay : this.menu.querySelector('.menu-audio-slot')!;
     if (this.audioSettings.root.parentElement !== settingsParent) {
       settingsParent.append(this.audioSettings.root);
@@ -2643,8 +2689,8 @@ export class ThreeGame {
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
     const controlledFaction = this.control.controlledFaction;
-    this.debugPanel.setVisible(phase !== 'FACTION_SELECT');
-    this.debugPanel.setControlContext(
+    this.debugPanel?.setVisible(phase !== 'FACTION_SELECT');
+    this.debugPanel?.setControlContext(
       this.debugPossessionEnabled && phase === 'PLAYING', controlledFaction);
     this.updateSkillHud();
   }
@@ -2653,7 +2699,7 @@ export class ThreeGame {
   private currentInteractionPrompt() {
     const faction = this.control.controlledFaction;
     const actor = this.control.controlled(this.player, this.human);
-    if (!faction || !actor || this.match.phase !== 'PLAYING' || this.sceneEditor.isOpen ||
+    if (!faction || !actor || this.match.phase !== 'PLAYING' || this.sceneEditor?.isOpen ||
         this.devFreeze.isFrozen) return null;
     const concealed = this.hide.isConcealed(faction);
     const door = this.nearestInteractableDoor(actor.position);
@@ -2694,7 +2740,7 @@ export class ThreeGame {
     const root = this.apartment.hideSpotIndicatorRoot;
     const actor = this.control.controlled(this.player, this.human);
     const faction = this.control.controlledFaction;
-    root.visible = this.match.phase === 'PLAYING' && !this.sceneEditor.isOpen && !!actor;
+    root.visible = this.match.phase === 'PLAYING' && !this.sceneEditor?.isOpen && !!actor;
     if (!root.visible || !actor || !faction) return;
     const target = this.hideTargetResolution(actor.position).target;
     for (const [id, ring] of this.apartment.hideSpotIndicators) {
@@ -2768,7 +2814,9 @@ export class ThreeGame {
 
   private updatePerceptionHud(): void {
     if (import.meta.env.DEV)
-      this.safetyPaths.update(this.deepseekAI.safetyDebug, this.human.position);
+      this.safetyPaths?.update(this.deepseekAI.safetyDebug, this.human.position);
+    // No player sound visualization and no open DEV panel: there is no consumer.
+    if (!PLAYER_SOUND_VISUAL_ENABLED && (!this.debugPanel?.isExpanded || this.debugPanel.root.hidden)) return;
     const faction = this.control.informationObserver;
     if (!faction) {
       if (PLAYER_SOUND_VISUAL_ENABLED)
@@ -2782,15 +2830,15 @@ export class ThreeGame {
     if (PLAYER_SOUND_VISUAL_ENABLED)
       this.soundVisual?.update(listener, this.debugPossessionEnabled ? probe : heard,
         this.match.phase !== 'FINISHED', this.sound.nowMs);
-    if (!this.debugPanel.isExpanded || this.debugPanel.root.hidden) return;
+    if (!this.debugPanel?.isExpanded || this.debugPanel.root.hidden) return;
     const sight = this.vision.get(faction);
-    this.updateDebugDetailsPanel(faction, heard, probe, sight);
+    this.updateDebugDetailsPanel(heard, probe, sight);
   }
 
-  private updateDebugDetailsPanel(faction: Faction,
-    heard: ReturnType<SoundEventSystem['heardBy']>,
+  private updateDebugDetailsPanel(heard: ReturnType<SoundEventSystem['heardBy']>,
     probe: ReturnType<SoundEventSystem['analyzeBy']>,
     sight: ReturnType<VisionSystem['get']>): void {
+    if (!import.meta.env.DEV || !this.debugPanel) return;
     const make = (key: string, label: string, value: string,
       tone: DebugProperty['tone'] = 'normal', children?: DebugProperty[]): DebugProperty =>
       ({ key, label, value, tone, children });
@@ -2798,8 +2846,7 @@ export class ThreeGame {
       state === 'EVADE' ? 'danger' : state === 'SAFE_WAIT' ? 'warning'
         : state.startsWith('CURIOUS') || state === 'SAFE_BYPASS' ? 'curious'
           : ['COMPLETED', 'DISABLED', 'PASS', 'SUCCESS'].includes(state) ? 'success' : 'normal';
-    const point = (value: { x: number; z: number } | null | undefined) => value
-      ? `(${value.x.toFixed(1)}, ${value.z.toFixed(1)})` : '无';
+    const point = pointText;
     const selectedFaction = this.control.selectedFaction;
     const factionName = selectedFaction === 'DEEPSEEK' ? 'DeepSeek 娘'
       : selectedFaction === 'HUMAN' ? '人类' : '未选择';
@@ -2809,8 +2856,7 @@ export class ThreeGame {
       : this.match.phase === 'READY' ? `准备：${Math.ceil(this.match.readyRemainingMs / 1000)} 秒`
         : this.match.phase === 'PLAYING' ? '对局中'
           : this.match.phase === 'PAUSED' ? '已暂停' : '已结束';
-    const seconds = Math.floor(this.match.elapsedMs / 1000);
-    const time = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+    const time = formatMatchTime(this.match.elapsedMs);
     const ratio = this.rice.progressRatio;
     const risk = this.sprint.state === 'NORMAL'
       ? ratio >= C.sprint.riskThreshold ? 'RISK SPRINT' : 'SAFE SPRINT'
@@ -2833,7 +2879,6 @@ export class ThreeGame {
           : this.sprint.state !== 'NORMAL' ? '冲刺或眩晕中无法进食'
             : nearest && nearest.range <= C.rice.interactionRange / U
               ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
-    const humanSight = this.vision.get('HUMAN');
     const humanPath = this.humanAI.getPathProgress();
     const humanActive = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
       this.control.temporaryInputTarget, this.input.debugDirection(), this.debugPossessionEnabled);
@@ -3211,7 +3256,7 @@ export class ThreeGame {
       {
         id: 'dev-freeze', title: 'DEV Freeze / 场景编辑',
         properties: this.debugPossessionEnabled
-          ? this.sceneEditor.statusEntries().map(entry =>
+          ? (this.sceneEditor?.statusEntries() ?? []).map(entry =>
             make(`dev-${entry.label}`, entry.label, entry.value, entry.tone ?? 'normal'))
           : [],
       },
@@ -3343,98 +3388,16 @@ export class ThreeGame {
   // S7C-2：DEV 只读的「AI 已知 / AI 推断」快照。读它不会推进任何计时，也不会
   // 改变 AI 的目标或路径；这里没有任何隐藏者的真实坐标或藏身占用状态。
   private humanAiHideSearchObservation(): DevBHumanHideSearch {
-    const latestClue = this.humanAI.clueList().slice(-1)[0] ?? null;
-    const inference = this.humanAI.traceInference;
-    const stance = this.humanAI.checkHideStance;
-    const nowMs = this.traces.nowMs;
-    const lastSeen = this.humanAI.lastSeenPublic(nowMs);
-    const lastSeenPublic = lastSeen as { present?: boolean; valid?: boolean;
-      x?: number; z?: number; roomId?: string | null; ageMs?: number };
-    const detail = this.humanAI.lastCheckDetail;
-    return {
-      clueCount: this.humanAI.clueMemory.count(),
-      expiredClueCount: this.humanAI.clueMemory.expiredCount,
-      latestCluePosition: latestClue ? { ...latestClue.position } : null,
-      latestClueAgeMs: latestClue ? nowMs - latestClue.discoveredAt : null,
-      inferenceCode: inference.code,
-      inferenceConfidence: inference.confidence,
-      inferenceHeadingDeg: inference.directionHeadingRad === null ? null
-        : inference.directionHeadingRad * 180 / Math.PI,
-      inferenceAnchor: inference.anchor ? { ...inference.anchor } : null,
-      inferenceBasis: inference.basis.join('；'),
-      candidateRanking: this.humanAI.candidateRanking,
-      suspectedSpotId: this.humanAI.suspectedSpotIds[0] ?? null,
-      suspectedBasis: this.humanAI.candidateBasis.join('；'),
-      candidateSkipped: this.humanAI.candidateSkipped,
-      // 修复轮 一 / 二：待处理线索与 Last Seen 的公开摘要。
-      pendingClueCount: this.humanAI.pendingClueCount,
-      pendingClueRemainingMs: Math.max(0,
-        this.humanAI.pendingClueValidUntilMs - nowMs),
-      pendingClueDeferReason: this.humanAI.pendingClueDeferReason,
-      pendingClueDeferCount: this.humanAI.pendingClueDeferCount,
-      pendingClueReevalCount: this.humanAI.pendingClueReevalCount,
-      lastSeenPresent: lastSeenPublic.present === true,
-      lastSeenValid: lastSeenPublic.valid === true,
-      lastSeenPosition: lastSeenPublic.present
-        ? { x: lastSeenPublic.x ?? 0, z: lastSeenPublic.z ?? 0 } : null,
-      lastSeenRoomId: this.humanAI.lastSeenRoomId,
-      lastSeenAgeMs: lastSeenPublic.ageMs ?? null,
-      lastSeenRoomGateCode: this.humanAI.lastSeenRoomGateCode,
-      lastSeenRoomGateDetail: this.humanAI.lastSeenRoomGateDetail,
-      // 修复轮 三 / 四 / 六：计数、收尾方式、声音明细与瞄点一致性。
-      roundAttempts: this.humanAI.checkHideRoundAttempts,
-      attemptedSpotId: this.humanAI.checkHideAttemptedSpotId,
-      investigationEndReason: this.humanAI.checkHideInvestigationEndReason,
-      interruptSoundType: this.humanAI.lastInterruptSoundType,
-      interruptSoundStrength: this.humanAI.lastInterruptSoundStrength,
-      interruptSoundRemainingMs: this.humanAI.lastInterruptSoundRemainingMs,
-      interruptSoundIsNew: this.humanAI.lastInterruptSoundIsNew,
-      checkResult: detail.result,
-      checkDetailText: detail.detail,
-      plannedSurfacePoint: detail.plannedSurfacePoint,
-      finalAimPoint: detail.finalAimPoint,
-      aimPointDelta: detail.aimPointDelta,
-      aimAngleDeltaDeg: detail.angleDeltaDeg,
-      aimBlocked: detail.blocked,
-      authoritativeCode: this.humanAiCheckCode,
-      authoritativeDetail: this.humanAiCheckDetail,
-      phase: this.humanAI.checkHidePhase,
-      source: this.humanAI.checkHideSource,
-      spotId: this.humanAI.checkHideSpotId,
-      stancePoint: stance ? { ...stance.stancePoint } : null,
-      surfacePoint: stance ? { ...stance.surfacePoint } : null,
-      // 修复轮 二：导航终点 / 正式站位 / REQUEST 实际位置三处一起看，
-      // 「为什么判成 STANCE_LOST」不再需要靠猜。
-      navGoal: this.humanAI.checkHideNavGoal
-        ? { ...this.humanAI.checkHideNavGoal } : null,
-      stanceDistance: this.humanAI.checkHideStanceDistance,
-      requestPosition: this.humanAI.checkHideRequestPosition
-        ? { ...this.humanAI.checkHideRequestPosition } : null,
-      approachSteps: this.humanAI.checkHideApproachSteps,
-      requestCount: this.humanAI.checkHideRequestCount,
-      staleCancels: this.humanAI.checkHideStaleCancels,
+    return observeHumanHideSearch(this.humanAI, this.traces.nowMs, {
+      authoritativeCode: this.humanAiCheckCode, authoritativeDetail: this.humanAiCheckDetail,
       countsAsFormalCheck: this.humanAiCheckCountsAsFormal,
-      dwellRemainingMs: this.humanAI.checkHideDwellRemainingMs,
-      dwellMs: this.humanAI.checkHideDwellMs,
-      roundChecks: this.humanAI.checkHideRoundChecks,
-      roundBudget: this.humanAI.checkHideRoundBudget,
-      investigationChecks: this.humanAI.checkHideInvestigationChecks,
-      checkedSpotIds: [...this.humanAI.checkHideCheckedSpotIds],
-      cooldowns: this.humanAI.checkHideCooldowns(),
-      lastResult: this.humanAI.checkHideLastResult,
-      lastResultSpotId: this.humanAI.checkHideLastResultSpotId,
-      giveUpCode: this.humanAI.checkHideGiveUpCode,
-      giveUpDetail: this.humanAI.checkHideGiveUpDetail,
-      startCount: this.humanAI.checkHideStartCount,
-      hitCount: this.humanAI.checkHideHitCount,
-      missCount: this.humanAI.checkHideMissCount,
-      interruptCount: this.humanAI.checkHideInterruptCount,
-    };
+    });
   }
 
   // Read-only observation: every value below already exists in a system; nothing
   // here advances a timer, repaths an AI or invents a field.
-  private collectDevBObservation(): DevBObservationInput {    const observer = this.control.informationObserver ?? 'HUMAN';
+  private collectDevBObservation(): DevBObservationInput {
+    const observer = this.control.informationObserver ?? 'HUMAN';
     const sight = this.vision.get(observer);
     const lastSeen = sight.lastSeen;
     const humanProgress = this.humanAI.getPathProgress();
@@ -3540,9 +3503,15 @@ export class ThreeGame {
   }
 
   dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    cancelAnimationFrame(this.frame);
+    this.devBBinding?.stop();
     this.audio.dispose();
+    this.menuSettings.dispose();
     this.audioSettings.dispose();
     this.feedback.dispose();
+    this.throwableView.dispose();
     const container = this.renderer.domElement.parentElement;
     container?.removeEventListener('pointerdown', this.onAudioGesture);
     container?.removeEventListener('pointerover', this.onAudioHover);
@@ -3552,22 +3521,39 @@ export class ThreeGame {
     window.removeEventListener('focus', this.onAudioFocus);
     document.removeEventListener('visibilitychange', this.onAudioFocus);
     this.actorShadows.dispose();
-    this.apartment.interiorShadows.dispose();
+    this.apartment.dispose();
+    this.safetyPaths?.dispose();
+    for (const view of this.riceViews.values()) {
+      view.object.removeFromParent();
+      view.dispose();
+    }
+    this.riceViews.clear();
     this.alphaHud.dispose();
     this.pulseLockView.dispose();
     this.playerAction.dispose();
     this.humanAction.dispose();
-    cancelAnimationFrame(this.frame);
-    this.devBDebug.dispose();
+    this.devBDebug?.dispose();
     this.hideSearchView.dispose();
     this.renderer.domElement.removeEventListener('click', this.onActorClick);
     window.removeEventListener('resize', this.resize);
-    this.sceneEditor.dispose();
+    this.sceneEditor?.dispose();
     this.input.dispose();
     this.captureZone.dispose();
     this.soundVisual?.dispose();
     this.clearTraceViews();
     for (const view of this.doorViews.values()) view.dispose();
+    this.doorViews.clear();
+    for (const actor of [this.player, this.human]) {
+      actor.geometry.dispose();
+      (actor.material as THREE.Material).dispose();
+    }
+    for (const child of this.scene.children) {
+      if (child instanceof THREE.DirectionalLight) child.dispose();
+    }
+    this.scene.clear();
+    this.overlay.remove(); this.menu.remove(); this.skillHud.remove();
+    this.debugPanel?.root.remove();
+    this.renderer.domElement.remove();
     this.renderer.dispose();
   }
 }

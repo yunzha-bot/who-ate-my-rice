@@ -1,0 +1,110 @@
+{
+  "reviewedBase": "e891b8a5dee76a7deb2ea9dc6f847bb16c3977da",
+  "remoteMainAtReview": "e891b8a5dee76a7deb2ea9dc6f847bb16c3977da",
+  "branch": "main",
+  "remoteEqualsHead": true,
+  "indexEmpty": true,
+  "tests": {
+    "workspace": {
+      "total": 949,
+      "pass": 949,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "isolatedCandidate": {
+      "total": 949,
+      "pass": 949,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "typecheck": "pass in workspace and isolation",
+    "build": "pass in workspace and isolation"
+  },
+  "protection": {
+    "compared": 330,
+    "changed": [],
+    "missing": []
+  },
+  "build": {
+    "files": 86,
+    "bytes": 43049716,
+    "localJs": "index-BKlcUlW_.js",
+    "isolatedJs": "index-CBfrQjt0.js",
+    "semanticBundleDifference": "only raw package.json CRLF vs LF representation; normalized JS identical",
+    "oldGlbsExcluded": 6,
+    "oldGlbUrlsAbsent": true,
+    "cameraShortcutStringsAbsent": true,
+    "pendingMp3CopiedCorrectly": true
+  },
+  "security": {
+    "explicitSecretPatternMatches": 0,
+    "privateDirectoriesRead": false,
+    "newAbsolutePathFiles": 34,
+    "newAbsolutePathFilesAllExcluded": true,
+    "selectedScreenshotContactSheetReview": 30,
+    "limitations": "Pattern scan and visual sampling are not proof of universal absence of secrets or full material authorization"
+  },
+  "existingTrackedLicenseGaps": [
+    "public/assets/props/rice-bag/rice-bag.glb",
+    "public/assets/ui/portraits/deepseek-lose.png",
+    "public/assets/ui/portraits/deepseek-model-reference.png",
+    "public/assets/ui/portraits/deepseek-normal.png",
+    "public/assets/ui/portraits/deepseek-portrait-sheet.png",
+    "public/assets/ui/portraits/deepseek-win.png",
+    "public/ui/components/blue-strip.png",
+    "public/ui/components/button-endcap.png",
+    "public/ui/components/button-shell-stretch.png",
+    "public/ui/components/button-shell.png",
+    "public/ui/components/dark-label.png",
+    "public/ui/components/header-strip.png",
+    "public/ui/faction-name-gradient-clean.png",
+    "public/ui/faction-name-gradient-clean.svg",
+    "public/ui/faction-name-gradient.png",
+    "public/ui/hud/faction-warm.png",
+    "public/ui/hud/interaction-shell.png",
+    "public/ui/hud/rice-bowl.png",
+    "public/ui/hud/rice-shell.png",
+    "public/ui/hud/skill-blue.png",
+    "public/ui/hud/skill-warm.png",
+    "public/ui/hud/timer-shell.png",
+    "public/ui/panels/compact-dots-upper.png",
+    "public/ui/panels/compact-shell-stretch.png",
+    "public/ui/panels/compact-shell.png",
+    "public/ui/panels/main-dots-left.png",
+    "public/ui/panels/main-dots-right.png",
+    "public/ui/panels/main-shell-stretch.png",
+    "public/ui/panels/main-shell.png",
+    "public/ui/pulselock/track-shell.png",
+    "public/ui/screens/result-accent.png",
+    "public/ui/sheet-a-pulselock.png",
+    "public/ui/sheet-b-panels.png",
+    "public/ui/sheet-c-hud.png",
+    "public/ui/sheet-d-menu-result.png",
+    "public/ui/sheet-e-textures.png",
+    "public/ui/sheet-f-modern-textures.png",
+    "public/ui/textures/paper.png"
+  ],
+  "reviewDate": "2026-10-16",
+  "inventory": {
+    "modified": 36,
+    "untrackedNonPrivate": 1220,
+    "initialFiles": 1256,
+    "recommendedExisting": 188,
+    "reviewDeliverables": 5,
+    "recommendedTotal": 193,
+    "pendingNewAudio": 2,
+    "excludedFiles": 1066,
+    "privateRoots": "3 roots, not enumerated or read"
+  },
+  "whitespace": {
+    "tracked": "git diff --check passed",
+    "untracked": {
+      "checked": 122,
+      "issues": []
+    }
+  },
+  "scope": "Release-inventory review only; no gameplay edits, staging, commit, push or Tag",
+  "publicationDecision": "hold: new MP3 permissions and existing asset evidence gaps need human resolution"
+}

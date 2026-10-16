@@ -60,10 +60,14 @@ export class CharacterActionView {
       this.deepseekHair = new DeepSeekHairMotion(model, this.mesh);
     } catch (error) {
       console.warn('DeepSeek visual unavailable; falling back', error);
-      if (model) disposeDeepSeekModel(model);
+      this.deepseekAnimation?.dispose();
+      this.deepseekAnimation = null;
+      this.deepseekHair = null;
+      // Once attached, HomeAvatar owns disposal, including failed initialization.
+      if (model && model.parent !== this.avatar.root) disposeDeepSeekModel(model);
       if (this.disposed) return;
       this.avatar.clearExternalVisual();
-      // loadDeepSeekModel already tries the static GLB after animated variants;
+      // Development tries old GLBs; production tries only the formal v6 model;
       // if that is also absent, keep the procedural avatar instead of retrying it.
     }
   }
@@ -89,7 +93,7 @@ export class CharacterActionView {
 
   /** Called only in PLAYING; pause and menus freeze both clip time and fall pose time. */
   update(requested: CharacterAction, deltaMs: number,
-    visualState: DeepSeekVisualState = { concealed: false, eating: false }): void {
+    visualState: DeepSeekVisualState = { concealed: false, eating: false }, headingRad?: number): void {
     const elapsed = Math.max(0, deltaMs);
     if (requested === 'FALL') this.fallRemainingMs = C.characterAnimation.fallPoseMs;
     else this.fallRemainingMs = Math.max(0, this.fallRemainingMs - elapsed);
@@ -110,7 +114,7 @@ export class CharacterActionView {
     if (this.deepseekAnimation) {
       try { this.deepseekAnimation.update(this.action, elapsed / 1000, visualState); }
       catch (error) {
-        console.warn('DeepSeek animation failed; restoring static GLB', error);
+        console.warn('DeepSeek animation failed; restoring fallback visual', error);
         this.deepseekAnimation.dispose();
         this.deepseekAnimation = null;
         this.deepseekHair = null;
@@ -120,7 +124,7 @@ export class CharacterActionView {
     }
     this.tryPlaySpecialIdle();
     this.avatar.root.visible = !this.mixer;
-    if (!this.mixer) this.avatar.update(this.action, elapsed);
+    if (!this.mixer) this.avatar.update(this.action, elapsed, headingRad);
     this.deepseekHair?.update(elapsed / 1000, visualState.concealed);
   }
 
@@ -147,6 +151,9 @@ export class CharacterActionView {
   get idleSeconds(): number {
     return this.idleElapsedMs / 1000;
   }
+
+  get headingRad(): number { return this.avatar.root.rotation.y; }
+  faceHeading(headingRad: number): void { this.avatar.faceHeading(headingRad); }
 
   dispose(): void {
     this.disposed = true;

@@ -1,0 +1,33 @@
+{
+  "compared": 329,
+  "changed": [
+    "src/three/GameAudio.ts",
+    "src/three/ThreeGame.ts",
+    "tests/game-audio.test.mjs"
+  ],
+  "missing": [],
+  "all38PreviousAudioFilesUnchanged": true,
+  "configAiMapsModelsAndHoldPositionUnchanged": true,
+  "logPrefixPreserved": true,
+  "asset": {
+    "file": "public/assets/audio/deepseekCaughtDefeat.mp3",
+    "bytes": 17525,
+    "sha256": "3754fcec7a41785ad41d71decd84ce487257df18973f16e7ac2a13119b34c447",
+    "originalUnmodified": true,
+    "distIdentical": true
+  },
+  "tests": {
+    "total": 945,
+    "pass": 943,
+    "fail": 2,
+    "skipped": 0,
+    "cancelled": 0,
+    "failures": [
+      "tests/difficulty.test.mjs:263 NORMAL/20276765 stays PLAYING",
+      "tests/throwables.test.mjs:35 throw_closet_1 initial distance assertion"
+    ],
+    "audio": 13,
+    "typecheck": "pass",
+    "build": "pass"
+  }
+}

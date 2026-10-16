@@ -1,0 +1,3020 @@
+[
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "faction": "HUMAN",
+    "difficulty": "NORMAL",
+    "seed": 20268846,
+    "url": "http://127.0.0.1:4173/",
+    "nativeRaf": true,
+    "directGameplayUpdates": 0,
+    "directStateWrites": 0,
+    "errors": [],
+    "samples": [
+      {
+        "wallMs": 422,
+        "phase": "PLAYING",
+        "elapsedMs": 387.89999985694885,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 5449,
+        "phase": "PLAYING",
+        "elapsedMs": 5415.899999856949,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 2469.7999999523163
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 10481,
+        "phase": "PLAYING",
+        "elapsedMs": 10423.499999523163,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 7477.39999961853
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 15528,
+        "phase": "PLAYING",
+        "elapsedMs": 15472.199999570847,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 12526.099999666214
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 21333,
+        "phase": "PLAYING",
+        "elapsedMs": 21278.799999713898,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 18332.699999809265
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 26507,
+        "phase": "PLAYING",
+        "elapsedMs": 26460.499999523163,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 23514.39999961853
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 31529,
+        "phase": "PLAYING",
+        "elapsedMs": 31486.89999961853,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 28540.799999713898
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 36563,
+        "phase": "PLAYING",
+        "elapsedMs": 36506.99999952316,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 41627,
+        "phase": "PLAYING",
+        "elapsedMs": 41549.49999952316,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 2079
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 46683,
+        "phase": "PLAYING",
+        "elapsedMs": 46627.19999957085,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 7156.700000047684
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 51729,
+        "phase": "PLAYING",
+        "elapsedMs": 51685.2999997139,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 12214.800000190735
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 56772,
+        "phase": "PLAYING",
+        "elapsedMs": 56712.599999666214,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 17242.10000014305
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 61818,
+        "phase": "PLAYING",
+        "elapsedMs": 61747.29999947548,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 22276.799999952316
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 66845,
+        "phase": "PLAYING",
+        "elapsedMs": 66777.89999961853,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 27307.400000095367
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 71875,
+        "phase": "PLAYING",
+        "elapsedMs": 71814.69999957085,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 76898,
+        "phase": "PLAYING",
+        "elapsedMs": 76840.09999966621,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 81927,
+        "phase": "PLAYING",
+        "elapsedMs": 81868.69999957085,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 5019.900000095367
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 86956,
+        "phase": "PLAYING",
+        "elapsedMs": 86896.29999947548,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 10047.5
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 91969,
+        "phase": "PLAYING",
+        "elapsedMs": 91910.29999947548,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 15061.5
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 96975,
+        "phase": "PLAYING",
+        "elapsedMs": 96917.99999952316,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 20069.200000047684
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 102015,
+        "phase": "PLAYING",
+        "elapsedMs": 101952.69999957085,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 25103.900000095367
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 107041,
+        "phase": "PLAYING",
+        "elapsedMs": 106976.09999966621,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 112077,
+        "phase": "PLAYING",
+        "elapsedMs": 111994.79999947548,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 117107,
+        "phase": "PLAYING",
+        "elapsedMs": 117039.69999957085,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 4244.599999904633
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 122170,
+        "phase": "PLAYING",
+        "elapsedMs": 122071.49999952316,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 9276.399999856949
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 127191,
+        "phase": "PLAYING",
+        "elapsedMs": 127129.89999961853,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 14334.799999952316
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 132274,
+        "phase": "PLAYING",
+        "elapsedMs": 132195.79999947548,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 19400.699999809265
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 137303,
+        "phase": "PLAYING",
+        "elapsedMs": 137235.19999957085,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 24440.099999904633
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 142583,
+        "phase": "PLAYING",
+        "elapsedMs": 142520.39999961853,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 29725.299999952316
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 147627,
+        "phase": "PLAYING",
+        "elapsedMs": 147532.69999957085,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 201.09999990463257
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 152656,
+        "phase": "PLAYING",
+        "elapsedMs": 152560.69999957085,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 5229.099999904633
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 157690,
+        "phase": "PLAYING",
+        "elapsedMs": 157586.39999961853,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 10254.799999952316
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 162746,
+        "phase": "PLAYING",
+        "elapsedMs": 162637.7999997139,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 15306.200000047684
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 167774,
+        "phase": "PLAYING",
+        "elapsedMs": 167648.7999997139,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 20317.200000047684
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 172800,
+        "phase": "PLAYING",
+        "elapsedMs": 172673.2999997139,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 25341.700000047684
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 177819,
+        "phase": "FINISHED",
+        "elapsedMs": 177339,
+        "completed": 5,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 30000
+          }
+        ],
+        "ai": "EAT",
+        "result": {
+          "winner": "DEEPSEEK",
+          "reason": "RICE_COMPLETED",
+          "elapsedMs": 177339
+        },
+        "focused": true
+      }
+    ],
+    "result": {
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 177339
+    },
+    "wallMs": 177820,
+    "completed": 5,
+    "restartAndMenu": true
+  },
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "faction": "HUMAN",
+    "difficulty": "NORMAL",
+    "seed": 20268846,
+    "url": "http://127.0.0.1:4173/",
+    "nativeRaf": true,
+    "directGameplayUpdates": 0,
+    "directStateWrites": 0,
+    "errors": [],
+    "samples": [
+      {
+        "wallMs": 801,
+        "phase": "PLAYING",
+        "elapsedMs": 857.3999998569489,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 5901,
+        "phase": "PLAYING",
+        "elapsedMs": 5976.099999904633,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 3024
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 10930,
+        "phase": "PLAYING",
+        "elapsedMs": 11019.499999761581,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 8067.399999856949
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 15949,
+        "phase": "PLAYING",
+        "elapsedMs": 16039.499999761581,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 13087.399999856949
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 21049,
+        "phase": "PLAYING",
+        "elapsedMs": 21097.299999713898,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 18145.199999809265
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 26152,
+        "phase": "PLAYING",
+        "elapsedMs": 26233.99999976158,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 23281.89999985695
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 31199,
+        "phase": "PLAYING",
+        "elapsedMs": 31262.99999976158,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 28310.89999985695
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 36214,
+        "phase": "PLAYING",
+        "elapsedMs": 36291.39999961853,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 41229,
+        "phase": "PLAYING",
+        "elapsedMs": 41307.2999997139,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 1830.5
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 46241,
+        "phase": "PLAYING",
+        "elapsedMs": 46325.2999997139,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 6848.5
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 51260,
+        "phase": "PLAYING",
+        "elapsedMs": 51344.69999957085,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 11867.899999856949
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 56273,
+        "phase": "PLAYING",
+        "elapsedMs": 56356.69999957085,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 16879.89999985695
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 61296,
+        "phase": "PLAYING",
+        "elapsedMs": 61374.19999957085,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 21897.39999985695
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 66371,
+        "phase": "PLAYING",
+        "elapsedMs": 66411.49999976158,
+        "completed": 1,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 26934.700000047684
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 71461,
+        "phase": "PLAYING",
+        "elapsedMs": 71461.7999997139,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 76499,
+        "phase": "PLAYING",
+        "elapsedMs": 76563.59999966621,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 81532,
+        "phase": "PLAYING",
+        "elapsedMs": 81601.39999961853,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 4769.599999904633
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 86565,
+        "phase": "PLAYING",
+        "elapsedMs": 86629.89999961853,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 9798.099999904633
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 91573,
+        "phase": "PLAYING",
+        "elapsedMs": 91635.99999952316,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 14804.199999809265
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 96631,
+        "phase": "PLAYING",
+        "elapsedMs": 96659.19999957085,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 19827.39999985695
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 101694,
+        "phase": "PLAYING",
+        "elapsedMs": 101722.7999997139,
+        "completed": 2,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 24891
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 106927,
+        "phase": "PLAYING",
+        "elapsedMs": 106918.19999957085,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 111964,
+        "phase": "PLAYING",
+        "elapsedMs": 112017.89999961853,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "MOVE_TO_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 117169,
+        "phase": "PLAYING",
+        "elapsedMs": 117156.19999957085,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 4390.299999952316
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 122323,
+        "phase": "PLAYING",
+        "elapsedMs": 122358.39999961853,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 9592.5
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 127409,
+        "phase": "PLAYING",
+        "elapsedMs": 127432.99999952316,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 14667.099999904633
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 132422,
+        "phase": "PLAYING",
+        "elapsedMs": 132471.79999947548,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 19705.89999985695
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 137614,
+        "phase": "PLAYING",
+        "elapsedMs": 137495.99999952316,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 24730.099999904633
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 142751,
+        "phase": "PLAYING",
+        "elapsedMs": 142743.5999994278,
+        "completed": 3,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 29977.699999809265
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 147771,
+        "phase": "PLAYING",
+        "elapsedMs": 147735.19999933243,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 431.2000000476837
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 152790,
+        "phase": "PLAYING",
+        "elapsedMs": 152758.79999923706,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 5454.799999952316
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 157833,
+        "phase": "PLAYING",
+        "elapsedMs": 157661.59999918938,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 10357.599999904633
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 162847,
+        "phase": "PLAYING",
+        "elapsedMs": 162658.699999094,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 15354.699999809265
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 168003,
+        "phase": "PLAYING",
+        "elapsedMs": 167748.99999904633,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 20444.99999976158
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 173103,
+        "phase": "PLAYING",
+        "elapsedMs": 172887.1999988556,
+        "completed": 4,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 25583.199999570847
+          }
+        ],
+        "ai": "EAT",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 178565,
+        "phase": "FINISHED",
+        "elapsedMs": 177305.89999890327,
+        "completed": 5,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 30000
+          },
+          {
+            "id": "rice_10",
+            "ms": 30000
+          },
+          {
+            "id": "rice_04",
+            "ms": 30000
+          },
+          {
+            "id": "rice_07",
+            "ms": 30000
+          },
+          {
+            "id": "rice_03",
+            "ms": 30000
+          }
+        ],
+        "ai": "EAT",
+        "result": {
+          "winner": "DEEPSEEK",
+          "reason": "RICE_COMPLETED",
+          "elapsedMs": 177305.89999890327
+        },
+        "focused": true
+      }
+    ],
+    "result": {
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 177305.89999890327
+    },
+    "wallMs": 178641,
+    "completed": 5,
+    "restartAndMenu": true
+  },
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "faction": "DEEPSEEK",
+    "difficulty": "NORMAL",
+    "seed": 20268846,
+    "url": "http://127.0.0.1:4173/",
+    "nativeRaf": true,
+    "directGameplayUpdates": 0,
+    "directStateWrites": 0,
+    "errors": [],
+    "samples": [
+      {
+        "wallMs": 449,
+        "phase": "PLAYING",
+        "elapsedMs": 401.7000000476837,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 5576,
+        "phase": "PLAYING",
+        "elapsedMs": 5493.499999761581,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 10613,
+        "phase": "PLAYING",
+        "elapsedMs": 9934.400000095367,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 15741,
+        "phase": "PLAYING",
+        "elapsedMs": 14982.000000238419,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 20799,
+        "phase": "PLAYING",
+        "elapsedMs": 20045.00000023842,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 25938,
+        "phase": "PLAYING",
+        "elapsedMs": 25170.60000014305,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 30963,
+        "phase": "PLAYING",
+        "elapsedMs": 30191.700000286102,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 35985,
+        "phase": "PLAYING",
+        "elapsedMs": 35176.60000014305,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 40998,
+        "phase": "PLAYING",
+        "elapsedMs": 40190.10000014305,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 46040,
+        "phase": "PLAYING",
+        "elapsedMs": 45235.00000023842,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 51047,
+        "phase": "FINISHED",
+        "elapsedMs": 46369.900000333786,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": {
+          "winner": "HUMAN",
+          "reason": "CAPTURED",
+          "elapsedMs": 46369.900000333786
+        },
+        "focused": true
+      }
+    ],
+    "result": {
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 46369.900000333786
+    },
+    "wallMs": 51048,
+    "completed": 0,
+    "restartAndMenu": true
+  },
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "faction": "DEEPSEEK",
+    "difficulty": "NORMAL",
+    "seed": 20268846,
+    "url": "http://127.0.0.1:4173/",
+    "nativeRaf": true,
+    "directGameplayUpdates": 0,
+    "directStateWrites": 0,
+    "errors": [],
+    "samples": [
+      {
+        "wallMs": 502,
+        "phase": "PLAYING",
+        "elapsedMs": 450.7999999523163,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 5517,
+        "phase": "PLAYING",
+        "elapsedMs": 5483.400000095367,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 10550,
+        "phase": "PLAYING",
+        "elapsedMs": 10504.200000047684,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 15572,
+        "phase": "PLAYING",
+        "elapsedMs": 15525.100000143051,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 20594,
+        "phase": "PLAYING",
+        "elapsedMs": 20551.200000047684,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 25628,
+        "phase": "PLAYING",
+        "elapsedMs": 25570.10000014305,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 30656,
+        "phase": "PLAYING",
+        "elapsedMs": 30596.900000095367,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 35668,
+        "phase": "PLAYING",
+        "elapsedMs": 35596.5,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 40688,
+        "phase": "PLAYING",
+        "elapsedMs": 40617.40000009537,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 45710,
+        "phase": "PLAYING",
+        "elapsedMs": 45634.60000014305,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": null,
+        "focused": true
+      },
+      {
+        "wallMs": 50727,
+        "phase": "FINISHED",
+        "elapsedMs": 46348.800000190735,
+        "completed": 0,
+        "progress": [
+          {
+            "id": "rice_12",
+            "ms": 0
+          },
+          {
+            "id": "rice_10",
+            "ms": 0
+          },
+          {
+            "id": "rice_04",
+            "ms": 0
+          },
+          {
+            "id": "rice_07",
+            "ms": 0
+          },
+          {
+            "id": "rice_03",
+            "ms": 0
+          }
+        ],
+        "ai": "SEEK_RICE",
+        "result": {
+          "winner": "HUMAN",
+          "reason": "CAPTURED",
+          "elapsedMs": 46348.800000190735
+        },
+        "focused": true
+      }
+    ],
+    "result": {
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 46348.800000190735
+    },
+    "wallMs": 50728,
+    "completed": 0,
+    "restartAndMenu": true
+  }
+]

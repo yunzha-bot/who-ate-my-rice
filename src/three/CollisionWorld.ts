@@ -1,7 +1,7 @@
 import { Box3, Vector3 } from 'three';
 import { GAME_CONFIG } from '../config/gameConfig.ts';
 import { nearestPointOnDoorSegment } from '../systems/DoorSystem.ts';
-import { circleIntersectsRect, localToWorld, pointInRect, rectBoundingAabb,
+import { circleIntersectsRect, localToWorld, rectBoundingAabb,
   segmentIntersectsRect, worldToLocal } from './map/RotatedRect.ts';
 import type { DoorNode, Rect } from './map/apartmentMap.ts';
 
@@ -71,6 +71,38 @@ export class CollisionWorld {
 
   dynamicObstacleCount(): number {
     return this.dynamicObstacles.size;
+  }
+
+  /** Continuous conservative XZ sweep. Arc height is visual only: no lobbing
+   * over walls/closed doors or rotated furniture. Returns first contact [0,1]. */
+  traceCircleXZ(start: { x: number; z: number }, end: { x: number; z: number },
+    radius: number): number | null {
+    let first = Infinity;
+    const slab = (a: typeof start, b: typeof end, minX: number, maxX: number,
+      minZ: number, maxZ: number) => {
+      let enter = 0, exit = 1;
+      for (const [p, d, min, max] of [[a.x, b.x - a.x, minX - radius, maxX + radius],
+        [a.z, b.z - a.z, minZ - radius, maxZ + radius]]) {
+        if (Math.abs(d) < 1e-12) { if (p < min || p > max) return; }
+        else { const t1 = (min - p) / d, t2 = (max - p) / d;
+          enter = Math.max(enter, Math.min(t1, t2)); exit = Math.min(exit, Math.max(t1, t2)); }
+        if (enter > exit) return;
+      }
+      first = Math.min(first, enter);
+    };
+    for (const box of this.allObstacles())
+      if (box.max.y > 0) slab(start, end, box.min.x, box.max.x, box.min.z, box.max.z);
+    for (const rect of this.oriented) if (rect.maxY > 0)
+      slab(worldToLocal(rect, start), worldToLocal(rect, end),
+        -rect.width / 2, rect.width / 2, -rect.depth / 2, rect.depth / 2);
+    // The map boundary is also solid; stop at its inner face.
+    for (const [a, b, limit] of [[start.x, end.x, this.halfWidth - radius],
+      [start.z, end.z, this.halfDepth - radius]]) {
+      if (Math.abs(a) > limit) first = 0;
+      else if (Math.abs(b) > limit) first = Math.min(first,
+        ((b > 0 ? limit : -limit) - a) / (b - a));
+    }
+    return Number.isFinite(first) ? first : null;
   }
 
   // Navigation samples the movement footprint, but plans through openable doors.

@@ -7,6 +7,17 @@ export const RICE_MAX_PROGRESS_MS = {
 export const RICE_TIMING_MODE: keyof typeof RICE_MAX_PROGRESS_MS = 'production';
 
 export const GAME_CONFIG = {
+  throwables: {
+    enabled: true, // 生活投掷物开关；默认开启。
+    pickupRange: 1.2, // 世界单位；拾取距离，默认1.2。
+    maxThrowDistance: 6, // 世界单位；最大投掷距离，默认6。
+    flightDurationMs: 600, // 毫秒；完整飞行时长，默认600。
+    arcHeight: 0.75, // 世界单位；抛物线附加高度，默认0.75。
+    projectileRadius: 0.12, // 世界单位；扫掠碰撞半径，默认0.12。
+    throwCooldownMs: 800, // 毫秒；每人出手间隔，默认800。
+    pickupDelayAfterLandingMs: 500, // 毫秒；不锈钢盆落地禁拾，默认500。
+    stunDurationMs: 3_000, // 毫秒；被砸倒地眩晕，默认3000，不累加。
+  },
   backgroundColor: '#858b91',
   development: {
     // Development-only control handoff. Disable for production builds.
@@ -142,7 +153,7 @@ export const GAME_CONFIG = {
   },
   three: {
     pixelsPerUnit: 60,
-    viewHeight: 14,
+    viewHeight: 8,
     actorHeight: 0.7,
     wallHeight: 1.5,
     boundaryHeight: 0.5,

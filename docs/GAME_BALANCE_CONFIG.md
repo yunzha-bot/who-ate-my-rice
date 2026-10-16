@@ -4,9 +4,31 @@
 
 2026-10-14 当前规则：本表的 AI 列记录 `GAME_CONFIG` 基础值（EASY），NORMAL/HARD 仅按玩家阵营覆盖对手的11个批准字段，完整档位表与接入说明见 [难度配置](DIFFICULTY_DESIGN.md)。正式游戏实际使用30秒/份；DEV-B保存预设保留但不再在刷新／新局自动应用，只能手动加载。有效值优先级为本局显式DEV覆盖＞本局难度＞GAME_CONFIG基础值，不能只看本表默认值。
 
+2026-10-15追捕手感调整：`DIFFICULTY_OVERRIDES.NORMAL.humanAI.movementSpeedMultiplier` 为0.64（原0.78），`HARD`同字段为0.76（原0.95）；EASY基础0.52不变。只影响DeepSeek主控时对手Human AI的巡逻/追逐移动及行程估计，不改玩家速度、破解/搜查、DeepSeek AI、进食或技能。暂停界面只显示难度名称，有效值仍可在DEV-B中核查。数值是待试玩的新基线，不宣称胜率已平衡。
+
 此前 [结构审计与平衡准备](CODEBASE_BALANCE_AUDIT.md) 的226项读取目录、38项DEV覆盖及填写表是调整前快照，不代表本轮的进食模式或自动恢复行为；其他未授权数值保持不变。
 
 听觉生效时机待决策：9项声音 `range` 实际在每次分析时读取，因此改变范围会影响存量事件（现有测试同样要求）；DEV元数据和旧设计写“仅新事件”，与运行矛盾。`strength`／`lifetimeMs` 则确实按生成快照。本轮只记录，未修源码／测试或选择新语义，详见审计A15。
+
+## 生活投掷物（2026-10-15初始值，待试玩）
+
+本组为新增玩法，只影响生活物件，不改变既有玩家、AI、技能和难度数值。三档与两阵营使用同一组配置，完整规则和验证见 [投掷物报告](verification/THROWABLES_REPORT.md)。
+
+| 参数路径 | 当前值 | 单位 / 作用 |
+|---|---:|---|
+| `C.throwables.enabled` | true | 功能开关 |
+| `C.throwables.pickupRange` | 1.2 | 世界单位；近距离且无遮挡拾取 |
+| `C.throwables.maxThrowDistance` | 6 | 世界单位；鼠标落点距离上限 |
+| `C.throwables.flightDurationMs` | 600 | 毫秒；完整飞行时间，须大于0 |
+| `C.throwables.arcHeight` | 0.75 | 世界单位；附加视觉弧高，碰撞仍沿XZ保守处理 |
+| `C.throwables.projectileRadius` | 0.12 | 世界单位；物件扫掠半径，角色判定还加自身逻辑半径 |
+| `C.throwables.throwCooldownMs` | 800 | 毫秒；每个角色出手间隔 |
+| `C.throwables.pickupDelayAfterLandingMs` | 500 | 毫秒；盆落地禁拾 |
+| `C.throwables.stunDurationMs` | 3000 | 毫秒；命中倒地眩晕，重复命中刷新而不累加 |
+
+每区域2件属于关卡内容，在 `src/three/map/throwableLayout.json` 持久化；花瓶/盒子实际投出后一次性消耗，只有盆可回收。眩晕期间阻止位移/交互/进食/抓捕，暂停冻结计时；重开复位。参数尚未经过统计平衡测试，尤其注意盆循环压制风险。
+
+2026-10-15用户追加批准：眩晕由2000ms改为3000ms；DEV场景编辑器新增道具拖动、X/Z输入、独立应用及保存，详见 [投掷物编辑验收](verification/THROWABLE_EDITOR_REPORT.md)。其他8项投掷数值及所有既有平衡参数不变。
 
 ## 开发与正式进食时间
 

@@ -1,0 +1,26 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "enemyProjectileFixture": true,
+    "riceId": "rice_12",
+    "before": 102.60000014305115,
+    "stopped": 595.7999999523163,
+    "progressRetained": true,
+    "eatLoopStopped": true,
+    "preparationRespected": true,
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "enemyProjectileFixture": true,
+    "riceId": "rice_12",
+    "before": 108.60000014305115,
+    "stopped": 606.1000001430511,
+    "progressRetained": true,
+    "eatLoopStopped": true,
+    "preparationRespected": true,
+    "errors": []
+  }
+]

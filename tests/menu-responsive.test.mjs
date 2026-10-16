@@ -9,7 +9,9 @@ test('faction cards reserve separate flow regions for identity, portrait and cap
   const menu = { innerHTML: '', querySelectorAll: () => [] };
   populateFactionMenu(menu, () => {});
   assert.match(menu.innerHTML, /<header class="menu-topbar">/);
-  assert.match(menu.innerHTML, /class="menu-audio-slot"/);
+  assert.match(menu.innerHTML, /class="menu-audio-slot menu-setting-panel"/);
+  assert.match(menu.innerHTML, /<aside class="menu-settings"/);
+  assert.match(menu.innerHTML, /class="menu-difficulty-slot menu-setting-panel"/);
   for (const region of ['faction-main', 'faction-identity', 'faction-description', 'faction-caption']) {
     assert.equal(menu.innerHTML.split(`class="${region}"`).length - 1, 2);
   }
@@ -38,8 +40,14 @@ test('short and narrow menus scroll and reflow instead of positioning primary co
   }
 });
 
-test('one shared audio settings view stays in the menu header or existing pause overlay', () => {
+test('one shared audio settings view stays in the home setting slot or existing pause overlay', () => {
   const source = read('src/three/ThreeGame.ts');
   assert.match(source, /phase === 'PAUSED' \? this\.overlay : this\.menu\.querySelector\('\.menu-audio-slot'\)!/);
   assert.equal((source.match(/new AudioSettingsView\(/g) ?? []).length, 1);
+});
+
+test('home setting panels bound their height and scroll on short windows', () => {
+  const source = read('src/faction-menu.css');
+  assert.match(source, /max-height: min\(520px, 65dvh\)/);
+  assert.match(source, /overflow-y: auto; overscroll-behavior: contain/);
 });

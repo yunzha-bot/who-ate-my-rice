@@ -9,7 +9,7 @@ import { degreesToRadians, distanceToRect, normalizeDegrees, normalizeRadians,
   rectsOverlap, rotatePointAround, snapDegrees } from './RotatedRect.ts';
 import { checkHideRegionPosition, hideRegionGeometry, hideRegionSetup, sampleHideRegion,
   validateHideRegionData, REGION_AUTHORING_LIMITS, DEFAULT_REGION_SAMPLE_STEP,
-  type HideRegionGeometry, type HideRegionPositionCode, type HideRegionSamplePreview }
+  type HideRegionGeometry, type HideRegionSamplePreview }
   from './HideInteractionRegion.ts';
 import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, PLAYER_DIAMETER,
   RICE_CANDIDATES, ROOMS, SPAWNS, WALLS,

@@ -1,0 +1,42 @@
+{
+  "url": "http://127.0.0.1:5183/",
+  "configuration": "original copied config loaded once; config-module watching disabled only in temporary harness; source HMR unchanged",
+  "copiedApprovedPublicFiles": 81,
+  "formalBefore": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8",
+  "records": [
+    {
+      "browser": "chrome",
+      "version": "154.0.8037.100",
+      "id": "gym_treadmill",
+      "beforeX": 13.05,
+      "savedX": 13.06,
+      "postStatus": 200,
+      "previousRevision": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8",
+      "savedRevision": "4c48edfcff10f68119abba121b537c1e6e2f31e52904871df971dd79b34a3455",
+      "backupVerified": true,
+      "reloadRestored": true,
+      "errors": [],
+      "failures": []
+    },
+    {
+      "browser": "edge",
+      "version": "151.0.4129.86",
+      "id": "gym_treadmill",
+      "beforeX": 13.06,
+      "savedX": 13.07,
+      "postStatus": 200,
+      "previousRevision": "4c48edfcff10f68119abba121b537c1e6e2f31e52904871df971dd79b34a3455",
+      "savedRevision": "845f0e863babb9539d64a6e4230ef5d88b2f13a3b66cb03e135055146437be67",
+      "backupVerified": true,
+      "reloadRestored": true,
+      "errors": [],
+      "failures": []
+    }
+  ],
+  "listening": {
+    "address": "127.0.0.1",
+    "family": "IPv4",
+    "port": 5183
+  },
+  "formalAfter": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8"
+}

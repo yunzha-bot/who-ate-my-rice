@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { GAME_CONFIG as C } from '../config/gameConfig';
-import { distanceToXZSegment } from '../systems/NavigationSystem';
-import type { DeepSeekAIController } from '../systems/DeepSeekAIController';
-import type { Point } from './map/apartmentMap';
+import { GAME_CONFIG as C } from '../config/gameConfig.ts';
+import { distanceToXZSegment } from '../systems/NavigationSystem.ts';
+import type { DeepSeekAIController } from '../systems/DeepSeekAIController.ts';
+import type { Point } from './map/apartmentMap.ts';
 
 /** DEV-only display. Actual Human coordinates never flow back to the AI. */
 export class AISafetyPathView {
@@ -22,10 +22,7 @@ export class AISafetyPathView {
     const signature = JSON.stringify([data, actualHuman.x, actualHuman.z]);
     if (signature === this.signature) return;
     this.signature = signature;
-    for (const child of [...this.group.children]) {
-      const line = child as THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
-      line.geometry.dispose(); line.material.dispose(); this.group.remove(line);
-    }
+    this.clear();
     const captureRadius = this.captureRadius();
     this.ring(actualHuman, captureRadius, 0xff4545);
     this.ring(actualHuman, captureRadius + C.deepseekAI.stationaryPassageSafetyMargin, 0xffc745);
@@ -36,6 +33,18 @@ export class AISafetyPathView {
     this.route(data.defaultPath, data.human, 0x8888ff);
     this.route(data.safePath, data.human, 0x45ff9a);
   }
+  dispose(): void {
+    this.clear();
+    this.group.removeFromParent();
+  }
+
+  private clear(): void {
+    for (const child of [...this.group.children]) {
+      const line = child as THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+      line.geometry.dispose(); line.material.dispose(); this.group.remove(line);
+    }
+  }
+
   private line(points: Point[], color: number): void {
     const geometry = new THREE.BufferGeometry().setFromPoints(
       points.map(p => new THREE.Vector3(p.x, 0.09, p.z)));

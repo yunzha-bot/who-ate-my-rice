@@ -1,0 +1,12 @@
+{
+  "tests": 943,
+  "pass": 941,
+  "fail": 2,
+  "cancelled": 0,
+  "skipped": 0,
+  "duration_ms": 67257.8279,
+  "failures": [
+    "tests/difficulty.test.mjs:263 fixed route remains PLAYING",
+    "tests/throwables.test.mjs:35 throw_closet_1 old initial 1.8 distance"
+  ]
+}

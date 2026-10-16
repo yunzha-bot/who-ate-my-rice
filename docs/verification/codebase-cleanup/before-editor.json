@@ -1,0 +1,24 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:5173/",
+    "clean": false,
+    "dirty": true,
+    "restored": false,
+    "rejection": null,
+    "before": 2,
+    "after": 2,
+    "baseline": 1
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:5173/",
+    "clean": false,
+    "dirty": true,
+    "restored": false,
+    "rejection": null,
+    "before": 2,
+    "after": 2,
+    "baseline": 1
+  }
+]

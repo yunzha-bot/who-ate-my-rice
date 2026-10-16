@@ -1,0 +1,28 @@
+{
+  "protectedFiles": 337,
+  "unchanged": 332,
+  "authorizedChanges": [
+    "src/config/gameConfig.ts",
+    "src/three/AlphaPresentation.ts",
+    "src/three/CharacterActionView.ts",
+    "src/three/CollisionWorld.ts",
+    "src/three/ThreeGame.ts"
+  ],
+  "missing": [],
+  "previousConfigUnchanged": true,
+  "logPrefixPreserved": true,
+  "originalMapSha256": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8",
+  "v6Sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026",
+  "oldModelsExcluded": 6,
+  "distFiles": 84,
+  "distBytes": 43004824,
+  "types": {
+    "VASE": 8,
+    "BOX": 18,
+    "BASIN": 10
+  },
+  "regions": 18,
+  "props": 36,
+  "editorSavePreservesIndependentLayout": true,
+  "indexEmpty": true
+}

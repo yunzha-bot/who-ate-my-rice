@@ -1,0 +1,126 @@
+[
+  {
+    "browser": "chrome",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "metrics": {
+      "duration": 1.6457083333333333,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 0.31198906898498535,
+      "rms": 0.06357322668024257,
+      "context": "running",
+      "master": 0.800000011920929,
+      "sfx": 0.800000011920929,
+      "calls": [
+        {
+          "bus": "sfx",
+          "level": 0.9059480500451031
+        }
+      ]
+    },
+    "checks": [
+      "native basin hit: one real decoded MP3 source start",
+      "vase and box hit: no metal cue",
+      "basin miss: no metal cue",
+      "mute blocks node",
+      "pause clears one-shots"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "chrome",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "metrics": {
+      "duration": 1.6457083333333333,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 0.31198906898498535,
+      "rms": 0.06357322668024257,
+      "context": "running",
+      "master": 0.800000011920929,
+      "sfx": 0.800000011920929,
+      "calls": [
+        {
+          "bus": "sfx",
+          "level": 0.9006769424202816
+        }
+      ]
+    },
+    "checks": [
+      "native basin hit: one real decoded MP3 source start",
+      "vase and box hit: no metal cue",
+      "basin miss: no metal cue",
+      "mute blocks node",
+      "pause clears one-shots"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "metrics": {
+      "duration": 1.6457083333333333,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 0.31198906898498535,
+      "rms": 0.0635732274260416,
+      "context": "running",
+      "master": 0.800000011920929,
+      "sfx": 0.800000011920929,
+      "calls": [
+        {
+          "bus": "sfx",
+          "level": 0.903950401917773
+        }
+      ]
+    },
+    "checks": [
+      "native basin hit: one real decoded MP3 source start",
+      "vase and box hit: no metal cue",
+      "basin miss: no metal cue",
+      "mute blocks node",
+      "pause clears one-shots"
+    ],
+    "errors": [],
+    "failed": []
+  },
+  {
+    "browser": "edge",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "scenarioFixtures": true,
+    "metrics": {
+      "duration": 1.6457083333333333,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 0.31198906898498535,
+      "rms": 0.0635732274260416,
+      "context": "running",
+      "master": 0.800000011920929,
+      "sfx": 0.800000011920929,
+      "calls": [
+        {
+          "bus": "sfx",
+          "level": 0.794676350557977
+        }
+      ]
+    },
+    "checks": [
+      "native basin hit: one real decoded MP3 source start",
+      "vase and box hit: no metal cue",
+      "basin miss: no metal cue",
+      "mute blocks node",
+      "pause clears one-shots"
+    ],
+    "errors": [],
+    "failed": []
+  }
+]

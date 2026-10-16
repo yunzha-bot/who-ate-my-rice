@@ -1,0 +1,438 @@
+[
+  {
+    "browser": "Edge",
+    "scenario": "load-html",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 4.600000000000001,
+      "z": 12,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at jm.parse (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:365055)\n    at Object.onLoad (http://1"
+      }
+    ]
+  },
+  {
+    "browser": "Chrome",
+    "scenario": "load-html",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 11.800000000000004,
+      "z": -8.799999999999999,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at jm.parse (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:365055)\n    at Object.onLoad (http://1"
+      }
+    ]
+  },
+  {
+    "browser": "Edge",
+    "scenario": "load-html",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 17.800000000000004,
+      "z": 9.600000000000001,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at jm.parse (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:365055)\n    at Object.onLoad (http://1"
+      }
+    ]
+  },
+  {
+    "browser": "Chrome",
+    "scenario": "load-html",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": -0.1999999999999993,
+      "z": -3.1999999999999993,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back SyntaxError: Unexpected token '<', \"<!doctype \"... is not valid JSON\n    at JSON.parse (<anonymous>)\n    at jm.parse (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:365055)\n    at Object.onLoad (http://1"
+      }
+    ]
+  },
+  {
+    "browser": "Edge",
+    "scenario": "animation-init",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": -20.2,
+      "z": 12.8,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": 1
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Injected critical animation initialization failure\n    at new <anonymous> (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:461820)\n    at $f.loadVisual (http://127.0.0.1:4173/assets/index-BCnk0pXZ."
+      }
+    ]
+  },
+  {
+    "browser": "Chrome",
+    "scenario": "animation-init",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": -20.2,
+      "z": -6.399999999999999,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": 1
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Injected critical animation initialization failure\n    at new <anonymous> (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:461820)\n    at $f.loadVisual (http://127.0.0.1:4173/assets/index-BCnk0pXZ."
+      }
+    ]
+  },
+  {
+    "browser": "Edge",
+    "scenario": "animation-init",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": -21.4,
+      "z": 3.6000000000000014,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": 1
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Injected critical animation initialization failure\n    at new <anonymous> (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:461820)\n    at $f.loadVisual (http://127.0.0.1:4173/assets/index-BCnk0pXZ."
+      }
+    ]
+  },
+  {
+    "browser": "Chrome",
+    "scenario": "animation-init",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 11.800000000000004,
+      "z": -8.799999999999999,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": 1
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Injected critical animation initialization failure\n    at new <anonymous> (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:461820)\n    at $f.loadVisual (http://127.0.0.1:4173/assets/index-BCnk0pXZ."
+      }
+    ]
+  },
+  {
+    "browser": "Edge",
+    "scenario": "animation-runtime",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 11.400000000000006,
+      "z": 3.200000000000003,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek animation failed; restoring fallback visual Error: Injected animation runtime failure\n    at window.__faultGame.playerAction.deepseekAnimation.update (eval at evaluate (:311:30), <anonymous>:1:74)\n    at $f.update (http://127.0.0.1:4173/asse"
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Production uses the procedural fallback, not private GLBs\n    at qT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:408874)\n    at ZT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:409525)\n "
+      }
+    ]
+  },
+  {
+    "browser": "Chrome",
+    "scenario": "animation-runtime",
+    "faction": "DEEPSEEK",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 17.800000000000004,
+      "z": 9.600000000000001,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek animation failed; restoring fallback visual Error: Injected animation runtime failure\n    at window.__faultGame.playerAction.deepseekAnimation.update (eval at evaluate (:311:30), <anonymous>:1:74)\n    at $f.update (http://127.0.0.1:4173/asse"
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Production uses the procedural fallback, not private GLBs\n    at qT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:408874)\n    at ZT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:409525)\n "
+      }
+    ]
+  },
+  {
+    "browser": "Edge",
+    "scenario": "animation-runtime",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 4.600000000000001,
+      "z": 12,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek animation failed; restoring fallback visual Error: Injected animation runtime failure\n    at window.__faultGame.playerAction.deepseekAnimation.update (eval at evaluate (:311:30), <anonymous>:1:74)\n    at $f.update (http://127.0.0.1:4173/asse"
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Production uses the procedural fallback, not private GLBs\n    at qT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:408874)\n    at ZT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:409525)\n "
+      }
+    ]
+  },
+  {
+    "browser": "Chrome",
+    "scenario": "animation-runtime",
+    "faction": "HUMAN",
+    "url": "http://127.0.0.1:4173/",
+    "procedural": {
+      "x": 23.800000000000004,
+      "z": 11.600000000000001,
+      "root": true,
+      "body": true,
+      "maid": true,
+      "external": true,
+      "animation": true,
+      "disposals": null
+    },
+    "moved": true,
+    "oldModelRequests": 0,
+    "v6Requests": 1,
+    "errors": [],
+    "failures": [],
+    "warnings": [
+      {
+        "type": "warning",
+        "text": "THREE.Clock: This module has been deprecated. Please use THREE.Timer instead."
+      },
+      {
+        "type": "warning",
+        "text": "THREE.WebGLShadowMap: PCFSoftShadowMap has been removed. Using PCFShadowMap instead."
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek animation failed; restoring fallback visual Error: Injected animation runtime failure\n    at window.__faultGame.playerAction.deepseekAnimation.update (eval at evaluate (:311:30), <anonymous>:1:74)\n    at $f.update (http://127.0.0.1:4173/asse"
+      },
+      {
+        "type": "warning",
+        "text": "DeepSeek visual unavailable; falling back Error: Production uses the procedural fallback, not private GLBs\n    at qT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:408874)\n    at ZT (http://127.0.0.1:4173/assets/index-BCnk0pXZ.js:4228:409525)\n "
+      }
+    ]
+  }
+]

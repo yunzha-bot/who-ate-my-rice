@@ -405,7 +405,9 @@ export class HomeAvatar {
   private readonly cloth: THREE.MeshStandardMaterial;
   private readonly actor: THREE.Mesh;
   private externalVisual: THREE.Group | null = null;
+  private readonly deepseek: boolean;
   constructor(actor: THREE.Mesh, deepseek: boolean) {
+    this.deepseek = deepseek;
     this.actor = actor;
     actor.geometry.computeBoundingBox();
     const size = actor.geometry.boundingBox!.getSize(new THREE.Vector3());
@@ -495,14 +497,20 @@ export class HomeAvatar {
     this.reset();
   }
 
-  update(action: string, deltaMs: number): void {
+  faceHeading(headingRad: number): void {
+    this.facing = this.targetFacing = headingRad;
+    this.root.rotation.y = headingRad;
+  }
+
+  update(action: string, deltaMs: number, headingRad?: number): void {
     const dt = Math.min(Math.max(0, deltaMs), 100) / 1000;
     if (dt === 0) return;
     this.time += dt;
     const dx = this.actor.position.x - this.last.x, dz = this.actor.position.z - this.last.z;
     const distance = Math.hypot(dx, dz);
     // Position is already resolved by gameplay. Only the child mesh follows it.
-    if (distance > .0001) this.targetFacing = Math.atan2(dx, dz);
+    if (headingRad !== undefined) this.faceHeading(headingRad);
+    else if (distance > .0001) this.targetFacing = Math.atan2(dx, dz);
     const turn = shortestTurn(this.facing, this.targetFacing);
     const eased = Math.abs(turn) * (1 - Math.exp(-dt / .12));
     const step = Math.sign(turn) * Math.min(Math.abs(turn), eased, 8 * dt);
@@ -510,6 +518,7 @@ export class HomeAvatar {
     this.root.rotation.y = this.facing;
     this.last.copy(this.actor.position);
     if (this.externalVisual) return; // External animation belongs to its mixer; heading stays here.
+    this.root.rotation.z = !this.deepseek && (action === 'FALL' || action === 'STUN') ? Math.PI / 2 : 0;
     const moving = action === 'WALK' || action === 'RUN';
     const height = this.actor.geometry.boundingBox!.max.y - this.actor.geometry.boundingBox!.min.y;
     const speed = distance / dt;

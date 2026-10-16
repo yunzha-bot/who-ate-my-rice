@@ -1,0 +1,190 @@
+[
+  {
+    "browser": "Edge",
+    "version": "151.0.4129.86",
+    "url": "http://127.0.0.1:5173/",
+    "width": 1366,
+    "height": 900,
+    "faction": "DEEPSEEK",
+    "durationMs": 10616,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Chrome",
+    "version": "154.0.8037.100",
+    "url": "http://127.0.0.1:5173/",
+    "width": 1366,
+    "height": 900,
+    "faction": "DEEPSEEK",
+    "durationMs": 10724,
+    "moves": 65,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Edge",
+    "version": "151.0.4129.86",
+    "url": "http://127.0.0.1:5173/",
+    "width": 1366,
+    "height": 900,
+    "faction": "HUMAN",
+    "durationMs": 10584,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Chrome",
+    "version": "154.0.8037.100",
+    "url": "http://127.0.0.1:5173/",
+    "width": 1366,
+    "height": 900,
+    "faction": "HUMAN",
+    "durationMs": 10620,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Edge",
+    "version": "151.0.4129.86",
+    "url": "http://127.0.0.1:5173/",
+    "width": 800,
+    "height": 600,
+    "faction": "DEEPSEEK",
+    "durationMs": 10650,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Chrome",
+    "version": "154.0.8037.100",
+    "url": "http://127.0.0.1:5173/",
+    "width": 800,
+    "height": 600,
+    "faction": "DEEPSEEK",
+    "durationMs": 10621,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Edge",
+    "version": "151.0.4129.86",
+    "url": "http://127.0.0.1:5173/",
+    "width": 800,
+    "height": 600,
+    "faction": "HUMAN",
+    "durationMs": 10654,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Chrome",
+    "version": "154.0.8037.100",
+    "url": "http://127.0.0.1:5173/",
+    "width": 800,
+    "height": 600,
+    "faction": "HUMAN",
+    "durationMs": 10679,
+    "moves": 64,
+    "regions": [
+      ".faction-number",
+      ".faction-copy strong",
+      ".faction-portrait",
+      ".faction-description",
+      ".faction-arrow"
+    ],
+    "initialEntry": 1,
+    "internalAdditional": 0,
+    "exitAdditional": 0,
+    "reentry": 1,
+    "actualNodes": true
+  },
+  {
+    "browser": "Edge",
+    "cardSwitchEntries": 4,
+    "bothFactionArrowClicks": true,
+    "pageErrors": []
+  },
+  {
+    "browser": "Chrome",
+    "cardSwitchEntries": 4,
+    "bothFactionArrowClicks": true,
+    "pageErrors": []
+  }
+]

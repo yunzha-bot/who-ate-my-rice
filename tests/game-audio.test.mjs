@@ -3,17 +3,22 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { AUDIO_CUES, DISABLED_AUDIO_CUES, sanitizeAudioSettings, worldAudioGain, GameAudio }
   from '../src/three/GameAudio.ts';
+import { GameStateSystem } from '../src/systems/GameStateSystem.ts';
 
-test('active S13 cues have Ogg assets; rejected cues have none', () => {
+test('active audio cues have valid assets; rejected S13 cues have none', () => {
   assert.equal(new Set(AUDIO_CUES).size, AUDIO_CUES.length);
   assert.deepEqual(DISABLED_AUDIO_CUES, ['step', 'sprintStep', 'sprintStart', 'doorOpen', 'doorClose']);
   for (const cue of AUDIO_CUES) {
-    const file = new URL(`../public/assets/audio/${cue}.ogg`, import.meta.url);
+    const mp3 = cue === 'basinHit' || cue === 'deepseekCaughtDefeat';
+    const file = new URL(`../public/assets/audio/${cue}.${mp3 ? 'mp3' : 'ogg'}`, import.meta.url);
     if (DISABLED_AUDIO_CUES.includes(cue)) {
       assert.equal(existsSync(file), false, cue);
       continue;
     }
-    assert.equal(readFileSync(file).subarray(0, 4).toString(), 'OggS', cue);
+    if(mp3){
+      const header=readFileSync(file).subarray(0,3);
+      assert(header.toString()==='ID3'||header[0]===0xff&&(header[1]&0xe0)===0xe0,'MP3 header');
+    }else assert.equal(readFileSync(file).subarray(0, 4).toString(), 'OggS', cue);
     assert.ok(statSync(file).size > 100, cue);
   }
 });
@@ -80,6 +85,57 @@ test('restore defaults updates all live gains and persisted settings', () => {
   assert.deepEqual(audio.settings, sanitizeAudioSettings(null));
   for (const bus of ['master', 'bgm', 'sfx', 'ui', 'ambience'])
     assert.equal(audio.gains.get(bus).gain.value, audio.settings[bus]);
+});
+
+test('basin hit uses the SFX bus, respects mute and suspension and stops on reset',async()=>{
+ const {audio,sources}=audioFixture();audio.buffers.set('basinHit',{});
+ audio.setMuted(true);audio.play('basinHit','sfx');await Promise.resolve();assert.equal(sources.length,0);
+ audio.setMuted(false);audio.play('basinHit','sfx');await Promise.resolve();assert.equal(sources.length,1);
+ assert.equal(sources[0].started,true);audio.reset();assert.equal(sources[0].stopped,true);
+ await audio.setSuspended(true);audio.play('basinHit','sfx');await Promise.resolve();assert.equal(sources.length,1);
+});
+
+test('real result audio selects NOPE only for captured DeepSeek players, once per result', t => {
+  // Execute the existing integration method, following browser-focus.test.mjs.
+  const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
+  const body = source.match(/private syncAudio\(\): void \{([\s\S]*?)\n  \}\n\n  private chooseFaction/);
+  assert.ok(body, 'real result audio integration must be found');
+  const sync = new Function(body[1].replace('const target: MusicCue', 'const target'));
+  const oldDocument = globalThis.document;
+  globalThis.document = { hidden: false, hasFocus: () => true };
+  t.after(() => { globalThis.document = oldDocument; });
+  for (const selectedFaction of ['DEEPSEEK', 'HUMAN']) {
+    for (const captured of [true, false]) {
+      const match = new GameStateSystem(0, 350);
+      match.advanceReady(0);
+      if (captured) match.forceCapture();
+      else match.advancePlaying(0, false, true);
+      const calls = [];
+      const game = { match, control: { selectedFaction }, lastAudioPhase: 'PLAYING',
+        lastAudioSuspended: false, feedback: { show() {} },
+        audio: { stop() {}, setMusic() {}, play: (...args) => calls.push(args) } };
+      for (let frame = 0; frame < 100; frame++) sync.call(game);
+      const won = match.result.winner === selectedFaction;
+      const expected = won ? 'victory' : selectedFaction === 'DEEPSEEK' ? 'deepseekCaughtDefeat' : 'defeat';
+      assert.deepEqual(calls, [[expected, 'ui']], `${selectedFaction}/${match.result.reason}`);
+      game.lastAudioPhase = 'PLAYING';
+      sync.call(game);
+      assert.deepEqual(calls, [[expected, 'ui'], [expected, 'ui']], 'next result may play again');
+    }
+  }
+});
+
+test('NOPE respects mute and pause, and restart stops its one-shot', async () => {
+  const { audio, sources } = audioFixture();
+  audio.buffers.set('deepseekCaughtDefeat', {});
+  audio.setMuted(true); audio.play('deepseekCaughtDefeat', 'ui');
+  await Promise.resolve(); assert.equal(sources.length, 0);
+  audio.setMuted(false); audio.play('deepseekCaughtDefeat', 'ui');
+  await Promise.resolve(); assert.equal(sources.length, 1);
+  assert.equal(sources[0].started, true);
+  audio.reset(); assert.equal(sources[0].stopped, true);
+  await audio.setSuspended(true); audio.play('deepseekCaughtDefeat', 'ui');
+  await Promise.resolve(); assert.equal(sources.length, 1);
 });
 
 test('rapid music changes cannot resurrect pending obsolete music or duplicate a loop', async () => {

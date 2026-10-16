@@ -13,13 +13,14 @@ type DeepSeekOverrides = Pick<DeepSeekAIConfig, 'visionEvadeDistance' | 'soundEv
 export const DIFFICULTY_OVERRIDES = {
   EASY: { humanAI: {}, deepseekAI: {} },
   NORMAL: {
-    humanAI: { movementSpeedMultiplier: .78, aiUnlockDurationMs: 7500,
+    // 2026-10-15 feedback: reduce pursuit speed; keep unlock/search abilities.
+    humanAI: { movementSpeedMultiplier: .64, aiUnlockDurationMs: 7500,
       aiUnlockSuccessChance: .8, searchMaxMs: 18000, searchRoomCount: 4, hideCheckMaxPerRound: 2 },
     deepseekAI: { visionEvadeDistance: 6, soundEvadeStrength: .075,
       escapeMinSeparation: 3.5, escapeReplanMs: 600, hideThreatDistance: 4 },
   },
   HARD: {
-    humanAI: { movementSpeedMultiplier: .95, aiUnlockDurationMs: 6500,
+    humanAI: { movementSpeedMultiplier: .76, aiUnlockDurationMs: 6500,
       aiUnlockSuccessChance: .9, searchMaxMs: 22000, searchRoomCount: 5, hideCheckMaxPerRound: 3 },
     deepseekAI: { visionEvadeDistance: 7, soundEvadeStrength: .06,
       escapeMinSeparation: 4, escapeReplanMs: 500, hideThreatDistance: 4.5 },

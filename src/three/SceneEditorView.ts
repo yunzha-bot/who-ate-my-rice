@@ -56,13 +56,13 @@ export class SceneEditorView {
   private readonly planeHit = new THREE.Vector3();
   private readonly normal = new THREE.Vector3(0, 1, 0);
   private build: ApartmentBuild | null = null;
+  private extraTargets = new Map<string, THREE.Object3D>();
   private highlight: THREE.BoxHelper | null = null;
   private selected: string | null = null;
   private active = false;
   private anchorsVisible = true;
   private dragging: { id: string; grabX: number; grabZ: number; pointerId: number } | null = null;
   private panning: { x: number; y: number } | null = null;
-  private previewValid: boolean | null = null;
   // Region preview objects are long-lived on purpose: a drag refreshes the
   // outline on every pointermove, so the boundary line and the sample instances
   // are updated in place instead of being disposed and rebuilt each time.
@@ -86,6 +86,8 @@ export class SceneEditorView {
   }
 
   get isActive(): boolean { return this.active; }
+
+  setExtraTargets(targets: Map<string, THREE.Object3D>): void { this.extraTargets=targets; }
 
   setBuild(build: ApartmentBuild): void {
     this.clearHighlight();
@@ -283,7 +285,6 @@ export class SceneEditorView {
   // DEV-only preview tint: yellow while the draft is still legal, red as soon
   // as it would be rejected. The preview is never treated as saved map data.
   setPreviewValidity(valid: boolean | null): void {
-    this.previewValid = valid;
     if (this.highlight) {
       const color = valid === false ? 0xff6b6b : valid === true ? 0x8fe3a4 : 0xffe08a;
       this.highlight.material.color.setHex(color);
@@ -322,9 +323,11 @@ export class SceneEditorView {
     this.clearHighlight();
     this.clearRegionPreview();
     this.build = null;
+    this.extraTargets.clear();
   }
 
   private objectOf(id: string): THREE.Object3D | null {
+    if(this.extraTargets.has(id))return this.extraTargets.get(id)!;
     if (!this.build) return null;
     return this.build.furnitureMeshes.get(id) ?? this.build.anchorGizmos.get(id) ?? null;
   }
@@ -393,6 +396,8 @@ export class SceneEditorView {
     this.pointer.set((event.clientX - rect.left) / rect.width * 2 - 1,
       -(event.clientY - rect.top) / rect.height * 2 + 1);
     this.raycaster.setFromCamera(this.pointer, this.camera);
+    const extraHit=this.raycaster.intersectObjects([...this.extraTargets.values()],true)[0];
+    if(extraHit){const id=this.walkToObjectId(extraHit.object);if(id)return id;}
     if (this.anchorsVisible && this.build.anchorGizmoRoot.visible) {
       const anchors = [...this.build.anchorGizmos.values()];
       const anchorHit = this.raycaster.intersectObjects(anchors, true)[0];
@@ -438,7 +443,7 @@ export class SceneEditorView {
       }
     }
     if (!this.selected) { this.clearHighlight(); return; }
-    const mesh = this.build.furnitureMeshes.get(this.selected);
+    const mesh = this.extraTargets.get(this.selected) ?? this.build.furnitureMeshes.get(this.selected);
     if (!mesh) { this.clearHighlight(); return; }
     if (!this.highlight) {
       this.highlight = new THREE.BoxHelper(mesh, 0xffe08a);
@@ -449,7 +454,7 @@ export class SceneEditorView {
 
   private refreshHighlight(): void {
     if (this.highlight && this.selected) {
-      const mesh = this.build?.furnitureMeshes.get(this.selected);
+      const mesh = this.extraTargets.get(this.selected) ?? this.build?.furnitureMeshes.get(this.selected);
       if (mesh) this.highlight.setFromObject(mesh);
     }
   }

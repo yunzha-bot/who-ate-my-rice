@@ -1,0 +1,37 @@
+{
+  "compared": 330,
+  "changed": [
+    "tests/difficulty.test.mjs",
+    "tests/throwables.test.mjs"
+  ],
+  "missing": [],
+  "allRuntimeAndAssetsUnchanged": true,
+  "layoutsUnchanged": true,
+  "logPrefixPreserved": true,
+  "reproduction": {
+    "before": {
+      "pass": 0,
+      "fail": 2
+    },
+    "after": {
+      "pass": 2,
+      "fail": 0
+    }
+  },
+  "tests": {
+    "total": 948,
+    "pass": 948,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "propContractAndEditor": 30,
+    "typecheck": "pass",
+    "build": "pass",
+    "browser": "not rerun; tests-only change, no runtime or visual changes"
+  },
+  "build": {
+    "js": "index-D7lufzEa.js",
+    "css": "index-CrqVpTD3.css",
+    "sameAsPriorAudioBuild": true
+  }
+}

@@ -11,7 +11,8 @@ test('native faction buttons dispatch only their own faction, once per activatio
   }));
   const menu = { innerHTML: '', querySelectorAll: () => buttons };
   populateFactionMenu(menu, faction => callbacks.push(faction));
-  assert.equal((menu.innerHTML.match(/type="button"/g) ?? []).length, 2);
+  assert.equal((menu.innerHTML.match(/type="button" class="faction-card"/g) ?? []).length, 2);
+  assert.equal((menu.innerHTML.match(/type="button" class="menu-setting-button"/g) ?? []).length, 2);
   assert.doesNotMatch(menu.innerHTML, /type="radio"|确认阵营/);
   assert.doesNotMatch(menu.innerHTML, /menu-controls|CONTROL \//);
   buttons[0].listeners.click();

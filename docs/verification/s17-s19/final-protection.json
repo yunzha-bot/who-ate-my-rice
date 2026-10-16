@@ -1,0 +1,110 @@
+{
+  "baselineFiles": 84,
+  "baselineBytes": 43163759,
+  "finalFiles": 84,
+  "finalBytes": 42987210,
+  "groups": {
+    "audio": {
+      "files": 37,
+      "bytes": 399664
+    },
+    "GLB": {
+      "files": 2,
+      "bytes": 13129676
+    },
+    "code": {
+      "files": 3,
+      "bytes": 1189622
+    },
+    "images": {
+      "files": 39,
+      "bytes": 28264649
+    },
+    "other": {
+      "files": 3,
+      "bytes": 3599
+    }
+  },
+  "unchangedOutputs": 82,
+  "protected": {
+    "total": 522,
+    "unchanged": 516,
+    "authorizedChanges": [
+      "src/three/GameUiLayout.ts",
+      "src/three/map/MapBuilder.ts",
+      "src/three/ThreeGame.ts",
+      "tests/cleanup-projection.test.mjs",
+      "tests/dev-b-param-persistence.test.mjs",
+      "vite.config.ts"
+    ],
+    "missing": [],
+    "logPrefixPreserved": true
+  },
+  "oldModelsExcluded": [
+    {
+      "file": "public/assets/characters/deepseek/deepseek_animated_v1.glb",
+      "sha256": "7692599cb940f1108e949ac68042edf972ead45468e5f27c2c537d1865f188ce",
+      "originalRetained": true
+    },
+    {
+      "file": "public/assets/characters/deepseek/deepseek_animated_v2.glb",
+      "sha256": "086e856b8bbc1a5ad44b0cb2cd55724c4bc5b7ac3f6ec7d40224f890ae0f90ec",
+      "originalRetained": true
+    },
+    {
+      "file": "public/assets/characters/deepseek/deepseek_animated_v3.glb",
+      "sha256": "a76ce05b692927e3d1d14aa08d7f8a88e808470dcd8b3cb5235e5a8dc297ee7b",
+      "originalRetained": true
+    },
+    {
+      "file": "public/assets/characters/deepseek/deepseek_animated_v4.glb",
+      "sha256": "2f9e2b4d02367fa3a76f280fdd2b13c6767cc89421ad7db96c22346b56293906",
+      "originalRetained": true
+    },
+    {
+      "file": "public/assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb",
+      "sha256": "d4e67fff652aa42508311ab18422d33727c15e1b700f2daf0a6255f8651e5277",
+      "originalRetained": true
+    },
+    {
+      "file": "public/assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb",
+      "sha256": "e32ac3ccc3253487ee7c026ad7887d1d7b0bee0c9088f48cce25637e1f2f7528",
+      "originalRetained": true
+    }
+  ],
+  "models": [
+    {
+      "file": "dist/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "bytes": 12496972,
+      "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026"
+    },
+    {
+      "file": "dist/assets/props/rice-bag/rice-bag.glb",
+      "bytes": 632704,
+      "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6"
+    }
+  ],
+  "code": [
+    {
+      "file": "dist/assets/index-CrqVpTD3.css",
+      "bytes": 69771,
+      "sha256": "0b8f8016364eb1e83037b2b9f723e89f080ca24f9d910083f0791f270c84b859",
+      "gzipBytes": 14053
+    },
+    {
+      "file": "dist/assets/index-DIsi7mRX.js",
+      "bytes": 1119446,
+      "sha256": "cf96642b0d67824d1e3ebed3b1ea25aba74583738449a86c811e344474072f47",
+      "gzipBytes": 308393
+    },
+    {
+      "file": "dist/index.html",
+      "bytes": 405,
+      "sha256": "41a41f8a4ff3fcad28c6cf98710b393d39e688490c90a4d1c4f9431d9bad4f28",
+      "gzipBytes": 296
+    }
+  ],
+  "mapSha256": "9d53920224997dc3b8d2caeea56b0b647f9abaeca9d137d17756f8d78b9dc1d8",
+  "headUnchanged": true,
+  "indexEmpty": true
+}

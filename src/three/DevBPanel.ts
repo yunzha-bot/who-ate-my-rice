@@ -435,7 +435,7 @@ export class DevBPanel {
       }
       for (const row of Array.from(host.querySelectorAll<HTMLElement>('.dev-b-entry')))
         if (!wanted.has(row.dataset.entry ?? '')) row.remove();
-      for (const [key, row] of wanted)
+      for (const row of wanted.values())
         if (!row.parentElement) host.append(row);
     }
     for (const [id, host] of existing)

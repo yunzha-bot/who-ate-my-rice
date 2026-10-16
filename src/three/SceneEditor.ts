@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { MapEditSession, authoredMapSource, furnitureRect, sceneEditorEnabled,
-  spotDraftToAnchor, type FurnitureDraft, type HideSpotDraft, type MapSource,
-  type MapExportDocument } from './map/MapEditModel.ts';
+  spotDraftToAnchor, type FurnitureDraft, type HideSpotDraft, type MapSource } from './map/MapEditModel.ts';
 import { authoredLayoutDocument, importLayoutText, layoutSignature, layoutSource,
   layoutStatus, type LayoutStatus }
   from './map/MapLayoutStore.ts';
@@ -12,6 +11,9 @@ import type { ApartmentBuild } from './map/MapBuilder';
 import type { DevFreezeSystem, DevRunState } from '../systems/DevFreezeSystem.ts';
 import type { GamePhase } from '../systems/GameStateSystem.ts';
 import type { HideSpot, Rect } from './map/apartmentMap.ts';
+import { ThrowableEditor } from './ThrowableEditor.ts';
+import type { ThrowableSpawn, ThrowableSystem } from '../systems/ThrowableSystem.ts';
+import type { ThrowableView } from './ThrowableView.ts';
 
 export interface CommittedMap {
   furniture: readonly Rect[];
@@ -96,8 +98,18 @@ export class SceneEditor {
   private savedLayoutAt: string | null;
   private lastLayoutError: string | null = null;
   private projectRevision: string | null = null;
+  private savingLayout = false;
+  private throwEditor: ThrowableEditor | null = null;
   message = '';
   lastRejection = '无';
+  private readonly onBeforeUnload = (event: BeforeUnloadEvent): void => {
+    if(this.savingLayout)return;
+    if (!this.session.isDirty && !this.layoutStatus().pending &&
+        (!this.throwEditor || this.throwEditor.model.saving ||
+          (!this.throwEditor.model.dirty && !this.throwEditor.model.pending))) return;
+    event.preventDefault();
+    event.returnValue = '';
+  };
 
   constructor(hooks: SceneEditorHooks) {
     this.hooks = hooks;
@@ -105,11 +117,7 @@ export class SceneEditor {
     this.savedLayoutSignature = hooks.savedLayoutSignature ?? null;
     this.savedLayoutAt = hooks.savedLayoutAt ?? null;
     this.lastLayoutError = hooks.savedLayoutError ?? null;
-    window.addEventListener('beforeunload', event => {
-      if (!this.session.isDirty && !this.layoutStatus().pending) return;
-      event.preventDefault();
-      event.returnValue = '';
-    });
+    window.addEventListener('beforeunload', this.onBeforeUnload);
     const enabled = sceneEditorEnabled(hooks.developerMode, hooks.factionSwitchEnabled);
     if (enabled) void this.loadProjectRevision();
     this.view = new SceneEditorView({
@@ -149,11 +157,20 @@ export class SceneEditor {
 
   get isOpen(): boolean { return this.opened; }
 
+  attachThrowables(initial: readonly ThrowableSpawn[], system: ThrowableSystem, view: ThrowableView): void {
+    this.throwEditor = new ThrowableEditor(initial,()=>({...this.session.sourceMap,
+      ...committedMap(this.session)}),system,view,id=>this.select(id),id=>this.focus(id));
+    this.panel.appendExtension(this.throwEditor.element);
+    this.view.setExtraTargets(this.throwEditor.targets);
+    void this.throwEditor.model.loadRevision();
+  }
+
   get selectedId(): string | null { return this.selection; }
 
   private selection: string | null = null;
 
   setBuild(build: ApartmentBuild): void {
+    this.throwEditor?.model.invalidateValidation();
     this.build = build;
     this.view.setBuild(build);
   }
@@ -181,6 +198,7 @@ export class SceneEditor {
     // Unapplied drafts are never kept: closing clears the preview and restores
     // the last applied map. Applied edits stay in memory.
     this.session.resetAll();
+    this.throwEditor?.close();
     this.selection = null;
     this.hooks.freeze.closeSceneEditor();
     this.opened = false;
@@ -196,13 +214,14 @@ export class SceneEditor {
     // mid-drag would point the region preview at another object.
     if (this.draggingId && id !== this.draggingId) return;
     this.selection = id;
+    this.throwEditor?.selectTarget(id);
     this.view.select(id);
     if (id) this.view.setPreviewValidity(null);
     this.refreshRegionPreview();
   }
 
   focus(id: string): void {
-    const target = this.session.get(id);
+    const target = this.throwEditor?.model.draft.find(p=>p.id===id) ?? this.session.get(id);
     if (!target) return;
     this.hooks.onFocus({ x: target.x, z: target.z });
   }
@@ -223,11 +242,18 @@ export class SceneEditor {
       this.panel.showNotice(this.message);
       return false;
     }
+    const propRejection=this.throwEditor?.model.dirty
+      ? this.throwEditor.model.validateAgainst({...this.session.sourceMap,...candidate}) : null;
+    if(propRejection){
+      this.lastRejection=propRejection;this.message=`已拒绝应用（投掷物）：${propRejection}`;
+      this.panel.showNotice(this.message);return false;
+    }
     const result = this.session.apply();
     this.rebuildFromCommitted();
     if (result.ok) {
+      if(this.throwEditor?.model.dirty)this.throwEditor.model.apply();
       this.refreshRegionPreview();
-      this.message = '已应用编辑：静态碰撞与导航网格已按校验后的数据重建。';
+      this.message = '已应用编辑：家具、藏身点及道具位置已应用；尚需保存布局。';
       this.lastRejection = '无';
       return true;
     }
@@ -239,6 +265,7 @@ export class SceneEditor {
   discardDraft(): void {
     this.endDragWindow();
     this.session.resetAll();
+    this.throwEditor?.model.discard();
     this.rebuildFromCommitted();
     this.message = '已放弃未应用的草稿，场景恢复为已应用地图。';
   }
@@ -269,12 +296,15 @@ export class SceneEditor {
 
   // 布局状态只看「已应用数据」：草稿是否有未应用修改由 `draftStatus` 单独报告。
   layoutStatus(): LayoutStatus {
-    return layoutStatus({
+    const status=layoutStatus({
       appliedSignature: layoutSignature(this.session.exportJson()),
       savedSignature: this.savedLayoutSignature,
       authoredSignature: layoutSignature(authoredLayoutDocument()),
       lastError: this.lastLayoutError,
     });
+    if(this.throwEditor?.model.dirty||this.throwEditor?.model.pending)
+      return {...status,label:'UNSAVED',text:'未保存修改（含投掷物）',saved:false,authored:false,unsaved:true,pending:true};
+    return status;
   }
 
   get layoutSavedAt(): string | null { return this.savedLayoutAt; }
@@ -295,11 +325,15 @@ export class SceneEditor {
 
   // 只保存已应用的地图；项目文件是跨浏览器、重启与 HMR 的权威家具排布。
   async saveLayout(): Promise<boolean> {
-    if (this.session.isDirty) {
+    if(this.savingLayout||this.throwEditor?.model.saving)return false;
+    if (this.session.isDirty || this.throwEditor?.model.dirty) {
       this.message = '保存被拒绝：还有未应用的草稿，请先点「应用编辑」再保存布局。';
       this.panel.showNotice(this.message);
       return false;
     }
+    const prop=this.throwEditor?.model;
+    const throwables=prop?.pending ? await prop.prepareSave() : undefined;
+    if(throwables===null){this.message=prop!.message;this.panel.showNotice(this.message);return false;}
     if (!this.projectRevision) await this.loadProjectRevision();
     if (!this.projectRevision) {
       this.message = this.lastLayoutError ?? '无法读取项目布局版本';
@@ -307,19 +341,25 @@ export class SceneEditor {
       return false;
     }
     const document = this.session.exportJson();
+    this.savingLayout=true;
     try {
       const response = await fetch('/__dev/scene-layout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ revision: this.projectRevision,
-          document }),
+          document, ...(throwables?{throwables}:{}) }),
       });
       const result = await response.json();
       if (!response.ok) throw Error(result.error ?? `HTTP ${response.status}`);
+      if(throwables){
+        if(typeof result.throwableRevision!=='string')throw Error('未确认道具保存，响应缺少版本');
+        prop!.markSaved(result.throwableRevision,throwables.layout);
+      }
       this.projectRevision = result.revision;
       this.savedLayoutSignature = layoutSignature(document);
       this.savedLayoutAt = result.savedAt;
       this.lastLayoutError = null;
-      this.message = '已保存布局到项目 src/three/map/sceneLayout.json。';
+      this.message = throwables ? '家具布局及道具位置均已保存；开发版刷新生效，4173正式预览需重新构建。'
+        : '家具布局已保存，道具位置与文件一致；4173正式预览需重新构建。';
       this.panel.showNotice(this.message);
       return true;
     } catch (error) {
@@ -327,7 +367,7 @@ export class SceneEditor {
       this.message = `保存布局失败：${String(error)}`;
       this.panel.showNotice(this.message);
       return false;
-    }
+    } finally { this.savingLayout=false; }
   }
 
   // 文件读取失败（包括用户选了非文本文件）也只报告，不改变当前地图。
@@ -392,6 +432,7 @@ export class SceneEditor {
 
   onFrame(): void {
     if (!this.opened) return;
+    this.throwEditor?.render();
     this.panel.render(this.session, {
       open: true,
       freezeState: this.hooks.freeze.state,
@@ -453,8 +494,10 @@ export class SceneEditor {
   }
 
   dispose(): void {
+    window.removeEventListener('beforeunload', this.onBeforeUnload);
     this.endDragWindow();
     this.view.dispose();
+    this.throwEditor?.dispose();
     this.panel.dispose();
     this.build = null;
   }
@@ -475,6 +518,11 @@ export class SceneEditor {
   }
 
   private preview(id: string, x: number, z: number): void {
+    if(this.throwEditor?.model.has(id)){
+      const px=Math.round(x*1000)/1000,pz=Math.round(z*1000)/1000;
+      this.throwEditor.model.move(id,px,pz);this.view.previewPosition(id,px,pz);
+      this.throwEditor.render();return;
+    }
     // Lightweight per-move path only: draft values, the furniture mesh, its
     // linked anchors and the exact region outline. No map validation, no region
     // sampling and no geometry rebuild.
@@ -486,6 +534,10 @@ export class SceneEditor {
 
   private commitDrag(id: string): void {
     this.endDragWindow();
+    if(this.throwEditor?.model.has(id)){
+      this.view.setPreviewValidity(this.throwEditor.model.validate()===null);
+      this.throwEditor.render();return;
+    }
     const linkedSpot = this.session.hideSpotForTarget(id);
     const rejections = this.session.validateDraft().filter(item =>
       item.targetId === id || item.targetId === linkedSpot);

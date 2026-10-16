@@ -1,0 +1,83 @@
+[
+  {
+    "difficulty": "EASY",
+    "seed": 20260927,
+    "phase": "FINISHED",
+    "elapsed": 193100,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 0
+  },
+  {
+    "difficulty": "EASY",
+    "seed": 20276765,
+    "phase": "FINISHED",
+    "elapsed": 149550,
+    "rice": 1,
+    "winner": "HUMAN",
+    "checks": 3
+  },
+  {
+    "difficulty": "EASY",
+    "seed": 20284684,
+    "phase": "FINISHED",
+    "elapsed": 178600,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 0
+  },
+  {
+    "difficulty": "NORMAL",
+    "seed": 20260927,
+    "phase": "FINISHED",
+    "elapsed": 225400,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 1
+  },
+  {
+    "difficulty": "NORMAL",
+    "seed": 20276765,
+    "phase": "FINISHED",
+    "elapsed": 242900,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 3
+  },
+  {
+    "difficulty": "NORMAL",
+    "seed": 20284684,
+    "phase": "FINISHED",
+    "elapsed": 178600,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 0
+  },
+  {
+    "difficulty": "HARD",
+    "seed": 20260927,
+    "phase": "FINISHED",
+    "elapsed": 212450,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 0
+  },
+  {
+    "difficulty": "HARD",
+    "seed": 20276765,
+    "phase": "FINISHED",
+    "elapsed": 148850,
+    "rice": 3,
+    "winner": "HUMAN",
+    "checks": 2
+  },
+  {
+    "difficulty": "HARD",
+    "seed": 20284684,
+    "phase": "FINISHED",
+    "elapsed": 185950,
+    "rice": 5,
+    "winner": "DEEPSEEK",
+    "checks": 0
+  }
+]

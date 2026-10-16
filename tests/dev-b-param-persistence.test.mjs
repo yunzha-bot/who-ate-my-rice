@@ -424,7 +424,7 @@ test('源码不变量：DEV预设保留但不能自动覆盖新局难度', () =>
   const resetStart = source.indexOf('private resetRound(): void {');
   assert.ok(resetStart > 0);
   const reset = source.slice(resetStart, source.indexOf('private updateHud(', resetStart));
-  assert.ok(reset.includes('this.devBBinding.resetForNewRound()'));
+  assert.ok(reset.includes('this.devBBinding?.resetForNewRound()'));
   assert.equal(reset.includes('applySaved('), false, '新局不得静默加载DEV预设');
   assert.ok(source.includes('resolveAiDifficulty(this.difficulty'));
   assert.ok(reset.indexOf('resetForNewRound()') < reset.indexOf('applyDifficulty()'),

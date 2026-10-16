@@ -1,0 +1,32 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "nativeKeys": true,
+    "teleports": 0,
+    "directRiceOrResultWrites": 0,
+    "checks": [
+      "hide enter/exit via E at a legally reached stance",
+      "rice start/interrupt/preserved progress/resume using held E",
+      "door open/close and DeepSeek Q lock via native keys",
+      "PulseLock wrong input uses existing locked-door fixture",
+      "PulseLock three correct native E inputs unlock the door"
+    ],
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "nativeKeys": true,
+    "teleports": 0,
+    "directRiceOrResultWrites": 0,
+    "checks": [
+      "hide enter/exit via E at a legally reached stance",
+      "rice start/interrupt/preserved progress/resume using held E",
+      "door open/close and DeepSeek Q lock via native keys",
+      "PulseLock wrong input uses existing locked-door fixture",
+      "PulseLock three correct native E inputs unlock the door"
+    ],
+    "errors": []
+  }
+]

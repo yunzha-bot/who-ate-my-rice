@@ -1,0 +1,33 @@
+{
+  "calls": [
+    {
+      "time": 2763.100000143051,
+      "stack": "Error\n    at a.play (eval at evaluate (:311:30), <anonymous>:1:545)\n    at HTMLDivElement.onAudioHover (http://127.0.0.1:5173/src/three/ThreeGame.ts?t=1792034493204:504:16)"
+    }
+  ],
+  "events": [
+    {
+      "target": "faction-number",
+      "related": "",
+      "inside": false
+    },
+    {
+      "target": "",
+      "related": "faction-number",
+      "inside": true
+    },
+    {
+      "target": "faction-description",
+      "related": "",
+      "inside": true
+    },
+    {
+      "target": "faction-number",
+      "related": "faction-description",
+      "inside": true
+    }
+  ],
+  "actualStarts": 1,
+  "cardCount": 2,
+  "stableCards": true
+}

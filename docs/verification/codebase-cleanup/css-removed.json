@@ -1,0 +1,187 @@
+[
+  {
+    "selector": ".game-overlay[data-phase='PAUSED']",
+    "property": "width",
+    "value": "min(500px, calc(100vw - 40px))",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay[data-phase='PAUSED']",
+    "property": "max-height",
+    "value": "calc(100dvh - 40px)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay[data-phase='PAUSED']",
+    "property": "padding",
+    "value": "18px",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay[data-phase='PAUSED']",
+    "property": "box-shadow",
+    "value": "0 12px 40px #26303940, 0 0 0 100vmax #18262f66",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay:is([data-phase='PAUSED'], [data-outcome='win'], [data-outcome='lose'])",
+    "property": "background",
+    "value": "var(--ui-paper)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay:is([data-outcome='win'], [data-outcome='lose'])",
+    "property": "padding",
+    "value": "34px",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-text p,\n.game-overlay:is([data-outcome='win'], [data-outcome='lose']) .overlay-stats",
+    "property": "background",
+    "value": "var(--ui-panel)",
+    "winners": [
+      "src/game-ui.css",
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button",
+    "property": "border",
+    "value": "1px solid var(--ui-line)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button",
+    "property": "box-shadow",
+    "value": "none",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button",
+    "property": "background",
+    "value": "var(--ui-ink)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button",
+    "property": "color",
+    "value": "var(--ui-paper)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button",
+    "property": "padding",
+    "value": "13px 17px",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button:not(:first-child)",
+    "property": "background",
+    "value": "var(--ui-paper)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button:not(:first-child)",
+    "property": "color",
+    "value": "var(--ui-ink)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button:hover",
+    "property": "background",
+    "value": "var(--ui-ice)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button:hover",
+    "property": "color",
+    "value": "var(--ui-ink)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay :is(.pause-actions, .result-actions) button:hover",
+    "property": "box-shadow",
+    "value": "0 3px 10px rgb(32 39 45 / .12)",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay[data-phase='PAUSED'] .overlay-text h1",
+    "property": "font-size",
+    "value": "32px",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay[data-phase='PAUSED'] .overlay-text h1",
+    "property": "margin",
+    "value": "14px 0",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay[data-phase='PAUSED'] .overlay-text h1",
+    "property": "letter-spacing",
+    "value": "0",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay .pause-actions",
+    "property": "gap",
+    "value": "10px",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay .pause-actions",
+    "property": "margin-top",
+    "value": "18px",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  },
+  {
+    "selector": ".game-overlay .audio-settings",
+    "property": "padding",
+    "value": "8px 0",
+    "winners": [
+      "src/game-ui.css"
+    ]
+  }
+]

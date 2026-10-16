@@ -60,6 +60,9 @@ export interface ApartmentBuildOptions {
   hideSpots?: readonly HideSpot[];
   debug?: boolean;
   anchorGizmos?: boolean;
+  // Only the development editor needs pickable anchor geometry; gameplay
+  // hide indicators remain available independently of these tools.
+  editorTools?: boolean;
 }
 
 export interface ApartmentBuild {
@@ -246,6 +249,7 @@ export function buildApartment(parent: THREE.Object3D,
     indicator.position.set(spot.x, 0.09, spot.z);
     hideSpotIndicators.set(spot.id, indicator);
     hideSpotIndicatorRoot.add(indicator);
+    if (options.editorTools === false) continue;
     const group = new THREE.Group();
     group.name = `anchor-${spot.id}`;
     group.position.set(spot.x, 0, spot.z);

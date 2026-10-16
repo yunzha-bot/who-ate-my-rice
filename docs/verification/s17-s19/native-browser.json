@@ -1,0 +1,104 @@
+[
+  {
+    "browser": "chrome",
+    "version": "154.0.8037.100",
+    "url": "http://127.0.0.1:4173/",
+    "headed": true,
+    "focusEmulationDisabled": true,
+    "readyFrozen": true,
+    "playingFocusLossPaused": true,
+    "noAutomaticResume": true,
+    "zoom": [
+      {
+        "requested": 90,
+        "observed": 100,
+        "dpr": 1.25,
+        "width": 1694,
+        "height": 907,
+        "cssZoom": "1",
+        "pageScale": 1,
+        "scrollWidth": 1694,
+        "clientWidth": 1694,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.5999984741211,
+            "left": 397.20001220703125,
+            "right": 1297.2000122070312
+          },
+          {
+            "top": 161.60000610351562,
+            "bottom": 675.3999938964844,
+            "left": 397.20001220703125,
+            "right": 1297.2000122070312
+          },
+          {
+            "top": 837.6000366210938,
+            "bottom": 907.2000350952148,
+            "left": 0,
+            "right": 1694.4000244140625
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "nativeZoomVerified": false,
+    "fullscreen": {
+      "width": 1694,
+      "height": 907,
+      "rootFullscreen": true
+    },
+    "fullscreenExited": true
+  },
+  {
+    "browser": "edge",
+    "version": "151.0.4129.86",
+    "url": "http://127.0.0.1:4173/",
+    "headed": true,
+    "focusEmulationDisabled": true,
+    "readyFrozen": true,
+    "playingFocusLossPaused": true,
+    "noAutomaticResume": true,
+    "zoom": [
+      {
+        "requested": 90,
+        "observed": 100,
+        "dpr": 1.25,
+        "width": 1686,
+        "height": 910,
+        "cssZoom": "1",
+        "pageScale": 1,
+        "scrollWidth": 1686,
+        "clientWidth": 1686,
+        "areas": [
+          {
+            "top": 40,
+            "bottom": 133.5999984741211,
+            "left": 392,
+            "right": 1292
+          },
+          {
+            "top": 161.60000610351562,
+            "bottom": 675.3999938964844,
+            "left": 392,
+            "right": 1292
+          },
+          {
+            "top": 840,
+            "bottom": 909.5999984741211,
+            "left": -0.800000011920929,
+            "right": 1684.7999755740166
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "nativeZoomVerified": false,
+    "fullscreen": {
+      "width": 1686,
+      "height": 910,
+      "rootFullscreen": true
+    },
+    "fullscreenExited": true
+  }
+]

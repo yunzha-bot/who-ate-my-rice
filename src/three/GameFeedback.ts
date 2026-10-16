@@ -3,9 +3,13 @@ import { Vector3, type Camera } from 'three';
 /** Ephemeral presentation only; the element never intercepts controls. */
 export class GameFeedback {
   readonly root = document.createElement('div');
-  private readonly live = new Set<HTMLElement>();
+  private readonly live = new Map<HTMLElement, {
+    timer: ReturnType<typeof setTimeout>; onEnd: () => void;
+  }>();
+  private readonly camera: Camera;
 
-  constructor(parent: HTMLElement, private readonly camera: Camera) {
+  constructor(parent: HTMLElement, camera: Camera) {
+    this.camera = camera;
     this.root.className = 'game-feedback';
     this.root.setAttribute('aria-hidden', 'true');
     parent.append(this.root);
@@ -21,23 +25,32 @@ export class GameFeedback {
     item.className = `game-feedback-item ${tone}`;
     item.textContent = text;
     item.style.left = `${x}%`; item.style.top = `${y}%`;
-    this.root.append(item); this.live.add(item);
-    item.addEventListener('animationend', () => this.remove(item), { once: true });
-    setTimeout(() => this.remove(item), 950);
+    this.track(item, 950);
     if (rice && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
       for (let n = 0; n < 3; n++) {
         const grain = document.createElement('i');
         grain.className = 'game-feedback-grain';
         grain.style.left = `${x + (n - 1) * 1.1}%`;
         grain.style.top = `${y + 2}%`;
-        this.root.append(grain); this.live.add(grain);
-        grain.addEventListener('animationend', () => this.remove(grain), { once: true });
-        setTimeout(() => this.remove(grain), 750);
+        this.track(grain, 750);
       }
     }
   }
 
-  private remove(item: HTMLElement): void { item.remove(); this.live.delete(item); }
-  clear(): void { for (const item of this.live) item.remove(); this.live.clear(); }
+  private track(item: HTMLElement, lifetimeMs: number): void {
+    const onEnd = () => this.remove(item);
+    this.live.set(item, { timer: setTimeout(onEnd, lifetimeMs), onEnd });
+    item.addEventListener('animationend', onEnd, { once: true });
+    this.root.append(item);
+  }
+
+  private remove(item: HTMLElement): void {
+    const lifetime = this.live.get(item);
+    if (!lifetime) return;
+    clearTimeout(lifetime.timer);
+    item.removeEventListener('animationend', lifetime.onEnd);
+    item.remove(); this.live.delete(item);
+  }
+  clear(): void { for (const item of this.live.keys()) this.remove(item); }
   dispose(): void { this.clear(); this.root.remove(); }
 }

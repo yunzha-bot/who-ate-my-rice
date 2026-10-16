@@ -1,0 +1,20 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:5183/",
+    "id": "throw_balcony_1",
+    "initialX": -6.4,
+    "requestedX": -6.39,
+    "afterGeneralApply": -6.39,
+    "afterSaveAndRefresh": -6.39
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:5183/",
+    "id": "throw_balcony_1",
+    "initialX": -6.39,
+    "requestedX": -6.38,
+    "afterGeneralApply": -6.38,
+    "afterSaveAndRefresh": -6.38
+  }
+]

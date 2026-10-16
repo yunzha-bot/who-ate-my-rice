@@ -1,0 +1,32 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:5183/",
+    "id": "throw_balcony_1",
+    "initialX": -6.38,
+    "requestedX": -6.37,
+    "afterGeneralApply": -6.37,
+    "afterSaveAndRefresh": -6.37,
+    "furnitureId": "gym_treadmill",
+    "furnitureX": 13.06,
+    "combinedSave": true,
+    "conflict409NoWrite": true,
+    "invalid400NoWrite": true,
+    "statusAccurate": true
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:5183/",
+    "id": "throw_balcony_1",
+    "initialX": -6.37,
+    "requestedX": -6.36,
+    "afterGeneralApply": -6.36,
+    "afterSaveAndRefresh": -6.36,
+    "furnitureId": "gym_treadmill",
+    "furnitureX": 13.07,
+    "combinedSave": true,
+    "conflict409NoWrite": true,
+    "invalid400NoWrite": true,
+    "statusAccurate": true
+  }
+]

@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-15",
+  "tests": {
+    "baseline": 893,
+    "firstPolicyRun": 898,
+    "final": 901,
+    "pass": 901,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "durationMs": 60251.795,
+    "newTests": 8
+  },
+  "typescript": {
+    "command": "npx tsc --noEmit",
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "modules": 117,
+    "warning": "existing chunk exceeds 500 kB",
+    "files": 84,
+    "bytes": 43157676
+  },
+  "browser": {
+    "normalCombinations": 24,
+    "productionFaultCases": 12,
+    "developmentFallbackCases": 4,
+    "hoverLongMovementCases": 8
+  },
+  "standardEditor": {
+    "command": "npm run dev -- --port 5183 --strictPort",
+    "defaultConfigLoader": true,
+    "originalCopiedViteConfig": true,
+    "fullWatchers": true,
+    "savePost": true,
+    "backupVerified": true,
+    "serviceAutoRestart": true,
+    "browserAutomaticReloadAndReconnect": true,
+    "manualRefresh": true,
+    "fullServiceStopStart": true,
+    "reloadedRevision": "df2430eefefbf41db1ccacb898cb6f29bf9fc2ccdc7b58e07694a6f111a32cd2",
+    "formalMapWritten": false,
+    "temporaryServerStopped": true
+  },
+  "probeNotes": [
+    "Initial temporary dependency copy lacked npm .bin shims; copied existing shims into temporary copy only; no project dependency changes",
+    "Initial save probe incorrectly required a full-reload websocket payload; actual Vite server restart reconnects and reloads via ping. Final assertions verify document load count increase and new connected frames before manual refresh",
+    "Initial animation fault observation showed double geometry disposal; regression reproduced it; final fault cases require exactly one disposal",
+    "Static manifest comparison excludes expected JS and HTML bundle-reference changes; remaining 82 files match baseline hashes"
+  ],
+  "limitations": [
+    "Not a subjective audio listening or natural full-match balance test",
+    "Specific AI platform terms for preexisting rice bag/portraits/UI inputs remain unverified"
+  ],
+  "gitWrites": false
+}

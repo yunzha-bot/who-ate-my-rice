@@ -1,0 +1,17 @@
+{
+  "url": "http://127.0.0.1:4173/",
+  "before": {
+    "phase": "PLAYING",
+    "elapsed": 0
+  },
+  "away": {
+    "hidden": false,
+    "focus": false,
+    "phase": "PLAYING",
+    "elapsed": 626.1000001430511
+  },
+  "back": {
+    "phase": "PLAYING",
+    "elapsed": 991.2000002861023
+  }
+}

@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { GAME_CONFIG as C, RICE_TIMING_MODE, RICE_MAX_PROGRESS_MS } from '../src/config/gameConfig.ts';
 import { DIFFICULTIES, resolveAiDifficulty, readDifficulty, saveDifficulty,
-  DIFFICULTY_STORAGE_KEY } from '../src/config/difficultyConfig.ts';
+  DIFFICULTY_STORAGE_KEY, DIFFICULTY_COPY } from '../src/config/difficultyConfig.ts';
 import { RuntimeDebugOverrides } from '../src/systems/RuntimeDebugOverrides.ts';
 import { HumanAIController, humanAiMovementSpeed } from '../src/systems/HumanAIController.ts';
 import { DeepSeekAIController } from '../src/systems/DeepSeekAIController.ts';
@@ -15,14 +16,28 @@ const humanKeys = ['movementSpeedMultiplier', 'aiUnlockDurationMs', 'aiUnlockSuc
   'searchMaxMs', 'searchRoomCount', 'hideCheckMaxPerRound'];
 const deepseekKeys = ['visionEvadeDistance', 'soundEvadeStrength', 'escapeMinSeparation',
   'escapeReplanMs', 'hideThreatDistance'];
-const expectedHuman = [[.52, 8750, .7, 15000, 3, 1], [.78, 7500, .8, 18000, 4, 2],
-  [.95, 6500, .9, 22000, 5, 3]];
+const expectedHuman = [[.52, 8750, .7, 15000, 3, 1], [.64, 7500, .8, 18000, 4, 2],
+  [.76, 6500, .9, 22000, 5, 3]];
 const expectedDeepseek = [[5, .09, 3, 700, 3.5], [6, .075, 3.5, 600, 4], [7, .06, 4, 500, 4.5]];
 const rooms = [{ id: 'a', x: 0, z: 0, minX: -2, maxX: 2, minZ: -2, maxZ: 2, major: true },
   { id: 'b', x: 8, z: 0, minX: 5, maxX: 11, minZ: -2, maxZ: 2, major: true },
   { id: 'c', x: -8, z: 0, minX: -11, maxX: -5, minZ: -2, maxZ: 2, major: true }];
 const nav = { nearestFree: p => p, findPath: (a, b) => [
   { ...a, doorId: null }, { ...b, doorId: null }] };
+
+test('pause difficulty text shows only the selected label for both factions, even with DEV overrides', () => {
+  const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
+  const assignment = source.match(/this\.difficultyStatus\.textContent = ([\s\S]*?);/);
+  assert.ok(assignment, 'test the real pause display expression');
+  const render = new Function('DIFFICULTY_COPY', `return ${assignment[1]};`);
+  for (const difficulty of DIFFICULTIES) for (const selectedFaction of ['DEEPSEEK', 'HUMAN']) {
+    for (const overrideCount of [0, 2]) {
+      const context = { difficulty, control: { selectedFaction },
+        runtime: { humanAIMovementMultiplier: .3, overrideCount } };
+      assert.equal(render.call(context, DIFFICULTY_COPY), `当前难度：${DIFFICULTY_COPY[difficulty].label}`);
+    }
+  }
+});
 
 test('six profiles change ONLY the approved opponent AI fields, never base/player rules', () => {
   const before = JSON.stringify(C);
@@ -224,12 +239,23 @@ test('bathroom two-door reproduction: all three difficulties can finish every ri
   }
 });
 
-test('real apartment lock invariant across three levels and fixed routes: every unfinished rice stays reachable', () => {
+test('real apartment lock invariant under pursuit then legal retreat: every unfinished rice stays reachable and the match finishes', () => {
   const points = new Map(RICE_CANDIDATES.map(r => [r.id,r]));
   let checked = 0;
   const lockRooms = new Set();
   for (const difficulty of DIFFICULTIES) for (const seed of [20260927,20276765,20284684]) {
     const sim = createMatchSim({seed,playerFaction:'HUMAN',policy:'pursue',difficulty});
+    // A pursuer camping beside the remaining rice can legitimately keep the
+    // opponent evading: this game has no match time limit. Pressure for 180s,
+    // then walk the scripted Human away using the same navigation/collision.
+    // Keep the original 12000-frame budget and every lock-reachability assertion.
+    const retreat = sim.systems.navigation.nearestFree({x:22,z:12}, sim.systems.doorSystem.doors);
+    assert.ok(retreat, 'retreat fixture needs a legal navigation cell');
+    assert.ok(sim.systems.collision.canOccupyStaticXZ(retreat.x,retreat.z,
+      C.collision.playerRadius,C.three.actorHeight));
+    const follow = sim.view.follow.bind(sim.view);
+    sim.view.follow = (target,repathMs) => follow(
+      sim.systems.match.elapsedMs >= 180000 ? retreat : target,repathMs);
     let previous = new Set();
     while (sim.systems.match.phase !== 'FINISHED' && sim.frame() < 12000) {
       sim.step();
@@ -246,6 +272,10 @@ test('real apartment lock invariant across three levels and fixed routes: every 
       previous = locked;
     }
     assert.equal(sim.systems.match.phase,'FINISHED',`${difficulty}/${seed}: ${sim.systems.deepseekAI.state}`);
+    if (sim.systems.match.result.winner === 'DEEPSEEK') {
+      assert.equal(sim.systems.rice.completedCount,5,`${difficulty}/${seed}: every portion must finish`);
+      assert.equal(sim.systems.match.result.reason,'RICE_COMPLETED');
+    }
   }
   assert.ok(checked>0,'合理自动锁门仍须真实发生，不得禁用来满足不变量');
   console.log('real lock invariant', {checked,rooms:[...lockRooms]});

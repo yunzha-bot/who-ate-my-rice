@@ -1,5 +1,23 @@
 # S13 音频与反馈验证记录
 
+## 2026-10-16：DeepSeek娘被抓失败音效
+
+- 用户提供 `NOPE.mp3`，原字节复制为 `public/assets/audio/deepseekCaughtDefeat.mp3`，17525字节，SHA-256 `3754fcec7a41785ad41d71decd84ce487257df18973f16e7ac2a13119b34c447`。当前44个事件ID，实际37个Ogg和2个MP3；此前盆命中音及五项停用状态保留，不改任何原音频。
+- 在既有 `syncAudio` 的FINISHED阶段切换入口，只有主控DEEPSEEK、未获胜且原结算原因为CAPTURED时，使用新声音替换通用defeat，不叠加两段失败音。Human失败及双方胜利保持原声音，常规抓捕和Q搜查共用原结算原因；不改胜负逻辑。沿用UI音量、Master、静音、自动播放保护和重开清理，不新增AI听觉事件。
+- 音频专项13/13，新回归2项验证四种结果选择、连续100次同步不重复、下一次结果可重播，以及静音/暂停/重置。全量943/945、失败2、跳过/取消0；仍为已有 `difficulty.test.mjs:263` NORMAL/20276765固定路线结算及 `throwables.test.mjs:35` throw_closet_1初始距离断言，未改玩法或用户点位迎合测试。独立TypeScript、生产build及diff检查通过，保留大chunk告警。
+- Chrome/Edge全新受控实例明确goto4173并核对标题，各自检查双阵营×捕获/吃米结算4组合。结果来自真实GameStateSystem结算方法的内存夹具，不冒充自然整局；实际解码NOPE约1.056秒、双声道，48kHz上下文中非零波形，只有一枚对应AudioBufferSource启动，其他结果音效不变，返回菜单无旧结算短音残留，页面异常和新增资源失败0。原始素材峰值达到1，本轮不擅自处理响度，听感留给用户验收。
+- 保护快照329个既有源码/测试/资产文件，仅 `GameAudio.ts`、`ThreeGame.ts`、`tests/game-audio.test.mjs` 获准变化，无文件丢失；原38个音频、地图/道具布局、GAME_CONFIG、难度、AI、模型和手持位置均不变。证据见 [验证摘要](deepseek-caught-audio/verification.json)、[浏览器结果](deepseek-caught-audio/browser.json)、[Chrome](deepseek-caught-audio/chrome-deepseek-caught.png)、[Edge](deepseek-caught-audio/edge-deepseek-caught.png)。
+- 4173正式预览已重新构建，刷新可试听；用户输入文件未修改。来源仅确认用户提供，公开分发许可尚未核验，未暂存/commit/push/Tag，不推进Gate。
+
+## 2026-10-15：不锈钢盆命中音效
+
+- 用户提供“钢管 落地.MP3”，直接复制为 `public/assets/audio/basinHit.mp3`，26381字节，SHA-256 `b04405c3f3c9d4546a2d60003879c278d99ae48fcca8c4f2b93433112fdff79d`；原文件不改，未剪辑、重合成或替换其他声音。当前43个事件ID、37个原Ogg加1个新MP3；五项停用事件继续停用。
+- `ThrowableSystem.advanceFlights`新增可选真实命中回调，保留原阵营返回值；仅 `kind === BASIN` 在命中当帧调用世界音 `basinHit`，一次飞行只结算一次。不在投出、落空、落地或墙体阻挡时播放该声音，盒子/花瓶命中不使用该文件。原通用倒地音保留。
+- 复用GameAudio的SFX/Master/静音、缓存、并发、暂停及重开清理；声音位置取实际接触点，沿用距离/遮挡和信息权限，不产生AI听觉事件。命中文字原先仍写2秒，本轮改为读取现有3000ms配置显示3秒，不改实际眩晕或其他数值。用户自调手持前伸0.60/高度0.55原样保留。
+- Chrome/Edge独立受控实例明确goto生产4173并核对标题；双阵营真实鼠标投掷命中、仅一枚实际MP3 AudioBufferSource启动、盒子/花瓶命中不播金属声、盆落空不播、静音阻止节点、暂停清空短音通过。实际解码约1.646秒/双声道，运行上下文48kHz重采样结果有非零波形（峰值约0.312、RMS约0.064），不是仅以HTTP200判断播放。合法位置/敌方场景使用明确夹具，不冒充自然对局或人工试听。
+- 新增2项命中/声音回归均通过。相关29项28通过1失败；全量943项941通过2失败：既有 `difficulty.test.mjs:263` 固定路线结算失败，以及 `throwables.test.mjs:35` 当前用户布局中的 `throw_closet_1` 不满足旧初始1.8距离断言。旧几何断言、用户两个布局、AI均未改，不声称全量通过。独立TypeScript/build/diff通过；既有大chunk告警保留。
+- 实现/测试文件：`ThrowableSystem.ts`、`GameAudio.ts`、`ThreeGame.ts`、`tests/throwables.test.mjs`、`tests/game-audio.test.mjs`；另新增MP3和必要来源/交接/追加日志及 `basin-hit/` 证据。原37个Ogg哈希均不变。用户提供不等于已核验公开再分发许可，公开上传/商业使用权限仍待确认；本轮仅本地接入，未暂存/commit/push/Tag。最终听感留给用户试听。
+
 ## 2026-10-14：用户最终验收与公开归档
 
 用户确认S13主观试听、ESC声音设置与暂停交互验收通过，并授权本次普通commit及push。保留42个事件接口，实际公开37个原创合成Ogg（399664字节）；`step`、`sprintStep`、`sprintStart`、`doorOpen`、`doorClose`继续禁用且无对应文件，不为凑齐42个文件重新生成。下面各轮42文件表及待试听文字为历史状态，以本节为准。

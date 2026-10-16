@@ -1,0 +1,1222 @@
+[
+  {
+    "browser": "chrome",
+    "file": "docs/verification/BALCONY/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/BALCONY/review.html",
+    "title": "阳台同机位前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/BATHROOM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/BATHROOM/review.html",
+    "title": "卫生间前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/ENTRY/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/ENTRY/review.html",
+    "title": "玄关前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "front-door-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "front-door-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/HOME_GYM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/HOME_GYM/review.html",
+    "title": "家庭健身区真实截图验收",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "gym-full.png",
+        "width": 1920,
+        "height": 1080,
+        "complete": true
+      },
+      {
+        "src": "gym-full-reverse.png",
+        "width": 1920,
+        "height": 1080,
+        "complete": true
+      },
+      {
+        "src": "movement-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "movement-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/KITCHEN/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/KITCHEN/review.html",
+    "title": "厨房靠墙操作区前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/MAIN_BEDROOM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/MAIN_BEDROOM/review.html",
+    "title": "主卧同机位对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_bed-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_bed-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_wardrobe-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_wardrobe-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_bed-concealed.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_wardrobe-concealed.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/NORTH_BALCONY/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/NORTH_BALCONY/review.html",
+    "title": "北阳台前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide-prompt-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide-prompt-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide-concealed.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "chrome",
+    "file": "docs/verification/SECOND_BEDROOM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/SECOND_BEDROOM/review.html",
+    "title": "次卧同机位对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "wardrobe-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "wardrobe-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/BALCONY/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/BALCONY/review.html",
+    "title": "阳台同机位前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/BATHROOM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/BATHROOM/review.html",
+    "title": "卫生间前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/ENTRY/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/ENTRY/review.html",
+    "title": "玄关前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "front-door-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "front-door-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/HOME_GYM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/HOME_GYM/review.html",
+    "title": "家庭健身区真实截图验收",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "gym-full.png",
+        "width": 1920,
+        "height": 1080,
+        "complete": true
+      },
+      {
+        "src": "gym-full-reverse.png",
+        "width": 1920,
+        "height": 1080,
+        "complete": true
+      },
+      {
+        "src": "movement-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "movement-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/KITCHEN/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/KITCHEN/review.html",
+    "title": "厨房靠墙操作区前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "interaction-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/MAIN_BEDROOM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/MAIN_BEDROOM/review.html",
+    "title": "主卧同机位对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_bed-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_bed-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_wardrobe-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_wardrobe-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_bed-concealed.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide_main_wardrobe-concealed.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/NORTH_BALCONY/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/NORTH_BALCONY/review.html",
+    "title": "北阳台前后对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide-prompt-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide-prompt-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "hide-concealed.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  },
+  {
+    "browser": "edge",
+    "file": "docs/verification/SECOND_BEDROOM/review.html",
+    "url": "http://127.0.0.1:5173/docs/verification/SECOND_BEDROOM/review.html",
+    "title": "次卧同机位对照",
+    "images": [
+      {
+        "src": "before-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-0.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-1.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-2.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "before-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "after-3.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "wardrobe-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-DEEPSEEK.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "wardrobe-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      },
+      {
+        "src": "rice-HUMAN.png",
+        "width": 1366,
+        "height": 768,
+        "complete": true
+      }
+    ]
+  }
+]

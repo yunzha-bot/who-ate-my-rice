@@ -1,0 +1,15 @@
+{
+  "compared": 327,
+  "changed": [
+    "src/three/SceneEditor.ts",
+    "src/three/ThrowableEditor.ts",
+    "src/three/map/ThrowableLayoutModel.ts"
+  ],
+  "missing": [],
+  "formalFurnitureLayoutUnchanged": true,
+  "formalThrowableLayoutUnchanged": true,
+  "configAiModelAudioUnchanged": true,
+  "logPrefixPreserved": true,
+  "mapSha256": "06376844ee630d74a7cf009182ec9b43d4abec67535c9da36207aaf49b9b6c37",
+  "propSha256": "bbf90bb50dc5b1211de2755e7112db28957f2f41e61b797109cfede99531a208"
+}

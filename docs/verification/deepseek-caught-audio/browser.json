@@ -1,0 +1,234 @@
+[
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "DEEPSEEK",
+    "captured": true,
+    "expected": "deepseekCaughtDefeat",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 12.200000047683716
+    },
+    "calls": [
+      {
+        "cue": "deepseekCaughtDefeat",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "deepseekCaughtDefeat"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "DEEPSEEK",
+    "captured": false,
+    "expected": "victory",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 0
+    },
+    "calls": [
+      {
+        "cue": "victory",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "victory"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "HUMAN",
+    "captured": true,
+    "expected": "victory",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 7.200000047683716
+    },
+    "calls": [
+      {
+        "cue": "victory",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "victory"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "chrome",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "HUMAN",
+    "captured": false,
+    "expected": "defeat",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 7.200000047683716
+    },
+    "calls": [
+      {
+        "cue": "defeat",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "defeat"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "DEEPSEEK",
+    "captured": true,
+    "expected": "deepseekCaughtDefeat",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 16
+    },
+    "calls": [
+      {
+        "cue": "deepseekCaughtDefeat",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "deepseekCaughtDefeat"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "DEEPSEEK",
+    "captured": false,
+    "expected": "victory",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 0
+    },
+    "calls": [
+      {
+        "cue": "victory",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "victory"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "HUMAN",
+    "captured": true,
+    "expected": "victory",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "HUMAN",
+      "reason": "CAPTURED",
+      "elapsedMs": 0
+    },
+    "calls": [
+      {
+        "cue": "victory",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "victory"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  },
+  {
+    "browser": "edge",
+    "url": "http://127.0.0.1:4173/",
+    "faction": "HUMAN",
+    "captured": false,
+    "expected": "defeat",
+    "fixture": "real GameStateSystem settlement method; not a natural full match",
+    "result": {
+      "winner": "DEEPSEEK",
+      "reason": "RICE_COMPLETED",
+      "elapsedMs": 0
+    },
+    "calls": [
+      {
+        "cue": "defeat",
+        "bus": "ui"
+      }
+    ],
+    "starts": [
+      "defeat"
+    ],
+    "metrics": {
+      "duration": 1.056,
+      "channels": 2,
+      "sampleRate": 48000,
+      "peak": 1,
+      "rms": 0.13260129968929074
+    }
+  }
+]

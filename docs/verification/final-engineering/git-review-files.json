@@ -1,0 +1,358 @@
+{
+  "purpose": "仅供人工审查的精确候选清单，不构成暂存或提交授权",
+  "count": 70,
+  "staged": 0,
+  "files": [
+    {
+      "file": "docs/AGENT_LOG.md",
+      "status": "modified-tracked",
+      "role": "报告/交接/追加日志"
+    },
+    {
+      "file": "docs/DEEPSEEK_HANDOFF.md",
+      "status": "modified-tracked",
+      "role": "报告/交接/追加日志"
+    },
+    {
+      "file": "docs/verification/CODEBASE_CLEANUP_REPORT.md",
+      "status": "new-untracked",
+      "role": "报告/交接/追加日志"
+    },
+    {
+      "file": "docs/verification/FINAL_ENGINEERING_REPORT.md",
+      "status": "new-untracked",
+      "role": "报告/交接/追加日志"
+    },
+    {
+      "file": "docs/verification/PRODUCTION_ASSET_OPTIMIZATION_REPORT.md",
+      "status": "new-untracked",
+      "role": "报告/交接/追加日志"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-browser.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-chrome-menu-1455.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-chrome-menu-800.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-chrome-menu-full.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-chrome-pause.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-edge-menu-full.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-edge-pause.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/after-editor.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/before-browser.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/before-chrome-menu-1455.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/before-chrome-pause.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/before-editor.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/css-removed.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/differential.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/imports.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/protection.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/codebase-cleanup/surfaces.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/browser.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/candidates-final.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/checks.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/chrome-isolated-editor-save.png",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/chrome-production-DEEPSEEK.png",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/chrome-production-HUMAN.png",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/dist-final.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/edge-isolated-editor-save.png",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/edge-production-DEEPSEEK.png",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/edge-production-HUMAN.png",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/fallback.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/galleries.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/git-review-files.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/isolated-editor.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/final-engineering/protection-final.json",
+      "status": "new-untracked",
+      "role": "本轮精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/after-dist-manifest.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/asset-catalog.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/b-audit.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/before-dist-manifest.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/browser.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/chrome-dev-DEEPSEEK.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/chrome-production-DEEPSEEK.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/chrome-production-HUMAN.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/comparison.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/edge-dev-DEEPSEEK.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/edge-production-DEEPSEEK.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/edge-production-HUMAN.png",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/fallback.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/protected-files.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "docs/verification/production-assets/resource-probes.json",
+      "status": "new-untracked",
+      "role": "S1/S2精选证据"
+    },
+    {
+      "file": "scripts/production-assets.mjs",
+      "status": "new-untracked",
+      "role": "S2构建"
+    },
+    {
+      "file": "src/s13-ui.css",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/systems/AILogCollector.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/AISafetyPathView.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/CollisionWorld.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/DevBHumanHideObservation.ts",
+      "status": "new-untracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/DevBPanel.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/GameFeedback.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/GameUiLayout.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/SceneEditor.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/SceneEditorPanel.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/SceneEditorView.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/ThreeGame.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "src/three/map/MapEditModel.ts",
+      "status": "modified-tracked",
+      "role": "S1源码"
+    },
+    {
+      "file": "tests/cleanup-projection.test.mjs",
+      "status": "new-untracked",
+      "role": "S1/S2回归测试"
+    },
+    {
+      "file": "tests/production-assets.test.mjs",
+      "status": "new-untracked",
+      "role": "S1/S2回归测试"
+    },
+    {
+      "file": "tests/view-cleanup.test.mjs",
+      "status": "new-untracked",
+      "role": "S1/S2回归测试"
+    },
+    {
+      "file": "vite.config.ts",
+      "status": "modified-tracked",
+      "role": "S2构建"
+    }
+  ],
+  "excluded": "dist、旧GLB、原始素材、私人目录、场景备份、Temp及其他未批准验证材料"
+}
