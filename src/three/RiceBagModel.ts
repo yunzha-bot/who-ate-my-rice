@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-export const RICE_BAG_MODEL_URL = '/assets/props/rice-bag/rice-bag.glb';
+const assetBase = typeof import.meta.env === 'undefined' ? '/' : import.meta.env.BASE_URL;
+export const RICE_BAG_MODEL_URL = `${assetBase}assets/props/rice-bag/rice-bag.glb`;
 let template: Promise<THREE.Group> | null = null;
 
 /** 五个米点共用一次下载与贴图；实例拥有自己的几何和材质。 */

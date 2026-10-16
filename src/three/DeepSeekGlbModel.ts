@@ -3,9 +3,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { DEEPSEEK_CLIPS } from './DeepSeekAnimation.ts';
 
-export const DEEPSEEK_GLB_URL = '/assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb';
-export const DEEPSEEK_ANIMATED_GLB_URL = '/assets/characters/deepseek/deepseek_animated_v6_hair.glb';
-const DEEPSEEK_PREVIOUS_ANIMATED_GLB_URL = '/assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb';
+// Vite supplies the hosting base; direct Node module tests keep root URLs.
+const assetBase = typeof import.meta.env === 'undefined' ? '/' : import.meta.env.BASE_URL;
+export const DEEPSEEK_GLB_URL = `${assetBase}assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb`;
+export const DEEPSEEK_ANIMATED_GLB_URL = `${assetBase}assets/characters/deepseek/deepseek_animated_v6_hair.glb`;
+const DEEPSEEK_PREVIOUS_ANIMATED_GLB_URL = `${assetBase}assets/characters/deepseek/deepseek_animated_v5_hair_ready.glb`;
 
 let modelPromise: Promise<THREE.Group> | null = null;
 let staticPromise: Promise<THREE.Group> | null = null;

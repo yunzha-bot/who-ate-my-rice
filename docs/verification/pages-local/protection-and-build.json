@@ -1,0 +1,95 @@
+{
+  "baselineFiles": 339,
+  "unchanged": 333,
+  "changed": [
+    "src/three/DeepSeekGlbModel.ts",
+    "src/three/GameUiLayout.ts",
+    "src/three/RiceBagModel.ts",
+    "vite.config.ts",
+    "README.md",
+    "docs/verification/GITHUB_PAGES_DEPLOYMENT_PLAN.md"
+  ],
+  "logPrefixPreserved": true,
+  "rootDist": {
+    "count": 86,
+    "bytes": 43049783
+  },
+  "pages": {
+    "count": 86,
+    "bytes": 43050301,
+    "manifestSha256": "6c261b68b8c7dc8c0a04ad6f2cd4ce2aa6d5214e300abfd2ad6bb20ce66b6a56"
+  },
+  "categories": [
+    {
+      "type": ".ogg",
+      "count": 37,
+      "bytes": 399664
+    },
+    {
+      "type": ".mp3",
+      "count": 2,
+      "bytes": 43906
+    },
+    {
+      "type": ".glb",
+      "count": 2,
+      "bytes": 13129676
+    },
+    {
+      "type": ".css",
+      "count": 1,
+      "bytes": 70123
+    },
+    {
+      "type": ".js",
+      "count": 1,
+      "bytes": 1138247
+    },
+    {
+      "type": ".png",
+      "count": 36,
+      "bytes": 27973361
+    },
+    {
+      "type": ".webp",
+      "count": 2,
+      "bytes": 289472
+    },
+    {
+      "type": ".md",
+      "count": 2,
+      "bytes": 3599
+    },
+    {
+      "type": ".html",
+      "count": 1,
+      "bytes": 437
+    },
+    {
+      "type": "(extensionless)",
+      "count": 1,
+      "bytes": 0
+    },
+    {
+      "type": ".svg",
+      "count": 1,
+      "bytes": 1816
+    }
+  ],
+  "audio": {
+    "ogg": 37,
+    "mp3": 2
+  },
+  "oldModelsProtected": 6,
+  "oldCopies": 0,
+  "rootPagesIdenticalPublic": true,
+  "hidden": [
+    {
+      "path": "maps/.gitkeep",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "head": "870c69050cf80ff83aa79531e7d9f2590a8834d5",
+  "staged": ""
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "browser": "chrome",
+    "mode": "getter-denied",
+    "result": "existing-startup-failure-confirmed",
+    "errors": [
+      "PAGES_TEST_STORAGE_DENIED"
+    ]
+  },
+  {
+    "browser": "chrome",
+    "mode": "getItem-denied",
+    "result": "startup-and-selection-pass",
+    "errors": []
+  },
+  {
+    "browser": "chrome",
+    "mode": "setItem-denied",
+    "result": "startup-and-selection-pass",
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "mode": "getter-denied",
+    "result": "existing-startup-failure-confirmed",
+    "errors": [
+      "PAGES_TEST_STORAGE_DENIED"
+    ]
+  },
+  {
+    "browser": "edge",
+    "mode": "getItem-denied",
+    "result": "startup-and-selection-pass",
+    "errors": []
+  },
+  {
+    "browser": "edge",
+    "mode": "setItem-denied",
+    "result": "startup-and-selection-pass",
+    "errors": []
+  }
+]

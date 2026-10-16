@@ -145,7 +145,11 @@ export class ThreeGame {
   private pulseLock = new PulseLockSystem(this.doorSystem, C.pulseLock.timing);
   private doorViews = new Map<string, DoorView>();
   private sound = new SoundEventSystem(this.runtime);
-  private readonly audio = new GameAudio(typeof localStorage === 'undefined' ? null : localStorage);
+  private readonly audio = new GameAudio((() => {
+    // Accessing the browser getter can throw before GameAudio's read/write guards.
+    try { return globalThis.localStorage ?? null; }
+    catch { return null; }
+  })());
   private audioSettings!: AudioSettingsView;
   private menuSettings!: MenuSettingsView;
   private pauseSettingsOpen = false;

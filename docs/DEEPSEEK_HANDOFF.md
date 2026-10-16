@@ -4,6 +4,22 @@
 
 ## 1. 项目概况
 
+### 2026-10-16 S19-P首次RC准入与部署授权
+
+- 用户批准第二次验收及门禁通过后的正常commit/push、Pages Actions Source和首次手动RC部署；不允许新Tag/Release，不代表S20完成。实际Git/Actions/公网结果统一记入 [S19-P报告](verification/S19_P_RC_DEPLOYMENT_REPORT.md)，不预填成功。
+- ThreeGame音频参数的localStorage getter新增最小try/catch，声音系统源码/播放不改。新增5回归先4绿1红后全绿，Chrome/Edge各4种存储模式均启动成功；全量963/963、独立tsc、两种生产构建及产物/diff通过。Pages86文件/43,050,329字节；玩法/地图/36道具/素材保护不变。
+- 工作流保持手动/生产限定/仅dist，新增approved_sha与github.sha严格相等。原v6取消证据保留；本轮Edge原包又见1次取消但模型动画就绪，无pageerror，不擅改加载策略。既有5173/4173和本地备份保留。
+- 计划按本轮授权精确提交，通过工作流后核对真实HTTPS和CI artifact来源/逐项字节；大陆三运营商无代理仍未测，旧rc1里程碑保持不变。没有完成实际部署前不更新新阶段Gate。
+
+### 2026-10-16 S19 Pages本地适配完成，等待第二次验收/上线授权
+
+- `v1.0.0-rc1`附注Tag和 [GitHub预发布Release](https://github.com/yunzha-bot/who-ate-my-rice/releases/tag/v1.0.0-rc1) 已实际创建；Tag对应历史提交 `870c69050cf80ff83aa79531e7d9f2590a8834d5`，远端main及本地归档落点核对一致，Release为prerelease=true/draft=false、无附加dist包。候选版已按用户接受的已知限制归档，不代表S20已上线或历史验收缺口被补齐。
+- 用户批准本地适配，未批准push、Pages设置或Actions部署。已最小修复Vite base及模型/立绘URL；显式PAGES_DEPLOYMENT=true的production build使用 `/who-ate-my-rice/`，默认5173/4173仍为根路径。原方案背景保留，真实结果见 [本地验收报告](verification/GITHUB_PAGES_LOCAL_ACCEPTANCE_REPORT.md)。
+- 最终958/958、独立TypeScript、根路径及隔离Pages构建、产物门禁和diff通过；339项开工哈希中333项不变，仅4个授权代码/配置文件及README/方案变化，历史日志前缀保持。Pages dist86文件/43,050,301字节，83public原字节保留、仅v6和米袋；6旧GLB及同内容副本/DEV端点/ZCX均不进生产。本地旧模型、地图、36道具点位和音频不改。
+- Chrome154/Edge151各6诊断组合和额外6原包组合，路径/难度/30秒/模型/投掷/暂停/重开/设置/布局/Hover检查完成；最终原包两浏览器Network失败和pageerror均0，39音频均解码。诊断及较早一次原包曾有v6取消记录，保留线上复核，不宣称从未发生；这些测试不代替原生缩放、公网或自然整局平衡。
+- 新增本地手动工作流，固定main触发SHA、生产门禁后仅上传dist、configure-pages enablement:false；未推送/触发/启用Pages。新增 [大陆无代理访问计划与存储审查](verification/GITHUB_PAGES_MAINLAND_ACCESS_PLAN.md)：现有键有项目前缀，无需迁移；两浏览器彻底禁止localStorage getter时的既有启动失败已复现但未越界修改，需决定接受限制或授权最小修复。实际Linux Actions、HTTPS及三运营商直连仍待授权后验收。
+- 已重新构建4173根预览并核对36投掷物与保存JSON逐项一致、模型可见；旧标签页需刷新/重开。原开发/预览进程均保留，临时静态服务关闭，未暂存/commit/push/新Tag/Release，不进入新阶段。
+
 ### 2026-10-16 S19候选版里程碑 v1.0.0-rc1
 
 - 用户按《完整制作阶段》明确确认当前版本作为带已知限制的S19候选试玩版，授权版本记录、附注Tag及GitHub预发布Release；不是v1.0.0正式上线或所有历史Gate无条件通过。同步package及lock为1.0.0-rc1，首页复用既有版本读取，无玩法/依赖/素材变化。

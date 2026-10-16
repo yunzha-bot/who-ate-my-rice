@@ -3135,3 +3135,64 @@
 
 - 本次提交标题 `chore: prepare S19 v1.0.0-rc1 milestone`；附注Tag及预发布Release名称为v1.0.0-rc1，实际提交落点/创建结果/远端同步以本轮回报和Git查询为准，不标记为v1.0.0正式上线。
 - 用户选择GitHub Pages，但只批准本轮先制定完整部署方案，未批准实际部署或修改Pages设置。归档后仅只读核对base/资源/构建/工作流需要，保留S14/S15/S16及低配/长测等已知限制，不补造历史Gate证据；1066项本机材料及私人目录继续保护。
+
+### S19里程碑发布结果与GitHub Pages部署前方案 — 2026-10-16（Codex）
+
+#### 已完成结果
+
+- S19版本归档正常提交落点 `870c69050cf80ff83aa79531e7d9f2590a8834d5`；附注Tag v1.0.0-rc1对象为 `b7194124e0c328ff59882642392e17c60f39ee28`，main与Tag已正常推送，远端剥离Tag与归档提交一致。未移动历史Tag或创建v1.0.0。
+- 实际创建并再次读取同名GitHub Release，prerelease=true、draft=false，附件0；URL为 https://github.com/yunzha-bot/who-ate-my-rice/releases/tag/v1.0.0-rc1 。用户接受的是带已知限制的候选试玩版，不是所有历史验收无条件通过或游戏网站上线。
+
+#### Pages只读审查与方案
+
+- 用户选GitHub Pages，并要求先出完整方案、未经明确批准不部署或修改设置。依research技能并行核对官方GitHub/Vite及实际源码，仅新增方案文档；主任务复核并补充安装devDependencies、最小权限与configure-pages位置等执行风险。
+- 独立Chrome/Edge加载当前dist的严格本地 `/who-ate-my-rice/` 子路径，HTML200/标题正确，但JS/CSS到根/assets请求404，菜单未挂载；这是当前路径不兼容的诊断实证，不是实施后测试失败，也不是实际Pages线上验收。临时只读服务已正常关闭，原4173/5173保留。
+- 仅GET核对公开仓库/main/Actions enabled=true，Pages GET404；未写Pages设置、创建workflow或触发部署。当前dist86文件/43049720字节，无测试/私人/备份等非预期材料、仅正式v6及米袋，旧模型与Z/C/X生产分支缺席。
+- 完整改动候选、生产限定dist上传、门禁/12会话子路径验证、HTTPS及线上验证、版本不移动/回滚和风险见 `docs/verification/GITHUB_PAGES_DEPLOYMENT_PLAN.md`。本方案及本条交接日志补充仅保留本地待用户审阅，不为制定方案额外提交/推送，不实施源码/配置/设置改动，不自动进入S20。
+
+### S19 GitHub Pages适配与本地验收 — 2026-10-16（Codex）
+
+#### 完成内容
+
+- 用户批准本地修复/手动工作流准备，不批准推送、Pages设置或触发部署。按ponytail/diagnosing-bugs最小修改4个代码/配置文件的base/模型/立绘URL；研究技能仅委派网络及存储只读审查，主任务复核。音频与CSS已支持base，不改素材、布局、玩法、难度或DEV隔离。
+- 新增9项回归、只读产物门禁和固定官方Action SHA的手动Pages工作流，仅dist上传、不自动启用Pages；完成大陆真实无代理验收计划。根正式预览重新build，36个投掷物位置与保存JSON一致、36模型可见，不直接读取用户旧标签页或归咎为确定的缓存原因。
+
+#### 自动化与浏览器验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 基线/最终全量 | 949/949 → 958/958，失败/取消/跳过0；最后一轮约101.18秒，含并行浏览器负载 |
+| 类型/构建/diff | 独立tsc、默认根构建、隔离Pages生产构建、产物与diff检查通过；既有chunk警告保留 |
+| 保护 | 开工339项中333项不变，6项授权代码/说明变化；6本地旧GLB和全部玩法/地图/音频不变，日志原字节前缀保持 |
+| Pages产物 | 86文件/43,050,301字节；83public原字节，正式v6/米袋两GLB，旧模型同内容副本0，无私人/测试/备份/DEV或ZCX；复建清单一致 |
+| Chrome/Edge | 各6诊断＋6原包组合，严格子路径、实际配置、移动投掷、暂停设置重开、5视口、两卡各10秒Hover、模型/动画兜底完成；最终原包Network失败/pageerror均0，39音频全解码 |
+| 开发环境 | 原5173/4173保留；两浏览器DEV编辑器打开/关闭正常，无保存POST，未改正式数据 |
+
+#### Git与已知限制
+
+- 未暂存、commit、push或触发线上工作流；远端main及原rc1剥离Tag仍为历史落点870c69050cf80ff83aa79531e7d9f2590a8834d5，原Tag/Release不动，不创建rc2/v1.0.0、不更新新阶段Gate。
+- 诊断及较早一次Edge原包曾记录v6 ERR_ABORTED但模型动画就绪，保留而不以最终复验零失败抹除；完全禁止localStorage getter时的既有启动失败已故障注入确认，本轮仅审查不越界改ThreeGame。公网HTTPS、实际Linux Actions、大陆三运营商无代理和原生缩放未验，不冒充通过；素材权利边界沿用账本。
+- 详见 `docs/verification/GITHUB_PAGES_LOCAL_ACCEPTANCE_REPORT.md`、`GITHUB_PAGES_MAINLAND_ACCESS_PLAN.md`及`pages-local/`真实清单/截图。临时服务关闭，停止等待用户第二次验收与独立上线授权，不扩展新阶段。
+
+### S19-P首次RC部署准入 — 2026-10-16（Codex）
+
+#### 完成内容与授权
+
+- 用户批准第二次验收，允许最小getter修复、门禁后精确commit/push和首次手动Pages RC部署，不创建新Tag/Release、不代表S20验收完成。ThreeGame只为音频存储参数添加try/catch；声音系统、玩法、UI、AI、地图、36道具点位及全部素材不改。
+- 新增5项真实字段初始化回归，先复现getter SecurityError（4通过1失败），修复后5/5；手动工作流增加approved_sha防止触发时main变化，不启用push部署。旧原始v6取消和存储失败记录保留，新证据放s19-p，不覆写pages-local。
+
+#### 测试与本地验收
+
+| 检查 | 结果 |
+|---|---|
+| 全量 | 963/963，失败/取消/跳过0，最终约84.95秒 |
+| 类型/构建/diff | 独立tsc、根路径及隔离Pages生产构建、产物和diff检查通过，保留大chunk提示 |
+| 保护 | 原339项集合332不变，仅授权5代码/配置及README/方案变化；本轮日志开工前缀保持 |
+| 存储浏览器 | Chrome/Edge正常、getItem拒绝、setItem拒绝、getter SecurityError共8项全部启动/选择成功 |
+| 功能浏览器 | 各6诊断＋6原包组合、39音频、v6/动画、投掷/暂停设置/重开/布局/Hover/DEV与ZCX隔离完成；Edge原包保留1次v6取消观察，pageerror0 |
+| Pages产物 | 86文件/43,050,329字节；83public原字节、仅正式v6与米袋，无旧GLB/私人/测试/备份/DEV材料 |
+
+#### Git、部署与限制
+
+- 本条只记录实际完成的本地准入；Git推送、Actions及公网结果完成后另追加，不预填成功。精确提交清单和结果见S19_P_RC_DEPLOYMENT_REPORT.md。原Tag/Release及5173/4173服务不动，不清理任何未知文件。
+- 已用现有凭据只读核对repo admin/push/workflow权限、Actions启用、Pages尚无站点；不创建新Token。大陆三运营商无代理、自然对局平衡和原生缩放等不冒充完成；素材权利边界沿用账本。

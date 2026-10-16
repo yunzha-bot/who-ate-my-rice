@@ -1,0 +1,86 @@
+name: Deploy production game to GitHub Pages
+
+# Manual RC publication only: no push, tag, release or pull-request auto-deployment.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_production:
+        description: 'Deploy this main commit after the owner approves online publication'
+        type: boolean
+        required: true
+        default: false
+      approved_sha:
+        description: 'Exact reviewed 40-character main commit SHA'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.repository == 'yunzha-bot/who-ate-my-rice' && inputs.confirm_production == true && github.sha == inputs.approved_sha
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout the approved immutable commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          clean: false
+      - name: Set up tested Node major
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install build and test dependencies
+        run: npm ci --include=dev
+      - name: Automated tests
+        run: npm test
+      - name: Independent TypeScript check
+        run: npx tsc --noEmit
+      - name: Build production for the repository subpath
+        run: npm run build
+        env:
+          NODE_ENV: production
+          PAGES_DEPLOYMENT: 'true'
+      - name: Audit exactly what will be published
+        run: |
+          git diff --check
+          node scripts/verify-pages-build.mjs > "$RUNNER_TEMP/pages-files.json"
+          printf 'Production source commit: `%s`\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload only audited production files
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: ./dist
+          include-hidden-files: false
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Read already approved Pages configuration
+        id: pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+        with:
+          enablement: false
+      - name: Check deployment subpath matches the audited build
+        run: test "$PAGE_BASE_PATH" = '/who-ate-my-rice'
+        env:
+          PAGE_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - name: Deploy the same audited artifact
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

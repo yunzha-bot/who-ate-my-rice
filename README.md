@@ -24,7 +24,26 @@ npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
 
 预览地址为 `http://127.0.0.1:4173/`。正式站点只部署生成的 `dist/`，不部署整个工作目录，不使用 `npm run dev` 对外提供游戏。生产构建不会初始化场景编辑器、DEV/DEV-B面板、调试绘制、AI诊断日志或DEV预设读取；暂停菜单也不创建开发阵营切换按钮。本地开发功能和预设仍保留。
 
-布局保存服务仅用于Vite开发环境，不属于正式游戏API。公开站点应使用HTTPS静态托管；当前运行时资源按站点根路径使用，部署到项目子目录前需另行核对Vite base及全部运行时URL。本轮没有配置线上平台或验证正式HTTPS地址。
+布局保存服务仅用于Vite开发环境，不属于正式游戏API。默认构建仍使用根路径；GitHub Pages 专用构建通过显式环境变量使用 `/who-ate-my-rice/`，模型、立绘、CSS 和音频遵循相同 base。
+
+### GitHub Pages RC构建与手动部署
+
+在隔离副本中使用 PowerShell 执行下列命令，避免覆盖正在运行的4173根路径预览的 `dist/`：
+
+```powershell
+$ricePagesPrevious = $env:PAGES_DEPLOYMENT
+try {
+  $env:PAGES_DEPLOYMENT = 'true'
+  npm run build
+  if ($LASTEXITCODE -ne 0) { throw 'Pages build failed' }
+  node scripts/verify-pages-build.mjs
+  if ($LASTEXITCODE -ne 0) { throw 'Pages artifact audit failed' }
+} finally { $env:PAGES_DEPLOYMENT = $ricePagesPrevious }
+```
+
+产物审查命令需在具备Git追踪清单的检出副本中运行；无Git元数据的隔离副本须由验证脚本显式提供经过审核的public清单。严格本地验证应只挂载 `/who-ate-my-rice/`，不能依赖根 `/assets/` 或HTML回退掩盖缺失资源。
+
+`.github/workflows/pages.yml` 只允许手动RC部署：限本仓库main、显式确认，并填写审核通过的40位`approved_sha`；触发提交必须与该SHA相同。生产构建和产物门禁后只上传 `./dist`，不随push/Tag/Release自动上线，也不自动启用Pages。`v1.0.0-rc1`里程碑保持固定，RC网页上线不等于正式v1.0.0或S20验收完成。实际准入与发布记录见 [S19-P报告](docs/verification/S19_P_RC_DEPLOYMENT_REPORT.md)，既有证据见 [Pages本地验收](docs/verification/GITHUB_PAGES_LOCAL_ACCEPTANCE_REPORT.md)，中国大陆访问见 [网络验收计划](docs/verification/GITHUB_PAGES_MAINLAND_ACCESS_PLAN.md)。
 
 ## 操作与对局
 

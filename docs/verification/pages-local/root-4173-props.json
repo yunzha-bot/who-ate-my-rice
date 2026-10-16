@@ -1,0 +1,557 @@
+{
+  "script": [
+    "http://127.0.0.1:4173/assets/index-CaFW0uhI.js"
+  ],
+  "enabled": true,
+  "items": [
+    {
+      "id": "throw_balcony_1",
+      "roomId": "balcony",
+      "kind": "VASE",
+      "x": 2.764,
+      "z": -18.408,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_balcony_2",
+      "roomId": "balcony",
+      "kind": "BOX",
+      "x": -0.669,
+      "z": -18.312,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_main_bedroom_1",
+      "roomId": "main_bedroom",
+      "kind": "VASE",
+      "x": -25.632,
+      "z": -3.084,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_main_bedroom_2",
+      "roomId": "main_bedroom",
+      "kind": "BOX",
+      "x": -25.122,
+      "z": -5.513,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_closet_1",
+      "roomId": "closet",
+      "kind": "BOX",
+      "x": -13.029,
+      "z": -7.399,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_closet_2",
+      "roomId": "closet",
+      "kind": "BASIN",
+      "x": -13.623,
+      "z": -11.974,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_living_1",
+      "roomId": "living",
+      "kind": "VASE",
+      "x": 2.442,
+      "z": -8.023,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_living_2",
+      "roomId": "living",
+      "kind": "BOX",
+      "x": -3.809,
+      "z": -11.385,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_kitchen_1",
+      "roomId": "kitchen",
+      "kind": "BASIN",
+      "x": 9.564,
+      "z": -9.032,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_kitchen_2",
+      "roomId": "kitchen",
+      "kind": "BOX",
+      "x": 12.697,
+      "z": -11.986,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_storage_1",
+      "roomId": "storage",
+      "kind": "BOX",
+      "x": 17.935,
+      "z": -11.235,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_storage_2",
+      "roomId": "storage",
+      "kind": "BASIN",
+      "x": 17.171,
+      "z": -4.597,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_dining_1",
+      "roomId": "dining",
+      "kind": "VASE",
+      "x": 12.96,
+      "z": 0.491,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_dining_2",
+      "roomId": "dining",
+      "kind": "BOX",
+      "x": 8.751,
+      "z": -0.33,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_bathroom_1",
+      "roomId": "bathroom",
+      "kind": "BASIN",
+      "x": -22.895,
+      "z": 2.142,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_bathroom_2",
+      "roomId": "bathroom",
+      "kind": "BOX",
+      "x": -27.2,
+      "z": 1.3,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_hall_1",
+      "roomId": "hall",
+      "kind": "BOX",
+      "x": -12.9,
+      "z": -2.7,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_hall_2",
+      "roomId": "hall",
+      "kind": "BASIN",
+      "x": -11.253,
+      "z": -0.039,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_second_bedroom_1",
+      "roomId": "second_bedroom",
+      "kind": "VASE",
+      "x": -25.7,
+      "z": 7.8,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_second_bedroom_2",
+      "roomId": "second_bedroom",
+      "kind": "BOX",
+      "x": -24.1,
+      "z": 7.8,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_study_1",
+      "roomId": "study",
+      "kind": "BOX",
+      "x": -13.675,
+      "z": 10.634,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_study_2",
+      "roomId": "study",
+      "kind": "BASIN",
+      "x": -7.083,
+      "z": 11.847,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_entry_1",
+      "roomId": "entry",
+      "kind": "VASE",
+      "x": 6.513,
+      "z": 8.819,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_entry_2",
+      "roomId": "entry",
+      "kind": "BOX",
+      "x": -1.066,
+      "z": 10.695,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_north_balcony_1",
+      "roomId": "north_balcony",
+      "kind": "VASE",
+      "x": 11.686,
+      "z": -18.38,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_north_balcony_2",
+      "roomId": "north_balcony",
+      "kind": "BOX",
+      "x": 16.892,
+      "z": -17.791,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_south_hall_1",
+      "roomId": "south_hall",
+      "kind": "BOX",
+      "x": 13.389,
+      "z": 16.13,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_south_hall_2",
+      "roomId": "east_hall",
+      "kind": "BASIN",
+      "x": 17.944,
+      "z": 12.686,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_east_hall_1",
+      "roomId": "east_hall",
+      "kind": "BOX",
+      "x": 16.8,
+      "z": 2.1,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_east_hall_2",
+      "roomId": "east_hall",
+      "kind": "BASIN",
+      "x": 16.8,
+      "z": 5.7,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_guest_room_1",
+      "roomId": "guest_room",
+      "kind": "VASE",
+      "x": 25.19,
+      "z": -6.224,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_guest_room_2",
+      "roomId": "guest_room",
+      "kind": "BOX",
+      "x": 21.244,
+      "z": -10.44,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_utility_1",
+      "roomId": "utility",
+      "kind": "BASIN",
+      "x": 22.11,
+      "z": 0.414,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_utility_2",
+      "roomId": "utility",
+      "kind": "BOX",
+      "x": 22.492,
+      "z": -1.337,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_garage_1",
+      "roomId": "garage",
+      "kind": "BASIN",
+      "x": 20.8,
+      "z": 5.3,
+      "state": "GROUND"
+    },
+    {
+      "id": "throw_garage_2",
+      "roomId": "garage",
+      "kind": "BOX",
+      "x": 20.8,
+      "z": 9.7,
+      "state": "GROUND"
+    }
+  ],
+  "rootVisible": true,
+  "rootParent": true,
+  "models": [
+    {
+      "id": "throw_balcony_1",
+      "visible": true,
+      "x": 2.764,
+      "z": -18.408,
+      "children": 1
+    },
+    {
+      "id": "throw_balcony_2",
+      "visible": true,
+      "x": -0.669,
+      "z": -18.312,
+      "children": 3
+    },
+    {
+      "id": "throw_main_bedroom_1",
+      "visible": true,
+      "x": -25.632,
+      "z": -3.084,
+      "children": 1
+    },
+    {
+      "id": "throw_main_bedroom_2",
+      "visible": true,
+      "x": -25.122,
+      "z": -5.513,
+      "children": 3
+    },
+    {
+      "id": "throw_closet_1",
+      "visible": true,
+      "x": -13.029,
+      "z": -7.399,
+      "children": 3
+    },
+    {
+      "id": "throw_closet_2",
+      "visible": true,
+      "x": -13.623,
+      "z": -11.974,
+      "children": 2
+    },
+    {
+      "id": "throw_living_1",
+      "visible": true,
+      "x": 2.442,
+      "z": -8.023,
+      "children": 1
+    },
+    {
+      "id": "throw_living_2",
+      "visible": true,
+      "x": -3.809,
+      "z": -11.385,
+      "children": 3
+    },
+    {
+      "id": "throw_kitchen_1",
+      "visible": true,
+      "x": 9.564,
+      "z": -9.032,
+      "children": 2
+    },
+    {
+      "id": "throw_kitchen_2",
+      "visible": true,
+      "x": 12.697,
+      "z": -11.986,
+      "children": 3
+    },
+    {
+      "id": "throw_storage_1",
+      "visible": true,
+      "x": 17.935,
+      "z": -11.235,
+      "children": 3
+    },
+    {
+      "id": "throw_storage_2",
+      "visible": true,
+      "x": 17.171,
+      "z": -4.597,
+      "children": 2
+    },
+    {
+      "id": "throw_dining_1",
+      "visible": true,
+      "x": 12.96,
+      "z": 0.491,
+      "children": 1
+    },
+    {
+      "id": "throw_dining_2",
+      "visible": true,
+      "x": 8.751,
+      "z": -0.33,
+      "children": 3
+    },
+    {
+      "id": "throw_bathroom_1",
+      "visible": true,
+      "x": -22.895,
+      "z": 2.142,
+      "children": 2
+    },
+    {
+      "id": "throw_bathroom_2",
+      "visible": true,
+      "x": -27.2,
+      "z": 1.3,
+      "children": 3
+    },
+    {
+      "id": "throw_hall_1",
+      "visible": true,
+      "x": -12.9,
+      "z": -2.7,
+      "children": 3
+    },
+    {
+      "id": "throw_hall_2",
+      "visible": true,
+      "x": -11.253,
+      "z": -0.039,
+      "children": 2
+    },
+    {
+      "id": "throw_second_bedroom_1",
+      "visible": true,
+      "x": -25.7,
+      "z": 7.8,
+      "children": 1
+    },
+    {
+      "id": "throw_second_bedroom_2",
+      "visible": true,
+      "x": -24.1,
+      "z": 7.8,
+      "children": 3
+    },
+    {
+      "id": "throw_study_1",
+      "visible": true,
+      "x": -13.675,
+      "z": 10.634,
+      "children": 3
+    },
+    {
+      "id": "throw_study_2",
+      "visible": true,
+      "x": -7.083,
+      "z": 11.847,
+      "children": 2
+    },
+    {
+      "id": "throw_entry_1",
+      "visible": true,
+      "x": 6.513,
+      "z": 8.819,
+      "children": 1
+    },
+    {
+      "id": "throw_entry_2",
+      "visible": true,
+      "x": -1.066,
+      "z": 10.695,
+      "children": 3
+    },
+    {
+      "id": "throw_north_balcony_1",
+      "visible": true,
+      "x": 11.686,
+      "z": -18.38,
+      "children": 1
+    },
+    {
+      "id": "throw_north_balcony_2",
+      "visible": true,
+      "x": 16.892,
+      "z": -17.791,
+      "children": 3
+    },
+    {
+      "id": "throw_south_hall_1",
+      "visible": true,
+      "x": 13.389,
+      "z": 16.13,
+      "children": 3
+    },
+    {
+      "id": "throw_south_hall_2",
+      "visible": true,
+      "x": 17.944,
+      "z": 12.686,
+      "children": 2
+    },
+    {
+      "id": "throw_east_hall_1",
+      "visible": true,
+      "x": 16.8,
+      "z": 2.1,
+      "children": 3
+    },
+    {
+      "id": "throw_east_hall_2",
+      "visible": true,
+      "x": 16.8,
+      "z": 5.7,
+      "children": 2
+    },
+    {
+      "id": "throw_guest_room_1",
+      "visible": true,
+      "x": 25.19,
+      "z": -6.224,
+      "children": 1
+    },
+    {
+      "id": "throw_guest_room_2",
+      "visible": true,
+      "x": 21.244,
+      "z": -10.44,
+      "children": 3
+    },
+    {
+      "id": "throw_utility_1",
+      "visible": true,
+      "x": 22.11,
+      "z": 0.414,
+      "children": 2
+    },
+    {
+      "id": "throw_utility_2",
+      "visible": true,
+      "x": 22.492,
+      "z": -1.337,
+      "children": 3
+    },
+    {
+      "id": "throw_garage_1",
+      "visible": true,
+      "x": 20.8,
+      "z": 5.3,
+      "children": 2
+    },
+    {
+      "id": "throw_garage_2",
+      "visible": true,
+      "x": 20.8,
+      "z": 9.7,
+      "children": 3
+    }
+  ],
+  "player": [
+    -0.1999999999999993,
+    0.35,
+    -16.4
+  ]
+}

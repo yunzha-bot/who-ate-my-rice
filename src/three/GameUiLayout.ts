@@ -25,11 +25,12 @@ export function populateRoundActions(pause: HTMLElement, result: HTMLElement, ha
   return settings;
 }
 
+const assetBase = typeof import.meta.env === 'undefined' ? '/' : import.meta.env.BASE_URL;
 export const UI_PORTRAITS = {
-  DEEPSEEK: '/assets/ui/portraits/deepseek-normal.png',
-  DEEPSEEK_WIN: '/assets/ui/portraits/deepseek-win.png',
-  DEEPSEEK_LOSE: '/assets/ui/portraits/deepseek-lose.png',
-  HUMAN: '/assets/ui/portraits/human-guardian-v1.webp',
+  DEEPSEEK: `${assetBase}assets/ui/portraits/deepseek-normal.png`,
+  DEEPSEEK_WIN: `${assetBase}assets/ui/portraits/deepseek-win.png`,
+  DEEPSEEK_LOSE: `${assetBase}assets/ui/portraits/deepseek-lose.png`,
+  HUMAN: `${assetBase}assets/ui/portraits/human-guardian-v1.webp`,
 } as const;
 
 /** Character emotion follows the winner, independently of the player's WIN/LOSE heading. */

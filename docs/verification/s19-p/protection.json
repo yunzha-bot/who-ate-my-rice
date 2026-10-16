@@ -1,0 +1,15 @@
+{
+  "baselineFiles": 339,
+  "unchanged": 332,
+  "authorizedChanges": [
+    "src/three/DeepSeekGlbModel.ts",
+    "src/three/GameUiLayout.ts",
+    "src/three/RiceBagModel.ts",
+    "src/three/ThreeGame.ts",
+    "vite.config.ts",
+    "README.md",
+    "docs/verification/GITHUB_PAGES_DEPLOYMENT_PLAN.md"
+  ],
+  "logPrefixPreserved": true,
+  "modelsMapAudioAndBalanceUnchanged": true
+}
