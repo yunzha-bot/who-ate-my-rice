@@ -214,6 +214,7 @@
 }
 .controls-help-side[data-current='true'] { border-color: #9dc3cd; background: var(--game-mint); }
 .controls-help-side h3 { margin: 0 0 10px; font-size: 13px; letter-spacing: .02em; color: var(--game-blue); }
+.controls-help-touch { display: none; }
 .controls-help-side[data-side='HUMAN'] h3 { color: #977548; }
 .controls-help-side dl { margin: 0; }
 .controls-help-row { display: flex; align-items: baseline; gap: 10px; padding: 5px 0; }

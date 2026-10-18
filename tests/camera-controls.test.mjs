@@ -164,6 +164,34 @@ test('Tab key uses a press edge and prevents browser focus only while gameplay c
   }
 });
 
+test('mobile joystick and touch buttons feed the same movement and press-edge input', () => {
+  const previousWindow = globalThis.window;
+  globalThis.window = { addEventListener() {}, removeEventListener() {} };
+  try {
+    const input = new InputManager();
+    input.setTouchDirection(.6, .8);
+    assert.deepEqual(input.localDirection(), { x: .6, y: .8 });
+    input.setTouchHeld('KeyE', true);
+    assert.equal(input.isHeld('KeyE'), true);
+    assert.equal(input.consumePress('KeyE'), true);
+    assert.equal(input.consumePress('KeyE'), false);
+    input.onKeyDown({code:'KeyE',repeat:false,preventDefault(){}});
+    assert.equal(input.consumePress('KeyE'), false, 'keyboard joining a held touch is not a second press');
+    input.setTouchHeld('KeyE', false);
+    assert.equal(input.isHeld('KeyE'), true, 'touch release preserves a physical held key');
+    input.onKeyUp({code:'KeyE'});
+    assert.equal(input.isHeld('KeyE'), false);
+    input.setTouchDirection(2, 0);
+    assert.deepEqual(input.localDirection(), { x: 1, y: 0 });
+    input.clear();
+    assert.deepEqual(input.localDirection(), { x: 0, y: 0 });
+    assert.equal(input.isHeld('KeyE'), false);
+    input.dispose();
+  } finally {
+    globalThis.window = previousWindow;
+  }
+});
+
 test('control switching preserves match, rice, capture, sprint and stun state', () => {
   const controls = new LocalControl();
   const match = new GameStateSystem(0, 350);

@@ -20,7 +20,7 @@ export class PulseLockView {
       '<button type="button" class="pulse-lock-close" aria-label="退出破解">×</button></header>' +
       '<div class="pulse-lock-progress"></div>' +
       '<div class="pulse-lock-rows"></div>' +
-      '<p class="pulse-lock-help">光点进入框里时按 <kbd>E</kbd></p>';
+      '<p class="pulse-lock-help">光点进入框里时按 <kbd>E</kbd><span class="controls-help-touch">手机：点右侧“点按解锁”按钮</span></p>';
     root.querySelector('button')!.addEventListener('click', onClose);
     this.progress = root.querySelector('.pulse-lock-progress')!;
     const tracks = root.querySelector('.pulse-lock-rows')!;

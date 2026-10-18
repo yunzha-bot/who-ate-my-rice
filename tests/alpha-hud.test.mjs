@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import { AlphaHudView } from '../src/three/AlphaHudView.ts';
 
 // Deliberately small DOM stand-in. Rendering/layout is checked in the browser.
-function harness() {
-  const make = () => ({ textContent: '', hidden: false, dataset: {}, values: {},
+function harness(input = { direction() {}, held() {}, aimStart() {}, aimEnd() {}, aimCancel() {}, pause() {}, cancel() {} }) {
+  const make = () => ({ textContent: '', hidden: false, dataset: {}, values: {}, listeners: {},
     style: { setProperty(key, value) { this[key] = value; } },
-    setAttribute() {}, remove() { this.removed = true; } });
+    setAttribute() {}, addEventListener(name, callback) { this.listeners[name] = callback; },
+    removeEventListener() {}, querySelector() { return make(); },
+    querySelectorAll() { return []; }, getBoundingClientRect() { return { left: 0, top: 0, width: 100, height: 100 }; },
+    remove() { this.removed = true; } });
   const nodes = new Map();
   const root = make();
   let builds = 0;
@@ -16,12 +19,15 @@ function harness() {
     return nodes.get(selector);
   };
   const pips = Array.from({ length: 5 }, make);
-  root.querySelectorAll = () => pips;
+  const buttons = new Map(['KeyE', 'KeyQ', 'KeyV', 'Space', 'KeyF', 'KeyL'].map(code => {
+    const button = make(); button.dataset.touchCode = code; return [code, button];
+  }));
+  root.querySelectorAll = selector => selector === '.rice-inventory i' ? pips : selector === '[data-touch-code]' ? [...buttons.values()] : [];
   const oldDocument = globalThis.document;
   globalThis.document = { createElement: () => root };
-  const view = new AlphaHudView({ append() {} });
+  const view = new AlphaHudView({ append() {} }, input);
   globalThis.document = oldDocument;
-  return { view, root, nodes, pips, builds: () => builds };
+  return { view, root, nodes, pips, buttons, builds: () => builds };
 }
 
 const frame = { phase: 'PLAYING', faction: 'DEEPSEEK', time: '00:12', completed: 2,
@@ -30,6 +36,53 @@ const frame = { phase: 'PLAYING', faction: 'DEEPSEEK', time: '00:12', completed:
   forceBreakRemainingMs: 0, forceBreakDurationMs: 30000,
   netRemainingMs: 0, netDurationMs: 20000, netStatus: null, netSlots: 4, lockSlots: 3,
   concealed: false, captureRatio: 0, riceRatio: null };
+
+test('touch HUD keeps faction skills, cooldown, capacity and light action in sync with authoritative values', () => {
+  const h = harness();
+  h.view.update({ ...frame, faction: 'HUMAN', netRemainingMs: 11000, pickupReady: false,
+    throwReady: false, lightLabel: '开灯 2s' });
+  assert.equal(h.buttons.get('KeyQ').textContent, '布网\n11秒');
+  assert.equal(h.buttons.get('KeyQ').dataset.slots, '4');
+  assert.equal(h.buttons.get('KeyV').hidden, false);
+  assert.equal(h.buttons.get('KeyF').disabled, true);
+  assert.equal(h.nodes.get('.mobile-throw').disabled, true);
+  assert.equal(h.buttons.get('KeyL').textContent, '开灯 2s');
+  h.view.update({ ...frame, lockSlots: 0, pulseLockOpen: true });
+  assert.equal(h.buttons.get('KeyQ').dataset.slots, '0');
+  assert.equal(h.buttons.get('KeyV').hidden, true);
+  assert.equal(h.buttons.get('KeyL').hidden, true);
+  assert.equal(h.buttons.get('KeyE').textContent, '点按解锁');
+  h.view.update({ ...frame, netMode: 'PLACING', pulseLockOpen: false });
+  assert.equal(h.nodes.get('.mobile-cancel').hidden, true, 'DP must not see Human AI placement state');
+  h.view.update({ ...frame, faction: 'HUMAN', netMode: 'AIMING' });
+  assert.equal(h.nodes.get('.mobile-cancel').hidden, false, 'Human may cancel their own placement');
+  h.view.dispose();
+});
+
+test('independent touch owners preserve movement, cancel safely and release all held input when HUD locks', () => {
+  const calls = [], h = harness(Object.fromEntries(['direction', 'held', 'aimStart', 'aimEnd', 'aimCancel', 'pause', 'cancel']
+    .map(key => [key, (...args) => calls.push([key, ...args])])));
+  const event = (type, pointerId, clientX = 95, clientY = 50) => ({ type, pointerId, clientX, clientY, preventDefault() {} });
+  h.view.update(frame);
+  h.nodes.get('.mobile-stick').listeners.pointerdown(event('pointerdown', 1));
+  assert.equal(h.view.stickPointer, 1);
+  h.buttons.get('KeyE').listeners.pointerdown(event('pointerdown', 2));
+  h.root.listeners.pointerup(event('pointerup', 2));
+  assert.equal(h.view.stickPointer, 1, 'releasing E must not release the movement finger');
+  h.nodes.get('.mobile-stick').listeners.pointerdown(event('pointerdown', 3));
+  assert.equal(h.view.stickPointer, 1, 'a second finger cannot steal the joystick');
+  h.nodes.get('.mobile-throw').listeners.pointerdown(event('pointerdown', 4));
+  h.root.listeners.pointercancel(event('pointercancel', 4));
+  assert(calls.some(call => call[0] === 'aimCancel'));
+  assert(!calls.some(call => call[0] === 'aimEnd'), 'pointercancel must never throw');
+  h.buttons.get('KeyE').listeners.pointerdown(event('pointerdown', 5));
+  h.view.update({ ...frame, controlsEnabled: false });
+  assert.equal(h.view.stickPointer, null);
+  assert.deepEqual(calls.at(-1), ['direction', 0, 0]);
+  assert(calls.some(call => call[0] === 'held' && call[1] === 'KeyE' && call[2] === false));
+  assert.equal(h.view.mobilePointers.size, 0);
+  h.view.dispose();
+});
 
 test('HUD changes faction information structure without rebuilding DOM or mutating input', () => {
   const h = harness();
@@ -53,6 +106,15 @@ test('HUD changes faction information structure without rebuilding DOM or mutati
   }
   assert.equal(h.builds(), 1);
   assert.equal(JSON.stringify(frame), before);
+});
+
+test('concealment progress uses one concise exit hint without duplicating the notice banner', () => {
+  const h = harness();
+  h.view.update({ ...frame, concealed: true });
+  assert.equal(h.nodes.get('.alpha-progress').textContent, '藏身中 · 按 E 离开');
+  h.view.update({ ...frame, concealed: false });
+  assert.equal(h.nodes.get('.alpha-progress').hidden, true);
+  h.view.dispose();
 });
 
 test('Human Space card reflects actual force cooldown and does not inherit DP sprint states', () => {
@@ -133,7 +195,7 @@ test('HUD isolates pause/results and reflects only supplied READY, hiding and ca
   assert.equal(h.nodes.get('.alpha-ready strong').textContent, '3');
   assert.equal(h.nodes.get('.alpha-ready').hidden, false);
   h.view.update({ ...frame, concealed: true });
-  assert.match(h.nodes.get('.alpha-progress').textContent, /已藏好/);
+  assert.equal(h.nodes.get('.alpha-progress').textContent, '藏身中 · 按 E 离开');
   h.view.update({ ...frame, captureRatio: .5 });
   assert.equal(h.nodes.get('.alpha-progress').dataset.danger, 'true');
   for (const phase of ['PAUSED', 'FINISHED']) {

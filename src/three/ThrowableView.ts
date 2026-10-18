@@ -47,11 +47,13 @@ export class ThrowableView {
   private readonly path: THREE.Line;
   private readonly pathPoints = new Float32Array(25*3);
   private pointer: { x: number; y: number } | null = null;
+  private touchAimPointer: number | null = null;
   private aiming: ThrowFaction | null = null;
   private suppressClick = false;
   private disposed = false;
   private editorLayout: readonly import('../systems/ThrowableSystem.ts').ThrowableSpawn[] | null = null;
   private readonly reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  private readonly touchControls = window.matchMedia?.('(pointer: coarse)').matches ?? false;
   private readonly canvas: HTMLCanvasElement;
   private readonly camera: THREE.Camera;
   private readonly system: ThrowableSystem;
@@ -84,7 +86,7 @@ export class ThrowableView {
     canvas.addEventListener('pointerdown',this.down);
     window.addEventListener('pointermove',this.move);
     window.addEventListener('pointerup',this.up);
-    window.addEventListener('pointercancel',this.cancel);
+    window.addEventListener('pointercancel',this.pointerCancel);
     window.addEventListener('blur',this.cancel);
     canvas.addEventListener('contextmenu',this.context);
     canvas.addEventListener('click',this.click,true);
@@ -109,26 +111,57 @@ export class ThrowableView {
     const target=this.system.aim(actor,requested,this.trace).point;
     return Math.atan2(target.x-actor.x,target.z-actor.z);
   }
-  cancel = (): void => { this.aiming=null; this.markers.visible=false; };
+  cancel = (): void => { this.aiming=null; this.touchAimPointer=null; this.markers.visible=false; };
+  touchAimStart(pointerId: number, x: number, y: number): void {
+    const actor = this.active();
+    if (!actor || !this.system.held(actor.faction)) return;
+    this.pointer = { x, y }; this.aiming = actor.faction; this.touchAimPointer = pointerId;
+  }
+  touchAimEnd(pointerId: number, x: number, y: number): void {
+    if (pointerId !== this.touchAimPointer) return;
+    this.pointer = { x, y };
+    this.releaseAim();
+  }
   setEditorLayout(layout: typeof this.editorLayout): void { this.editorLayout=layout;this.cancel(); }
   private down = (e: PointerEvent): void => {
+    if (e.pointerType === 'touch') return;
     if(e.ctrlKey||e.metaKey||e.altKey)return;
     if(e.button===2){if(this.system.held(this.selected()??'DEEPSEEK'))e.preventDefault();this.cancel();return;}
     const actor=this.active(); if(e.button!==0||!actor||!this.system.held(actor.faction))return;
     this.pointer={x:e.clientX,y:e.clientY};this.aiming=actor.faction;this.suppressClick=true;e.preventDefault();
   };
   private move = (e: PointerEvent): void => {
+    if (this.touchAimPointer !== null) {
+      if (e.pointerId === this.touchAimPointer) this.pointer = { x: e.clientX, y: e.clientY };
+      return;
+    }
+    if (e.pointerType === 'touch') return;
     if(e.target===this.canvas||this.aiming)this.pointer={x:e.clientX,y:e.clientY};
   };
   private up = (e: PointerEvent): void => {
     if(e.button!==0)return;
-    const actor=this.active(),aiming=this.aiming;this.pointer={x:e.clientX,y:e.clientY};
-    if(actor&&aiming===actor.faction&&e.target===this.canvas){const target=this.target(actor);
-      const heading=this.heading(actor.faction);
-      if(target&&heading!==undefined&&this.system.throw(actor,target,this.trace))this.onThrow(actor.faction,heading);}
-    this.cancel();
+    if (this.touchAimPointer !== null) {
+      if (e.pointerId === this.touchAimPointer) this.touchAimEnd(e.pointerId, e.clientX, e.clientY);
+      return;
+    }
+    if (e.pointerType === 'touch') return;
+    this.pointer={x:e.clientX,y:e.clientY};
+    if (e.target === this.canvas) this.releaseAim();
+    else this.cancel();
     if(e.target!==this.canvas)this.suppressClick=false;
   };
+  private pointerCancel = (event: PointerEvent): void => {
+    if (this.touchAimPointer === event.pointerId || (event.pointerType !== 'touch' && this.touchAimPointer === null)) this.cancel();
+  };
+  private releaseAim(): void {
+    const actor = this.active(), aiming = this.aiming;
+    if (actor && aiming === actor.faction) {
+      const target = this.target(actor), heading = this.heading(actor.faction);
+      if (target && heading !== undefined && this.system.throw(actor, target, this.trace))
+        this.onThrow(actor.faction, heading);
+    }
+    this.cancel();
+  }
   private context = (e: MouseEvent): void => { if(this.aiming||this.system.held(this.selected()??'DEEPSEEK'))e.preventDefault();this.cancel(); };
   private click = (e: MouseEvent): void => { if(this.suppressClick){e.stopImmediatePropagation();e.preventDefault();this.suppressClick=false;} };
   sync(): void {
@@ -153,8 +186,8 @@ export class ThrowableView {
     const item=held||near;
     const durability=item?.kind==='BASIN'?` · 剩余 ${item.remainingThrows} 次投掷`:'';
     this.status.hidden=!active||(!held&&!near);
-    this.status.textContent=held?`${THROWABLE_NAMES[held.kind]}${durability} · 按住左键瞄准，松开投掷 · 右键取消`:
-      near?`F 拾取${THROWABLE_NAMES[near.kind]}${durability}`:'';
+    this.status.textContent=held?`${THROWABLE_NAMES[held.kind]}${durability} · ${this.touchControls ? '长按投掷瞄准' : '按住左键瞄准，松开投掷 · 右键取消'}`:
+      near?`${this.touchControls ? '点拾取按钮：' : 'F 拾取'}${THROWABLE_NAMES[near.kind]}${durability}`:'';
     if(!active||!held||!this.aiming)return;
     const requested=this.target(active);if(!requested)return;
     const aim=this.system.aim(active,requested,this.trace);
@@ -169,7 +202,7 @@ export class ThrowableView {
   dispose(): void {
     if(this.disposed)return;this.disposed=true;
     this.canvas.removeEventListener('pointerdown',this.down);window.removeEventListener('pointermove',this.move);
-    window.removeEventListener('pointerup',this.up);window.removeEventListener('pointercancel',this.cancel);
+    window.removeEventListener('pointerup',this.up);window.removeEventListener('pointercancel',this.pointerCancel);
     window.removeEventListener('blur',this.cancel);this.canvas.removeEventListener('contextmenu',this.context);
     this.canvas.removeEventListener('click',this.click,true);this.status.remove();this.root.removeFromParent();
     const materials=new Set<THREE.Material>();this.root.traverse(object=>{if(object instanceof THREE.Mesh||object instanceof THREE.Line){

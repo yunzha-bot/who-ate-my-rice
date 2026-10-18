@@ -253,6 +253,20 @@ test('pointer aiming uses the actual offset canvas and all four camera angles; c
   window.dispatchEvent(release);assert.equal(s.items[0].state,'FLIGHT');
   assert.equal(s.items[0].remainingThrows,2);
   assert(Math.abs(throws.at(-1)[1]-Math.PI/4)<1e-8);}
+ s.reset();s.pickup(a,clear);
+ const p=new THREE.Vector3(2,0,2).project(camera),x=100+(p.x+1)*400,y=50+(1-p.y)*300;
+ const touch=(type,id,xx=x,yy=y)=>Object.assign(event(type,0,xx,yy),{pointerType:'touch',pointerId:id});
+ view.touchAimStart(9,x,y);
+ window.dispatchEvent(touch('pointermove',8,700,150));
+ window.dispatchEvent(touch('pointerup',8));
+ window.dispatchEvent(touch('pointercancel',8));
+ assert.equal(view.touchAimPointer,9,'movement finger must not retarget or cancel the aiming finger');
+ assert(Math.abs(view.heading('DEEPSEEK')-Math.PI/4)<1e-8);
+ window.dispatchEvent(touch('pointerup',9));
+ assert.equal(s.items[0].state,'FLIGHT');assert.equal(s.items[0].remainingThrows,2);
+ s.reset();s.pickup(a,clear);view.touchAimStart(10,x,y);
+ window.dispatchEvent(touch('pointercancel',10));view.touchAimEnd(10,x,y);
+ assert(s.held('DEEPSEEK'));assert.equal(s.items[0].remainingThrows,3,'cancelled touch never spends durability');
  view.dispose();view.dispose();assert.equal(scene.children.length,0);assert.equal(view.models.size,0);
  assert.equal(view.status.removed,true);
 });

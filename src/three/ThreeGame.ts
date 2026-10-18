@@ -314,7 +314,9 @@ export class ThreeGame {
     this.scene.background = new THREE.Color(HOME_PALETTE.background);
     this.soundVisual = PLAYER_SOUND_VISUAL_ENABLED
       ? new SoundVisualView(this.scene, import.meta.env.DEV) : null;
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+    const touchDevice = matchMedia('(pointer: coarse)').matches;
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, touchDevice ? 1.35 : 2));
+    this.renderer.domElement.classList.add('game-canvas');
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.append(this.renderer.domElement);
@@ -323,7 +325,7 @@ export class ThreeGame {
     const light = new THREE.DirectionalLight(0xffefd8, 2.4);
     light.position.set(-8, 24, 12);
     light.castShadow = true;
-    light.shadow.mapSize.set(2048, 2048);
+    light.shadow.mapSize.set(touchDevice ? 1024 : 2048, touchDevice ? 1024 : 2048);
     light.shadow.normalBias = .035;
     light.shadow.camera.left = -MAP_WIDTH / 2;
     light.shadow.camera.right = MAP_WIDTH / 2;
@@ -447,7 +449,15 @@ export class ThreeGame {
     this.skillHud.hidden = true;
     this.skillHudState = this.label(this.skillHud, 'skill-hud-state');
     this.skillHudNotice = this.label(this.skillHud, 'skill-hud-notice');
-    this.alphaHud = new AlphaHudView(container);
+    this.alphaHud = new AlphaHudView(container, {
+      direction: (x, y) => this.input.setTouchDirection(x, y),
+      held: (code, value) => this.input.setTouchHeld(code, value),
+      aimStart: (pointerId, x, y) => this.throwableView.touchAimStart(pointerId, x, y),
+      aimEnd: (pointerId, x, y) => this.throwableView.touchAimEnd(pointerId, x, y),
+      aimCancel: () => this.throwableView.cancel(),
+      pause: () => { if (this.match.phase === 'PLAYING') this.togglePause(); },
+      cancel: () => this.cancelTouchAction(),
+    });
     this.overlay = this.label(container, 'game-overlay');
     this.overlayText = this.label(this.overlay, 'overlay-text');
     this.overlayText.innerHTML = REPORT_MARKUP;
@@ -529,11 +539,19 @@ export class ThreeGame {
     void this.audio.unlock().then(() => this.audio.play(cue, 'ui', .7));
   };
   private onAudioFocus = (): void => {
+    if (document.hidden || !document.hasFocus()) this.alphaHud?.releaseTouch();
     if ((document.hidden || !document.hasFocus()) && this.match.phase === 'PLAYING' &&
         !this.sceneEditor?.isOpen && !this.devFreeze.isFrozen) this.togglePause();
     // Refocusing never resumes a match without the player's explicit Continue.
     this.syncAudio();
   };
+
+  private cancelTouchAction(): void {
+    this.throwableView.cancel();
+    if (!this.control.isControlling('HUMAN')) return;
+    this.captureNet.cancel(); this.captureNetView.cancel();
+    if (this.pulseLock.isOpen) this.closePulseLock();
+  }
 
   private showWorldFeedback(text: string, tone: 'good' | 'bad' | 'soft',
     source: THREE.Vector3, rice = false): void {
@@ -777,6 +795,10 @@ export class ThreeGame {
   }
 
   private resize = (): void => {
+    this.alphaHud?.releaseTouch();
+    if (globalThis.matchMedia?.('(pointer: coarse)').matches) this.input.clear();
+    this.throwableView?.cancel();
+    this.captureNetView?.cancel();
     const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
     Object.assign(this.camera, homeFrustum(width / height, this.match.phase === 'FACTION_SELECT',
       C.three.viewHeight * this.devZoom, MAP_DEPTH, MAP_WIDTH));
@@ -788,6 +810,9 @@ export class ThreeGame {
 
   private tick = (): void => {
     const deltaMs = Math.min(this.clock.getDelta() * 1000, C.match.maxFrameDeltaMs);
+    // A portrait instruction must never leave a live match running behind it.
+    const portrait = globalThis.matchMedia?.('(pointer: coarse) and (orientation: portrait)').matches ?? false;
+    if (portrait && this.match.phase === 'PLAYING') this.togglePause();
     const cameraEnabled = this.control.selectedFaction !== null &&
       (this.match.phase === 'PLAYING' || this.sceneEditor?.isOpen);
     // Camera-angle shortcuts are authoring tools, not production controls.
@@ -847,7 +872,7 @@ export class ThreeGame {
       } else if (this.match.phase === 'READY') {
         // The pre-round countdown must keep advancing (see readyDelta): it is a
         // phase timer, not the gameplay delta the DEV freeze is allowed to gate.
-        const readyMs = this.devFreeze.readyDelta(document.hidden || !document.hasFocus() ? 0 : deltaMs);
+        const readyMs = this.devFreeze.readyDelta(document.hidden || !document.hasFocus() || portrait ? 0 : deltaMs);
         if (readyMs > 0) {
           this.match.advanceReady(readyMs);
           const seconds = Math.ceil(this.match.readyRemainingMs / 1000);
@@ -2384,7 +2409,9 @@ export class ThreeGame {
       // 中断进食（保留原有进食进度语义），并把既有抓捕进度归零。
       this.rice.interrupt();
       this.match.captureProgressMs = 0;
-      this.setHideNotice('已藏身：按 E 退出（藏身中不能移动 / 冲刺 / 进食 / 锁门）');
+      // The persistent progress chip already shows the exit action while concealed.
+      // Clear prior feedback so a second banner does not stack on top of it.
+      this.setHideNotice('');
     } else {
       this.setHideNotice(`无法藏身：${result.message}`);
     }
@@ -2397,7 +2424,7 @@ export class ThreeGame {
     if (result.ok) {
       this.playWorld('hideExit', this.player.position, 'DEEPSEEK');
       this.feedback.show('离开躲藏', 'soft', this.player.position);
-      this.setHideNotice('已退出藏身：普通视觉与抓捕立刻恢复');
+      this.setHideNotice('已离开藏身，可以继续行动');
     } else {
       this.setHideNotice(result.code === 'HUMAN_BLOCKING'
         ? result.message : `无法退出藏身：${result.message}`);
@@ -3002,7 +3029,19 @@ export class ThreeGame {
     this.difficultyStatus.textContent = `当前难度：${DIFFICULTY_COPY[this.difficulty].label}`;
     const time = formatMatchTime(this.match.elapsedMs);
     const hudFaction = this.control.controlledFaction;
+    const touchActor = this.throwActors().find(actor => actor.faction === hudFaction);
+    const heldProp = hudFaction ? this.throwables.held(hudFaction) : undefined;
+    const actor = this.control.controlled(this.player, this.human);
+    const lightSwitch = hudFaction && actor && this.canUseRoomLight(hudFaction)
+      ? this.roomLights.nearby(actor.position, this.roomLightBlocked) : null;
+    const lightCooldown = lightSwitch ? this.roomLights.cooldown(lightSwitch.roomId) : 0;
     this.alphaHud.update({ phase, faction: hudFaction, time,
+      controlsEnabled: phase === 'PLAYING' && !this.controlsHelp.visible &&
+        !this.devFreeze.isFrozen && !this.sceneEditor?.isOpen,
+      throwReady: !!touchActor?.canAct && !!heldProp,
+      pickupReady: !!touchActor?.canAct && !heldProp && !!this.throwables.nearest(touchActor, this.traceThrow),
+      netMode: this.captureNet.mode, pulseLockOpen: this.pulseLock.isOpen,
+      lightLabel: lightSwitch ? `${this.roomLights.isOn(lightSwitch.roomId) ? '关灯' : '开灯'}${lightCooldown > 0 ? ` ${Math.ceil(lightCooldown / 1000)}s` : ''}` : null,
       completed: this.rice.completedCount, total: ACTIVE_RICE_COUNT,
       readySeconds: Math.ceil(this.match.readyRemainingMs / 1000),
       qRemainingMs: (hudFaction === 'HUMAN' ? this.humanSearchCooldown : this.deepseekLockCooldown).remainingSeconds * 1000,

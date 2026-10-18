@@ -156,8 +156,22 @@ const method = name => source.match(new RegExp(`  private ${name}\\([\\s\\S]*?\\
 const ground = source.match(/  private netGroundClear = [\s\S]*?\n  };\r?\n/)[0];
 const Harness = runInNewContext(stripTypeScriptTypes(
   `class Harness { ${method('move')} ${method('moveToNetContact')} ${method('tryHumanAiNet')}
-    ${method('humanNetReactionWaiting')} ${ground} }; Harness`, { mode: 'transform' }),
+    ${method('humanNetReactionWaiting')} ${method('cancelTouchAction')} ${ground} }; Harness`, { mode: 'transform' }),
 { C, humanNetPlacement, SPAWNS: { human: { x: -10, z: -10 }, deepseek: { x: 10, z: 10 } } });
+
+test('DP touch cancel cannot reveal or cancel Human AI placement; Human can cancel their own action', () => {
+  for (const side of ['DEEPSEEK','HUMAN']) {
+    const g=new Harness(),calls=[];
+    Object.assign(g,{captureNet:new CaptureNetSystem(),control:{isControlling:f=>f===side},
+      throwableView:{cancel:()=>calls.push('throw')},captureNetView:{cancel:()=>calls.push('net')},
+      pulseLock:{isOpen:true},closePulseLock:()=>calls.push('lock')});
+    assert(g.captureNet.beginAim());assert(g.captureNet.place(human,point,clear,valid));
+    const before=JSON.stringify(g.captureNet);g.cancelTouchAction();
+    if(side==='DEEPSEEK'){
+      assert.deepEqual(calls,['throw']);assert.equal(JSON.stringify(g.captureNet),before);
+    }else{assert.deepEqual(calls,['throw','net','lock']);assert.equal(g.captureNet.mode,'NONE');}
+  }
+});
 
 function aiNetHost(difficulty) {
   const g = new Harness();
@@ -301,6 +315,19 @@ test('mouse placement uses canvas/camera projection, cancels without throwing he
     assert.equal(s.cooldownMs, 0); assert(view.begin());
     window.dispatchEvent(new Event('blur')); assert.equal(s.mode, 'NONE');
   }
+  s.reset();canvas.setPointerCapture=()=>{};assert(view.begin());
+  const p=new THREE.Vector3(point.x,0,point.z).project(camera),tx=100+(p.x+1)*400,ty=50+(1-p.y)*300;
+  const touch=(type,id,x=tx,y=ty)=>Object.assign(event(type,0,x,y),{pointerType:'touch',pointerId:id});
+  canvas.dispatchEvent(touch('pointerdown',21));assert.equal(s.mode,'AIMING','touch starts a preview, not immediate placement');
+  window.dispatchEvent(touch('pointermove',22,150,100));
+  window.dispatchEvent(touch('pointercancel',22));
+  assert.equal(view.touchPointer,21,'other fingers cannot cancel the placement gesture');
+  canvas.dispatchEvent(touch('pointerup',21));assert.equal(s.mode,'PLACING');
+  assert(Math.abs(s.pending.x-point.x)<1e-8);view.cancel();s.reset();assert(view.begin());
+  canvas.dispatchEvent(touch('pointerdown',23));window.dispatchEvent(touch('pointercancel',23));
+  assert.equal(s.mode,'NONE');assert.equal(s.cooldownMs,0);
+  assert(view.begin());canvas.dispatchEvent(touch('pointerdown',24));canvas.dispatchEvent(touch('lostpointercapture',24));
+  assert.equal(s.mode,'NONE','unexpected capture loss must cancel a preview without placing');
   assert(view.begin()); enabled = false; view.sync(); assert.equal(s.mode, 'NONE');
   view.dispose(); view.dispose(); throws.dispose();
   assert.equal(view.status.removed, true); assert.equal(scene.children.length, 0);

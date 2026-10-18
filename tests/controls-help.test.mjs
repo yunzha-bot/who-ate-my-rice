@@ -14,11 +14,16 @@ function helpFrameFixture(phase = 'READY') {
   const start = source.indexOf('    const gameplayMs = this.devFreeze.gameplayDelta');
   const end = source.indexOf('    const editorOpen =', start);
   assert.ok(start > 0 && end > start);
-  const frame = runInNewContext(`(function(deltaMs) { ${source.slice(start, end)
+  const orientation = { portrait: false };
+  const orientationStart = source.indexOf('    const portrait = globalThis.matchMedia');
+  const orientationEnd = source.indexOf('    const cameraEnabled', orientationStart);
+  assert.ok(orientationStart > 0 && orientationEnd > orientationStart);
+  const frame = runInNewContext(`(function(deltaMs) { ${source.slice(orientationStart, orientationEnd)} ${source.slice(start, end)
     .replaceAll('import.meta.env.DEV', 'false')} })`, {
     C: { development: { directHotkeysEnabled: false } },
     resolveRoundShortcut: () => null,
     document: { hidden: false, hasFocus: () => true },
+    matchMedia: () => ({ matches: orientation.portrait }),
   });
   const game = {
     match: new GameStateSystem(3000, 350, phase),
@@ -35,8 +40,17 @@ function helpFrameFixture(phase = 'READY') {
     togglePause() { if (!this.match.pause()) this.match.resume(); },
     updatePlaying(ms) { this.match.advancePlaying(ms, false, false); },
   };
-  return { game, step: ms => frame.call(game, ms) };
+  return { game, orientation, step: ms => frame.call(game, ms) };
 }
+
+test('mobile portrait preserves READY time and pauses PLAYING until explicitly continued in landscape', () => {
+  const ready = helpFrameFixture(); ready.game.closeControlsHelp(); ready.orientation.portrait = true;
+  ready.step(1000); assert.equal(ready.game.match.readyRemainingMs, 3000);
+  ready.orientation.portrait = false; ready.step(50); assert.equal(ready.game.match.readyRemainingMs, 2950);
+  const active = helpFrameFixture('PLAYING'); active.game.closeControlsHelp(); active.orientation.portrait = true;
+  active.step(1000); assert.equal(active.game.match.phase, 'PAUSED'); assert.equal(active.game.match.elapsedMs, 0);
+  active.orientation.portrait = false; active.step(1000); assert.equal(active.game.match.phase, 'PAUSED');
+});
 
 test('首次说明停留期间 READY 保持完整，关闭后才开始倒计时', () => {
   const { game, step } = helpFrameFixture();

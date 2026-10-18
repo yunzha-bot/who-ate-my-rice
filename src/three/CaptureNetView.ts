@@ -19,6 +19,8 @@ export class CaptureNetView {
   private owned = false;
   private swallowClick = false;
   private disposed = false;
+  private touchPointer: number | null = null;
+  private readonly touchControls = window.matchMedia?.('(pointer: coarse)').matches ?? false;
   private readonly canvas: HTMLCanvasElement;
   private readonly camera: THREE.Camera;
   private readonly system: CaptureNetSystem;
@@ -51,11 +53,12 @@ export class CaptureNetView {
     canvas.parentElement?.append(this.status);
     canvas.addEventListener('pointerdown', this.down, true);
     window.addEventListener('pointermove', this.move);
-    canvas.addEventListener('pointerup', this.blockGesture, true);
+    canvas.addEventListener('pointerup', this.up, true);
+    canvas.addEventListener('lostpointercapture', this.pointerCancel);
     canvas.addEventListener('click', this.click, true);
     canvas.addEventListener('contextmenu', this.context, true);
     window.addEventListener('blur', this.cancel);
-    window.addEventListener('pointercancel', this.cancel);
+    window.addEventListener('pointercancel', this.pointerCancel);
     this.sync();
   }
   private makeNet(): THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial> {
@@ -76,8 +79,10 @@ export class CaptureNetView {
   cancel = (): void => {
     if (this.owned) this.system.cancel();
     this.owned = false; this.pointer = null;
+    this.touchPointer = null;
   };
   private move = (e: PointerEvent): void => {
+    if (this.touchPointer !== null && e.pointerId !== this.touchPointer) return;
     if (e.target !== this.canvas || !this.owned) { this.pointer = null; return; }
     const rect = this.canvas.getBoundingClientRect();
     this.mouse.set((e.clientX - rect.left) / rect.width * 2 - 1,
@@ -88,12 +93,32 @@ export class CaptureNetView {
   };
   private down = (e: PointerEvent): void => {
     if (!this.owned || !this.canUse()) return;
+    if (e.pointerType === 'touch' && this.touchPointer !== null) {
+      e.preventDefault(); e.stopImmediatePropagation(); return;
+    }
     if (e.button !== 0 && e.button !== 2) return;
     this.swallowClick = true; e.preventDefault(); e.stopImmediatePropagation();
     if (e.button === 2) { this.cancel(); return; }
     this.move(e);
+    if (e.pointerType === 'touch') {
+      this.touchPointer = e.pointerId;
+      this.canvas.setPointerCapture(e.pointerId);
+      return;
+    }
     if (this.pointer && this.system.mode === 'AIMING')
       this.system.place(this.human(), this.pointer, this.trace, this.check);
+  };
+  private up = (event: PointerEvent): void => {
+    if (event.pointerId === this.touchPointer) {
+      this.move(event);
+      this.touchPointer = null;
+      if (this.owned && this.canUse() && this.pointer && this.system.mode === 'AIMING')
+        this.system.place(this.human(), this.pointer, this.trace, this.check);
+    }
+    this.blockGesture(event);
+  };
+  private pointerCancel = (event: PointerEvent): void => {
+    if (event.pointerId === this.touchPointer || (event.pointerType !== 'touch' && this.touchPointer === null)) this.cancel();
   };
   private blockGesture = (e: Event): void => {
     if (this.swallowClick) { e.preventDefault(); e.stopImmediatePropagation(); }
@@ -126,7 +151,8 @@ export class CaptureNetView {
       this.preview.material.color.setHex(this.system.valid(human, point, this.trace, this.check) ? 0x43a6a1 : 0xd75442);
     }
     this.status.hidden = !humanObserver || !this.owned;
-    this.status.textContent = this.system.placing
+    this.status.textContent = this.touchControls ? this.system.placing ? '正在布网 · 点取消可中止'
+      : '触摸空地拖动预览，绿色可放；松手布网 · 点取消可退出' : this.system.placing
       ? `正在布网 ${Math.floor(this.system.placementMs / this.system.config.placeMs * 100)}% · 右键或 Esc 取消`
       : '捕捉网 · 移动鼠标选择近处空地，绿色可放 · 左键确认 · 右键或 Esc 取消';
   }
@@ -134,11 +160,12 @@ export class CaptureNetView {
     if (this.disposed) return; this.disposed = true; this.cancel();
     this.canvas.removeEventListener('pointerdown', this.down, true);
     window.removeEventListener('pointermove', this.move);
-    this.canvas.removeEventListener('pointerup', this.blockGesture, true);
+    this.canvas.removeEventListener('pointerup', this.up, true);
+    this.canvas.removeEventListener('lostpointercapture', this.pointerCancel);
     this.canvas.removeEventListener('click', this.click, true);
     this.canvas.removeEventListener('contextmenu', this.context, true);
     window.removeEventListener('blur', this.cancel);
-    window.removeEventListener('pointercancel', this.cancel);
+    window.removeEventListener('pointercancel', this.pointerCancel);
     this.root.removeFromParent(); this.status.remove();
     for (const line of [...this.nets, this.preview, this.caught, this.range]) {
       line.geometry.dispose(); line.material.dispose();

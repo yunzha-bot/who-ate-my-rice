@@ -3,6 +3,8 @@ import type { Direction } from '../systems/SprintSystem';
 export class InputManager {
   private readonly held = new Set<string>();
   private readonly pressed = new Set<string>();
+  private readonly touchHeld = new Set<string>();
+  private touchDirection: Direction = { x: 0, y: 0 };
   private tabCaptureEnabled = false;
 
   constructor() {
@@ -12,12 +14,12 @@ export class InputManager {
   }
 
   localDirection(): Direction {
-    return this.direction(
-      this.held.has('KeyA') || this.held.has('ArrowLeft'),
-      this.held.has('KeyD') || this.held.has('ArrowRight'),
-      this.held.has('KeyW') || this.held.has('ArrowUp'),
-      this.held.has('KeyS') || this.held.has('ArrowDown'),
-    );
+    const x = Number(this.held.has('KeyD') || this.held.has('ArrowRight')) -
+      Number(this.held.has('KeyA') || this.held.has('ArrowLeft')) + this.touchDirection.x;
+    const y = Number(this.held.has('KeyS') || this.held.has('ArrowDown')) -
+      Number(this.held.has('KeyW') || this.held.has('ArrowUp')) + this.touchDirection.y;
+    const length = Math.hypot(x, y);
+    return length > 0 ? { x: x / length, y: y / length } : { x: 0, y: 0 };
   }
 
   debugDirection(ignoreL = false): Direction {
@@ -27,7 +29,20 @@ export class InputManager {
     );
   }
 
-  isHeld(code: string): boolean { return this.held.has(code); }
+  isHeld(code: string): boolean { return this.held.has(code) || this.touchHeld.has(code); }
+
+  setTouchDirection(x: number, y: number): void {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) { x = 0; y = 0; }
+    const length = Math.hypot(x, y);
+    this.touchDirection = length > 1 ? { x: x / length, y: y / length } : { x, y };
+  }
+
+  setTouchHeld(code: string, held: boolean): void {
+    if (held) {
+      if (!this.held.has(code) && !this.touchHeld.has(code)) this.pressed.add(code);
+      this.touchHeld.add(code);
+    } else this.touchHeld.delete(code);
+  }
 
   setTabCaptureEnabled(enabled: boolean): void {
     this.tabCaptureEnabled = enabled;
@@ -41,7 +56,9 @@ export class InputManager {
 
   clear = (): void => {
     this.held.clear();
+    this.touchHeld.clear();
     this.pressed.clear();
+    this.setTouchDirection(0, 0);
   };
 
   dispose(): void {
@@ -51,17 +68,16 @@ export class InputManager {
   }
 
   private direction(left: boolean, right: boolean, up: boolean, down: boolean): Direction {
-    // Screen-space input: +x right, +y down; the camera converts this to world XZ.
     const x = Number(right) - Number(left);
-    const z = Number(down) - Number(up);
-    const length = Math.hypot(x, z);
-    return length > 0 ? { x: x / length, y: z / length } : { x: 0, y: 0 };
+    const y = Number(down) - Number(up);
+    const length = Math.hypot(x, y);
+    return length > 0 ? { x: x / length, y: y / length } : { x: 0, y: 0 };
   }
 
   private onKeyDown = (event: KeyboardEvent): void => {
     if (event.code.startsWith('Arrow') || event.code === 'Space' ||
         (event.code === 'Tab' && this.tabCaptureEnabled)) event.preventDefault();
-    if (!this.held.has(event.code) && !event.repeat) this.pressed.add(event.code);
+    if (!this.isHeld(event.code) && !event.repeat) this.pressed.add(event.code);
     this.held.add(event.code);
   };
 
