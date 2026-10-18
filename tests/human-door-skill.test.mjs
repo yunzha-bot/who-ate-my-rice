@@ -18,6 +18,46 @@ function setup() {
   return { doors, skill };
 }
 
+test('AI force break waits a full second, then opens once and spends the existing 30s cooldown', () => {
+  const { doors, skill } = setup();
+  const id = nodes[0].id;
+  doors.lock(id, 'DEEPSEEK');
+  assert.equal(C.humanAI.aiForceBreakWindupMs, 1000);
+  assert.equal(skill.tryAiForceBreak(id, 999, 'PLAYING'), null);
+  assert.equal(doors.get(id).state, 'LOCKED');
+  assert.equal(skill.cooldownRemainingMs, 0);
+  assert.equal(skill.tryAiForceBreak(id, 1, 'PLAYING'), 'FORCE_OPENED');
+  assert.equal(doors.get(id).state, 'OPEN');
+  assert.equal(skill.cooldownRemainingMs, 30000);
+  assert.equal(skill.aiForceBreakProgressMs, 0);
+  assert.equal(skill.tryAiForceBreak(id, 1000, 'PLAYING'), null);
+});
+
+test('AI preparation freezes on pause and cancels on leaving, switching doors, opening or reset', () => {
+  const { doors, skill } = setup();
+  const [a, b] = nodes.map(n => n.id);
+  doors.lock(a, 'DEEPSEEK'); doors.lock(b, 'DEEPSEEK');
+  skill.tryAiForceBreak(a, 500, 'PLAYING');
+  skill.tryAiForceBreak(a, 10000, 'PAUSED');
+  assert.equal(skill.aiForceBreakProgressMs, 500);
+  skill.tryAiForceBreak(null, 50, 'PLAYING');
+  assert.equal(skill.aiForceBreakProgressMs, 0);
+  skill.tryAiForceBreak(a, 500, 'PLAYING');
+  skill.tryAiForceBreak(b, 50, 'PLAYING');
+  assert.equal(skill.aiForceBreakProgressMs, 50);
+  doors.forceOpen(b, 'HUMAN');
+  skill.tryAiForceBreak(b, 1000, 'PLAYING');
+  assert.equal(skill.aiForceBreakDoorId, null);
+  skill.tryAiForceBreak(a, 500, 'PLAYING');
+  skill.cancelAiForceBreak(); // Runtime uses this on stun/manual takeover.
+  assert.equal(skill.aiForceBreakProgressMs, 0);
+  skill.tryAiForceBreak(a, 500, 'PLAYING');
+  skill.reset();
+  assert.equal(skill.aiForceBreakProgressMs, 0);
+  assert.equal(skill.cooldownRemainingMs, 0);
+  assert.equal(skill.use(a, 'HUMAN', 'PLAYING'), 'FORCE_OPENED', 'manual skill remains instant');
+});
+
 test('door frame side gains a wider E/Space interaction range and nearest valid door wins', () => {
   const { doors } = setup();
   const door = nodes[0];

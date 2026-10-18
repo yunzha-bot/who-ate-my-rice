@@ -189,7 +189,9 @@ export function createMatchSim(options = {}) {
   const setup = createMatchSetup(seed, collision, navigation,
     C.matchRandom.maxAttempts, HIDE_SPOTS);
   const rice = new RiceField(setup.rice.map(rice => rice.id),
-    RICE_MAX_PROGRESS_MS[options.riceTimingMode ?? RICE_TIMING_MODE], C.rice.prepareMs);
+    // Explicit historical regression fixtures may pin their original duration;
+    // ordinary simulations always use the selected production/development mode.
+    options.riceMaxProgressMs ?? RICE_MAX_PROGRESS_MS[options.riceTimingMode ?? RICE_TIMING_MODE], C.rice.prepareMs);
   doorSystem.applyInitialStates(setup.doorStates);
   const syncDoorCollision = () => {
     for (const door of doorSystem.doors) {
@@ -709,7 +711,8 @@ export function createMatchSim(options = {}) {
       humanSpeedMultiplier: C.human.speedMultiplier,
       humanAIMovementMultiplier: aiConfig.humanAI.movementSpeedMultiplier }).player /
       C.three.pixelsPerUnit * (sprint.state === 'SPRINT_RUNNING'
-        ? C.sprint.speedMultiplier : 1);
+        ? C.sprint.speedMultiplier : 1) *
+      (deepseekAiEnabled ? aiConfig.deepseekAI.movementSpeedMultiplier : 1);
     const oldDeepseek = deepseek.clone();
     if (deepseekMovement.x !== 0 || deepseekMovement.y !== 0) {
       const next = collision.move(deepseek,
@@ -766,9 +769,9 @@ export function createMatchSim(options = {}) {
         applyDoorResult(command.unlockDoorId,
           doorSystem.disableLock(command.unlockDoorId, 'HUMAN'), 'HUMAN');
       }
-      if (command.forceBreakDoorId) {
-        const result = humanDoorSkillRef.use(command.forceBreakDoorId, 'HUMAN',
-          match.phase);
+      const forceResult = humanDoorSkillRef.tryAiForceBreak(command.forceBreakDoorId, deltaMs, match.phase);
+      if (command.forceBreakDoorId && forceResult !== null) {
+        const result = forceResult;
         if (result !== 'COOLDOWN') applyDoorResult(command.forceBreakDoorId, result,
           'HUMAN');
       }

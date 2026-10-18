@@ -1,5 +1,5 @@
 export const RICE_MAX_PROGRESS_MS = {
-  production: 30_000, // 正式进食进度：30 秒／份，所有难度一致。
+  production: 20_000, // 正式进食进度：20 秒／份，所有难度一致；2026-10-17用户授权试调。
   development: 5_000, // 仅供开发阶段频繁测试
 } as const;
 
@@ -7,6 +7,22 @@ export const RICE_MAX_PROGRESS_MS = {
 export const RICE_TIMING_MODE: keyof typeof RICE_MAX_PROGRESS_MS = 'production';
 
 export const GAME_CONFIG = {
+  roomLights: {
+    interactionRange: 1.5, // 世界单位；墙壁开关交互距离，默认1.5，玩家和AI共用。
+    toggleCooldownMs: 3000, // 毫秒；每个开关切换间隔，默认3000，双方共用，暂停冻结。
+    aiDetourRange: 4, // 世界单位；AI只就近绕到本区开关，默认4，不跨区远程操作。
+    aiSafeDistance: 2.5, // 世界单位；DP不为关灯靠近可见Human到此距离内，默认2.5。
+  },
+  difficulty: {
+    hardNightVisionRange: 5, // 世界单位；仅困难夜间两方AI视觉上限，默认5，与玩家显示范围一致。
+    hardNightRenderRange: 5, // 世界单位；仅困难玩家画面对手可见距离上限，默认5，仍需无遮挡且未藏身。
+    hardNightHideDelayMs: 1000, // 毫秒；困难对手超距/遮挡后的显示保留时间，默认1000，真正藏身立即隐藏。
+    normalDeepseekMovementMultiplier: 0.95, // 倍率；Human普通模式对手DP AI步行/冲刺速度，默认0.95。
+    easyDeepseekSprint: {
+      movementSpeedMultiplier: 0.9, // 倍率；Human简单模式对手DP AI的步行/冲刺速度，默认0.9。
+      approachSprintDistance: 4.5, // 世界单位；同一对手AI面对逼近时的提前冲刺阈值，默认4.5。
+    },
+  },
   throwables: {
     enabled: true, // 生活投掷物开关；默认开启。
     pickupRange: 1.2, // 世界单位；拾取距离，默认1.2。
@@ -16,7 +32,61 @@ export const GAME_CONFIG = {
     projectileRadius: 0.12, // 世界单位；扫掠碰撞半径，默认0.12。
     throwCooldownMs: 800, // 毫秒；每人出手间隔，默认800。
     pickupDelayAfterLandingMs: 500, // 毫秒；不锈钢盆落地禁拾，默认500。
+    basinMaxThrows: 3, // 次；每个不锈钢盆可成功投掷次数，默认3，最后一投落地后损坏。
     stunDurationMs: 3_000, // 毫秒；被砸倒地眩晕，默认3000，不累加。
+  },
+  throwableAI: {
+    pickupScanMs: 300, // 毫秒；AI顺路查找可拾取道具的间隔，默认300。
+    minTargetDistance: 1.5, // 世界单位；AI不在贴脸距离投掷，默认1.5。
+    maxTargetDistance: 5.5, // 世界单位；AI只向此距离内可见目标投掷，默认5.5。
+    EASY: {
+      windupMs: 1300, // 毫秒；简单AI投掷前摇，默认1300，留出较长躲避时间。
+      intervalMs: 9000, // 毫秒；简单AI成功投掷后的再次瞄准间隔，默认9000。
+      aimErrorRadius: 1.8, // 世界单位；简单AI落点误差圆半径，默认1.8，三档最大。
+    },
+    NORMAL: {
+      windupMs: 900, // 毫秒；普通AI瞄准前摇，默认900，期间不追踪落点。
+      intervalMs: 6500, // 毫秒；普通AI两次成功投掷的最短间隔，默认6500。
+      aimErrorRadius: 1.25, // 世界单位；普通AI落点随机偏差圆半径，默认1.25。
+    },
+    HARD: {
+      windupMs: 650, // 毫秒；困难AI瞄准前摇，默认650，期间不追踪落点。
+      intervalMs: 5000, // 毫秒；困难AI两次成功投掷的最短间隔，默认5000。
+      aimErrorRadius: 0.25, // 世界单位；困难AI落点随机偏差圆半径，默认0.25，仍保留误差。
+      maxTargetDistance: 6, // 世界单位；困难AI目标距离上限，默认6，不超出玩家物理射程。
+      leadTimeMs: 600, // 毫秒；困难AI可见移动预判时长上限，默认600，且不超过弹体飞行时间。
+      maxLeadDistance: 2.4, // 世界单位；困难AI预测落点相对可见当前位置的最大偏移，默认2.4。
+    },
+  },
+  captureNet: {
+    maxActiveNets: 4, // 张；场上同时存在的捕捉网上限，默认4，启动中的网也占名额。
+    placeRange: 3, // 世界单位；Human鼠标放置最大距离，默认3。
+    radius: 0.55, // 世界单位；网的地面触发半径，默认0.55。
+    placeMs: 600, // 毫秒；原地布置时间，默认600，取消不耗冷却。
+    armMs: 1_000, // 毫秒；成功放置后的启动延迟，默认1000。
+    rootMs: 5_000, // 毫秒；命中定身时间，默认5000，不与眩晕相加。
+    cooldownMs: 20_000, // 毫秒；成功放置起算的冷却，默认20000。
+    immunityMs: 2_000, // 毫秒；控制结束后的网免疫，默认2000，不免疫投掷。
+    protectedClearance: 0.9, // 世界单位；米点/出生/藏身出口的额外禁放距离，默认0.9。
+    aiThreatRange: 6, // 世界单位；AI仅看见此距离内目标时考虑布网，默认6。
+    aiPlaceDistance: 1.4, // 世界单位；AI沿当前合法行进方向布网距离，默认1.4。
+  },
+  captureNetAI: {
+    EASY: {
+      maxActiveNets: 1, // 张；简单Human AI主动布网预算，默认1，不限制玩家。
+      attemptIntervalMs: 5000, // 毫秒；简单AI两次布网提案的最短间隔，默认5000。
+      approachDelayMs: 1200, // 毫秒；看见DP中网后延迟靠近，默认1200。
+    },
+    NORMAL: {
+      maxActiveNets: 2, // 张；普通Human AI主动布网预算，默认2。
+      attemptIntervalMs: 1500, // 毫秒；普通AI两次布网提案的最短间隔，默认1500。
+      approachDelayMs: 500, // 毫秒；看见DP中网后延迟靠近，默认500。
+    },
+    HARD: {
+      maxActiveNets: 4, // 张；困难Human AI主动布网预算，默认4，共用场上总上限。
+      attemptIntervalMs: 500, // 毫秒；困难AI两次布网提案的最短间隔，默认500。
+      approachDelayMs: 0, // 毫秒；困难AI看到中网目标后不额外等待，默认0。
+    },
   },
   backgroundColor: '#858b91',
   development: {
@@ -50,6 +120,7 @@ export const GAME_CONFIG = {
     aiUnlockMaxAttempts: 2, // 同一锁芯本局最多尝试次数。
     aiUnlockFailureAvoidMs: 6_000, // 失败后暂避该锁门的时间：毫秒。
     forceBreakReserveMs: 1_800, // 路线比较时为长冷却技能保留的等效时间：毫秒。
+    aiForceBreakWindupMs: 1_000, // 毫秒；AI快速强破的连续准备时间，默认1000，玩家强破不读取。
     detourSlackMs: 600, // 绕行路线可比锁门方案多耗费的容差：毫秒。
     searchRadius: 12, // Last Seen 周边有限搜索半径：世界单位。
     searchRoomCount: 3, // 一次追丢最多搜索的相邻房间数。
@@ -62,6 +133,7 @@ export const GAME_CONFIG = {
     hideCheckMaxPerRound: 1, // 每轮调查最多正式检查的家具数：件。
   },
   deepseekAI: {
+    movementSpeedMultiplier: 1, // 倍率；DP AI相对基础移动速度，默认1，人工控制不读取。
     waypointTolerance: 0.25, // 路径节点到达容差：XZ 世界单位。
     stuckRepathMs: 800, // 持续未靠近节点后重新寻路的时间：毫秒。
     stuckProgressEpsilon: 0.05, // 上述时间内应缩短的最小节点距离：世界单位。

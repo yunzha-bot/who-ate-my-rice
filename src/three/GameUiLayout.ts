@@ -10,6 +10,8 @@ export function formatMatchTime(elapsedMs: number): string {
 export function populateRoundActions(pause: HTMLElement, result: HTMLElement, handlers: {
   resume: () => void; settings: () => void; restart: () => void;
   menu: () => void; switchFaction: () => void; developerMode: boolean;
+  /** Optional: pause-menu entry for the standalone controls help layer. */
+  help?: () => void;
 }): HTMLButtonElement {
   const button = (text: string, onClick: () => void): HTMLButtonElement => {
     const element = document.createElement('button');
@@ -18,8 +20,11 @@ export function populateRoundActions(pause: HTMLElement, result: HTMLElement, ha
     return element;
   };
   const settings = button('设置', handlers.settings);
-  pause.append(button('继续游戏', handlers.resume), settings,
-    button('重新开始', handlers.restart), button('返回主菜单', handlers.menu));
+  pause.append(button('继续游戏', handlers.resume));
+  pause.append(settings);
+  // 操作说明是从暂停菜单重看教学的入口；没有接线时不生成按钮，保持旧组合不变。
+  if (handlers.help) pause.append(button('操作说明', handlers.help));
+  pause.append(button('重新开始', handlers.restart), button('返回主菜单', handlers.menu));
   if (handlers.developerMode) pause.append(button('开发调试：切换主控阵营', handlers.switchFaction));
   result.append(button('再来一局', handlers.restart), button('返回阵营选择', handlers.menu));
   return settings;

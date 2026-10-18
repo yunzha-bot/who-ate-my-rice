@@ -293,6 +293,7 @@ export interface VisionState extends VisionInspection { visible: boolean; lastSe
 export class VisionSystem {
   nowMs = 0;
   private readonly tuning: VisionTuning | null;
+  private readonly rangeLimit: () => number;
   // S7C-1B：被隐藏阵营对普通视觉不可见。This is a one-way suppression: the
   // concealed faction keeps its own normal vision of the opponent.
   private readonly concealed: Record<Faction, boolean> = { HUMAN: false, DEEPSEEK: false };
@@ -301,7 +302,13 @@ export class VisionSystem {
     DEEPSEEK: { visible: false, status: 'OUT_OF_RANGE', blocker: null, lastSeen: null },
   };
 
-  constructor(tuning: VisionTuning | null = null) { this.tuning = tuning; }
+  constructor(tuning: VisionTuning | null = null,
+    rangeLimit: () => number = () => Number.POSITIVE_INFINITY,
+    illuminated: (target: Point) => boolean = () => false) {
+    this.tuning = tuning; this.rangeLimit = rangeLimit; this.illuminated = illuminated;
+  }
+
+  private readonly illuminated: (target: Point) => boolean;
 
   setConcealed(faction: Faction, concealed: boolean): void {
     this.concealed[faction] = concealed;
@@ -311,13 +318,17 @@ export class VisionSystem {
 
   update(deltaMs: number, human: Point, deepseek: Point, geometry: PerceptionGeometry): void {
     this.nowMs += Math.max(0, deltaMs);
-    const range = this.tuning?.visionRange ?? GAME_CONFIG.perception.visionRange;
-    const inspection = geometry.inspectVision(human, deepseek, range);
+    const range = Math.min(this.tuning?.visionRange ?? GAME_CONFIG.perception.visionRange,
+      this.rangeLimit());
+    const humanInspection = geometry.inspectVision(human, deepseek,
+      this.illuminated(deepseek) ? Number.POSITIVE_INFINITY : range);
+    const deepseekInspection = geometry.inspectVision(human, deepseek,
+      this.illuminated(human) ? Number.POSITIVE_INFINITY : range);
     const concealedState: VisionInspection = { status: 'CONCEALED', blocker: null };
     this.apply(this.states.HUMAN,
-      this.concealed.DEEPSEEK ? concealedState : inspection);
+      this.concealed.DEEPSEEK ? concealedState : humanInspection);
     this.apply(this.states.DEEPSEEK,
-      this.concealed.HUMAN ? concealedState : inspection);
+      this.concealed.HUMAN ? concealedState : deepseekInspection);
     // Last Seen is only refreshed by a faction that can actually see the
     // opponent; a concealed target leaves the existing record to expire on its
     // own lifecycle instead of refreshing it.

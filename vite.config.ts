@@ -6,9 +6,11 @@ import { productionAssetFilter } from './scripts/production-assets.mjs';
 import { authoredMapSource } from './src/three/map/MapEditModel.ts';
 import { importLayoutText, layoutSource } from './src/three/map/MapLayoutStore.ts';
 import { validateThrowableLayout } from './src/three/map/ThrowableLayoutModel.ts';
+import { validateLightLayout } from './src/three/map/RoomLightLayout.ts';
 
 const layoutPath = resolve('src/three/map/sceneLayout.json');
 const throwableLayoutPath = resolve('src/three/map/throwableLayout.json');
+const lightLayoutPath = resolve('src/three/map/roomLightLayout.json');
 const revision = (text: string) => createHash('sha256').update(text).digest('hex');
 // Both entry points write authored layouts; serialize them under one DEV save lock.
 let layoutSaving = false;
@@ -54,6 +56,14 @@ function sceneLayoutSave(): Plugin {
           res.statusCode = 400; res.end(JSON.stringify({ error: parsed.message })); return;
         }
         const source = layoutSource(parsed.document);
+        const lightsCurrent=await readFile(lightLayoutPath,'utf8');
+        if(request.lights!==undefined&&request.lights?.revision!==revision(lightsCurrent)){
+          res.statusCode=409;res.end(JSON.stringify({error:'灯位文件已更新，请刷新，未覆盖任何布局'}));return;
+        }
+        const lights=request.lights!==undefined?request.lights?.layout:JSON.parse(lightsCurrent);
+        const lightError=validateLightLayout(lights,{...authoredMapSource(),...source});
+        if(lightError){res.statusCode=400;res.end(JSON.stringify({error:lightError}));return;}
+        const lightsNext=JSON.stringify(lights,null,2)+'\n';
         const next = JSON.stringify({ furniture: source.furniture, hideSpots: source.hideSpots }, null, 2) + '\n';
         let propsCurrent: string | null=null, propsNext: string | null=null;
         if(request.throwables!==undefined){
@@ -70,14 +80,19 @@ function sceneLayoutSave(): Plugin {
         const mapChanged=next!==current, propsChanged=propsNext!==null&&propsNext!==propsCurrent;
         const temporary = `${layoutPath}.${process.pid}.tmp`;
         const propsTemporary=`${throwableLayoutPath}.${process.pid}.tmp`;
+        const lightsTemporary=`${lightLayoutPath}.${process.pid}.tmp`;
+        const lightsChanged=lightsNext!==lightsCurrent;
         // Validate both versions and prepare both backups before replacing either file.
         if(mapChanged){await copyFile(layoutPath, `${layoutPath}.${stamp}.bak`);await writeFile(temporary,next);}
         if(propsChanged){await copyFile(throwableLayoutPath,`${throwableLayoutPath}.${stamp}.bak`);await writeFile(propsTemporary,propsNext!);}
+        if(lightsChanged){await copyFile(lightLayoutPath,`${lightLayoutPath}.${stamp}.bak`);await writeFile(lightsTemporary,lightsNext);}
         // Furniture is last: its config dependency may restart Vite after replacement.
         if(propsChanged)await rename(propsTemporary,throwableLayoutPath);
+        if(lightsChanged)await rename(lightsTemporary,lightLayoutPath);
         if(mapChanged)await rename(temporary,layoutPath);
         res.end(JSON.stringify({ revision: revision(next), savedAt: new Date().toISOString(),
-          ...(propsNext!==null?{throwableRevision:revision(propsNext)}:{}) }));
+          ...(propsNext!==null?{throwableRevision:revision(propsNext)}:{}),
+          ...(request.lights!==undefined?{lightRevision:revision(lightsNext)}:{}) }));
       } catch (error) {
         res.statusCode = 500;
         res.end(JSON.stringify({ error: `写入失败：${String(error)}；请核对文件，可能部分写入，自动备份保留` }));
@@ -120,13 +135,47 @@ function throwableLayoutSave(): Plugin {
   }};
 }
 
+/** DEV-only fixed-path authoring, same origin/revision/backup rules as other layouts. */
+function roomLightLayoutSave():Plugin {
+  return {name:'room-light-layout-save',apply:'serve',configureServer(server){
+    server.middlewares.use('/__dev/room-light-layout',async(req,res)=>{
+      res.setHeader('Content-Type','application/json; charset=utf-8');
+      if(req.headers.origin&&req.headers.origin!==`http://127.0.0.1:${server.config.server.port}`){
+        res.statusCode=403;res.end(JSON.stringify({error:'非法来源'}));return;}
+      if(req.method!=='GET'&&req.method!=='POST'){res.statusCode=405;res.end();return;}
+      if(req.method==='POST'&&layoutSaving){res.statusCode=409;res.end(JSON.stringify({error:'布局正在保存'}));return;}
+      if(req.method==='POST')layoutSaving=true;
+      try{
+        const current=await readFile(lightLayoutPath,'utf8');
+        if(req.method==='GET'){res.end(JSON.stringify({revision:revision(current),layout:JSON.parse(current)}));return;}
+        let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>100_000)throw Error('灯位文件过大');}
+        const request=JSON.parse(raw);
+        if(request.revision!==revision(current)){res.statusCode=409;
+          res.end(JSON.stringify({error:'灯位文件已更新，请刷新，未覆盖新文件'}));return;}
+        const source={...authoredMapSource(),...JSON.parse(await readFile(layoutPath,'utf8'))};
+        const error=validateLightLayout(request.layout,source);
+        if(error){res.statusCode=400;res.end(JSON.stringify({error}));return;}
+        const next=JSON.stringify(request.layout,null,2)+'\n';
+        if(next!==current){
+          const stamp=new Date().toISOString().replace(/[:.]/g,'-');
+          await copyFile(lightLayoutPath,`${lightLayoutPath}.${stamp}.bak`);
+          const temporary=`${lightLayoutPath}.${process.pid}.tmp`;
+          await writeFile(temporary,next);await rename(temporary,lightLayoutPath);
+        }
+        res.end(JSON.stringify({revision:revision(next),savedAt:new Date().toISOString()}));
+      }catch(error){res.statusCode=500;res.end(JSON.stringify({error:`灯位保存失败：${String(error)}`}));}
+      finally{if(req.method==='POST')layoutSaving=false;}
+    });
+  }};
+}
+
 /**
  * 本地开发固定使用 http://127.0.0.1:5173/。
  * strictPort: 端口被占用时直接报错退出，绝不静默切换到 5174 等其他端口。
  */
 export default defineConfig(({ command }) => ({
   base: command === 'build' && process.env.PAGES_DEPLOYMENT === 'true' ? '/who-ate-my-rice/' : '/',
-  plugins: [sceneLayoutSave(), throwableLayoutSave(), productionAssetFilter()],
+  plugins: [sceneLayoutSave(), throwableLayoutSave(), roomLightLayoutSave(), productionAssetFilter()],
   server: {
     host: '127.0.0.1',
     port: 5173,

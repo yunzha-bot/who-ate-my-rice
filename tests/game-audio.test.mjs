@@ -97,7 +97,7 @@ test('basin hit uses the SFX bus, respects mute and suspension and stops on rese
 
 test('real result audio selects NOPE only for captured DeepSeek players, once per result', t => {
   // Execute the existing integration method, following browser-focus.test.mjs.
-  const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
   const body = source.match(/private syncAudio\(\): void \{([\s\S]*?)\n  \}\n\n  private chooseFaction/);
   assert.ok(body, 'real result audio integration must be found');
   const sync = new Function(body[1].replace('const target: MusicCue', 'const target'));

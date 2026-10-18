@@ -19,6 +19,24 @@ const deepseekKeys = ['visionEvadeDistance', 'soundEvadeStrength', 'escapeMinSep
 const expectedHuman = [[.52, 8750, .7, 15000, 3, 1], [.64, 7500, .8, 18000, 4, 2],
   [.76, 6500, .9, 22000, 5, 3]];
 const expectedDeepseek = [[5, .09, 3, 700, 3.5], [6, .075, 3.5, 600, 4], [7, .06, 4, 500, 4.5]];
+
+test('actual DP movement formula applies 0.9/0.95/1 difficulty speeds to opponent AI only', () => {
+  const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
+  const expression = source.match(/const speed = (effectiveSpeeds\(this\.runtime\)\.player[\s\S]*?);/)[1];
+  const calculate = new Function('effectiveSpeeds', 'U', 'C', 'deepseekAiEnabled', `return ${expression};`);
+  for (const difficulty of DIFFICULTIES) for (const faction of ['HUMAN', 'DEEPSEEK']) {
+    const config = resolveAiDifficulty(difficulty, faction).deepseekAI;
+    const expectedMultiplier = faction === 'HUMAN'
+      ? { EASY: .9, NORMAL: .95, HARD: 1 }[difficulty] : 1;
+    assert.equal(config.movementSpeedMultiplier, expectedMultiplier);
+    for (const aiEnabled of [true, false]) for (const state of ['NORMAL', 'SPRINT_RUNNING']) {
+      const context = { runtime: {}, sprint: { state }, deepseekAI: { difficultyConfig: config } };
+      const actual = calculate.call(context, () => ({ player: C.player.speed }), C.three.pixelsPerUnit, C, aiEnabled);
+      const base = C.player.speed / C.three.pixelsPerUnit * (state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
+      assert.equal(actual, base * (aiEnabled ? config.movementSpeedMultiplier : 1));
+    }
+  }
+});
 const rooms = [{ id: 'a', x: 0, z: 0, minX: -2, maxX: 2, minZ: -2, maxZ: 2, major: true },
   { id: 'b', x: 8, z: 0, minX: 5, maxX: 11, minZ: -2, maxZ: 2, major: true },
   { id: 'c', x: -8, z: 0, minX: -11, maxX: -5, minZ: -2, maxZ: 2, major: true }];
@@ -51,7 +69,10 @@ test('six profiles change ONLY the approved opponent AI fields, never base/playe
     for (const k of Object.keys(C.humanAI).filter(k => !humanKeys.includes(k)))
       assert.equal(dp.humanAI[k], C.humanAI[k]);
     for (const k of Object.keys(C.deepseekAI).filter(k => !deepseekKeys.includes(k)))
-      assert.equal(human.deepseekAI[k], C.deepseekAI[k]);
+      assert.equal(human.deepseekAI[k], difficulty === 'EASY' &&
+        Object.hasOwn(C.difficulty.easyDeepseekSprint, k)
+        ? C.difficulty.easyDeepseekSprint[k]
+        : difficulty === 'NORMAL' && k === 'movementSpeedMultiplier' ? .95 : C.deepseekAI[k]);
     assert.ok(human.deepseekAI.hideThreatDistance < human.deepseekAI.visionEvadeDistance);
     assert.ok(Object.isFrozen(dp) && Object.isFrozen(dp.humanAI));
   });
@@ -173,9 +194,9 @@ for (const [i, difficulty] of DIFFICULTIES.entries()) {
 }
 
 for (const faction of ['DEEPSEEK', 'HUMAN']) for (const difficulty of DIFFICULTIES) {
-  test(`${faction}/${difficulty}: 30 seconds progress, 400ms prep, interruption/resume and 5/5 victory`, () => {
+  test(`${faction}/${difficulty}: 20 seconds progress, 400ms prep, interruption/resume and 5/5 victory`, () => {
     assert.equal(RICE_TIMING_MODE, 'production');
-    assert.equal(C.rice.maxProgressMs, 30000);
+    assert.equal(C.rice.maxProgressMs, 20000);
     assert.equal(RICE_MAX_PROGRESS_MS.development, 5000);
     assert.equal(C.rice.prepareMs, 400);
     const field = new RiceField(['a', 'b', 'c', 'd', 'e'], C.rice.maxProgressMs, C.rice.prepareMs);
@@ -187,13 +208,13 @@ for (const faction of ['DEEPSEEK', 'HUMAN']) for (const difficulty of DIFFICULTI
       field.update(1, id, true);
       field.update(5000, id, true);
       assert.equal(field.get(id).rice.completed, false);
-      assert.equal(field.get(id).progressRatio, 1 / 6);
+      assert.equal(field.get(id).progressRatio, 1 / 4);
       field.interrupt();
       field.update(20000, id, false);
       assert.equal(field.get(id).rice.progressMs, 5000);
       field.update(400, id, true);
       assert.equal(field.get(id).rice.progressMs, 5000);
-      field.update(24999, id, true);
+      field.update(14999, id, true);
       assert.equal(field.get(id).rice.completed, false);
       match.advancePlaying(1, false, field.completed);
       assert.equal(match.phase, 'PLAYING');
@@ -201,7 +222,7 @@ for (const faction of ['DEEPSEEK', 'HUMAN']) for (const difficulty of DIFFICULTI
       assert.equal(field.get(id).progressRatio, 1);
       match.advancePlaying(1, false, field.completed);
     }
-    assert.equal(field.totalProgressMs, 150000);
+    assert.equal(field.totalProgressMs, 100000);
     assert.equal(match.phase, 'FINISHED');
     assert.equal(match.result.reason, 'RICE_COMPLETED');
   });
@@ -211,14 +232,14 @@ test('paired fixed seed: six real-system matches use production timing and finis
   const rows = [];
   for (const faction of ['DEEPSEEK', 'HUMAN']) for (const difficulty of DIFFICULTIES) {
     const sim = createMatchSim({ seed: 20268846, playerFaction: faction, policy: 'idle', difficulty });
-    assert.ok(sim.systems.rice.states.every(r => r.maxProgressMs === 30000));
+    assert.ok(sim.systems.rice.states.every(r => r.maxProgressMs === 20000));
     const result = sim.run(12000);
     assert.equal(result.timedOut, false, `${faction}/${difficulty}: ${result.elapsedMs}`);
     assert.equal(result.phase, 'FINISHED');
     assert.equal(result.winner, faction === 'HUMAN' ? 'DEEPSEEK' : 'HUMAN');
     assert.equal(result.telemetry.humanStuckFrames, 0);
     assert.equal(result.telemetry.deepseekStuckFrames, 0);
-    if (faction === 'HUMAN') { assert.equal(result.riceCompleted, 5); assert.ok(result.elapsedMs >= 152000); }
+    if (faction === 'HUMAN') { assert.equal(result.riceCompleted, 5); assert.ok(result.elapsedMs >= 102000); }
     rows.push({ faction, difficulty, elapsedMs: result.elapsedMs, winner: result.winner,
       telemetry: result.telemetry, setup: result.setup });
   }
@@ -228,9 +249,12 @@ test('paired fixed seed: six real-system matches use production timing and finis
     ({ faction, difficulty, elapsedMs, winner })));
 });
 
-test('bathroom two-door reproduction: all three difficulties can finish every rice under fixed-seed pursuit', () => {
+test('historical 30s bathroom two-door reproduction: all difficulties finish every rice under fixed-seed pursuit', () => {
   for (const difficulty of DIFFICULTIES) {
-    const sim = createMatchSim({seed:20260927,playerFaction:'HUMAN',policy:'pursue',difficulty});
+    // Preserve the exact timing fixture: shortening meals changes this pursuit
+    // trajectory and can legally end in capture, not in a navigation softlock.
+    const sim = createMatchSim({seed:20260927,playerFaction:'HUMAN',policy:'pursue',difficulty,
+      riceMaxProgressMs:30000});
     const result = sim.run(12000);
     assert.equal(result.timedOut,false,`${difficulty}: ${sim.systems.deepseekAI.lastSelectionReason}`);
     assert.equal(result.winner,'DEEPSEEK');

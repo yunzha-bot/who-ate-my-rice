@@ -13,7 +13,7 @@ export interface PromptInput extends InteractionArbitrationInput {
   riceInRange: boolean;
   moving: boolean;
 }
-export interface InteractionPrompt { label: string; detail: string; blocked: boolean }
+export interface InteractionPrompt { key?: 'E' | 'V'; label: string; detail: string; blocked: boolean }
 
 /** Presentation only: reuse E arbitration, never authorize or execute an action. */
 export function interactionPrompt(input: PromptInput): InteractionPrompt | null {

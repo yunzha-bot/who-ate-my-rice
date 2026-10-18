@@ -117,7 +117,7 @@ test('reset clears sprint, risk, stun, and last direction for the next round', (
 });
 
 test('one configured rice reaches the sprint risk threshold at the same progress ratio', () => {
-  assert.equal(RICE_MAX_PROGRESS_MS.production, 30_000);
+  assert.equal(RICE_MAX_PROGRESS_MS.production, 20_000);
   assert.equal(GAME_CONFIG.rice.maxProgressMs, RICE_MAX_PROGRESS_MS[RICE_TIMING_MODE]);
   const rice = new RiceSystem('rice-1', GAME_CONFIG.rice.maxProgressMs, GAME_CONFIG.rice.prepareMs);
   const thresholdMs = GAME_CONFIG.rice.maxProgressMs * GAME_CONFIG.sprint.riskThreshold;

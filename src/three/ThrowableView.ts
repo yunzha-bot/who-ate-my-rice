@@ -30,7 +30,7 @@ export function makeThrowableModel(kind: ThrowableKind): THREE.Group {
   return group;
 }
 
-interface ViewActor extends ThrowActor { heading: number }
+interface ViewActor extends ThrowActor { heading: number; renderVisible?: boolean }
 
 /** Pointer input and presentation only. Every pickup/throw is adjudicated by the system. */
 export class ThrowableView {
@@ -145,14 +145,16 @@ export class ThrowableView {
       model.visible=item.state!=='USED'&&this.system.config.enabled;
       if(item.state==='HELD'){const actor=actors.find(a=>a.faction===item.holder)!;
         const heading=this.heading(actor.faction)??actor.heading;
-        model.visible=!actor.hidden&&this.system.config.enabled;model.position.set(actor.x+Math.sin(heading)*.60,.55,actor.z+Math.cos(heading)*.60);
+        model.visible=!actor.hidden&&actor.renderVisible!==false&&this.system.config.enabled;model.position.set(actor.x+Math.sin(heading)*.60,.55,actor.z+Math.cos(heading)*.60);
       }else model.position.set(item.x,item.height+.025,item.z);
       model.rotation.z=item.state==='FLIGHT'&&!this.reducedMotion?Math.sin(this.system.nowMs*.015)*.35:0;
     }
     const held=active&&this.system.held(active.faction),near=active&&!held?this.system.nearest(active,this.trace):undefined;
+    const item=held||near;
+    const durability=item?.kind==='BASIN'?` · 剩余 ${item.remainingThrows} 次投掷`:'';
     this.status.hidden=!active||(!held&&!near);
-    this.status.textContent=held?`${THROWABLE_NAMES[held.kind]} · 按住左键瞄准，松开投掷 · 右键取消`:
-      near?`F 拾取${THROWABLE_NAMES[near.kind]}`:'';
+    this.status.textContent=held?`${THROWABLE_NAMES[held.kind]}${durability} · 按住左键瞄准，松开投掷 · 右键取消`:
+      near?`F 拾取${THROWABLE_NAMES[near.kind]}${durability}`:'';
     if(!active||!held||!this.aiming)return;
     const requested=this.target(active);if(!requested)return;
     const aim=this.system.aim(active,requested,this.trace);

@@ -1,0 +1,25 @@
+{
+  "sourceSHA": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+  "runId": 38897897043,
+  "artifactId": 12044274455,
+  "artifactSHA256": "c21a3c56c507e681e0aab75ccebf928a72264ef281ad79e03ac8bbb6bf514e08",
+  "artifactZIPBytes": 40299469,
+  "files": 85,
+  "decodedFileBytes": 43050329,
+  "checked": 85,
+  "matched": 85,
+  "failures": [],
+  "hashVerificationClosed": true,
+  "compressedResponses": 8,
+  "notUploaded": [
+    "maps/.gitkeep"
+  ],
+  "browserOnlyExcluded": [
+    "https://yunzha-bot.github.io/favicon.ico"
+  ],
+  "publicVerifiedAt": "2026-10-16T13:12:24.221Z",
+  "independentRowCoverageCheck": true,
+  "gameTestsRerun": false,
+  "rebuildPerformed": false,
+  "onlineWritesPerformed": false
+}

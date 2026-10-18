@@ -12,6 +12,7 @@ import { PerceptionGeometry, SoundEventSystem, VisionSystem } from
 import { DOOR_NODES, FURNITURE, MAP_DEPTH, MAP_WIDTH, RICE_CANDIDATES, ROOMS, WALLS } from
   '../src/three/map/apartmentMap.ts';
 import { GAME_CONFIG as C } from '../src/config/gameConfig.ts';
+import { resolveAiDifficulty } from '../src/config/difficultyConfig.ts';
 
 const actor = { x: 0, z: 0 };
 const rice = { id: 'rice-1', x: 0, z: 0, progressMs: 0,
@@ -37,6 +38,50 @@ const base = () => ({ deltaMs: 50, deepseek: actor, rice: [rice], doors: [],
 const heard = (x, z, audibleStrength = 0.3) => ({
   event: { sourceFaction: 'HUMAN', position: { x, z }, type: 'FOOTSTEP' },
   audibleStrength, remainingMs: 500,
+});
+
+test('close-range visual escape remains active in all difficulties; only approaching threshold is tuned', () => {
+  const sample = difficulty => {
+    const ai = new DeepSeekAIController(nav, [], rooms);
+    ai.setDifficultyConfig(resolveAiDifficulty(difficulty, 'HUMAN').deepseekAI);
+    const command = ai.update({ ...base(), visibleHuman: { x: 4, z: 0 } });
+    assert.equal(ai.state, 'EVADE');
+    assert.ok(Math.hypot(command.direction.x, command.direction.z) > 0);
+    return command.startSprint;
+  };
+  assert.equal(sample('EASY'), true);
+  assert.equal(sample('NORMAL'), true);
+  assert.equal(sample('HARD'), true);
+});
+
+test('Human EASY opponent still sprints at close range and on strong unseen sound', () => {
+  for (const extra of [{ visibleHuman: { x: 3, z: 0 } }, { heardHuman: heard(4, 0) }]) {
+    const ai = new DeepSeekAIController(nav, [], rooms);
+    ai.setDifficultyConfig(resolveAiDifficulty('EASY', 'HUMAN').deepseekAI);
+    assert.equal(ai.update({ ...base(), ...extra }).startSprint, true);
+  }
+});
+
+test('Human EASY approaching trigger waits until 4.5 units; other sprint entrances remain independent', () => {
+  // Risky progress makes the ordinary visual threshold 2.2, isolating the
+  // approaching entrance without disabling or changing production decisions.
+  const approachingBase = () => ({ ...base(), riceProgressRatio: .4 });
+  const sample = difficulty => {
+    const ai = new DeepSeekAIController(nav, [], rooms);
+    ai.setDifficultyConfig(resolveAiDifficulty(difficulty, 'HUMAN').deepseekAI);
+    ai.update({ ...approachingBase(), visibleHuman: { x: 4.9, z: 0 } });
+    ai.update({ ...approachingBase(), visibleHuman: { x: 5.5, z: 0 } });
+    return ai.update({ ...approachingBase(), visibleHuman: { x: 5, z: 0 } }).startSprint;
+  };
+  assert.equal(sample('EASY'), false);
+  assert.equal(sample('NORMAL'), true);
+  assert.equal(sample('HARD'), true);
+  const ai = new DeepSeekAIController(nav, [], rooms);
+  ai.setDifficultyConfig(resolveAiDifficulty('EASY', 'HUMAN').deepseekAI);
+  ai.update({ ...approachingBase(), visibleHuman: { x: 5, z: 0 } });
+  const command = ai.update({ ...approachingBase(), visibleHuman: { x: 4.5, z: 0 } });
+  assert.equal(command.startSprint, true);
+  assert.equal(ai.sprintDecision, 'PURSUER_CLOSING_SPRINT');
 });
 
 test('eating stops on actual Human threat and existing RiceField keeps progress', () => {

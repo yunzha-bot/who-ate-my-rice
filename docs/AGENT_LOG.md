@@ -3196,3 +3196,1280 @@
 
 - 本条只记录实际完成的本地准入；Git推送、Actions及公网结果完成后另追加，不预填成功。精确提交清单和结果见S19_P_RC_DEPLOYMENT_REPORT.md。原Tag/Release及5173/4173服务不动，不清理任何未知文件。
 - 已用现有凭据只读核对repo admin/push/workflow权限、Actions启用、Pages尚无站点；不创建新Token。大陆三运营商无代理、自然对局平衡和原生缩放等不冒充完成；素材权利边界沿用账本。
+
+### S19-P首次RC提交、部署与公网检查结果 — 2026-10-16（Codex）
+
+#### Git与部署事实
+
+- 经用户明确授权、全部本地门禁后，精确审查/暂存36文件，正常提交并推送`e9f361fce9dd5f392e2165ec2cf0b5f1148ed108`，标题`fix: prepare S19-P RC Pages deployment and safe storage startup`；HEAD、origin/main和远端一致。无强推、amend、旧模型/私人/备份清理或未知进程终止。
+- 原rc1附注Tag对象b7194124e0c328ff59882642392e17c60f39ee28及剥离落点870c69050cf80ff83aa79531e7d9f2590a8834d5不动，原Release ID414708471内容指纹复核不变。未创建rc2、v1.0.0、新Tag或新Release。
+- Pages首次创建为workflow来源、HTTPS启用，手动调度一次并传approved_sha；Actions运行38897897043（https://github.com/yunzha-bot/who-ate-my-rice/actions/runs/38897897043）来源为上述提交，build/deploy和整体success，实际RC网址 https://yunzha-bot.github.io/who-ate-my-rice/ 。新版dispatch成功返回200，临时工具旧204断言经官方契约和GET纠正，仅核对原运行，没有二次调度或绕过门禁。
+
+#### 公网验收与停止条件
+
+| 项目 | 实际结果 |
+|---|---|
+| Chrome/Edge | 各6原包UI＋6内存观察夹具组合；两模型HTTP200/v6动画就绪，39音频全解码，移动投掷/暂停设置/DEV-ZCX隔离正常 |
+| Network/控制台 | 本次会话v6取消0、pageerror0，游戏资源记录无404；只读CDP确认根favicon.ico 404，保留不修线上 |
+| CI产物独立核验 | 下载完整artifact超时：The operation was aborted due to timeout；未取得zip，公网逐文件SHA比对未执行，不能宣称完整验收通过 |
+| 大陆无代理 | 未实际覆盖三运营商，当前出口/代理未独立核实，不把可访问当作大陆无代理通过 |
+
+- 按用户规则停止后续发布操作，不重跑部署、不追加push、不修改Pages/线上内容或加载策略。公网浏览器检查原与下载并行启动，收集已启动只读结果和控制台分类，未用其替代归档比对。失败后本条/报告/交接及公网证据留本地，不执行新的Git归档。
+- 详见S19_P_RC_DEPLOYMENT_REPORT.md及s19-p公网证据。首次RC网页已部署，但完整公网验收保留，不标记S20或正式v1.0.0，不进入任何新阶段。原5173/4173和模型/地图/36道具/音频均保持，等待用户对只读产物核验的下一步决定。
+
+### S19-P原始CI Artifact与公网文件SHA-256只读补验 — 2026-10-16（Codex）
+
+#### 完成内容
+
+- 用户仅批准验证及本地记录；锁定Run38897897043/run_attempt1与提交`e9f361fce9dd5f392e2165ec2cf0b5f1148ed108`。原github-pages Artifact12044274455未过期，完整下载40,299,469字节，SHA-256`c21a3c56c507e681e0aab75ccebf928a72264ef281ad79e03ac8bbb6bf514e08`匹配GitHub digest，ZIP CRC/TAR路径与普通文件检查通过。
+- 本轮单连接实测慢速后仅停止自己的核验下载进程、保留部分文件；第二次以4个严格206/Content-Range分段取得同一原始归档，没有重新构建或部署。临时Python探针显式UTF-8修正路径解码后完成检查，不改原归档或游戏文件。
+- 实际85个公开文件、43,050,329字节；公网逐项解码后实体长度与SHA-256全部一致。含v6/米袋两个GLB、全部39音频及所有其他公开文件；82项public内容同时匹配指定提交Git blob。未以本地Windows或新Linux构建冒充原始CI。
+
+#### 验证结果
+
+| 检查 | 实际结果 |
+|---|---|
+| 原始归档完整性 | GitHub digest、总长度、ZIP CRC及TAR边界通过 |
+| 公网逐项一致性 | 85/85，失败文件0、未核验文件0；路径集合独立复核通过 |
+| HTTP内容编码 | 8项实际gzip按解码后内容哈希；临时回环gzip/Brotli自检通过，不混淆传输Content-Length |
+| 保护与版本 | 336项开工保护哈希、日志原前缀、main、原rc1 Tag/Release及Run attempt均不变；索引为空 |
+| 游戏测试/TypeScript/build | 本轮未重跑；仅只读网络与文档核验，用户禁止重建，不冒称上一轮963项为本轮结果 |
+| 文档与证据 | 追加S19-P报告§6、同步精简交接、保存7份JSON证据；文档diff及证据检查通过 |
+
+#### Git检查点与限制
+
+- 本轮未暂存、commit、push、修改Pages/线上内容、触发Actions或创建Tag/Release；历史部署落点不变。原5173/4173监听进程和全部本地备份保留，未访问私人目录或清理未知文件。
+- 原始CI Artifact与公网哈希核验真正闭合；旧超时/v6取消记录不回改。maps/.gitkeep原本不上传，根favicon.ico是浏览器附带请求且仍404；没有借排除项跳过实际产物。
+- 大陆三运营商无代理与既有素材/人工验收限制保留，不将哈希匹配当作S20或v1.0.0通过。证据见S19_P_RC_DEPLOYMENT_REPORT.md及s19-p/hash-verification/，只保留本地，任务完成后停止等待用户审查。
+
+### S19-P本地收尾与S20 Web上线准入准备 — 2026-10-16（Codex）
+
+#### 完成内容
+
+- 用户只批准收尾记录/方案，未批准提交、推送、重建发布、重新部署、正式Tag/Release或S20 PASS。复核原ZIP digest/CRC及85项TAR哈希，与原7份JSON和报告第6节逐一对应，85/85历史公网记录一致；保留原记录网络时点，未冒称本轮重新公网测试。新增S19_P_CLOSEOUT_EVIDENCE.json归档文件指纹，原始证据不改。
+- 用户明确允许使用《完整制作阶段.docx》的S19～S22目标/Gate/里程碑，不推断与(5)全文一致。新增S20_WEB_RELEASE_READINESS_REPORT.md及其他电脑/真实无代理/至少一局自然对局空表；S21不同网络3～5局与三运营商扩大计划单列，不增加为S20原定硬门槛。
+- 制定保留e9f…RC的最小正式版本提交、同源CI/公网验收后v1.0.0 Tag/Release及回滚方案。说明现有package构建版本为rc1、Tag不能改网页显示，main/approved_sha门禁与原Artifact有效期限制。未实施版本/工作流/源码修改。
+
+#### 检查与Git状态
+
+| 项目 | 实际结果 |
+|---|---|
+| 原包及历史证据对应 | 同一Run38897897043/Artifact12044274455；ZIP40,299,469字节、85文件43,050,329字节，全部复核通过 |
+| 原证据保护 | 7份JSON及第6节原内容保持，文件指纹归档；日志原前缀保护 |
+| 文档检查 | git diff --check、链接/表格结构及保护文件检查；不重跑游戏测试、tsc或build，本轮源码不改 |
+| 自动化/浏览器边界 | 963/963及Chrome/Edge公网记录是上一轮证据；其他电脑、真实无代理及自然一局尚待人工填写 |
+| Git归档 | 仅本地文件整理，未暂存/commit/push/Tag；历史e9f…、原rc1与线上RC不动 |
+
+#### 已知限制与下一步
+
+- S19-P技术一致性闭合，本地收尾归档完成；新文档未Git归档，不标新Gate。S20材料准备完成、未PASS，S21未启动。favicon404/历史v6取消仍非阻断观察，不改源码或线上内容。
+- 等待用户回填最小人工表、选择版本方案和批准精确正式操作；不自动进行发布、S21扩大测试或S22维护。原5173/4173、模型/地图/音频/道具及私人/备份文件保持。
+
+### S20外部慢网与Edge输入阻断只读诊断 — 2026-10-16（Codex）
+
+#### 完成内容
+
+- 按用户要求立即暂停v1.0.0准备，S20保持BLOCKED、S21未启动。锁定历史e9f361fce9dd5f392e2165ec2cf0b5f1148ed108原RC，HTTPS页面与JS哈希匹配原CI，不重建或改线上。新增S20_EXTERNAL_BLOCKERS_DIAGNOSIS.md及9份原字节浏览器证据/索引，仅本地待审。
+- Chrome/Edge受控慢网复现v6请求约101秒、约29秒已进入PLAYING，先显示临时程序化角色，下载后正式v6和动画正常。确认20秒UI提前放行、8秒音频竞速提前结束图片等待及入局缺少角色就绪关联；不把受控限速当大陆运营商直连，不把人为abort当自然取消。
+- 独立Edge实体键盘178/178控制采样帧有位移；用户原Edge有Global Speed，开启时键盘失效并出现0.7/0.8浮层，用户关闭后确认恢复，确定该会话扩展冲突。未采到原扩展具体拦截阶段，不虚称已完成任意插件兼容。手动原JSON空自动化数组汇总字段错误单独注明，原件不改。
+
+#### 验证结果
+
+| 检查 | 实际结果 |
+|---|---|
+| 定向现有测试 | focus、camera-controls、collision-world、production-model-policy共48/48，失败/跳过/取消0 |
+| 浏览器 | Chrome154/Edge151普通与受控慢网；独立Edge实体键盘、原Edge用户扩展开关对照分别记录 |
+| 保护与证据 | 336项开工哈希不变，日志原前缀保持，9份证据原字节匹配；文档diff及新报告空白检查通过 |
+| 全量npm test/tsc/build | 未执行，本轮只读诊断/文档、源码不改；不冒称历史963项为本轮门禁 |
+| Git及本地服务 | HEAD/本地origin/main/远端main仍为历史RC，索引为空；原5173/4173进程保留 |
+
+#### Git检查点、限制与下一步
+
+- 未改源码、测试、玩法、地图、36道具、模型/音频或私人目录，未add/commit/push/Tag/Release/重新部署；原S19-P85/85是产物一致性事实，不能替代S20体验Gate。
+- 已提交最小加载门禁/真实就绪/失败兜底修复提案及回归、真实外部无代理复验要求，尚未实施。键盘临时关闭扩展可用，但慢网阻断未解除；缺原外部设备HAR和实际大陆线路测量。诊断完成后停止，等待用户批准，不启动新阶段或正式发布。
+
+### S20加载门禁第一轮本地最小修复 — 2026-10-16（Codex）
+
+#### 完成内容
+
+- 用户仅批准本地加载状态/界面/入局门禁及必要测试。新增StartupReadiness连接StartupView、CharacterActionView和ThreeGame；明确下载/解析/初始化/正式ready/failed/主动simplified。20秒改为提示而非自动放行，8秒可选音频不再结束图片等待。真实失败有手动reload重试，主动简化作废角色加载代次并释放迟到克隆，不意外换回。
+- 不改输入系统、玩法/平衡、AI、碰撞、地图/36道具点位、模型或音频。原生产v6/程序化及DEV旧模型链保留，GLTFLoader仍用原loadAsync请求方式，仅观察实例parse边界。新增本地验收报告S20_LOADING_GATE_FIX_REPORT.md及s20-loading-fix原始JSON/截图/产物清单。
+
+#### 自动化与本地浏览器结果
+
+| 检查 | 实际结果 |
+|---|---|
+| 回归红绿 | 原StartupView两个真实时序断言0/2→2/2；最终加载/模型/释放定向18/18 |
+| 全量npm test | 973/973，失败/取消/跳过0，既有断言保留 |
+| TypeScript/构建 | 独立tsc、根路径build、隔离Pages production build及原产物门禁通过；保留大chunk警告 |
+| 双浏览器功能 | Chrome154/Edge151共20独立最终会话；根/子路径双阵营三难度24组合，实际AI配置/30秒/3秒、36道具坐标及39音频解码核对正常 |
+| 真实限速下载 | Chrome99.855秒、Edge99.886秒；约34秒仍downloading/inert且代码入局被拒，约104秒正式ready后才可进入菜单，既有倒计时后正常入局和移动 |
+| 失败/恢复 | 网络失败、请求取消、动画初始化失败、手动reload恢复、下载中明确简化与迟到真实parse不换回、首屏图片延迟和可选音频失败均验证 |
+| 严格Network | Chrome根/Pages正常矩阵的零取消断言因v6 ERR_ABORTED失败，原JSON/非零退出保留；完整解码字节、正式模型动画与功能通过分开记录，不虚报所有浏览器检查全绿 |
+| 保护 | 336项开工跟踪哈希中328项不变、8项授权文件变化，新增2项代码/测试；日志原字节前缀保持、文档diff检查通过 |
+
+#### Git检查点、已知限制与停止
+
+- 根dist86文件/43,053,550字节，Pages86文件/43,054,068字节；按现工作流不上传零字节.gitkeep则普通公开文件85项。两包只有v6/米袋，无旧GLB、源码、测试或私人/备份文件。dist不提交。
+- 未add/commit/push/重新部署/Tag/Release；HEAD、远端main及rc1保持原RC历史落点。原5173/4173后续连接/监听检查不可用，本轮未停止或擅自重启它们；自有临时根/严格子路径服务完成后关闭。
+- 大陆无代理线路与实际下载速度未解决；本轮受控限速不是运营商直连验收，v6取消标记原因也未闭合。公网RC保持原样、S20继续BLOCKED、S21未启动；完成后停止，等待人工本地审查与下一次精确Git/RC/外部复验授权。
+
+### 玩家反馈轮：最小操作教学与开发日志补齐 — 2026-10-17（DeepSeek Harness）
+
+#### 用户批准范围
+
+- 只做两件事：**最小操作教学**（独立说明层，可关闭、可从暂停菜单重看；不修改阵营卡片，不延长或改动 READY 计时，不展示内部倍率、世界单位与 AI 隐藏信息；先核对真实按键，删除含义不明的教学文案）与**开发日志补齐**（复用现有机制，记录投掷命中双方、门的强破/解锁结果与时间、AI 绕行决策、抓捕时状态；**绕行决策与门实际打开必须分别记录**；仅用于开发调试，不新增生产版 DEV 入口）。
+- 明确不动：吃米保持 30 秒；不改速度、技能冷却、AI 决策、地图与道具位置；不新增 Human 技能。
+
+#### 完成内容
+
+- 新增独立说明层 `src/three/ControlsHelpView.ts`（纯 DOM 表现层，不读玩法状态、不暂停、不推进任何计时；`controlsHelpMarkup()` 为纯函数，便于无 DOM 环境下核对文案）+ `src/game-ui.css` 样式（`z-index:160`，在暂停面板之上、开局层之下）。
+- 入口：暂停菜单新增「操作说明」按钮（`populateRoundActions` 的可选 `help` 参数；未接线时不生成该按钮，原有按钮顺序与数量不变）；每浏览器**首次开局自动出现一次**（常量 `CONTROLS_HELP_AUTO_OPEN`，键 `who-ate-my-rice/controls-help-seen-v1`，localStorage 不可用时静默跳过、不阻断开局）；Esc 优先关闭说明层；暂停、恢复、重开、返回阵营选择时隐藏。
+- 文案按源码核对的真实按键编写：Human＝WASD 移动 / Space 开门与强行破锁 / E 开关门与拧锁芯 / Q 搜查（家具或前方区域）/ F 拾取 / 按住左键瞄准·松开投掷 / 右键取消 / 贴住即可抓捕 / Esc；DeepSeek＝WASD / E 吃米·藏身·开关门 / Space 冲刺（结束时若已吃掉三成米会摔倒）/ Q 上锁 / F / 左键·右键 / Esc。玩家可读文字中**不含任何阿拉伯数字、倍率、世界单位与 AI 决策词**。
+- 删除含义不明文案：技能 HUD 的「面向白色轮廓家具按 Q 搜查」「Q 搜查白色轮廓家具」与含半径／张角的 `title` 改为「对着家具按 Q 搜查」「Q 搜查面前的家具」与「对面前的家具或前方区域生效」；`AlphaHudView` 的「Q 抓捕」改为「靠近即可抓捕；Q 搜查前方或面前的家具」。均只改文案，判定逻辑未动。
+- 日志格式 v1.7 → v1.8（只增字段，v1.7 语义不变）：`counts.throwHitsHuman / throwHitsDeepseek`；`doorAccessEvidence`（结果码 + 触发方 + **上锁到被打开的毫秒数**，上限 50）；`humanRouteEvidence`（`lockDecision` / `decisionReason` / `targetDoorId`，上限 200，**与门实际结果分开**）；`captureEvidence`（结算瞬间的 stun / concealed / sprint / 抓捕圈进度与抓捕路径，一局最多 1 条）。三类证据在新局清空；结算证据在结果置位当帧冲写，避免局终断尾。
+- 接线：投掷命中循环里 `recordThrowHit`；`applyDoorResult` 统一推导门动作方并同时计数与留证；`updatePlaying` 中 `lockDecision`/`decisionReason` 变化时 `recordHumanRoute`；三处 `forceCapture` 分别标注 `Q_FAN` / `FURNITURE_CHECK`。
+
+#### 自动化结果
+
+| 检查 | 实际结果 |
+|---|---|
+| 新增定向测试 | `tests/controls-help.test.mjs` 5 项、`tests/ai-log-evidence.test.mjs` 7 项，合计 12/12 通过 |
+| 既有相关测试 | `ai-log-collector`、`ai-log-match-summary`、`cleanup-projection` 全通过（版本号与 counts 期望已同步为 1.8） |
+| 全量 npm test | **985/985 通过**，失败/取消/跳过 0（官方 `npm test`，与 `npm run build` 合并在一次门禁内执行） |
+| TypeScript | `tsc --noEmit` 退出码 0 |
+| 生产构建 | `npm run build` 退出码 0，保留既有「chunk > 500 kB」警告 |
+| diff 检查 | `git diff --check` 退出码 0 |
+| 人工验收 | **未执行**，等待用户浏览器验收（见下） |
+
+#### 人工验收待办（用户执行）
+
+1. 首次进局时说明层自动出现（每个浏览器仅一次），点「知道了」或 Esc 可关闭，且 READY 倒计时与入局节奏不受影响。
+2. 暂停 →「操作说明」可再次打开；恢复、重开、返回阵营选择后不再残留。
+3. 两个阵营各看一遍：Human 不应出现「吃米/冲刺」，DeepSeek 不应出现「强破/搜查」；画面无任何内部数值。
+4. 开发构建导出一局 AI JSON：确认 `doorAccessEvidence` 与 `humanRouteEvidence` 分别有内容、`captureEvidence` 只有一条，`counts.throwHits*` 随投掷命中增长。
+
+#### Git 检查点、已知限制与停止
+
+- **未 add / commit / push / Tag / Release / 部署**。开工前工作区已存在上一轮未提交改动（`src/main.ts`、`src/s13-ui.css`、`src/three/CharacterActionView.ts`、`src/three/DeepSeekGlbModel.ts`、`src/three/StartupView.ts`、两个模型测试与若干 docs），本轮未触碰、未清理。
+- 本轮涉及文件：新增 `src/three/ControlsHelpView.ts`、`tests/controls-help.test.mjs`、`tests/ai-log-evidence.test.mjs`；修改 `src/three/ThreeGame.ts`、`src/three/GameUiLayout.ts`、`src/three/AlphaHudView.ts`、`src/systems/AILogCollector.ts`、`src/game-ui.css`、`tests/ai-log-collector.test.mjs`、`tests/ai-log-match-summary.test.mjs`、本日志与本交接。
+- 已知限制：项目无 DOM 库，说明层的测试只覆盖「文案/数据/菜单组合」，**渲染与点击需浏览器验收**；日志只在 DEV 构建生成；`doorAccessEvidence` 与 `humanRouteEvidence` 各自有上限，超限后不再追加（导出里以条目数体现）。
+- 下一步：等待上述 4 项人工验收。验收通过后再讨论是否用新证据推进 D/E 两条反馈的数值或 AI 条件调整；本轮不宣布任何平衡结论。
+
+### 2026-10-17 首次教学阅读门禁与投掷说明修复
+
+#### 完成内容
+
+- 根据用户截图和授权修复说明层显示期间后台继续对局的问题。ThreeGame在既有帧派发处阻止说明可见时的READY/PLAYING推进，不修改3秒准备时长或GameStateSystem；关闭说明后才继续倒计时。Esc只关闭说明，关闭当帧不推进或切换暂停；阅读期间清理缓存按键。
+- 暂停中重看说明、关闭后均保持暂停。补充投掷命中眩晕3秒、不锈钢盆可再次拾取和其他物品投出不可回收的规则文案。使用ponytail最小改动方式复用现有状态与说明层，没有新增计时系统或依赖。
+
+#### 测试与人工验收
+
+| 检查 | 结果 |
+|---|---|
+| 定向回归 | controls-help共8/8；新增3项执行真实帧派发，覆盖停留20秒不耗READY、关闭后完整倒计时、Esc不穿透及暂停保持 |
+| 全量npm test | 988/988，失败/跳过/取消0 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0；125模块，既有大chunk警告保留 |
+| 差异 | git diff --check通过 |
+| 浏览器 | 当前宿主无可控制标签，未完成真实渲染/点击；等待用户本地复验，不冒充自动化已覆盖 |
+
+#### Git检查点与限制
+
+- 仅修改ThreeGame.ts、ControlsHelpView.ts、controls-help.test.mjs及本交接/追加日志，保留全部已有未提交改动；未修改平衡、AI、地图、素材或输入系统。未暂存、提交、推送、部署、Tag或Release，不更新阶段Gate。
+- 已有首次说明存储标记原样保留，不清用户存储。可暂停重看；首次门禁在未看过说明的浏览器环境验收。此次构建更新了本地dist，腾讯云已部署RC没有改变。
+
+### 2026-10-17 简单Human追捕体验最小试调
+
+#### 完成内容
+
+- 用户要求先处理DP娘难追，未实施捕捉网。按ponytail最小改动及diagnosing-bugs对照方法核对真实AI冲刺入口，将最终变更限制为Human主控/EASY对手AI的approachSprintDistance：6→4.5世界单位。新值在GAME_CONFIG.difficulty.easyDeepseekSprint统一管理，难度类型仅新增该允许字段，普通/困难和其他参数保持。
+- 不改DeepSeekAIController算法、双方实际速度、冲刺持续/冷却/风险规则、AI听觉、门锁、地图、道具、素材或玩家能力。更新平衡目录及难度说明；现有未提交教学/日志/加载修复全部保留。
+- 原候选同时降低近距safeSprintDistance至3.5，定向先红后绿，但首轮全量990/991：20276765追捕后合法退避场景在12000帧预算内HIDE未结算。原配置对照149550ms抓捕结算；单独降低近距仍未结算，单独修改逼近阈值149900ms结算。因此撤回近距变化，原整局预算和断言保留，不修改躲藏系统、不宣称已证明永久软锁。
+- 新测试隔离逼近入口时最初仍混入近距入口；随后用真实高风险进度及先进入逃跑再逼近的输入序列隔离，未修改生产算法以迁就测试。中间失败不计为最终通过。
+
+#### 验证
+
+| 检查 | 结果 |
+|---|---|
+| 实际AI逃跑回归 | 31/31，含3项新测试：近距保留、近距/声音正常、逼近阈值分档生效 |
+| 档位/存储/有效值定向 | 3/3；仅批准对手字段变化，玩家与其他配置保持 |
+| 最终npm test | 991/991；失败/取消/跳过0，原整局不变量通过 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 最终生产构建 | npm run build退出0，125模块，既有大chunk警告保留 |
+| 差异 | git diff --check通过 |
+| 浏览器/真人 | 本轮未执行Chrome/Edge真实试玩，不能宣称追捕体验已解决或胜率平衡 |
+
+#### Git与限制
+
+- 未暂存、提交、推送、部署、Tag或Release，不改变S20 Gate；腾讯云RC及GitHub部署不变。修改文件为gameConfig.ts、difficultyConfig.ts、deepseek-evade.test.mjs、difficulty.test.mjs、GAME_BALANCE_CONFIG.md、DIFFICULTY_DESIGN.md、交接及本追加日志。
+- 仅推迟逼近入口；5单位内仍可能由近距入口冲刺，强声音和出口受阻也可触发，因此不是全局降速。请刷新5173并新开Human简单局试玩；若仍难追，先根据真实追逐记录再决定下一项，不自动扩大调整。
+
+### 2026-10-17 简单DP AI步行与冲刺降速10%本地试调
+
+#### 完成内容
+
+- 用户试玩认为仍快，明确批准仅Human简单难度对手DP AI速度降低10%，保留上一轮冲刺时机覆盖。新增GAME_CONFIG.deepseekAI.movementSpeedMultiplier=1及difficulty.easyDeepseekSprint.movementSpeedMultiplier=0.9；难度类型允许此字段，其他档位默认1。
+- 在ThreeGame实际位移速度点按deepseekAiEnabled乘AI倍率，步行/冲刺均生效；人工DP与DEV临时接管不受影响。默认步行3.45、冲刺5.52世界单位/秒，Human4.14不变，不改持续时间、冷却、风险或抓捕规则。按ponytail最小接入原则复用控制状态与难度快照，不新增系统。
+- 同步s7d-match-sim实际速度公式，避免仿真仍跑旧速度；新增回归执行真实ThreeGame速度表达式，核对两阵营/三档/手动与AI/步行与冲刺。不改地图、素材、道具、门锁、输入或AI决策算法，平衡目录和难度文档同步。
+
+#### 验证与验收
+
+| 检查 | 结果 |
+|---|---|
+| 定向速度与档位保护 | 2/2通过 |
+| 全量npm test | 992/992；失败/跳过/取消0，原整局及锁门不变量通过，未调整预算 |
+| 独立tsc | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0；125模块，既有大chunk警告保留 |
+| git diff --check | 通过 |
+| 浏览器真人 | 本轮未执行，待用户刷新5173并新开Human简单局体验，不冒充手感或胜率通过 |
+
+#### Git检查点与限制
+
+- 涉及gameConfig.ts、difficultyConfig.ts、ThreeGame.ts、s7d-match-sim.mjs、difficulty.test.mjs、GAME_BALANCE_CONFIG.md、DIFFICULTY_DESIGN.md及交接/追加日志；保留全部先前未提交改动。未暂存、commit、push、部署、Tag或Release，不改变线上RC或阶段Gate。
+- 仅简单对手AI降速；其他难度不变，冲刺时仍可能比Human快。此次是待试玩初值，不承诺追捕问题已解决，不添加捕捉网或继续改其他玩法。
+
+### 2026-10-17 简单速度人工确认与DP AI三档梯度
+
+#### 完成内容
+
+- 用户反馈简单速度“可以”，记录为该项追捕手感人工确认，不扩大为完整游戏或阶段Gate验收。用户继续授权按简单速度调整普通/困难；本轮设置Human主控对手DP AI倍率简单0.90、普通0.95、困难1.00，困难不额外加速。
+- 普通0.95统一定义在GAME_CONFIG.difficulty.normalDeepseekMovementMultiplier并进入现有难度快照。按ponytail最小改动原则复用上一轮步行/冲刺位移接线，不重写移动系统；玩家DP及Human、技能时长/冷却/风险、其他AI参数、地图、音频、道具不变。保留简单approachSprintDistance=4.5。
+- 更新真实移动表达式与六组合档位保护回归，以及平衡/难度说明；保留全部此前未提交改动。
+
+#### 验证与人工验收
+
+| 检查 | 结果 |
+|---|---|
+| 定向真实速度/配置保护 | 2/2；双阵营三档、AI与人工控制、步行冲刺 |
+| npm test | 992/992，失败/跳过/取消0；既有整局回归通过 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0，125模块；既有大chunk警告保留 |
+| git diff --check | 通过 |
+| 人工 | 简单由用户明确确认；普通/困难本轮未浏览器试玩，待用户新开局验收 |
+
+#### Git检查点与限制
+
+- 本轮修改gameConfig.ts、difficultyConfig.ts、difficulty.test.mjs、GAME_BALANCE_CONFIG.md、DIFFICULTY_DESIGN.md、交接及本追加日志；未暂存/commit/push/部署/Tag/Release，线上RC不变，不更新阶段Gate。
+- 5173原服务仍监听，刷新、返回阵营选择、选择普通或困难并新开Human局验证；不宣称统计胜率平衡，不继续添加技能或其他优化。
+
+### 2026-10-17 正式进食每份20秒本地试调
+
+#### 完成内容
+
+- 用户明确批准30→20秒；仅将RICE_MAX_PROGRESS_MS.production改为20000，模式仍production，开发5000保留。两阵营/三档共用，五份胜利、400ms准备、移动/松键中断和累计恢复不变。按ponytail最小改动原则，不重写进食、AI估时或HUD；真实接线均读取米状态最大进度。
+- 五份纯进度从150秒变100秒；连续一份至少20.4秒，风险比例仍30%，对应总累计进食30秒，不冒充实际对局耗时。保留所有速度/冲刺/门锁/地图/道具/素材改动边界，不扩展技能。
+- 六组合回归先按新时长执行0/6失败（真实30000不等于20000），修改配置后6/6通过；同步五份总量100000、五秒进度比例1/4、完成前1ms边界及理论最短进食准备总量102000，不删除断言。
+
+#### 验证与历史夹具说明
+
+| 检查 | 结果 |
+|---|---|
+| 六组合20秒进食 | 6/6，准备、中断、恢复、未完成不结算和5/5胜利 |
+| 进食/状态/冲刺定向 | 31/31 |
+| 最终npm test | 992/992，失败/取消/跳过0 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0，125模块，既有大chunk警告保留 |
+| git diff --check | 通过 |
+| 浏览器 | 本轮未执行真实20秒进食试玩，等待用户新开局，不冒充自动测试为真人验收 |
+
+- 初次全量991/992：bathroom固定种子追捕夹具的胜负由DP改为Human，正常抓捕结算并非计时或路径卡死。定向复核确认20秒六组合整局通过，但该历史追逐轨迹要求DP吃完五份。仿真新增显式riceMaxProgressMs夹具参数，该历史用例固定30000并保持原全部胜利/米数断言；正式游戏没有该覆盖入口。20秒仍由六组合production整局和原九组合追捕后退避可达性/结算回归覆盖，预算不变。
+
+#### Git检查点与限制
+
+- 修改gameConfig.ts、difficulty.test.mjs、game-state.test.mjs、rice-field.test.mjs、sprint.test.mjs、s7d-full-match.test.mjs注释、s7d-match-sim.mjs历史夹具参数、平衡/难度文档及交接/本追加日志。保留全部既有未提交工作，不清用户文件。
+- 未暂存、commit、push、部署、Tag或Release；5173原服务仍监听，本地dist已构建，线上RC不变。待用户刷新/新开局确认节奏及双方体验，不标记S20通过。
+
+### 2026-10-17 Human AI强破1秒准备与可见反馈
+
+#### 完成内容
+
+- 用户明确确认20秒进食时间可以，记录为该项体验认可，不扩大为阶段Gate。用户随后要求解决锁门收益低，按此前提出的AI强破约1秒前摇方案进行本地实现。
+- 核对实际链路确认AI原先立即调用玩家共用HumanDoorSkill.use，成功后正常进入30秒冷却；没有把即时开门误称无冷却。新增GAME_CONFIG.humanAI.aiForceBreakWindupMs=1000，通过HumanDoorSkill.tryAiForceBreak仅约束AI请求，连续满1秒才执行原强破，玩家use保持即时。按ponytail最小改动原则复用技能及AI合法交互命令，不改路由选择、普通开锁或PulseLock。
+- 准备期间门保持LOCKED，冷却不消耗；换门、无合法请求、失距、眩晕/人工接管取消准备，暂停不推进，reset清空。AI沿用零方向站门前，INTERACT动作标记增加准备条件；Human可见或DP近处可合法交互此门时，门位置显示一次“正在强行破锁…”，不显示远处隐藏AI位置。没有增加音频或修改素材。
+- 无头仿真同步AI执行入口，保留玩家即时强破路径；平衡目录及难度规范补充配置与行为说明。其他既有改动均保留。
+
+#### 验证
+
+| 检查 | 结果 |
+|---|---|
+| 门技能/AI定向 | 26/26，新增2项覆盖999ms门不打开、1000ms开门并消耗30秒CD、暂停冻结、取消/换门/门已打开/重开清理及玩家即时强破 |
+| 全量npm test | 994/994，失败/跳过/取消0，原整局和门锁可达性回归通过 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0，125模块，既有chunk警告保留 |
+| git diff --check | 通过 |
+| 浏览器 | 本轮未执行实机点击/INTERACT动画和提示验收，需用户在本地复验，不冒充单元测试已覆盖 |
+
+#### Git检查点与限制
+
+- 修改gameConfig.ts、HumanDoorSkill.ts、ThreeGame.ts、s7d-match-sim.mjs、human-door-skill.test.mjs、GAME_BALANCE_CONFIG.md、DIFFICULTY_DESIGN.md及交接/本追加日志。没有修改地图、道具、速度、20秒进食、抓捕、输入或声音系统。
+- 未暂存、commit、push、部署、Tag或Release；5173原服务保留，线上RC不变。此调整保证AI强破前的准备窗口，不保证所有锁门都阻挡AI，绕行仍是合法策略。待用户新开DP对局确认收益，不自动继续其他技能开发。
+
+### 2026-10-17 Human常驻Space强破技能卡修复
+
+#### 完成内容
+
+- 用户截图确认Human右下角只有E和Q，授权补齐Space强破提醒。原AlphaHudView用this.sprint.hidden=!dp隐藏Human卡，且AlphaHudFrame无强破冷却字段；本轮复用原Space卡位和cooldown渲染，按阵营切换冲刺/强破。
+- ThreeGame传入既有HumanDoorSkill的真实cooldownRemainingMs和cooldownMs；Human显示“Space强破·就绪/剩余秒数”及进度，DP继续读取冲刺状态，不把DP的眩晕/冲刺文案串到Human。不新增计时器、CSS、依赖或技能规则，按ponytail原则最小接入，保留此前HUD文案及其他已有工作。
+
+#### 验证
+
+| 检查 | 结果 |
+|---|---|
+| 定向HUD | 修复前2失败/3通过，修复后5/5；覆盖Human常驻、真实剩余秒数向上取整、进度、就绪和切回DP |
+| npm test | 995/995，失败/跳过/取消0 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0，125模块；既有大chunk警告保留 |
+| git diff --check | 通过 |
+| 浏览器 | 本轮未执行实机渲染/交互，待用户刷新5173后检查Human卡位、冷却和阵营切换，不以DOM替身冒充真实画面验收 |
+
+#### Git检查点与限制
+
+- 本轮仅修改AlphaHudView.ts、ThreeGame.ts、alpha-hud.test.mjs及交接/本追加日志。技能数值、破门逻辑、地图、素材、声音和CSS布局不动；未暂存、commit、push、部署、Tag或Release，线上RC保持，不推进阶段Gate。
+- 本地开发服务原监听5173保留。玩家请使用真正锁门强破验证冷却；Space免费打开普通关门不消耗强破冷却，卡片仍就绪属于既有正确规则。
+
+### 2026-10-17 Human E搜查与门交互优先级接入
+
+#### 完成内容
+
+- 用户要求Human Q搜查迁至E，并明确接受门交互优先。Human Q预留但不触发搜查或陷阱；E消费一次，PulseLock面板已开则只操作锁芯，附近门则只开关/解锁（即使受阻也不再搜查），其他情况执行原家具/扇形搜查。DP输入和Human Space不变，未实现捕捉网。
+- 按ponytail原则复用原搜查执行器、目标判定与12秒冷却，不重构输入系统。useSkillQ/resolvePlayerQPlan及日志字段保留兼容名并注明历史含义；Human E调用原执行器，Human Q不调用。HUD卡、角色附近E提示、操作说明和DEV可见文案同步，防止门旁家具提示覆盖门动作，PulseLock中不显示搜查提示。
+- 更新平衡说明中的当前按键，无玩法数值变化；保留全部此前未提交修改。
+
+#### 验证
+
+| 检查 | 结果 |
+|---|---|
+| 输入/HUD/教学/原搜查优先级定向 | 26/26，含4项新回归执行真实handleDoorInteractions：E一次、Q预留、门/锁芯/受阻不双触发、眩晕拒绝、DP Q原动作 |
+| 最终npm test | 999/999，失败/跳过/取消0 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0，125模块，既有chunk警告保留 |
+| git diff --check | 通过 |
+| 浏览器 | 本轮未执行真实键鼠/布局验收，用户需刷新本地新开局；不以夹具测试冒充实机 |
+
+- 新测试最初正则误截方法返回类型，造成4项handleDoorInteractions不存在的TypeError；修正为匹配完整方法后定向和全量重新执行通过。此为测试夹具错误，不当成游戏Bug或忽略失败。
+
+#### Git检查点与限制
+
+- 本轮修改ThreeGame.ts、AlphaHudView.ts、ControlsHelpView.ts、controls-help.test.mjs、alpha-hud.test.mjs、GAME_BALANCE_CONFIG.md、交接/本追加日志，新增human-e-priority.test.mjs。未修改技能数值、AI、地图、素材、声音或InputManager。
+- 5173原服务保留；未暂存/commit/push/部署/Tag/Release，线上RC不变，不改变阶段Gate。后续捕捉网仍须单独授权，Q预留不代表技能已实现。
+
+### 2026-10-17 Human头顶E搜查提示范围修复
+
+#### 完成内容
+
+- 用户截图反馈Human在空地仍显示头顶E搜查。真实currentInteractionPrompt回归复现无条件Human fallback生成提示；按最小诊断/ponytail原则复用playerQTargetResolution的pointedLegalTarget，限定为合法且被指向家具，并排除暴露目标扇形优先情形，不借机调整输入或玩法。
+- 没有目标立即返回null，离开家具不保留旧提示；合法家具可显示就绪/冷却，门提示仍优先。右下角常驻技能冷却、E扇形空挥及抓捕判定、DP提示、Q预留规则均保持，不新增计时器或CSS。
+
+#### 验证
+
+| 检查 | 结果 |
+|---|---|
+| 定向真实提示/输入回归 | 修复前4通过1失败，修复后5/5；空地/非法目标不提示、合法目标提示、离开清除、冷却及门优先 |
+| npm test | 1000/1000，失败/跳过/取消0 |
+| 独立TypeScript | npx tsc --noEmit退出0 |
+| 生产构建 | npm run build退出0，125模块，既有大chunk警告保留 |
+| git diff --check | 通过 |
+| 浏览器 | 本轮未执行真实渲染/操作验收，待用户本地刷新检查，不冒充回归夹具为真人试玩 |
+
+#### Git检查点与限制
+
+- 仅修改ThreeGame.ts、human-e-priority.test.mjs及交接/本追加日志；保留全部已有改动。5173原服务保留，未暂存/commit/push/部署/Tag/Release，线上RC不变，不推进阶段Gate。
+- 搜查本身仍能在空地释放并按原规则消耗冷却，本次只去除误导性的常驻头顶提示；右下角技能卡继续帮助玩家知道可用按键。
+
+### 2026-10-17 Human Q捕捉网本地实现，待人工验收
+
+#### 完成内容
+
+- 用户“行，开始吧”批准新增Human捕捉网。采用ponytail技能复用现有Three.js、CollisionWorld、投掷、HUD和动作入口，不新增依赖、通用技能框架或在线统计系统。
+- Q鼠标选点，左键布置，右键/Esc取消；第一次Esc取消、下一次Esc暂停。2单位范围、600ms原地布置、1秒启动、1.2秒定身、成功放置才起20秒CD、25秒存在且一张，不覆盖旧网。
+- 地图物理校验禁止墙/关闭门/家具/角色重叠，保护米点、真实随机出生和藏身退出；藏身扇形用原半径的包围圆保守禁放。网非实体、不修改导航；DP冲刺也经连续扫掠触网，在原CollisionWorld路径内截停，不倒地、不直接判胜，Human仍需原规则接近抓捕。
+- DP投掷拆网按墙/角色/网的首碰撞决定，待启动网也能拆；不改变盆回收、其他道具消耗或砸人音效条件。网定身与原投掷眩晕取剩余max，不相加；整段控制结束后网免疫2秒，不取消原投掷规则。
+- Human AI仅用当前真实可见目标和已有路线方向提案，每500ms检查，复用同一个放置/冷却/物理校验；没有AI投掷、隐藏位置读取或预测规划。原AI模块及难度参数未改。
+- 新Q技能卡与E搜查/Space强破并存，教学说明已同步；暂停/说明/DEV冻结不推进计时，未成功选点/布置取消不耗CD，已部署网冻结，重开/返回阵营清空。实际地图变化移除旧网但不返CD，dispose清理事件/DOM/几何材质。不改20秒进食、速度档位、门技能数值、InputManager、地图/36件道具布局、模型或音频。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 捕捉网定向 | 新增13项通过；状态计时/取消/冷却/扫掠/隐藏与墙遮挡/控制免疫/公平AI提案/三类拆网回收/真实move与禁放入口/四相机鼠标与持有道具隔离/清理 |
+| HUD、说明、E输入 | 增加独立Q卡、Esc取消再暂停、布置占用E及定身禁用交互；旧Human E/DP Q分工保持。最初两项教学断言仍预留Q与伪按键“小心网”不匹配，已更新授权分工，并将避网规则移到正文而非伪按键 |
+| npm test | 最终1016/1016，失败/取消/跳过0（此前1000基线、首轮新功能1014也通过，最终再含Esc和控制阻断两项） |
+| npx tsc --noEmit | 最终退出0；首轮View材质泛型过宽报错，收紧类型后重新检查通过，未绕过TS |
+| npm run build | 退出0，127模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过；新文件另查行尾空白 |
+| Chrome/Edge真实交互 | 未执行：浏览器连接清单只有无标签页的MCP Apps；不将EventTarget/Three.js夹具或HTTP200当成实际浏览器验收 |
+
+#### Git检查点
+
+- 实际文件清单见docs/CAPTURE_NET_DESIGN.md末节，共16项；其中既有未提交文件只叠加本轮范围，不清理旧工作。新增文件为CaptureNetSystem、CaptureNetView、capture-net测试及设计文档。
+- 未暂存、commit、push、部署、Tag或Release；原main/线上RC保持，不改写历史或S20 Gate，不自动进入S21。原5173服务保留。
+
+#### 已知限制与下一项任务
+
+- 刷新5173按设计文档人工验收：Q选点/取消、布置和网视觉、暂停/重开、冲刺触网、投掷拆网/盆回收、Human AI布网和两阵营三难度。HUD四卡布局及网材质可见性未做真实画面验收。
+- AI只是基于可见目标和当前路线方向布网，不预测或专门绕网；是否有效和平衡待试玩，不能从自动测试推断胜率。等待用户人工反馈，不提交或部署。
+
+### 2026-10-17 去除Human右下角重复E搜查卡
+
+#### 完成内容
+
+- 用户截图指出E搜查已合并进左侧E交互，要求去掉独立卡。按ponytail最小修改，仅AlphaHudView将原alpha-q卡在Human阵营设为hidden，DP仍显示Q锁门，冷却文案仅为DP更新；使用现有hidden样式，不改CSS或输入/搜查冷却逻辑。
+- Human保留E交互（门优先、无门时搜查）/Q捕捉网/Space强破；不动技能效果、数值、AI、地图、道具、模型和音频。同步捕捉网人工验收清单为三卡，既有未提交工作保留。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| HUD定向 | 修改断言后先复现4通过3失败，修改显示逻辑后7/7通过；覆盖Human就绪/冷却始终隐藏、左侧交互保留、Q网/Space不受影响、切回DP恢复锁门卡与冷却 |
+| npm test | 1017/1017，失败/取消/跳过0 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，127模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 浏览器画面 | 本轮未执行；刷新5173确认Human仅E交互/Q网/Space三卡及DP锁门卡保留，不以DOM夹具代替实机 |
+
+#### Git检查点、限制与下一步
+
+- 本轮修改src/three/AlphaHudView.ts、tests/alpha-hud.test.mjs、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志，共5项。未暂存/commit/push/部署/Tag/Release，线上RC和阶段Gate不变。
+- 没有改变实际E搜查及其冷却；只是去除重复的独立卡。等待用户刷新后的画面确认，不自动实施其他UI或玩法调整。
+
+### 2026-10-17 捕捉网禁锢3秒、DP隐藏地面网及扩大布置距离
+
+#### 完成内容
+
+- 用户授权将Human Q捕捉网禁锢改为3秒、DP视角隐藏陷阱、布置范围大一点。复用现有配置/表现层，rootMs从1200改3000，placeRange从2试调为3世界单位（距离增加50%），网本体触发半径0.55不变。
+- CaptureNetView新增信息观察者回调，ThreeGame传selectedFaction是否Human；Human能看到待启动/已启动地面网，DP均不可见，选点预览/范围/选点文案也按观察者隐藏。DEV临时输入接管不会改变可见性。踩中后两阵营仍看到DP身上束缚网，触发/投掷拆网/碰撞权威保持原路径。
+- 教学取消“避开可见地面网”的过时提示；数值索引、捕捉网设计和当前交接同步，既有历史不回改。
+
+#### 自动化测试与人工验收
+
+| 检查 | 结果 |
+|---|---|
+| 定向捕捉网/操作说明 | 22/22；覆盖3000ms到期、范围3与3.01边界/2.5可放、3秒后外部控制和免疫、真实移动截停、DP隐藏待启动/启动网但网仍真实存在、切回Human显示、踩中后束缚效果 |
+| npm test | 1017/1017，失败/取消/跳过0；约51.8秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，127模块；既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| Chrome/Edge实际画面和试玩 | 本轮未执行；待确认DP无地面网、触发后3秒束缚及Human扩大范围的手感，不能用夹具替代 |
+
+#### Git检查点
+
+- 本轮9项：src/config/gameConfig.ts、src/three/CaptureNetView.ts、src/three/ThreeGame.ts、src/three/ControlsHelpView.ts、tests/capture-net.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志。保留各文件已有未提交改动。
+- 未暂存、commit、push、部署、Tag或Release；线上RC与S20 BLOCKED保持，原5173服务PID45208继续运行，无清理备份或私人目录。
+
+#### 已知限制与下一项任务
+
+- 布置距离3为本轮“大一点”的本地试调；AI原行进方向提案距离1.4保持。DP隐藏地面网会降低其主动瞄准拆网的信息，投掷真实命中仍能拆除。两阵营平衡尚待试玩，不宣称验收完成。
+- 刷新5173分别开Human/DP局，确认放置圈、地面隐藏、触网效果/恢复及暂停冻结，再按用户反馈决定下一步。
+
+### 2026-10-17 捕捉网禁锢由3秒改为5秒
+
+#### 完成内容
+
+- 用户明确要求5秒。仅调整GAME_CONFIG.captureNet.rootMs为5000毫秒，同步已有测试的4999+1到期边界、外部控制免疫及真实移动/视图断言。布置范围3、DP隐藏地面网和其他技能数值保持原实现。
+- 修改6项：src/config/gameConfig.ts、tests/capture-net.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。保留已有工作。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| npm test | 1017/1017，失败/取消/跳过0，约51.1秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，127模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 实际浏览器试玩 | 未执行；刷新5173验收5秒禁锢及暂停冻结 |
+
+#### Git检查点、已知限制与下一步
+
+- 未暂存、commit、push、部署、Tag或Release，线上RC及S20 BLOCKED不变。
+- 5秒为用户本轮指定值，实战抓捕手感尚待人工验收；不据自动化通过宣布平衡完成。
+
+### 2026-10-17 四张永久捕捉网及双阵营Q剩余名额圆标
+
+#### 完成内容
+
+- 用户授权捕捉网上限4张和Q右上角圆标，明确DP锁门保持3扇上限；随后指定网永久留场、仅取消自动到期且保留DP投掷拆网。新增GAME_CONFIG.captureNet.maxActiveNets=4，移除lifetimeMs；冷却20秒、启动1秒、禁锢5秒、范围3及AI既有策略参数保持。
+- CaptureNetSystem由单网改为同一权威nets数组，待启动占名额，成功布置扣格、取消失败不扣格，四张满后禁止第五张；触发或拆除只移除对应网，重开/地图应用仍清空。网之间不重叠；触网扫掠选最先合法接触网，已有控制/免疫期间不消耗其余网。
+- CaptureNetView复用固定4个网视图，全部按原信息观察者规则隐藏；ThrowableSystem对全部网比较弹道首接触，仍遵守更近墙/角色优先，销毁仅一张，不改变盆回收/原投掷眩晕与音效。
+- AlphaHudFrame从真实系统提供剩余名额。Human Q显示4→3→2→1→0，DP Q显示3→2→1→0；触发/拆网/解锁/强破释放名额后恢复。圆标用现有卡片的CSS伪元素，零为灰色，数量独立于每帧冷却文字；增加余量aria-label/title。处理既有伪元素mask及响应式padding优先级，避免数字被挖空或遮挡文字。
+- 教学、数值表、捕捉网设计和交接同步；原单网/25秒日志保留作为历史。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 全量npm test | 1020/1020，失败/取消/跳过0，约50.6秒 |
+| 最后定向回归 | 32/32（捕捉网15、HUD8、操作说明9）；在最后教学文字/CSS修正后执行 |
+| 容量和永久性 | 通过真实20秒CD逐次布置4张，推进一小时仍在，第五张失败；踩中释放一格、可补回；重开回4格 |
+| 多网物理和表现 | 反序数组仍先触近网，仅消耗一张；投掷先拆近网，其他网保留；四网Human可见/DP隐藏，束缚效果保留；原控制免疫/取消/输入隔离回归通过 |
+| HUD | Human4→0→恢复，DP3→0→恢复，冷却文本不吞掉圆标、切换阵营不重建DOM |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 最后CSS/教学修正后退出0，127模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| Chrome/Edge真实交互 | 未执行；圆标视觉及实战铺网/拆网/破锁仍需人工验收，不将EventTarget夹具当作真实浏览器 |
+
+#### Git检查点
+
+- 本轮14项：src/config/gameConfig.ts、src/systems/CaptureNetSystem.ts、src/systems/ThrowableSystem.ts、src/three/CaptureNetView.ts、src/three/ThreeGame.ts、src/three/AlphaHudView.ts、src/three/ControlsHelpView.ts、src/game-ui.css、tests/capture-net.test.mjs、tests/alpha-hud.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志。已有未提交工作保留。
+- 未暂存/commit/push/部署/Tag/Release，线上RC和S20 BLOCKED保持，不启动S21。
+
+#### 已知限制与下一步
+
+- 圆标表示剩余同时存在名额，并非本局总次数或技能充能；仍每成功放置后等待原20秒CD。永久仅指本局无自动过期，重开/换地图仍清空。
+- 刷新5173确认Human圆标和四网永久存在、触发/投掷拆网后恢复名额、DP锁门圆标跟随锁数变化；所有实战平衡待人工试玩。
+
+### 2026-10-17 不锈钢盆三次投掷耐久
+
+#### 完成内容
+
+- 用户要求不锈钢盆最多投掷3次，之后损坏不可用。新增GAME_CONFIG.throwables.basinMaxThrows=3，每件盆以remainingThrows独立记录，成功出手扣一次，取消瞄准、无效目标、无法行动、冷却拒绝均不扣。投空/撞墙/砸人/拆网均消耗一次。
+- 第3次仍按原路径完成飞行、命中眩晕/回调音效或拆网；结束后复用USED状态隐藏、禁止拾取。前两次仍500ms落地禁拾；换人回收和场景应用不重置，重开恢复3次。未修改地图36件物品、盆模型或花瓶/盒子一次性规则。
+- 拾取/持有文字显示盆剩余投掷次数，教学说明最多三次；数值表、投掷专项报告、捕捉网拆网说明和交接同步。按ponytail复用现有计数/USED路径，不新建损坏系统或表现资产。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 定向投掷/捕捉网/操作说明 | 47/47；覆盖两阵营交换回收、三次投空/撞墙/命中/拆网、最后一投仍有效且不能回收、独立耐久、应用布局不修复/重开恢复、失败/取消不扣、暂停冻结和持有次数提示 |
+| npm test | 1022/1022，失败/取消/跳过0，约52.6秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，127模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过 |
+| 浏览器实机 | 未执行；待刷新5173验收三次投掷/耐久文字/最后损坏与新局恢复，不将夹具当实机 |
+
+#### Git检查点
+
+- 修改11项：src/config/gameConfig.ts、src/systems/ThrowableSystem.ts、src/three/ThrowableView.ts、src/three/ControlsHelpView.ts、tests/throwables.test.mjs、tests/controls-help.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/CAPTURE_NET_DESIGN.md、docs/verification/THROWABLES_REPORT.md、docs/DEEPSEEK_HANDOFF.md和本追加日志。保留全部既有未提交内容。
+- 未暂存/commit/push/部署/Tag/Release，线上RC和S20 BLOCKED保持；原5173 PID45208继续运行。
+
+#### 已知限制与下一步
+
+- 损坏复用USED后从画面移除，没有新增碎片模型/破裂动画；最后一投仍能播放原命中音效。耐久只在本局记录，不写入场景文件。
+- 刷新5173，用同一盆投三次并回收，确认前两次可再拾、第3次结束后消失且不能拾取、换人不补充、重开恢复，再收集手感反馈。
+
+### 2026-10-17 普通/困难双方AI顺路拾取和误差投掷
+
+#### 完成内容
+
+- 用户明确要求普通/困难两方AI都能拿投掷物砸人、准头较差。新增AIThrowableController，两方复用同一策略，通过原ThrowableSystem.pickup/throw/advanceFlights裁决。简单档不启用；不修改主AI追逃/寻路/门锁/藏身/吃米、速度、36件道具位置或玩家技能数值。
+- 参数统一放GAME_CONFIG.throwableAI：拾取扫描300ms、目标距离1.5～5.5；普通前摇900ms/成功后额外间隔6500ms/误差半径1.25，困难650ms/5000ms/0.9。原800ms出手冷却仍由权威投掷系统检查，AI额外间隔仅限制决策。
+- AI顺路拾原1.2单位可达无遮挡道具，不新增找道具寻路。向当前真实视野可见且未藏身/禁锢/眩晕的对手瞄准，起手固定当时位置加均匀圆盘随机偏差，后续不跟踪或预判。丢视野/越界/受控/接管取消瞄准，重新看到要重新前摇；实际命中仍由飞行/墙/角色扫掠决定，不人为保证命中或漏判。
+- ThreeGame在两方移动完成且刷新当前视野后调用投掷策略，再统一处理飞行/命中。主AI忙于门/搜查/吃米/藏身/冲刺/布网时不叠加投掷，受控目标不被补投；共用原玩法时钟，暂停/说明/冻结不推进。接管/地图应用取消准备，新局重置；可见AI起手显示“准备投掷…”，原持有模型和朝向接入，不添加瞄准线或暴露目标点。
+- throwActors.canAct去掉人工控制身份限制，保留动作物理门禁；鼠标/F输入仍只选择原controlledFaction。AI执行权使用既有shouldRunHumanAI/shouldRunDeepSeekAI和动作互斥条件，没有新增生产DEV入口。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 新定向tests/ai-throwable.test.mjs | 10/10；双阵营/两档/三类道具真实拾取与飞行命中、前摇到期、固定快照不追踪、误差分布边界、简单/控制/隐藏/眩晕/禁用保护、丢视野/墙/距离取消、玩法时钟/长间隔及真实ThreeGame投掷接线 |
+| npm test | 1032/1032，失败/取消/跳过0，约50.5秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块；既有chunk>500kB警告保留 |
+| git diff --check | 通过；新增文件另检查行尾空白 |
+| Chrome/Edge真人或实际浏览器试玩 | 未执行；普通/困难两个阵营的自然拾取频率、警告可读性、走位躲避、准头和压迫感待人工验收 |
+
+#### Git检查点
+
+- 本轮9项：新增src/systems/AIThrowableController.ts、tests/ai-throwable.test.mjs；修改src/config/gameConfig.ts、src/three/ThreeGame.ts、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志。保留各文件已有未提交工作及全部验证/私人材料。
+- 未暂存/commit/push/部署/Tag/Release；线上RC和S20 BLOCKED保持，未进入S21。原5173服务PID45208继续运行。
+
+#### 已知限制与下一步
+
+- 仅顺路拾取，AI不会为了道具改道跨房间搜寻；实际投掷频率受原路线、附近道具、当前视野和更高优先级动作影响，不保证每局都有相同投掷次数。
+- 独立随机源运行时Math.random，可注入固定源做定向验证；不声称固定出生种子可重放所有投掷随机数。偏差参数不是固定命中率，未做真人胜率统计。
+- 旧无头整局仿真未集成本轮AI投掷；其原有回归通过不能当作这轮自然完整对局验证。刷新5173选择普通/困难、两阵营分别试玩；观察AI拾取持有、起手提示、走位躲避，回归隐藏/受控不追投、暂停冻结、盆3次耐久以及简单未启用。
+
+### 2026-10-17 三档投掷准头与Human AI布网/中网后追捕节奏
+
+#### 完成内容
+
+- 用户要求投掷准头随难度上升、Human AI按难度布网，简单少布且慢点靠近、困难多布；另明确确认简单也要投掷但准头很差。新增C.throwableAI.EASY配置1300ms前摇/9000ms成功后间隔/1.8单位误差半径；普通900/6500/1.25、困难650/5000/0.9保持，AIThrowableController移除旧简单禁用条件。
+- 新增C.captureNetAI三档主动布网预算1/2/4张、提案间隔5000/1500/500ms、看到DP中网后的靠近等待1200/500/0ms。旧captureNet.aiCheckMs移除，ThreeGame提案与反应等待都读取现有throwables.nowMs，不新增玩法时钟或技能冷却。
+- 主AI原有空闲合法分支调用tryHumanAiNet，只使用当前可见目标/自己的原行进方向，仍经CaptureNetSystem/CollisionWorld完整校验。未到提案间隔、预算满、CD未好、目标不可见/仍中网时不再布网。AI预算限制主动新放，不修改已有网、玩家Human上限或场上4张总上限。
+- humanNetReactionWaiting仅在Human AI真正目视中网DP时起一次反应等待；等待阶段不执行Human AI动作并将实际移动方向置零，连续看见不重复起算。失去可见中网状态或手动接管后不继续限制，暂停/说明/冻结不推进，新局清空状态。基础速度、AI寻路、抓捕半径/350ms连续抓捕判定不改，已在原抓捕圈内不增加免抓保护。
+- 同步难度设计、数值配置索引、捕捉网说明和当前交接，保留旧日志及全部既有工作。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 定向AI投掷/捕捉网 | 31/31；投掷覆盖三档两方三类道具、误差梯度/前摇/间隔、真实弹道和门禁；捕捉网新增真实宿主1/2/4预算/玩家4格、5s/1.5s/0.5s提案边界、目视根状态1.2s/0.5s/0等待、实际Human方向表达式及暂停/接管边界 |
+| npm test | 1038/1038，失败/取消/跳过0，约49.9秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| Chrome/Edge实际浏览器/自然对局 | 未执行；三档两方准头、Human布网数量和中网后靠近节奏待人工验收 |
+
+#### Git检查点
+
+- 本轮10项：src/config/gameConfig.ts、src/systems/AIThrowableController.ts、src/three/ThreeGame.ts、tests/ai-throwable.test.mjs、tests/capture-net.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志；部分原为未跟踪或已有改动，均保留。
+- 未暂存/commit/push/部署/Tag/Release，不修改线上RC或S20 BLOCKED，不进入S21。
+
+#### 已知限制与下一步
+
+- 难度“准头上升”通过缩小误差圆和缩短前摇实现，不保证某一局/某一发困难必然更准，不声称固定命中率或胜率。简单/普通的中网等待只减慢AI靠近，不改变原抓捕规则，也不赋予已贴身玩家免抓时间。
+- AI布网数量为预算上限，实际还受视野/路线方向/禁放点和原20秒CD限制，不能保证每局铺满。较低难度接手已有更多网时不删除，只停止继续新放。
+- 刷新5173分别测试两方三档：简单也会捡物和投掷但易躲、普通居中、困难更准；DP主控检查Human布网数量和中网后反应；回归玩家4网、5秒禁锢、永久留场、盆3次耐久、暂停/重开。旧无头整局仿真未集成网/投掷，不将其通过当本轮自然完整对局验证。
+
+### 2026-10-17 修复AI边追边投的过期落点，困难准头和距离试调
+
+#### 完成内容与根因
+
+- 用户反馈困难AI投掷只出一个模型身位。按diagnosing-bugs建立真实控制器/投掷系统回归：起手目标x=3，困难Human前摇650ms内按3.1464单位/秒追赶、DP按3.8333单位/秒前进，出手时Human x=2.04516、DP x=5.4916667、真实间距3.4465067；旧落点仍x=2.3636039，计划只飞0.3184439。无墙且未执行飞行命中，排除墙裁剪/落地提前终止；物理射程一直是6，并非只允许一身位。
+- 对照静止发射者时同样随机误差计划飞2.3636；只有前摇期间前进的发射者会逼近旧落点。新增collapse回归先运行失败（0.3184<2），修复后通过。此前测试虽移动过目标，却未包含发射者追赶移动，漏掉了这个真实调用链路。
+- AIThrowableController前摇期间保留原快照，出手时依据当前仍真正可见的目标刷新一次落点，保留起手同一份随机误差。继续不使用隐藏坐标、速度预判或投出后追踪；失去视野/越界/受控仍取消。修复共用AI路径，不改变玩家投掷、弹道/碰撞或输入。
+- 困难C.throwableAI.HARD.aimErrorRadius从0.9调0.55，并新增HARD.maxTargetDistance=6；简单/普通误差和5.5目标门槛不变。困难仍受原玩家物理射程6和首接触裁决，不穿墙或强制命中。前摇/出手间隔、盆3次耐久/命中音效、AI布网/追捕反应和地图不改。
+- 同一个原复现场景修复后计划飞3.0575979，落点相对当前目标误差0.3889087；不再落在发射者脚边。数值索引/难度文档/交接同步，旧历史保留。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 原症状回归 | node --experimental-strip-types --test --test-name-pattern 'collapse a clear' tests/ai-throwable.test.mjs；先失败，修复后1/1通过；内联同场景探针亦复验3.0576计划距离 |
+| 定向AI投掷与基础投掷 | 37/37；新增困难两阵营5.9可投/6.01拒绝及物理6上限，更新为前摇不追踪/出手刷新一次/飞行不追踪；原取消/视野/眩晕/三次耐久等保护通过 |
+| npm test | 1040/1040，失败/取消/跳过0，约60.1秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块，保留既有chunk>500kB警告 |
+| git diff --check | 通过；未添加生产日志或持久诊断探针 |
+| 真实Chrome/Edge试玩 | 未执行；用户刷新5173复验困难双方边追/边逃投掷距离与准头，不将固定夹具当真人对局 |
+
+#### Git检查点
+
+- 本轮7项：src/config/gameConfig.ts、src/systems/AIThrowableController.ts、tests/ai-throwable.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志。其余既有改动/备份保留，未读取私人目录。
+- 未暂存/commit/push/部署/Tag/Release，线上RC和S20 BLOCKED保持，未进入S21。
+
+#### 已知限制与下一步
+
+- 这是对已复现“追赶时向旧世界落点出手”的修复和困难误差/距离试调；附近真实墙/家具仍可让投掷合法提前落地。刷新后若仍仅飞一个身位，需要区分是否受墙/家具真实截挡，不宣称消除了所有短投来源。
+- 不预测玩家后续速度，弹体飞出后固定落点，运动玩家仍可躲避；不承诺困难命中率。原回归探针仅在命令行执行，无需删除用户材料或关闭5173服务。
+
+### 2026-10-17 困难AI缩小误差并加入用户批准的有限走位预判
+
+#### 完成内容
+
+- 用户要求困难更准；经明确选择“缩小误差，并加入有限走位预判”，本轮授权扩大到困难的短时预判。HARD.aimErrorRadius从0.55改0.25，新增GAME_CONFIG.throwableAI.HARD.leadTimeMs=600（毫秒）、maxLeadDistance=2.4（世界单位）。简单/普通参数和不预判逻辑保持。
+- AIThrowableController记录前摇开始时真正可见的目标位置和原玩法时间，出手时用准备期间可见位置变化估计平均速度，预测时长不超过配置及弹体实际飞行时间，预测位移分量最多2.4，再叠加起手同一份随机误差。只在HARD出手那一帧使用，不读取玩家输入、未来路径或墙后位置；原丢视野/受控/接管取消会同时丢弃运动估计。
+- 仍共用6单位物理射程与墙/角色首接触，不强制命中；前摇650ms、额外投掷间隔5000ms保留。出手后落点固定，不会跟随玩家新变向。地图、速度、网、音效与盆3次耐久均保持。
+- 数值表/难度设计/交接同步，旧“不预判”历史日志不回改；当前仅困难按本轮授权例外。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 直线跑动反馈回路 | 修改前真实飞行无法命中直线逃跑夹具，新增用例先失败；修复后可拦截同场景，玩家出手后拐弯能躲，飞行终点不变 |
+| tests/ai-throwable.test.mjs | 17/17；新增困难有限预判/直线命中与变向躲避、两阵营三档2.4位移上限和困难独享、丢视野后清空估计/重新准备；既有三类道具/准头梯度/射程/暂停/动作门禁回归通过 |
+| npm test | 1043/1043，失败/取消/跳过0，约63.1秒 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过 |
+| Chrome/Edge真实试玩 | 未执行；困难两方的实际准头/走位躲避/压迫感待刷新5173验收，不把控制夹具当自然对局 |
+
+#### Git检查点
+
+- 本轮7项：src/config/gameConfig.ts、src/systems/AIThrowableController.ts、tests/ai-throwable.test.mjs、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志；保留既有未提交工作及备份。
+- 未暂存/commit/push/部署/Tag/Release，线上RC与S20 BLOCKED保持，未进入S21。
+
+#### 已知限制与下一步
+
+- 采用前摇内连续可见位置的平均变化，不是完美速度测量；玩家中途拐弯/加速能让预测失效。接近最大射程且向外远离时，原6单位射程仍可能无法拦截，绝不通过额外射程或必中判定补偿。
+- 预判位移上限2.4不含另叠加的随机误差0.25；最终落点仍过原物理射程/墙裁剪。不承诺特定命中率或真人平衡。
+- 刷新5173用Human/DP各试困难：直线走动更容易被拦截，出手后变向仍可躲；回归简单/普通未增加预判、暂停/隐藏取消及盆耐久，再按用户反馈微调。
+
+### 2026-10-17 Human搜查从E独立迁移至V
+
+#### 完成内容
+
+- 用户提出E连按易误放搜查，最初选择C，实施中明确改成V；最终以V为准。移除Human E无门时的搜查回落，E仍开关门/锁芯，V独立走原useSkillQ兼容执行器，原12秒冷却、家具/扇形判定、AI搜查、Q捕捉网、Space强破及DP按键保持。
+- PulseLock开启/刚打开、眩晕及捕捉网瞄准/布置时消费V但不执行，避免解除状态后补放。V可在普通门附近独立搜查，不需要远离门；DP的V不触发搜查。
+- 复用原HUD卡显示V搜查真实冷却，不显示锁门数量圆标；Human Q网及DP Q锁门数量保留。头顶合法家具搜查提示按键/按住反馈改V，空地不显示；教学及DEV文案同步。最终没有修改DEV Z/C/X视角分支或InputManager，不调整任何平衡值。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 分流/HUD/教学/生产工具定向 | 29/29；E重复20次不搜查，V单次释放、C不搜查、门旁V、PulseLock/眩晕/布网互斥、阻塞V不延迟释放、DP及生产视角隔离保持 |
+| npm test | 1044/1044，失败/取消/跳过0，约60秒；完整输出在系统临时目录rice-human-v-search-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过；保留既有LF/CRLF提示，不转换无关文件 |
+| Chrome/Edge真实键鼠/布局 | 未执行；测试使用方法VM与DOM替身，不代表浏览器验收 |
+
+#### Git检查点
+
+- 本轮文件：src/three/ThreeGame.ts、src/three/AlphaHudView.ts、src/three/InteractionPrompt.ts、src/three/ControlsHelpView.ts、src/game-ui.css；tests/human-e-priority.test.mjs、tests/alpha-hud.test.mjs、tests/controls-help.test.mjs；docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- 只修改本轮按键与提示相关内容，保留所有既有未提交工作和备份；索引空，HEAD/origin/main及只读ls-remote main仍为历史RC部署提交e9f361fce9dd5f392e2165ec2cf0b5f1148ed108。未暂存/commit/push/部署/Tag/Release，S20 BLOCKED与线上RC不变。
+
+#### 已知限制与下一步
+
+- 5173原服务PID45208仍运行，未终止进程。请刷新后Human连续按E开关门，确认不消耗搜查；V测试家具/前方搜查与原冷却；Q布网、Space强破及DP原按键回归。Human右下角现在有独立V卡（不是重复E卡），真实屏幕排版待确认。
+- 本轮没有发布，线上RC仍是旧版本；不自动进入下个功能或正式发布。
+
+### 2026-10-17 Human家具搜查并入E，V仅前方扇形抓捕
+
+#### 完成内容
+
+- 用户要求分开家具搜查与人物前方扇形，并明确“家具并到E，V是前方扇形抓捕”。Human E维持PulseLock/门优先，无门才重新解析当前合法且被指向家具；无目标/家具执行失效不耗冷却、绝不回退扇形。V只传扇形目标，不选家具；玩家扇形在隐藏者藏身时传null，避免扫家具搜出隐藏者。AI仍走原独立搜查，不改共享几何函数。
+- 复用原useSkillQ兼容执行器及resolvePlayerQPlan，以调用方明确用途传互斥目标；E合法搜中/搜空、V命中/空挥共用原12秒SkillCooldown，不新增计时或数值。E/V同帧先E，家具成功后同一冷却阻止V二次释放。Q捕捉网、Space强破、DP按键及DEV视角工具保持。
+- 家具白色可用高亮、E提示不再受暴露目标压制；门旁仍优先显示E门提示，空地不常驻家具提示。V卡改“扇形抓捕”，教学/DEV文案和数值规则索引同步明确共用冷却；没有另加E技能卡。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 定向输入/执行器、HUD、教学、原计划兼容 | 36/36；真实方法VM验证E空地不耗、E家具不被暴露目标改道、失效不回退、V不选家具、E/V共用冷却及同时按互斥；真实扇形函数验证隐藏者不读家具目标、暴露者距离/角度/墙遮挡保持 |
+| 初次定向夹具 | 34/36：原DP夹具无附近门导致实际锁门入口未调用、扇形命中夹具缺feedback.show；补齐测试依赖后36/36，不为夹具改变生产规则 |
+| npm test | 1047/1047，失败/取消/跳过0，约61.5秒；完整输出位于系统临时目录rice-e-furniture-v-fan-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块，保留既有chunk>500kB警告 |
+| git diff --check | 通过；未转换无关文件行尾 |
+| Chrome/Edge真实键鼠/布局 | 未执行，方法VM/DOM替身并非浏览器或真人验收；刷新5173人工确认 |
+
+#### Git检查点
+
+- 本轮修改：src/three/ThreeGame.ts、src/three/AlphaHudView.ts、src/three/ControlsHelpView.ts；tests/human-e-priority.test.mjs、tests/alpha-hud.test.mjs、tests/controls-help.test.mjs、tests/player-q-priority.test.mjs；docs/GAME_BALANCE_CONFIG.md、docs/S7C_HIDE_RANDOMIZATION_DESIGN.md、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- 索引空；开工HEAD/origin/main及远端只读ls-remote一致，原历史RC部署提交保持。未暂存/commit/push/部署/Tag/Release；保留全部既有未提交工作和备份，未读取私人目录，S20 BLOCKED不变。
+
+#### 已知限制与下一步
+
+- 两功能虽分键，仍共用12秒冷却；这是本轮保留原平衡的实现，不代表已授权独立冷却。E仅合法家具才释放，V空挥照常耗冷却；普通贴身自动抓捕不变。
+- 刷新5173，依次测空地/门旁/家具旁E，面向家具且前方有暴露DP时E只搜家具、V只抓角色，DP藏身时V无效但E可搜出；查看E家具提示、V卡、共用冷却、Q网及两阵营回归。5173原进程45208保持；线上仍旧RC，未发布。
+
+### 2026-10-17 V扇形特效随Human移动（仅表现）
+
+#### 完成内容
+
+- 用户澄清希望扇形跟随Human移动，才实施本轮。根因为HideSearchView.show仅在释放时设置世界坐标，后续advance仅推进透明度，没有玩家移动后的位置接线；并非碰撞、输入或抓捕失败。
+- HideSearchView.followPlayer只在剩余特效时长大于零时更新玩家扇形位置，ThreeGame在碰撞解析后的移动结束处调用。扇形朝向继续保留施法快照，原120ms淡入/140ms停留/260ms淡出不重启，网格和几何复用。
+- 根节点仍保持单位变换，家具白色高亮、命中反馈及AI扇形/轮廓世界坐标不被平移。真实V抓捕只在释放瞬间算一次，不新增逐帧命中、移动扫人或冷却刷新；E/V分工、12秒共用冷却、AI、Q网/Space、地图/音频/数值保持。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 原问题回归 | 真实ThreeGame移动后帧接线片段+真实Three.js网格，修复前失败：Human X从2到3，扇形仍为2；修复后随多次XZ移动，其他世界对象不动 |
+| 定向表现/玩家技能回归 | 16/16；释放计数仅1，朝向/几何不变、总520ms自然消失，结束/reset不复活；既有E/V互斥、隐藏者/墙/距离判定保持 |
+| npm test | 1048/1048，失败/取消/跳过0，约62.6秒；完整输出在系统临时目录rice-v-fan-follow-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过，未加生产探针/日志或新依赖 |
+| Chrome/Edge画面 | 未执行；真实Three.js夹具不等于浏览器画面验收，待刷新5173人工确认 |
+
+#### Git检查点
+
+- 本轮6项：src/three/HideSearchView.ts、src/three/ThreeGame.ts、tests/hide-search-view-player-target.test.mjs、docs/S7C_HIDE_RANDOMIZATION_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志；保留原未提交工作与备份。
+- HEAD/origin/main与远端只读ls-remote一致，索引为空，无合并/变基状态；未暂存/commit/push/部署/Tag/Release，原线上RC及S20 BLOCKED保持。
+
+#### 已知限制与下一步
+
+- 本轮只跟随位置，不随走位重新转向，朝向仍是按V时方向；跟随特效不是持续有效抓捕区域。若要持续命中或改变朝向判定，需要另行授权玩法调整。
+- 原5173服务PID45208复用未终止。刷新后Human边移动边按V看短暂扇形随位置移动，家具描边不跟着走，E家具/Q网/Space仍正常；不自动发布。
+
+### 2026-10-17 Human技能卡文案按用户图片统一
+
+#### 完成内容
+
+- 用户提供技能文案图片并授权调整。Human E说明改「开门 · 搜查」（标题仍交互），V名称保持「扇形抓捕」，Q改「布设捕捉网」，Space改「强行破门」。Human技能名称/状态用换行与pre-line双行显示，就绪为「技能就绪」，冷却仍读原剩余时间并显示「冷却 Ns」。没有照搬图片二乘二布局，不改现有卡片顺序或尺寸规则。
+- 布网中/满额等实际状态覆盖就绪提示，Q网数量圆标和DP锁门圆标保留；冷却条仍读原权威数据。DP保持原单行名称/就绪/冲刺状态文案。操作说明同步Q/Space技能名称，原详细规则保留。
+- 未修改ThreeGame输入/判定、E家具/V扇形分工、共用冷却、网/破门功能或GAME_CONFIG；未新增依赖与表现计时器。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| HUD/教学定向 | 17/17；核对Human三技能完整名称/技能就绪、真实冷却、布网状态/容量圆标，DP切回保持原文案 |
+| npm test | 1048/1048，失败/取消/跳过0，约62.4秒；完整输出在系统临时目录rice-human-skill-copy-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过；既有行尾提示不涉及无关格式改写 |
+| Chrome/Edge排版 | 未执行；DOM替身只验证文案/状态，不等于真实排版验收 |
+
+#### Git检查点
+
+- 本轮7项：src/three/AlphaHudView.ts、src/three/ControlsHelpView.ts、src/game-ui.css、tests/alpha-hud.test.mjs、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md和本追加日志。
+- 基线HEAD/origin/main与远端只读ls-remote一致，索引空，无合并/变基；未暂存/commit/push/部署/Tag/Release。保留已有工作和备份，S20 BLOCKED与线上RC不变。
+
+#### 已知限制与下一步
+
+- 仅Human文案与双行显示调整，不改变布局。较长Q/Space名称的实际屏幕排版仍待刷新5173人工确认，同时看冷却、满网圆标及DP切回；5173原服务PID45208复用未停止，不自动发布。
+
+### 2026-10-17 Human技能卡两列轻量便签排版
+
+#### 完成内容
+
+- 用户截图反馈上一版双行文字视觉粗重，授权范围按当前外观优化理解，本轮只修改game-ui.css的Human选择器。沿用原DOM与文本，用两列等宽Grid、最大400px和窄屏边距形成右下角紧凑四卡，不再横排占据大段场景。
+- 四卡统一最小高度/内边距、16px圆角及轻阴影；技能卡display:block使first-line能单独显示14px/650名称，状态沿用11px/400淡色。Q圆标固定右上10px，保留右侧空间；冷却条减为2px低透明度。技能逻辑、文案、数量/冷却权威及DP样式不改。
+- 没有新建UI组件/图标依赖，没有改模型、地图、AI、输入或玩法数值；不宣称截图已经验收。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| npm test | 1048/1048，失败/取消/跳过0，约61.6秒；系统临时目录rice-human-skill-layout-tests.log保留完整输出 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，128模块；既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 浏览器连接检查 | cua.getState只返回无标签页MCP Apps，未提供可操作Chrome/Edge；未完成真实截图/计算布局验收，不以自动化通过代替美观验收 |
+
+#### Git检查点
+
+- 本轮4项：src/game-ui.css、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志；保留所有已有改动和备份。
+- HEAD/origin/main及远端只读ls-remote一致，索引为空，无合并/变基状态；未暂存/commit/push/部署/Tag/Release，线上RC及S20 BLOCKED保持。
+
+#### 已知限制与下一步
+
+- 视觉效果待刷新5173人工确认：两列宽度、高度、标题/状态层级、Q圆标与长名称、暂停/布网提示及DP原布局。尤其低分辨率场景可能需要按实际反馈微调，不预先宣称无遮挡。
+- 5173原服务PID45208保持运行，未停止任何未知进程；不自动发布。
+
+### 2026-10-17 纠正误解：恢复横排，仅精简Human技能措辞
+
+#### 完成内容
+
+- 用户澄清“文案，不是卡片排列”，经询问明确选择改文字措辞而非字号/行距。先仅撤回本代理上一轮添加的两列Grid及卡片尺寸/内边距/字重/圆标/冷却条覆盖，恢复原横排和原CSS，不覆盖其他历史改动。
+- Human HUD名称精简为E交互（副文案开门·搜查）、V抓捕、Q布网、Space破门；状态“技能就绪”改“就绪”，冷却表达为“冷却 N 秒”。名称/状态仍双行，DP原文案和状态保留。Q title保留捕捉网全称，V title和操作说明保留扇形及原详细规则，布网中/满额提示不变。
+- 没有修改按键、技能判定、共用冷却、AI、输入、地图、模型、音频或玩法数值；不将上轮布局误改当作用户验收通过。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| HUD定向 | 8/8，核对简称/就绪/中文冷却秒数/网状态及容量圆标，DP切回保持 |
+| 最终npm test | 1048/1048，失败/取消/跳过0，约48.9秒；系统临时目录rice-concise-skill-copy-tests.log |
+| npx tsc --noEmit | 文案最终改动后独立执行退出0 |
+| npm run build | 最终改动后退出0，128模块，保留既有chunk警告 |
+| git diff --check | 通过 |
+| 真人浏览器画面 | 未执行，刷新5173确认原横排及新措辞；不冒充画面验收 |
+
+#### Git检查点
+
+- 本轮6项：src/game-ui.css（仅撤回误加样式）、src/three/AlphaHudView.ts、tests/alpha-hud.test.mjs、docs/CAPTURE_NET_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- HEAD/origin/main与远端只读ls-remote一致，索引空，无合并/变基；未暂存/commit/push/部署/Tag/Release，保留既有工作和备份，线上RC及S20 BLOCKED不变。
+
+#### 已知限制与下一步
+
+- 原横排及原字号字重已恢复；本轮是精简措辞，不是另一轮排版设计。若需要保持参考图的长名称，应按用户进一步指示调整，不能再擅改布局。
+- 请刷新5173检查E交互/V抓捕/Q布网/Space破门、就绪/冷却中文秒数及网容量状态，不自动发布。
+
+### 2026-10-18 仅困难夜间盲追：双向视觉限制与对手不渲染
+
+#### 完成内容
+
+- 用户提出夜晚场景、玩家任一阵营画面不显示对手，并批准“双方向都受限制”；随后特别强调简单/普通不改。本轮困难才启用冷蓝夜景和对手根节点渲染隐藏，玩家近距离也不会重新显示对手。AI不是完全失明：两阵营Vision视距上限首轮试调3世界单位，声音/米痕及Last Seen沿用原规则，不新增透视信息。
+- 新增GAME_CONFIG.difficulty.hardNightVisionRange=3（单位/用途/默认值注释齐全），VisionSystem接收动态上限，取原运行时视距与夜间上限min；默认调用保留无限额外上限，简单/普通不变，DEV调大基础视距也不能越过夜间上限。不改保存的DEV预设或全局基础11。
+- HardNightView复用原半球光/方向光，保留日间背景/色彩/强度，困难换月光补光，菜单/简单/普通精确恢复；不改材质贴图/地图或灯光阴影相机。夜间只在渲染前设置角色visible，随后接地影、手持物更新使用同一显示门禁；实际物理角色、碰撞、抓捕/冷却/canAct、HideSystem不变。
+- 手持道具采用独立renderVisible，不复用玩法hidden；敌方手持物不显示，已投出的道具和地面36件道具仍显示。Human观察者看不到隐藏DP身上网的轮廓，DP自身中网效果保留；网实体/定身和地面网阵营规则不改。隐藏Human时也抑制其AI搜查扇形/轮廓，保留真实搜查。世界坐标反馈保留自身位置警告，不用远处浮字钉住隐藏对手。
+- 正式信息观察者仍selectedFaction，临时DEV输入接管不改变观察者；DEV场景编辑器恢复原白天/角色显示以保护作者流程，离开再切回夜间，不取消对局或修改AI感知数据。难度说明提示夜间规则，完整方案及待人工清单在docs/HARD_NIGHT_MODE_DESIGN.md。
+- 此前针对“眼前藏身”的0.8秒断视线提案未获单独批准，未搭车实施；本轮没有改AI藏身决策、速度、技能数值、地图/36物点或模型/音频文件。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 夜间/感知/网/投掷定向 | 62/62；新增夜间6项，覆盖两阵营三档、身体/GLB根/接地影、持有/飞行道具、身体网、原光色恢复、菜单/DEV编辑、真实Vision接线/墙/Last Seen过期、自己警告保留与敌方定位浮字拦截 |
+| npm test | 1054/1054，失败/取消/跳过0，约60.8秒；系统临时目录rice-hard-night-tests.log保存完整输出 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过；未添加生产诊断探针或外部依赖 |
+| Chrome/Edge画面/自然夜间完整对局 | 未执行；真实Three.js/方法VM验证不是浏览器实机或玩家平衡验收，必须刷新5173人工补验 |
+
+#### Git检查点
+
+- 本轮14项：src/config/gameConfig.ts、src/config/difficultyConfig.ts、src/systems/PerceptionSystem.ts、src/three/ThreeGame.ts、src/three/HardNightView.ts、src/three/ThrowableView.ts、src/three/CaptureNetView.ts、src/three/HideSearchView.ts、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- HEAD/origin/main与只读远端main核对一致，索引为空，无合并/变基；未暂存/commit/push/部署/Tag/Release，保护既有工作/备份，未读取私人目录；线上RC及S20 BLOCKED保持。
+
+#### 已知限制与下一步
+
+- 当前定义是玩家画面永远不渲染对手、AI可在最多3单位内真正目视；它是双方受限制，并非两者完全相同的感知能力。声音/米痕仍可驱动AI行动，不能把远处仍有寻路行为直接判为透视；需核对Last Seen/听觉线索。
+- 原无头整局测试仍是原玩法仿真，不能冒充本轮夜景/不渲染条件下的真人平衡数据。原v6加载/兜底状态未改，困难看不见对手是有意显示规则，不应误认成模型丢失。
+- 5173原服务PID45208复用；两方各自然试一局困难，评价亮度、声音可读性、投掷/网/抓捕可玩性，再切简单/普通确认白天及对手恢复。浏览器实机未验证，不承诺特定胜率；不自动发布或进入S21。
+
+### 2026-10-18 困难视野显形修正：看见对手时显示模型
+
+#### 完成内容
+
+- 用户明确“Human看到了AI DP时要显示其身影”，纠正上一轮把屏幕隐藏理解为永久隐身的实现。根因不是Vision没发现目标，而是HardNightView按主控阵营一律关闭对手根节点，完全未读取当前视觉结果。
+- 新增ThreeGame.opponentVisible，只读取selectedFaction当前Vision.visible，不使用Last Seen。HardNightView、手持道具renderVisible、身体网、AI检查表现和世界反馈接入同一当前可见性；近距无遮挡显形，超距或墙门遮挡隐藏，重新目视立即恢复。真实家具藏身继续优先，不会因为靠近而绕过。
+- 夜间灯光和3单位视觉上限保持，不改AI状态、速度/能力、碰撞、抓捕、输入、地图/36物点/模型/音频文件；简单/普通继续原白天和显示规则。难度描述改“视野内才显示对手”，设计/数值/交接同步；旧永久隐身日志作为历史保留，不回改。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 新增显形反馈回路 | 真实Vision+真实渲染接线：修复前近距无遮挡、Vision已visible但模型false，新增用例失败；修复后两阵营均完成显形/超距隐藏/墙挡隐藏/重获视野显形，Last Seen不留模型，真实藏身不破坏 |
+| 夜间定向 | 7/7；既有简单/普通恢复、影子/手持物/身体网及AI显示门禁回归保持 |
+| npm test | 1055/1055，失败/取消/跳过0，约61.4秒；系统临时目录rice-night-visibility-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块，保留既有chunk>500kB警告 |
+| git diff --check | 通过 |
+| 真人Chrome/Edge画面 | 未执行；刷新5173进困难局，靠近/隔墙/拉远/重新接近验证。夹具不是浏览器画面或平衡验收 |
+
+#### Git检查点
+
+- 本轮9项：src/three/HardNightView.ts、src/three/ThreeGame.ts、src/config/difficultyConfig.ts、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- HEAD/origin/main与远端只读核对一致，索引空、无合并/变基；未暂存/commit/push/部署/Tag/Release，原工作/备份及线上RC保留，S20仍BLOCKED。
+
+#### 已知限制与下一步
+
+- 当前Vision沿用原系统的范围与墙门遮挡，不新增“只看角色面前某个角度”的视锥；本轮只修显形与感知脱节，未调整3单位范围。若要改朝向视锥或视距，另按用户要求确认。
+- 刷新5173，两方分别确认当前视野内模型/手持物/影子同步显示、失去视野同步隐藏、家具藏身仍隐藏；简单/普通不变，夜间亮度与真人平衡仍待验收。不自动发布。
+
+### 2026-10-18 困难显形规则B：无遮挡不限距离
+
+#### 完成内容
+
+- 用户明确选择B：取消玩家画面距离限制，只有墙门遮挡或真正藏身隐藏对手。原opponentVisible读取3单位AI Vision，导致远处无遮挡仍隐藏；改为先检查真正藏身，再复用PerceptionGeometry.inspectVision(..., Infinity)判断遮挡。未改AI Vision、Last Seen、夜景、简单/普通或技能/数值。
+- 既有模型根节点、手持物、接地影、身体网及AI检查表现继续读取同一显示门禁。GAME_CONFIG只修正注释，原值3保持且明确仅限制AI；同步夜间设计、数值索引和难度文档，交接顶端说明旧记录已被替代。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 先红后绿回归 | 修改真实接线测试后，旧实现于4单位无遮挡显示断言失败；修复后两阵营在4/10/50单位显示，AI仍不可见；墙挡、关闭/上锁门隐藏、开门恢复、真正藏身优先均通过 |
+| 夜间定向 | 7/7；持有物、身体网、影子、简单/普通及菜单恢复、AI原范围/Last Seen等回归保持 |
+| npm test | 1055/1055，失败/取消/跳过0，约61.5秒；原始输出位于系统临时目录rice-night-unlimited-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块，原chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| Chrome/Edge实际画面 | 未执行；需用户刷新5173，对比无遮挡远近、墙门遮挡/开门、藏身退出时模型/手持物/影子同步 |
+
+#### Git检查点
+
+- 本轮8项：src/three/ThreeGame.ts、src/config/gameConfig.ts（仅注释）、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- 开工核对main、HEAD/origin/main及只读远端一致；无合并/变基/挑选残留，索引空。未暂存/commit/push/部署/Tag/Release，保留已有工作区/私人目录/备份与线上RC，S20仍BLOCKED。
+
+#### 已知限制与下一步
+
+- 不限距离指屏幕显形门禁，不移动相机，也不让屏幕外角色强行出现在画面中；任一玩家阵营规则相同，但AI仍受原3单位感知上限，不等于给AI无限视距。真实藏身继续隐藏，不新增朝向视锥。
+- 原5173服务PID45208未停止；真实浏览器及自然整局平衡待人工验收，不自动进入后续阶段。
+
+### 2026-10-18 困难画面对手可见距离上限改为10单位
+
+#### 完成内容
+
+- 用户最新明确“仍隐藏，10单位是可见距离上限”，取代上一轮B不限距离规则。GAME_CONFIG.difficulty新增hardNightRenderRange=10（世界单位，默认10），ThreeGame.opponentVisible使用此值调用既有PerceptionGeometry距离/墙门检测。恰好10单位仍显示，超过即隐藏；真实藏身优先，返回合法范围同步恢复模型、手持物和阴影。
+- 未实现仅建议过的0.3秒淡出；AI的hardNightVisionRange=3、Last Seen、夜景、简单/普通以及玩法/地图/道具/音频不变。按最小改动技能复用原显示接线，未新增视野系统。同步设计/数值索引/难度文档和交接，保留旧日志。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 定向先红后绿 | 配置接入前真实显示接线在10.001单位仍显示，断言失败；接入后两阵营4/9.999/10可见、10.001/50隐藏、返回10恢复；模型/影子/手持物门禁一致，墙门/藏身及AI范围回归通过 |
+| 夜间定向 | 7/7 |
+| npm test | 1055/1055，失败/取消/跳过0，约60.4秒；原始输出系统临时目录rice-night-range10-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过 |
+| Chrome/Edge实际画面 | 未执行；待刷新5173人工验收，不以测试夹具替代画面/平衡验收 |
+
+#### Git检查点
+
+- 本轮8项：src/config/gameConfig.ts、src/three/ThreeGame.ts、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- main的HEAD/origin/main及只读远端一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/部署/Tag/Release，保留已有改动、备份、私人目录及线上RC，S20继续BLOCKED。
+
+#### 已知限制与下一步
+
+- 当前仍为立即显示/隐藏；用户未批准的淡出不实施。距离门禁不是朝向视锥；显示10与AI感知3独立，不自动把AI视距提高到10。
+- 原5173服务PID45208复用。请两阵营困难局测试拉远/靠近、墙门/藏身以及手持物/阴影同步，再回简单/普通确认不变；未自动发布。
+
+### 2026-10-18 困难两方AI视觉与画面同步10单位
+
+#### 完成内容
+
+- 只读诊断已确认原画面10、AI3导致无遮挡距离2.9/3.1交替时Human在CHASE/INVESTIGATE之间切换。用户批准修正，并明确不仅选DP娘，选Human也须同步。
+- 最小运行改动仅`GAME_CONFIG.difficulty.hardNightVisionRange: 3 → 10`及注释。既有共享Vision初始化自动同时作用两方：选DP时Human AI收到visibleTarget，选Human时DP AI收到visibleHuman。画面上限10保持，原墙门/真正藏身/Last Seen和普通/简单、AI决策/逃跑阈值/速度不动；没有把“看见Human”改为“任意距离强制逃跑”。
+- 回归扩展真实接线和真实两方控制器；按最小改动技能复用现有系统，不新增第二套感知。同步夜间设计、数值索引、难度文档与交接，旧日志保持。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 先红后绿 | 旧配置在3.1单位两方视觉接线断言失败；改后2.9/3.1/4/9.999/10均持续目击，10.001断开；Human真实控制器保持CHASE后转INVESTIGATE，DP真实控制器持续收到VISION威胁后转非目击信息 |
+| 夜间定向 | 8/8，范围/遮挡/藏身/Last Seen过期、两方显示及手持物/阴影等回归通过；简单/普通10.5单位仍可见，困难10.5不可见 |
+| npm test | 1056/1056，失败/取消/跳过0，约60.0秒；原始输出系统临时目录rice-night-both-ai10-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 真人Chrome/Edge画面及自然对局 | 未执行；不能以夹具证明全部原地停顿原因均消失，碰撞/搜查/布网等原行为仍可能合理停步 |
+
+#### Git检查点
+
+- 本轮7项：src/config/gameConfig.ts、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。ThreeGame及两方AI控制器源码未改，只复用原接线。
+- main的HEAD/origin/main及只读远端一致，索引空，无合并/变基/挑选残留。未暂存/commit/push/部署/Tag/Release；保留已有工作区/备份和线上RC，S20继续BLOCKED，原5173服务PID45208复用。
+
+#### 已知限制与下一步
+
+- AI实际视距仍为原运行时视距与10单位上限的min，DEV显式低视距覆盖不会被回写；默认11故正式困难为10。原墙门遮挡及真正藏身继续断目击，Last Seen仍可支持有限调查，不等于立即停止所有移动。
+- 请刷新5173，两种主控阵营各试困难：Human在无遮挡3至10单位保持追逐，DP同距离能识别人类威胁但仍按原危险程度决定动作；隔墙/藏身后不得透视，简单/普通不变。仍停步时需实际AI日志/位置继续区分，不擅自提高速度或取消其他合法行为。
+
+### 2026-10-18 困难双方视距由10试调为5单位
+
+#### 完成内容
+
+- 用户要求“换成5单位”，沿用上一轮双方对齐范围：`GAME_CONFIG.difficulty.hardNightVisionRange`、`hardNightRenderRange`均由10改5及注释。选DP时Human AI、选Human时DP AI和玩家显示同步；其他玩法/速度/威胁阈值、简单/普通、墙门遮挡/真正藏身/Last Seen保持，不加淡出。
+- 按最小改动技能只调集中配置，更新既有夜间回归及设计/数值索引/难度文档。旧10单位日志不回改，交接顶部说明当前5单位。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 夜间定向 | 8/8，两方4/4.999/5可见，5.001/10/50隐藏、返5恢复；真实Human AI范围内CHASE、超距INVESTIGATE，DP AI范围内VISION、超距停止目击；遮挡/藏身/手持物/阴影等回归保持 |
+| npm test | 1056/1056，失败/取消/跳过0，约60.1秒；系统临时目录rice-night-both-range5-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块，保留既有chunk>500kB警告 |
+| git diff --check | 通过 |
+| Chrome/Edge实机 | 未执行；刷新5173，两种主控阵营各试困难5单位显隐与AI反应，不以夹具代替真人手感验收 |
+
+#### Git检查点
+
+- 本轮7项：src/config/gameConfig.ts、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。ThreeGame与两方AI算法未改。
+- main的HEAD/origin/main及只读远端一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/部署/Tag/Release，原工作区/备份、5173服务PID45208与线上RC保留，S20继续BLOCKED。
+
+#### 已知限制与下一步
+
+- 显隐仍即时，5单位处没有新增迟滞或淡出。超距后AI可按原记忆/听觉继续调查，不代表完全停步；DEV显式低视距覆盖仍受原优先规则管理。待用户验证两方实际手感，不自动进入下阶段或发布。
+
+### 2026-10-18 困难人物延迟1秒消失（仅表现）
+
+#### 完成内容
+
+- 用户要求“延迟1秒消失”，新增`GAME_CONFIG.difficulty.hardNightHideDelayMs=1000`（毫秒，默认1000）。HardNightView保留曾看见对手的显示余时：超距或墙门遮挡后1秒再隐藏；重新看见立即显示并重置余时，从未看见不显示；真正家具藏身立即清空并隐藏。
+- ThreeGame保留opponentVisible为即时几何/距离结果，新增opponentRendered读取延迟表现结果；根模型/接地影/手持物/身体网同步，世界浮字/AI搜查表现仍依即时目击抑制。AI双方5单位Vision/Last Seen、真实藏身/碰撞/抓捕/速度/技能、简单/普通及地图/音频不变。
+- 渲染前仅传既有gameplayMs；暂停、DEV冻结、说明层不扣显示余时，不接READY计时。resetRound、正式观察者变更、退出困难/进入编辑器清空，避免跨局残留。没有新增setTimeout或渐变材质，没有把显示延迟反馈给AI。依据最小改动技能复用现有表现模块。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 先红后绿 | 新真实接线用例在旧实现失去视线当帧模型false处失败；修复后两阵营超距/墙挡999ms仍显示、1000ms隐藏，反复失去视线不重新延长，重获视线重置，AI即时visible为false |
+| 夜间定向 | 9/9；模型/影子/手持门禁一致，身体网使用同一表现结果；暂停/说明层/DEV冻结不扣时、换观察者/重开清零、真实藏身立即隐藏、简单/普通恢复等通过 |
+| npm test | 1057/1057，失败/取消/跳过0，约63.5秒；系统临时目录rice-night-delay1s-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，129模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 真人Chrome/Edge观感 | 未执行；需刷新5173两种主控困难局检查1秒保留/重获视线/真正藏身及附件同步，不能以夹具代替画面验收 |
+
+#### Git检查点
+
+- 本轮9项：src/config/gameConfig.ts、src/three/HardNightView.ts、src/three/ThreeGame.ts、tests/hard-night.test.mjs、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。
+- main的HEAD/origin/main及只读远端一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/部署/Tag/Release，已有工作区/私人目录/备份与线上RC保持，S20继续BLOCKED，5173原服务PID45208复用。
+
+#### 已知限制与下一步
+
+- 按用户要求为1秒后消失，不是渐隐；宽限中保留真实模型当前动作/位置，可能在越过5单位或转入遮挡后多看见1秒，不是冻结在最后目击位置。AI不因此获得新的视觉信息，世界反馈也不延长；真正藏身不暴露位置。
+- 暂停期间宽限随游戏时间冻结，恢复后继续。请本地验收两方实际观感，保留范围5与AI参数，不自动发布或进入后续阶段。
+
+### 2026-10-18 困难区域灯光与实体墙壁开关（本地待人工验收）
+
+#### 完成内容
+
+- 用户明确批准方案后实施，上一轮因Windows浏览器URL识别安全机制停止而中断，本轮继续完成回归与门禁。新增RoomLightSystem与RoomLightView，依据权威18区域/墙段/静态碰撞派生墙面安装和可站立接近点，新增墙上实体面板、暖色局部点光/地面提亮和L提示，不移动既有家具、门、米点、出生点或36件投掷物。
+- 默认每局全关，仅困难启用。玩家靠近本区开关按L切换，真实行动/距离/遮挡门禁，Ctrl/Alt/Meta组合键、输入框不误触；同一开关玩家/AI共用3秒间隔，随既有游戏时间推进，暂停/说明层/DEV冻结不推进，新局重置。
+- 亮区**目标**不受距离限制；观察者处于亮区不代表能看见远处暗区目标。VisionSystem分别计算两方几何/距离结果，玩家显示复用目标范围；墙/关闭门/真正藏身仍遮挡。暗区沿用5单位和玩家1秒显示保留；AI不继承玩家显示延迟，原Last Seen/声音/米痕保持。简单/普通不使用亮区扩展或显示开关。
+- 两方AI使用同一近距开关入口，导航后位移仍走既有CollisionWorld：Human巡逻/调查就近开灯，追逐时不绕去开灯但经过开关可即时操作；DP仅真实看到Human威胁才尝试本区关灯，进食/门/藏身/冲刺优先，不能为关灯更靠近追捕者或进入安全距离。不增加全图灯光规划或隐藏目标坐标读取。
+- L原属DEV IJKL右移，保留InputManager默认行为，只在附近开关捕获该次L至松键，其他方向键不受影响。正式Z/C/X隔离代码未变；原测试一度因变量名lightKeyCaptured包含KeyC字样误报，改名lightOwnsL后通过，未修改或放宽隔离测试。
+- 可调参数集中于GAME_CONFIG.roomLights：interactionRange=1.5世界单位、toggleCooldownMs=3000毫秒、aiDetourRange=4世界单位、aiSafeDistance=2.5世界单位；同步数值索引、夜间/难度文档、新灯光设计、交接及操作说明。按最小改动技能复用原导航、碰撞、输入与视觉接缝，无新依赖/美术下载。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 新灯光定向 | 7/7：18真实墙面安装/可站立/从双方出生点导航可达；操作/遮挡/共享冷却/重置；真实Vision初始化/玩家显示，亮区20单位可见而墙挡/藏身仍隐藏、简单普通不扩展；真实AI辅助方法+CollisionWorld实际走近才切换；实体/点光/提示/释放；L与DEV方向隔离 |
+| 原夜间定向 | 9/9，5单位边界、1秒延迟、模型/附件/阴影同步与两方AI接线保持 |
+| 正式DEV隔离定向 | 5/5；Z/C/X和DEV构造器仍仅开发构建 |
+| 最终npm test | 1064/1064，失败/取消/跳过0，约58.7秒；原始输出系统临时目录rice-room-lights-final-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，131模块；保留既有chunk>500kB警告 |
+| git diff --check | 通过，已修正新增CSS末尾空行 |
+| Chrome/Edge实际渲染/自然整局 | 未完成：上轮Windows操作因无法可靠识别Chrome当前URL被安全机制停止，本轮浏览器连接库存只有无标签MCP Apps；未绕过限制，未以夹具/HTTP200替代视觉验收 |
+
+#### Git检查点
+
+- 本轮15项：src/config/gameConfig.ts、src/systems/RoomLightSystem.ts、src/systems/PerceptionSystem.ts、src/three/RoomLightView.ts、src/three/ThreeGame.ts、src/three/InputManager.ts、src/three/ControlsHelpView.ts、src/game-ui.css、tests/room-lights.test.mjs、docs/ROOM_LIGHTS_DESIGN.md、docs/HARD_NIGHT_MODE_DESIGN.md、docs/GAME_BALANCE_CONFIG.md、docs/DIFFICULTY_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。此前全部未提交变更保留，不作为本轮新增改动重复申报。
+- main的HEAD/origin/main及只读远端核对一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/部署/Tag/Release，线上RC保持，S20继续BLOCKED，5173原服务PID45208复用，未停止未知进程或清理备份/私人目录。
+
+#### 已知限制与下一步
+
+- 点光不新增阴影以控制性能，可能对邻区有少量视觉补光；不会改变邻区灯光状态或越过几何/藏身门禁。18个开关的实际画面可读性、暖光亮度、低配置帧率及两方AI自然整局仍需人工验收。
+- 开关位置不随DEV家具拖动自动迁移；后续把家具堵在开关前会被真实碰撞/遮挡阻止，AI不会穿物操作。没有新增自动重新布置地图或远程救场逻辑。
+- 请刷新5173选困难，找墙面白色小开关，靠近出现L开灯/关灯与区域名；分别确认亮暗/双方视野、墙门/藏身限制、冷却/暂停/新局、简单普通不变。完成后等待用户验收，不自动发布或进入S21。
+
+### 2026-10-18 区域开灯恢复白天照明、墙壁开关外形修正
+
+#### 完成内容
+
+- 用户提供实机截图，明确原开关像抽象黄块、亮区应像原白天。本轮只改视觉，不改RoomLightSystem、开关位置/距离/冷却、输入、AI决策或视觉感知参数。沿用最小改动技能：保留原灯光及材质，在独立表现模块接入局部白天照明。
+- RoomLightView面板改圆角底座、内凹暗槽、白色塑料翘板、两处螺钉和小型指示灯；开关切换只改变翘板角度和小指示灯，不再整块变黄，原L提示/交互保持。
+- 移除18个点光及黄色地面覆盖层，新增RoomDaylightView：从原半球光/方向光捕获白天颜色×强度，按权威房间XZ边界对受光材质逐片元替换对应照明。原夜间灯光不修改，亮区得到原白天光照，暗区保持夜色；方向光原阴影采样继续，原材质色/贴图及GLB不改。
+- 复用Three.js安装版本原ShaderChunk，保留并串接材质旧onBeforeCompile/customProgramCacheKey，统一uniform控制灯状态，无逐次切灯编译或新增阴影贴图。包含批量/实例/蒙皮后世界坐标，逐帧识别异步GLB/DEV新材质，释放时恢复存活材质原钩子。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 灯光定向 | 8/8，原18点可达/操作/双方感知/AI/DEV L保持；新增白色受光翘板/底座凹槽螺钉、无点光/地面薄膜、原白天uniform颜色/强度精确一致、暗区灯光/原材质不变、迟到材质/释放恢复回归 |
+| npm test | 1065/1065，失败/取消/跳过0，约73.2秒；系统临时目录rice-room-daylight-full-tests.log；与软件WebGL检查并行执行，耗时不能与前轮直接比较 |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，133模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 独立Chrome/Edge WebGL对照 | 两浏览器亮区采样均为[233,184,117,255]，与原白天同点一致；暗区[84,84,75,255]，与原夜间同点一致，无运行/着色器错误。GPU程序数保持1，切换只更新uniform |
+| 独立实际游戏渲染 | Chrome/Edge均模型ready、必需资源ready、18开关存在，无运行/着色器错误；暂停受控场景定位厨房并开灯，截图已生成，Chrome实际截图已人工视觉检查，亮区墙/地/家具/DP恢复明亮，邻区夜色，开关为立体翘板 |
+| 自然完整对局/玩家硬件性能 | 未执行；软件WebGL和受控定位不能冒充真人键鼠试玩或硬件帧率验收 |
+
+#### Git检查点
+
+- 本轮7项：src/three/RoomDaylightView.ts（新增）、src/three/RoomLightView.ts、src/three/ThreeGame.ts（只传入原灯光引用）、tests/room-lights.test.mjs、docs/ROOM_LIGHTS_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。既有大量未提交改动保留，不重复归为本轮新增。
+- main的HEAD/origin/main及只读远端一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/部署/Tag/Release，未改模型/音频/地图/道具文件，原5173服务PID45208和线上RC保留，S20继续BLOCKED。
+
+#### 已知限制与下一步
+
+- 独立浏览器使用运行时自带Playwright创建新无账号上下文与软件WebGL，仅访问127.0.0.1。为读取实际游戏状态，测试仅在该上下文本地main.ts响应末尾附加测试引用，未写入生产源码或日常浏览器，不绕过此前Windows窗口URL识别限制。初次测试等待失败是main.ts带Vite时间戳、拦截未命中；页面已正常到菜单且无错误。修正测试URL匹配后两浏览器全部通过，未改启动/模型策略来掩盖测试失败。
+- 原始证据在系统临时目录：rice-room-daylight-browser-results.json、rice-{chrome,msedge}-{day,night,lit,actual-kitchen}.png，脚本rice-room-daylight-check.mjs。厨房受控实际场景截图不是自然游玩记录。
+- 灯光按区域边界切换而非物理门缝扩散，角色跨边界时表面可分别处于亮暗区域；原1秒模型显隐逻辑不变。请刷新5173确认日常浏览器中的开关外形/房间白天观感及帧率，用户自然验收前不发布。
+
+### 2026-10-18 DEV墙壁开关位置编辑（本地待用户验收）
+
+#### 完成内容
+
+- 用户要求灯位可在开发工具调整，按墙壁开关实现，不添加点光源或改变区域光照边界。沿用ponytail最小改动技能，在现有SceneEditor扩展区增加18区选择、聚焦、X/Z/安装高度输入和场景鼠标拖动。自动吸附同区域真实墙面及朝向，数量/所属区域不可改，编辑期间显示开关但不推进灯光玩法。
+- 预览/已应用/项目已保存分开：预览不改RoomLightSystem，应用更新同一玩家/AI交互点及接近点，不重置开关状态或冷却；关闭/放弃清未应用草稿，重开保留已应用位置。原道具拾取目标与开关合并登记，未覆盖已有36道具编辑。
+- 新增roomLightLayout.json初始[]，保持原18个派生点不挪动；支持独立保存及总应用/保存。校验有限值、区域/墙面/高度、站立与双方导航可达；本地DEV接口固定路径、同源、SHA-256防旧版本覆盖、共享保存锁、写前备份/临时文件替换。总保存预先校验相关版本，文件系统写入异常如实报告可能部分写入，不冒充跨文件事务。生产不开放保存接口，不保存每局灯状态/AI/技能计时。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 新定向 | 5/5：原18点不变、真实墙面吸附/高度/非法字段/阻挡/可达；草稿/应用/放弃与AI/交互位置；保存失败/旧版本/缺确认；总应用/保存；两种实际保存处理函数在临时目录落盘、备份、409/403/400、刷新解析恢复 |
+| 最终npm test | 1070/1070，失败/取消/跳过0，约63秒；系统临时目录rice-light-editor-complete-tests.log |
+| 独立tsc / 生产构建 / diff | 均通过，136模块，既有chunk>500kB警告保留 |
+| 独立Chrome/Edge | 实际游戏资源ready，18开关+36道具共54扩展拾取目标，真实鼠标拖动/输入高度、独立及总应用、退出丢弃、保存响应和刷新恢复、改后近距操作通过，无运行异常。浏览器保存/刷新使用仅隔离会话响应夹具；实际写文件与备份验证在临时目录，不改项目灯位 |
+| 真人自然对局 | 未执行；待用户实际操作验收，不以受控流程声明阶段PASS |
+
+#### Git检查点
+
+- 本轮14项：新增src/three/RoomLightEditor.ts、src/three/map/RoomLightLayout.ts、src/three/map/roomLightLayout.json、tests/room-light-editor.test.mjs；修改src/systems/RoomLightSystem.ts、src/three/RoomLightView.ts、src/three/SceneEditor.ts、src/three/ThreeGame.ts、vite.config.ts、tests/pages-deployment.test.mjs及docs/ROOM_LIGHTS_DESIGN.md、docs/DEV_SCENE_EDITOR_DESIGN.md、docs/DEEPSEEK_HANDOFF.md、本日志。仅因新增DEV插件同步既有清单并断言apply=serve，未放松生产隔离。
+- main的HEAD/origin/main/只读远端一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/部署/Tag/Release，全部既有未提交内容、备份/私人目录与线上RC保留，S20仍BLOCKED。检查时5173已无监听，启动npm run dev（新PID9732），没有停止原或未知进程。
+
+#### 已知限制与下一步
+
+- 测试证据：系统临时目录rice-light-editor-browser-results.json、rice-light-editor-{chrome,msedge}.png、rice-light-editor-browser.mjs。软件WebGL初次预览断言早于下一渲染帧失败，改为等待真实mesh更新后Chrome/Edge通过；未改玩法来迎合测试。
+- 灯位只能在本区域真实墙面调整，不能跨区域或用家具挡住接近点；安装高度上限读取墙体定义。文件保存后4173/线上需要另行构建与授权发布，本轮不发布。后续用户报告属性面板挤压，另按下一条修复，不据先前受控通过否认截图问题。
+
+### 2026-10-18 DEV属性坐标区被挤成细条、无法滚动修复（本地待用户验收）
+
+#### 完成内容
+
+- 用户截图反馈底部坐标只能露出细缝，无法下拉。按diagnosing-bugs技能建立真实编辑器DOM/CSS夹具并先红：762×484视口，属性区16px、外层426px/内容811px、overflow:hidden；坐标不是只读或锁定，而是flex收缩及外层裁切叠加。沿用ponytail技能最小修复，没有另建编辑器或修改玩法。
+- style.css改为整块面板可滚动，直接子区不压缩，属性区自然高度，列表保留有限高度与自身滚动；关闭标题栏sticky，输入列允许收缩且盒宽不溢出。原场景编辑、DEV/DEV-B入口、灯位/道具位置与保存数据不变。
+- 新增scripts/verify-scene-editor-panel.mjs，复用实际SceneEditorPanel/ThrowableEditor/RoomLightEditor和真实CSS，独立无账号Chrome/Edge，不访问用户浏览器或改写项目布局；不引入新依赖，允许PLAYWRIGHT_MODULE指定现有Playwright。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 原始复现 | 脚本在旧样式明确失败：detailHeight16，坐标区不足120px；日志系统临时目录rice-editor-panel-before.log |
+| Chrome/Edge布局回归 | 12/12：两浏览器×762×484/1280×720/1920×1080×灯位区展开/收起；属性区328px，输入实际可编辑/Tab触发坐标回调，命中检测无祖先裁切，保存按钮滚动可达，面板不越视口且输入不横向溢出，无运行异常；rice-editor-panel-after.log |
+| npm test | 最终1070/1070，失败/取消/跳过0，约83.4秒；rice-editor-panel-full-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，136模块，既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| 用户日常浏览器/自然对局 | 未代替用户验收，待刷新5173确认屏幕缩放、滚轮及坐标区操作；本修复不涉及玩法 |
+
+#### Git检查点
+
+- 本轮5项：src/style.css、新增scripts/verify-scene-editor-panel.mjs、docs/DEV_SCENE_EDITOR_DESIGN.md（§14）、docs/DEEPSEEK_HANDOFF.md及本追加日志。前一灯位扩展14项另见上一条，既有未提交文件均保留。
+- main的HEAD/origin/main未变化，索引空；未暂存/commit/push/Tag/Release/部署，未停止5173或未知进程，保留4173/线上RC、全部备份/私人目录，S20 BLOCKED不变。
+
+#### 已知限制与下一步
+
+- 小窗口需要滚动整个右侧面板，物体列表仍有自己的滚动条；没有把固定窗口强行放大到屏幕之外。默认布局宽度及游戏HUD不变。夹具检验真实布局/点击，不执行真实保存或宣称自然整局通过。
+- 请刷新127.0.0.1:5173进入场景编辑，选对象后把鼠标放在面板内向下滚动，确认X/Z/高度等字段和按钮可完整访问。灯位编辑同样保留，未授权发布。
+
+### 2026-10-18 全部墙壁开关安装高度下降至0.7（本地待画面验收）
+
+#### 完成内容
+
+- 用户要求所有开关下降到0.7。按ponytail最小改动技能，仅更新现有roomLightLayout.json：从当前权威地图/碰撞生成既有18处位置并保存高度Y=0.7的覆盖项。逐项只读比对确认X/Z、墙面朝向、接近点均与修改前相同，未修改生成器/表现层/AI或灯光规则。
+- 新增对应数据与真实Three.js节点回归，验证完整18区、合法墙面/可达、实际节点初建及sync后高度0.7、DEV模型读取0.7。高度属于既有地图位置字段，不新增玩法配置键。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 定向先红后绿 | 初版[]在18区覆盖断言0≠18处失败；更新后room-light-editor 6/6通过，实际节点及编辑器读数均0.7 |
+| 坐标保护 | 18/18原X/Z、朝向、接近点完全相同；安装高度校验通过 |
+| npm test | 1071/1071，失败/取消/跳过0，约55秒；系统临时目录rice-switch-07-full-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，136模块；既有chunk>500kB警告保留 |
+| git diff --check | 通过 |
+| Chrome/Edge实际画面 | 本轮未执行，待用户刷新5173确认高度与遮挡观感；不以模型节点断言冒充实机截图 |
+
+#### Git检查点
+
+- 本轮5项：src/three/map/roomLightLayout.json、tests/room-light-editor.test.mjs、docs/ROOM_LIGHTS_DESIGN.md、docs/DEEPSEEK_HANDOFF.md及本追加日志。现有未提交改动全部保留。
+- main的HEAD/origin/main/只读远端一致，索引空，无合并/变基/挑选残留。未暂存/commit/push/Tag/Release/部署，保留私人目录、备份与线上RC；复用5173服务PID9732，无进程终止，S20仍BLOCKED。
+
+#### 已知限制与下一步
+
+- 这是全部18个现有区域开关的安装中心高度，非亮度/照明范围调整；仍可在DEV工具中单独修改并保存。刷新5173检查，线上及已有4173预览不宣称已更新，不自动发布。
+
+### 2026-10-18 开放健身两分区共用照明（本地待用户验收）
+
+#### 完成内容
+
+- 用户确认无墙明暗切线问题并批准把两片健身区合为一个区域。按已说明的照明合并范围实施，沿用ponytail最小改动技能，复用地图OPEN_ROOM_CONNECTIONS，不重构18个地图ID/导航；south_hall与east_hall共用一组灯状态及3秒冷却，当前17灯组、18个可编辑实体开关。两个原开关均保留，位置与0.7高度不动，正式L提示统一「家庭健身区」。
+- RoomLightSystem的同组判断成为灯状态/冷却/开关候选唯一入口。RoomDaylightView原有isOn读取自动让两片矩形同时亮，不改着色器，不用外接大矩形误照L形缺口或邻房。旧共边内部归入同灯区以消除精确边界处视距断层，外墙/共边端点仍排除。
+- 同组玩家/AI按实体距离选择就近开关，AI路径可跨原共边而非强制同一旧roomId；仍保留近距/遮挡/行动资格/任务优先级/DP真实目击和安全路线门禁，移动仍走CollisionWorld。两方亮区感知同步，墙门/真正藏身、暗区5单位/玩家1秒显示保留、简单普通与其他玩法不改。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 先红后绿 | 旧实现一侧开灯另一侧isOn=false，材质uniform为[1,0]，新增回归失败；修复后[1,1]且共用冷却、原中线无暗视距缝，邻房/L形缺口/外端点不扩亮 |
+| 定向 | 27/27（灯光12、灯位编辑6、夜间9），覆盖双方Vision/藏身、两方真实AI辅助方法+受控跨边界路径+实际CollisionWorld移动、同组近距/遮挡、共享冷却与重开、原夜间/编辑保护 |
+| npm test | 最终1075/1075，失败/取消/跳过0，约63.4秒；系统临时目录rice-gym-merge-final-tests.log |
+| npx tsc --noEmit | 独立执行退出0 |
+| npm run build | 退出0，136模块，保留既有chunk>500kB警告 |
+| git diff --check | 通过 |
+| Chrome/Edge WebGL | 独立无账号软件WebGL夹具，任一开关开灯后左/中/右RGBA为[233,184,117,255]，与原白天相同；邻房[85,84,75,255]与原夜间相同，无运行/着色器错误；真实灯光/夜间系统及实际GPU着色器，非自然对局截图 |
+| 用户日常浏览器/完整对局 | 未代替用户验收，待刷新5173确认整片健身区同步开关及原门墙/藏身规则 |
+
+#### Git检查点
+
+- 本轮8项：src/systems/RoomLightSystem.ts、src/three/RoomLightView.ts、src/three/ThreeGame.ts（仅同灯区路径检查）、tests/room-lights.test.mjs、docs/ROOM_LIGHTS_DESIGN.md、docs/GAME_BALANCE_CONFIG.md（只同步共用冷却口径，数值未改）、docs/DEEPSEEK_HANDOFF.md及本追加日志。原地图/灯位JSON/模型/音频/全部既有改动不变。
+- main的HEAD/origin/main/只读远端一致，索引空，无合并/变基/挑选残留；未暂存/commit/push/Tag/Release/部署，保留备份/私人目录与线上RC，复用5173服务PID9732，无进程终止，S20仍BLOCKED。
+
+#### 已知限制与下一步
+
+- 合并的是照明/同组交互范围，不删除地图ID，不重排家具/门/米点/道具。DEV列表仍区分两段便于选择安装位置。当前开放连接只有这一对，不自动把打开的门当作同灯区；未来若添加开放连接链，应在灯组入口改为连通分量，不在本轮预建系统。
+- DP仍会拒绝更靠近追捕者或不安全的导航路线；初始完整导航夹具因此未切灯，改用明确安全跨边界路径锁定本轮接线并保留真实碰撞测试，没有改避险策略迎合测试。真实地图18个开关可达性原回归保留，不声称任何情况下AI必去切灯。
+- 原始GPU证据系统临时目录rice-gym-light-browser-results.json、rice-gym-light-check.mjs；本轮不公开部署、不进入下一阶段。请本地困难局分别用两个开关，检查整片同亮同暗、邻房不跟随。
+
+### 2026-10-18 工程交付整理与Git归档授权
+
+#### 完成内容
+
+- 用户明确批准“先整理工程，然后推送Git”。按已说明的ponytail最小改动原则，不搬动源码目录、不更改玩法或既有素材；将历轮已批准实现、必要新模块/测试/静态灯位数据、设计和报告整理为87个文件的精确白名单，见docs/PROJECT_DELIVERY_2026-10-18.md。
+- 暂存清单第一次独立导出暴露CRLF兼容问题：本机/索引LF、Windows core.autocrlf=true导出CRLF，五处测试源码提取/工作流断言因此失败，去除换行差异后内容完全相同。按diagnosing-bugs流程缩小到五个文件（本机40/40、导出36项中5处失败，其中一个文件级失败导致其内部测试未注册）后，仅在五处测试读文本时规范化CRLF，不改游戏源码或放宽行为断言；最终结果另列。
+- 历史S19-P八份JSON纳入版本控制；其中七份原始证据与收尾索引的字节数/SHA-256逐项一致。新增窄范围.gitattributes -text，防止Windows换行转换破坏证据。原证据保持不变，不重新断言历史公网当前状态。
+- 私人目录不读取/修改/暂存；incoming-assets、自动备份、既有未跟踪截图/诊断/验证材料均留在原处，dist/node_modules不提交，不改.gitignore。未新增运行模型/图片/音频。
+
+#### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+|---|---|
+| 工作区npm test | 初次1075/1075；五处换行兼容修正后最终1075/1075，失败/取消/跳过0，约76.2秒；系统临时目录rice-delivery-final-worktree-tests.log |
+| 独立npx tsc --noEmit | 退出0 |
+| npm run build | 退出0，136模块，保留既有chunk>500kB警告 |
+| 暂存清单独立导出 | 最终1075/1075，失败/取消/跳过0，约81.5秒；独立tsc、根路径与Pages构建退出0；系统临时目录rice-delivery-final-export-tests.log。复用现有依赖，不声称npm ci；最终仅同步三份交付文档结果，源码/测试不变 |
+| 严格Pages子路径审核 | PASS，86个产物文件/43,102,437字节，v6与米袋GLB字节/哈希保持，未混入DEV、备份、私有/旧模型资源 |
+| Git差异与凭据模式扫描 | 精确87项清单、无未暂存受跟踪变更、历史7/7哈希、diff检查通过；87项扫描无凭据模式命中，不等价于完整安全审计 |
+| 浏览器自然完整对局 | 本轮未重跑，不将源码归档当成外部设备验收 |
+
+#### Git检查点
+
+- 归档起点HEAD/origin/main/只读远端一致，main，索引空，无合并/变基/挑选残留；用户授权正常暂存/commit/push，不授权改写历史、Tag/Release或网站部署。
+- 本条随本轮工程归档提交，实际提交编号和远端同步以git log/ls-remote及本轮交付回复为准。只精确暂存白名单，不使用git add .或git add -A。
+
+#### 已知限制与下一步
+
+- 当前线上腾讯云RC不随本轮Git归档宣称更新；现有GitHub Pages工作流仅支持手动workflow_dispatch，不由push触发。S20仍BLOCKED，S21不启动，既有Tag/Release保持不动。
+- 历史报告中的其他本地截图/临时证据并未整体发布，新克隆不保证这些本地链接存在。下一步需另行批准生产构建更新与真实外部设备复验，不代表v1.0.0发布。

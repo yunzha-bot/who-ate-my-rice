@@ -14,6 +14,10 @@ import type { HideSpot, Rect } from './map/apartmentMap.ts';
 import { ThrowableEditor } from './ThrowableEditor.ts';
 import type { ThrowableSpawn, ThrowableSystem } from '../systems/ThrowableSystem.ts';
 import type { ThrowableView } from './ThrowableView.ts';
+import { RoomLightEditor } from './RoomLightEditor.ts';
+import type { RoomLightSystem } from '../systems/RoomLightSystem.ts';
+import type { RoomLightView } from './RoomLightView.ts';
+import type { LightPlacement } from './map/RoomLightLayout.ts';
 
 export interface CommittedMap {
   furniture: readonly Rect[];
@@ -100,13 +104,15 @@ export class SceneEditor {
   private projectRevision: string | null = null;
   private savingLayout = false;
   private throwEditor: ThrowableEditor | null = null;
+  private lightEditor: RoomLightEditor | null = null;
   message = '';
   lastRejection = '无';
   private readonly onBeforeUnload = (event: BeforeUnloadEvent): void => {
-    if(this.savingLayout)return;
+    if(this.savingLayout||this.lightEditor?.model.saving)return;
     if (!this.session.isDirty && !this.layoutStatus().pending &&
         (!this.throwEditor || this.throwEditor.model.saving ||
-          (!this.throwEditor.model.dirty && !this.throwEditor.model.pending))) return;
+          (!this.throwEditor.model.dirty && !this.throwEditor.model.pending)) &&
+        !this.lightEditor?.model.dirty && !this.lightEditor?.model.pending) return;
     event.preventDefault();
     event.returnValue = '';
   };
@@ -161,8 +167,20 @@ export class SceneEditor {
     this.throwEditor = new ThrowableEditor(initial,()=>({...this.session.sourceMap,
       ...committedMap(this.session)}),system,view,id=>this.select(id),id=>this.focus(id));
     this.panel.appendExtension(this.throwEditor.element);
-    this.view.setExtraTargets(this.throwEditor.targets);
+    this.refreshExtraTargets();
     void this.throwEditor.model.loadRevision();
+  }
+
+  attachLights(system:RoomLightSystem,view:RoomLightView,saved:readonly LightPlacement[]):void {
+    this.lightEditor=new RoomLightEditor(system,view,saved,()=>({...this.session.sourceMap,
+      ...committedMap(this.session)}),id=>this.select(id),id=>this.focus(id));
+    this.panel.appendExtension(this.lightEditor.element);
+    this.refreshExtraTargets();
+    void this.lightEditor.model.loadRevision();
+  }
+
+  private refreshExtraTargets():void {
+    this.view.setExtraTargets(new Map([...(this.throwEditor?.targets??[]),...(this.lightEditor?.targets??[])]));
   }
 
   get selectedId(): string | null { return this.selection; }
@@ -171,6 +189,7 @@ export class SceneEditor {
 
   setBuild(build: ApartmentBuild): void {
     this.throwEditor?.model.invalidateValidation();
+    this.lightEditor?.model.invalidateValidation();
     this.build = build;
     this.view.setBuild(build);
   }
@@ -187,6 +206,7 @@ export class SceneEditor {
     this.opened = true;
     this.view.setActive(true);
     this.panel.setOpen(true);
+    this.lightEditor?.open();
     this.message = '已进入场景编辑：双阵营自动冻结。应用编辑后碰撞与导航会安全重建。';
     this.onFrame();
     return true;
@@ -199,6 +219,7 @@ export class SceneEditor {
     // the last applied map. Applied edits stay in memory.
     this.session.resetAll();
     this.throwEditor?.close();
+    this.lightEditor?.close();
     this.selection = null;
     this.hooks.freeze.closeSceneEditor();
     this.opened = false;
@@ -215,13 +236,15 @@ export class SceneEditor {
     if (this.draggingId && id !== this.draggingId) return;
     this.selection = id;
     this.throwEditor?.selectTarget(id);
+    this.lightEditor?.selectTarget(id);
     this.view.select(id);
     if (id) this.view.setPreviewValidity(null);
     this.refreshRegionPreview();
   }
 
   focus(id: string): void {
-    const target = this.throwEditor?.model.draft.find(p=>p.id===id) ?? this.session.get(id);
+    const target = this.lightEditor?.model.draft.find(p=>`light-switch:${p.roomId}`===id) ??
+      this.throwEditor?.model.draft.find(p=>p.id===id) ?? this.session.get(id);
     if (!target) return;
     this.hooks.onFocus({ x: target.x, z: target.z });
   }
@@ -248,12 +271,16 @@ export class SceneEditor {
       this.lastRejection=propRejection;this.message=`已拒绝应用（投掷物）：${propRejection}`;
       this.panel.showNotice(this.message);return false;
     }
+    const lightRejection=this.lightEditor?.model.validate({...this.session.sourceMap,...candidate});
+    if(lightRejection){this.lastRejection=lightRejection;this.message=`已拒绝应用（灯位）：${lightRejection}`;
+      this.panel.showNotice(this.message);return false;}
     const result = this.session.apply();
     this.rebuildFromCommitted();
     if (result.ok) {
       if(this.throwEditor?.model.dirty)this.throwEditor.model.apply();
+      if(this.lightEditor?.model.dirty)this.lightEditor.model.apply();
       this.refreshRegionPreview();
-      this.message = '已应用编辑：家具、藏身点及道具位置已应用；尚需保存布局。';
+      this.message = '已应用编辑：家具、藏身点、道具及灯位已应用；尚需保存布局。';
       this.lastRejection = '无';
       return true;
     }
@@ -266,6 +293,7 @@ export class SceneEditor {
     this.endDragWindow();
     this.session.resetAll();
     this.throwEditor?.model.discard();
+    this.lightEditor?.model.discard();
     this.rebuildFromCommitted();
     this.message = '已放弃未应用的草稿，场景恢复为已应用地图。';
   }
@@ -302,8 +330,8 @@ export class SceneEditor {
       authoredSignature: layoutSignature(authoredLayoutDocument()),
       lastError: this.lastLayoutError,
     });
-    if(this.throwEditor?.model.dirty||this.throwEditor?.model.pending)
-      return {...status,label:'UNSAVED',text:'未保存修改（含投掷物）',saved:false,authored:false,unsaved:true,pending:true};
+    if(this.throwEditor?.model.dirty||this.throwEditor?.model.pending||this.lightEditor?.model.dirty||this.lightEditor?.model.pending)
+      return {...status,label:'UNSAVED',text:'未保存修改（含道具/灯位）',saved:false,authored:false,unsaved:true,pending:true};
     return status;
   }
 
@@ -325,8 +353,8 @@ export class SceneEditor {
 
   // 只保存已应用的地图；项目文件是跨浏览器、重启与 HMR 的权威家具排布。
   async saveLayout(): Promise<boolean> {
-    if(this.savingLayout||this.throwEditor?.model.saving)return false;
-    if (this.session.isDirty || this.throwEditor?.model.dirty) {
+    if(this.savingLayout||this.throwEditor?.model.saving||this.lightEditor?.model.saving)return false;
+    if (this.session.isDirty || this.throwEditor?.model.dirty || this.lightEditor?.model.dirty) {
       this.message = '保存被拒绝：还有未应用的草稿，请先点「应用编辑」再保存布局。';
       this.panel.showNotice(this.message);
       return false;
@@ -334,6 +362,9 @@ export class SceneEditor {
     const prop=this.throwEditor?.model;
     const throwables=prop?.pending ? await prop.prepareSave() : undefined;
     if(throwables===null){this.message=prop!.message;this.panel.showNotice(this.message);return false;}
+    const light=this.lightEditor?.model;
+    const lights=light?.pending ? await light.prepareSave() : undefined;
+    if(lights===null){this.message=light!.message;this.panel.showNotice(this.message);return false;}
     if (!this.projectRevision) await this.loadProjectRevision();
     if (!this.projectRevision) {
       this.message = this.lastLayoutError ?? '无法读取项目布局版本';
@@ -346,7 +377,7 @@ export class SceneEditor {
       const response = await fetch('/__dev/scene-layout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ revision: this.projectRevision,
-          document, ...(throwables?{throwables}:{}) }),
+          document, ...(throwables?{throwables}:{}), ...(lights?{lights}:{}) }),
       });
       const result = await response.json();
       if (!response.ok) throw Error(result.error ?? `HTTP ${response.status}`);
@@ -354,11 +385,16 @@ export class SceneEditor {
         if(typeof result.throwableRevision!=='string')throw Error('未确认道具保存，响应缺少版本');
         prop!.markSaved(result.throwableRevision,throwables.layout);
       }
+      if(lights){
+        if(typeof result.lightRevision!=='string')throw Error('未确认灯位保存，响应缺少版本');
+        light!.markSaved(result.lightRevision,lights.layout);
+      }
       this.projectRevision = result.revision;
       this.savedLayoutSignature = layoutSignature(document);
       this.savedLayoutAt = result.savedAt;
       this.lastLayoutError = null;
-      this.message = throwables ? '家具布局及道具位置均已保存；开发版刷新生效，4173正式预览需重新构建。'
+      this.message = lights ? '布局及灯位已保存；开发版刷新生效，4173正式预览需重新构建。'
+        : throwables ? '家具布局及道具位置均已保存；开发版刷新生效，4173正式预览需重新构建。'
         : '家具布局已保存，道具位置与文件一致；4173正式预览需重新构建。';
       this.panel.showNotice(this.message);
       return true;
@@ -424,6 +460,9 @@ export class SceneEditor {
       this.panel.showNotice(this.message);
       return false;
     }
+    const lightError=this.lightEditor?.model.validate(source);
+    if(lightError){this.lastLayoutError=lightError;this.message=`${label}被拒绝（灯位）：${lightError}`;
+      this.panel.showNotice(this.message);return false;}
     this.session.replaceSource(source);
     this.rebuildFromCommitted();
     this.lastLayoutError = null;
@@ -433,6 +472,7 @@ export class SceneEditor {
   onFrame(): void {
     if (!this.opened) return;
     this.throwEditor?.render();
+    this.lightEditor?.render();
     this.panel.render(this.session, {
       open: true,
       freezeState: this.hooks.freeze.state,
@@ -498,6 +538,7 @@ export class SceneEditor {
     this.endDragWindow();
     this.view.dispose();
     this.throwEditor?.dispose();
+    this.lightEditor?.dispose();
     this.panel.dispose();
     this.build = null;
   }
@@ -518,6 +559,9 @@ export class SceneEditor {
   }
 
   private preview(id: string, x: number, z: number): void {
+    if(this.lightEditor?.model.has(id)){
+      this.lightEditor.model.move(id,x,z);this.lightEditor.render();return;
+    }
     if(this.throwEditor?.model.has(id)){
       const px=Math.round(x*1000)/1000,pz=Math.round(z*1000)/1000;
       this.throwEditor.model.move(id,px,pz);this.view.previewPosition(id,px,pz);
@@ -534,6 +578,11 @@ export class SceneEditor {
 
   private commitDrag(id: string): void {
     this.endDragWindow();
+    if(this.lightEditor?.model.has(id)){
+      const error=this.lightEditor.model.validate();this.view.setPreviewValidity(error===null);
+      if(error)this.lightEditor.model.message=`灯位无效：${error}；请移到可接近的墙面后应用`;
+      this.lightEditor.render();return;
+    }
     if(this.throwEditor?.model.has(id)){
       this.view.setPreviewValidity(this.throwEditor.model.validate()===null);
       this.throwEditor.render();return;

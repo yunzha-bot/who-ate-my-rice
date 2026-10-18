@@ -142,8 +142,59 @@ export interface AILogMatchSummary {
   doorLockEvidence: { t: number; type: string; reason: string }[];
   /** S7B-3A 实机证据：本局逐条关门 / 跳过事件（上限 50 条）。 */
   doorEscapeEvidence: { t: number; type: string; reason: string }[];
+  /**
+   * 本轮新增（v1.8）：**门真的被怎么打开**的逐条证据（强破 / 解锁 / 普通开关，
+   * 含门上锁到被打开之间的毫秒数）。与下面的 `humanRouteEvidence` 分开记录。
+   */
+  doorAccessEvidence: AILogDoorAccessEvidence[];
+  /**
+   * 本轮新增（v1.8）：Human AI 的**路线决策**（绕行 / 解锁 / 强破 / 无）。
+   * 刻意与 `doorAccessEvidence` 分开：决策不等于门真的被打开，混在一起就无法
+   * 分辨「AI 决定绕行」和「门被强破」。
+   */
+  humanRouteEvidence: AILogHumanRouteEvidence[];
+  /** 本轮新增（v1.8）：结算瞬间的状态事实（一局最多 1 条）。 */
+  captureEvidence: AILogCaptureEvidence[];
   /** AI 卡路 / 异常状态的可疑点（上限 100 条，按种类去重后保留首次与持续时长）。 */
   anomalies: AILogMatchAnomaly[];
+}
+
+/** 本轮新增：门实际被打开 / 关闭的逐条证据（不复制门状态，只记结果与时间）。 */
+export interface AILogDoorAccessEvidence {
+  /** 相对开局毫秒。 */
+  t: number;
+  doorId: string;
+  /** DoorSystem 结果码：OPENED / CLOSED / LOCKED / UNLOCKED / FORCE_OPENED。 */
+  result: string;
+  /** 触发方：从结果码与 actorOverride 推导，推导不出时为 UNKNOWN。 */
+  actor: 'HUMAN' | 'DEEPSEEK' | 'UNKNOWN';
+  /** 该门最近一次上锁到本次结果之间的毫秒数；本局未锁过该门时为 null。 */
+  sinceLockMs: number | null;
+}
+
+/** 本轮新增：Human AI 的路线决策（与门实际结果分开记录）。 */
+export interface AILogHumanRouteEvidence {
+  t: number;
+  /** HumanAIController.lockDecision：NONE / DETOUR / UNLOCK / FORCE_BREAK。 */
+  decision: string;
+  reason: string;
+  /** 该决策针对的门；绕行或无关时为 null。 */
+  doorId: string | null;
+}
+
+/** 本轮新增：结算瞬间的状态事实（不含任何隐藏坐标）。 */
+export interface AILogCaptureEvidence {
+  t: number;
+  reason: 'RICE_COMPLETED' | 'CAPTURED';
+  winner: 'DEEPSEEK' | 'HUMAN';
+  /** 抓捕路径：普通接触圈累计 / Q 扇形搜查命中 / 家具搜查命中 / 非抓捕结局。 */
+  mode: 'ZONE' | 'Q_FAN' | 'FURNITURE_CHECK' | 'NONE';
+  deepseekStunned: boolean;
+  deepseekConcealed: boolean;
+  humanStunned: boolean;
+  sprintState: string;
+  /** 抓捕圈内累计进度（毫秒）；非抓捕结局为 0。 */
+  captureProgressMs: number;
 }
 
 export interface AILogMatchCounts {
@@ -162,6 +213,9 @@ export interface AILogMatchCounts {
   humanCheckMiss: number;
   /** 强制抓捕（Q 搜查命中 / 家具搜查命中）次数。 */
   forcedCaptures: number;
+  /** 本轮新增：投掷命中次数（按被砸中的阵营；只有玩家能投掷）。 */
+  throwHitsHuman: number;
+  throwHitsDeepseek: number;
 }
 
 export interface AILogMatchAnomaly {
@@ -348,6 +402,9 @@ const DIFF_RULES: readonly DiffRule[] = [
   { type: 'SPRINT_READINESS', field: 'sprintReadiness' },
 ];
 
+/** 门实际结果里值得逐条留证的集合（与 DoorSystem 结果码同源）。 */
+const DOOR_ACCESS_RESULTS = new Set(['OPENED', 'CLOSED', 'LOCKED', 'UNLOCKED', 'FORCE_OPENED']);
+
 export class AILogCollector {
   private events: AILogEvent[] = [];
   private nowMs = 0;
@@ -365,9 +422,18 @@ export class AILogCollector {
   private readonly counts: AILogMatchCounts = {
     doorOpened: 0, doorClosed: 0, doorLocked: 0, doorUnlocked: 0, forceBreak: 0,
     sprintStarted: 0, falls: 0, hideEntered: 0, hideExited: 0, hideRejected: 0,
-    humanCheckStarted: 0, humanCheckHit: 0, humanCheckMiss: 0, forcedCaptures: 0 };
+    humanCheckStarted: 0, humanCheckHit: 0, humanCheckMiss: 0, forcedCaptures: 0,
+    throwHitsHuman: 0, throwHitsDeepseek: 0 };
   private readonly doorLockEvidence: { t: number; type: string; reason: string }[] = [];
   private readonly doorEscapeEvidence: { t: number; type: string; reason: string }[] = [];
+  // 本轮新增：门实际结果、AI 路线决策、结算状态各自独立的时间线（都有上限）。
+  private readonly doorAccessEvidence: AILogDoorAccessEvidence[] = [];
+  private readonly humanRouteEvidence: AILogHumanRouteEvidence[] = [];
+  private readonly captureEvidence: AILogCaptureEvidence[] = [];
+  private readonly maxDoorAccessEvidence = 50;
+  private readonly maxHumanRouteEvidence = 200;
+  /** 每扇门最近一次上锁的相对毫秒，用来算「锁了多久才被打开」。 */
+  private readonly doorLockedAtMs = new Map<string, number>();
   private readonly anomalies: AILogMatchAnomaly[] = [];
   private readonly maxDoorEvidence = 50;
   private readonly maxAnomalies = 100;
@@ -381,6 +447,8 @@ export class AILogCollector {
   private openAnomaly: { kind: string; detail: string; state: string; sinceMs: number } | null =
     null;
   private riceCompletedCount = 0;
+  /** 本轮新增：最近一次强制抓捕的路径，供结算证据区分来源。 */
+  private lastForcedCaptureMode: 'Q_FAN' | 'FURNITURE_CHECK' | null = null;
 
   startMatch(): void {
     this.events = [];
@@ -393,10 +461,15 @@ export class AILogCollector {
     this.playerSearchTimeline = [];
     this.doorLockEvidence.length = 0;
     this.doorEscapeEvidence.length = 0;
+    this.doorAccessEvidence.length = 0;
+    this.humanRouteEvidence.length = 0;
+    this.captureEvidence.length = 0;
+    this.doorLockedAtMs.clear();
     this.anomalies.length = 0;
     this.openAnomaly = null;
     this.matchResult = null;
     this.riceCompletedCount = 0;
+    this.lastForcedCaptureMode = null;
     for (const key of Object.keys(this.counts) as (keyof AILogMatchCounts)[]) {
       this.counts[key] = 0;
     }
@@ -427,18 +500,64 @@ export class AILogCollector {
    * S7D：门操作计数（与 `DoorSystem` 的结果码同源）。只计数，不复制门状态，
    * 因此不会形成第二份门状态真相。
    */
-  recordDoorResult(result: string): void {
+  recordDoorResult(result: string, access?: {
+    doorId: string | null;
+    actor: 'HUMAN' | 'DEEPSEEK' | null;
+  }): void {
     if (result === 'OPENED') this.counts.doorOpened++;
     else if (result === 'CLOSED') this.counts.doorClosed++;
     else if (result === 'LOCKED') this.counts.doorLocked++;
     else if (result === 'UNLOCKED') this.counts.doorUnlocked++;
     else if (result === 'FORCE_OPENED') this.counts.forceBreak++;
+    // 本轮新增：逐条「门真的被怎么打开」的证据，含锁门到被打开之间的毫秒数。
+    const doorId = access?.doorId ?? null;
+    if (!doorId || !DOOR_ACCESS_RESULTS.has(result)) return;
+    const t = this.nowMs - this.matchStartMs;
+    if (result === 'LOCKED') this.doorLockedAtMs.set(doorId, t);
+    if (this.doorAccessEvidence.length >= this.maxDoorAccessEvidence) return;
+    const lockedAt = this.doorLockedAtMs.get(doorId);
+    this.doorAccessEvidence.push({
+      t, doorId, result,
+      actor: access?.actor ?? 'UNKNOWN',
+      sinceLockMs: result === 'LOCKED' || lockedAt === undefined
+        ? null : Math.max(0, t - lockedAt),
+    });
   }
 
   recordSprintStart(): void { this.counts.sprintStarted++; }
   recordFall(): void { this.counts.falls++; }
-  /** S7D：强制抓捕（Q 搜查命中 / 家具搜查命中）——复用同一条胜负结算的那次调用。 */
-  recordForcedCapture(): void { this.counts.forcedCaptures++; }
+  /**
+   * S7D：强制抓捕（Q 搜查命中 / 家具搜查命中）——复用同一条胜负结算的那次调用。
+   * 本轮新增 `mode`，供结算证据区分「普通接触圈」与两种搜查命中。
+   */
+  recordForcedCapture(mode: 'Q_FAN' | 'FURNITURE_CHECK' = 'Q_FAN'): void {
+    this.counts.forcedCaptures++;
+    this.lastForcedCaptureMode = mode;
+  }
+  /** 本轮新增：投掷命中（双方都记，投掷只可能来自玩家输入）。 */
+  recordThrowHit(victim: 'HUMAN' | 'DEEPSEEK'): void {
+    if (victim === 'HUMAN') this.counts.throwHitsHuman++;
+    else this.counts.throwHitsDeepseek++;
+  }
+  /**
+   * 本轮新增：Human AI 的路线决策。只记决策本身，**不**代表门被打开；
+   * 门的实际结果由 `recordDoorResult` 的另一条时间线记录。
+   */
+  recordHumanRoute(entry: { decision: string; reason: string;
+    doorId: string | null }): void {
+    if (this.humanRouteEvidence.length >= this.maxHumanRouteEvidence) return;
+    this.humanRouteEvidence.push({ t: this.nowMs - this.matchStartMs, ...entry });
+  }
+  /**
+   * 本轮新增：结算瞬间的状态事实。由调用方在「对局结果刚置位、updatePlaying
+   * 还没停」的那一处冲写，避免局终后事件链尾部缺失。
+   */
+  recordCapture(evidence: Omit<AILogCaptureEvidence, 't'>): void {
+    if (this.captureEvidence.length > 0) return;
+    const mode = evidence.mode === 'ZONE' && this.lastForcedCaptureMode
+      ? this.lastForcedCaptureMode : evidence.mode;
+    this.captureEvidence.push({ t: this.nowMs - this.matchStartMs, ...evidence, mode });
+  }
   /** S7D：本局已吃到的大米数量（每帧同步，只有结算前的最终值会被导出）。 */
   recordRiceProgress(completed: number): void {
     this.riceCompletedCount = completed;
@@ -649,7 +768,10 @@ export class AILogCollector {
       // ABORT / SPOT_BLOCKED）；既有 events / hideEvents / humanSearchEvents /
       // playerSearchEvents 的字段与语义完全不变。
       // S7D：1.6 → 1.7，只新增 `matchSummary`（整局摘要）。v1.6 的全部字段保持原样。
-      formatVersion: '1.7',
+      // 本轮：1.7 → 1.8，只在 `matchSummary` 内新增 `doorAccessEvidence` /
+      // `humanRouteEvidence` / `captureEvidence`，并给 `counts` 增加两个投掷命中计数；
+      // v1.7 的全部字段与含义保持不变。
+      formatVersion: '1.8',
       exportedAt: new Date().toISOString(),
       matchDurationMs: t,
       config: { deepseekAI: GAME_CONFIG.deepseekAI },
@@ -672,6 +794,9 @@ export class AILogCollector {
         counts: { ...this.counts },
         doorLockEvidence: [...this.doorLockEvidence],
         doorEscapeEvidence: [...this.doorEscapeEvidence],
+        doorAccessEvidence: [...this.doorAccessEvidence],
+        humanRouteEvidence: [...this.humanRouteEvidence],
+        captureEvidence: [...this.captureEvidence],
         anomalies: [...this.anomalies],
       },
     };

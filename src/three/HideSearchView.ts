@@ -8,7 +8,8 @@ import type { Point } from './map/apartmentMap.ts';
  *
  * 它不参与任何判定：真实命中在 `HumanSearchSkill.ts` 里按释放瞬间的快照算一次，
  * 这里只负责「扇形快速淡入、再快速淡出」和命中家具的简易反馈。几何体在构造时
- * 创建一次并长期复用，`advance()` 只改透明度与可见性，所以每帧不会销毁/重建
+ * 创建一次并长期复用，`advance()` 只改透明度与可见性，`followPlayer()` 只改扇形位置，
+ * 所以每帧不会销毁/重建
  * 几何体（也不影响 DEV-A 拖动与 DEV-B 观察的性能）。
  *
  * 颜色刻意避开 DEV 调试可视化的红/黄/青/紫，便于区分「技能特效」与「调试叠加」。
@@ -152,7 +153,7 @@ export class HideSearchView {
     scene.add(this.root);
   }
 
-  /** 释放瞬间的扇形：位置与朝向都取自快照，之后不再改变。 */
+  /** 释放时初始化扇形；朝向保持施法快照，位置随后由 followPlayer 跟随角色。 */
   show(origin: Point, headingRad: number): void {
     // 世界矩阵 = Ry(朝向) · Rx(-90°)：与旧实现（根节点带 rotation.y、子网格带
     // rotation.x）逐值相同，但只作用在扇形自己身上，不污染同级的其他对象。
@@ -163,6 +164,17 @@ export class HideSearchView {
     this.fan.visible = true;
     this.fan.material.opacity = 0;
     this.releaseCount++;
+  }
+
+  /** 只移动尚未淡出的玩家扇形，不重启特效或判定，不移动公共根节点/家具反馈。 */
+  followPlayer(origin: Point): void {
+    if (this.remainingMs > 0) this.fan.position.set(origin.x, 0.035, origin.z);
+  }
+
+  /** Night rendering gate only; never changes the AI's gameplay inspection. */
+  setAiPresentationVisible(visible: boolean): void {
+    this.aiFan.visible = visible && this.aiInspecting;
+    this.aiOutline.visible = visible && (this.aiInspecting || this.aiDoneRemainingMs > 0);
   }
 
   /** 命中家具时的简易反馈（不改变家具碰撞、不改地图布局）。 */

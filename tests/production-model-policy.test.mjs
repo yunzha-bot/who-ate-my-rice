@@ -35,6 +35,18 @@ test('production loads and clones the formal v6 rig and all required animation c
   module.disposeDeepSeekModel(model);
 });
 
+test('formal loader reports download then actual parse boundary without changing its request API', async t => {
+  const phases = [], original = rigged();
+  t.mock.method(GLTFLoader.prototype, 'parse', (_data, _path, onLoad) => onLoad(original));
+  t.mock.method(GLTFLoader.prototype, 'loadAsync', function () {
+    return new Promise(resolve => this.parse(new ArrayBuffer(0), '/', resolve));
+  });
+  const module = await modelModule(true);
+  const model = await module.loadDeepSeekModel(false, phase => phases.push(phase));
+  assert.deepEqual([...new Set(phases)], ['downloading', 'parsing']);
+  module.disposeDeepSeekModel(model);
+});
+
 test('production v6 failure reaches the existing caller fallback without requesting private models', async t => {
   const requests = [];
   t.mock.method(GLTFLoader.prototype, 'loadAsync', async url => { requests.push(url); throw injectedFailure('model unavailable'); });

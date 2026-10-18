@@ -1,0 +1,16 @@
+[
+  {
+    "encoding": "gzip",
+    "contentLength": "54",
+    "decodedBytes": 34,
+    "decodedSHA256": "ec900990afc888ee1250693ff971504e77cc01a2bb0c7e5e5f08df532eb9972a",
+    "passed": true
+  },
+  {
+    "encoding": "br",
+    "contentLength": "38",
+    "decodedBytes": 34,
+    "decodedSHA256": "ec900990afc888ee1250693ff971504e77cc01a2bb0c7e5e5f08df532eb9972a",
+    "passed": true
+  }
+]

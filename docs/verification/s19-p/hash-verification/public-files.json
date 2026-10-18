@@ -1,0 +1,1985 @@
+{
+  "site": "https://yunzha-bot.github.io/who-ate-my-rice/",
+  "sourceSHA": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+  "runId": 38897897043,
+  "startedAt": "2026-10-16T13:12:11.290Z",
+  "checkedAt": "2026-10-16T13:12:24.221Z",
+  "expectedCount": 85,
+  "checked": 85,
+  "matched": 85,
+  "allHashesMatch": true,
+  "decoding": "Node fetch automatically decompresses HTTP Content-Encoding; bytes and SHA-256 are decoded entity content, not compressed transfer bytes",
+  "decodingSelfCheck": [
+    {
+      "encoding": "gzip",
+      "contentLength": "54",
+      "decodedBytes": 34,
+      "decodedSHA256": "ec900990afc888ee1250693ff971504e77cc01a2bb0c7e5e5f08df532eb9972a",
+      "passed": true
+    },
+    {
+      "encoding": "br",
+      "contentLength": "38",
+      "decodedBytes": 34,
+      "decodedSHA256": "ec900990afc888ee1250693ff971504e77cc01a2bb0c7e5e5f08df532eb9972a",
+      "passed": true
+    }
+  ],
+  "rows": [
+    {
+      "path": "assets/audio/back.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/back.ogg",
+      "expectedBytes": 4372,
+      "expectedSHA256": "8e9de91bc7e42206aef936b527cbb1034f439a1f6b7d442d3b0d375706ca8e7d",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:11.391Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4372",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1114\"",
+          "bytes": 4372,
+          "bodyComplete": true,
+          "sha256": "8e9de91bc7e42206aef936b527cbb1034f439a1f6b7d442d3b0d375706ca8e7d",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:12.218Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/basinHit.mp3",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/basinHit.mp3",
+      "expectedBytes": 26381,
+      "expectedSHA256": "b04405c3f3c9d4546a2d60003879c278d99ae48fcca8c4f2b93433112fdff79d",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:11.396Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "26381",
+          "type": "audio/mp3",
+          "etag": "\"6ad2132c-670d\"",
+          "bytes": 26381,
+          "bodyComplete": true,
+          "sha256": "b04405c3f3c9d4546a2d60003879c278d99ae48fcca8c4f2b93433112fdff79d",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:12.318Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/capture.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/capture.ogg",
+      "expectedBytes": 5198,
+      "expectedSHA256": "af28e6188e28475db9f148c85d190c389410880dbfa2d127d38e6c948e5f1e01",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:11.398Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5198",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-144e\"",
+          "bytes": 5198,
+          "bodyComplete": true,
+          "sha256": "af28e6188e28475db9f148c85d190c389410880dbfa2d127d38e6c948e5f1e01",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:12.240Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/caught.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/caught.ogg",
+      "expectedBytes": 5721,
+      "expectedSHA256": "de2aee8c92b414251b1e94b2ce7a50e1ae2a621bb25e149cfec51ccb3d9497a3",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:11.399Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5721",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1659\"",
+          "bytes": 5721,
+          "bodyComplete": true,
+          "sha256": "de2aee8c92b414251b1e94b2ce7a50e1ae2a621bb25e149cfec51ccb3d9497a3",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:12.223Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/chase.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/chase.ogg",
+      "expectedBytes": 55990,
+      "expectedSHA256": "1bac512b19996e740a41e732bbf56fbcff6e78ac499cd67536f362f881028cee",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:12.220Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "55990",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-dab6\"",
+          "bytes": 55990,
+          "bodyComplete": true,
+          "sha256": "1bac512b19996e740a41e732bbf56fbcff6e78ac499cd67536f362f881028cee",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.241Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/click.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/click.ogg",
+      "expectedBytes": 4230,
+      "expectedSHA256": "ab6ccb8ee012b6bb801cbeeab35947acf07f9b0676af5b27b1c6500856157547",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:12.235Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4230",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1086\"",
+          "bytes": 4230,
+          "bodyComplete": true,
+          "sha256": "ab6ccb8ee012b6bb801cbeeab35947acf07f9b0676af5b27b1c6500856157547",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.036Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/confirm.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/confirm.ogg",
+      "expectedBytes": 4742,
+      "expectedSHA256": "f732fc65539480404498fa3f8d9586c26fefc7843493f2215ac600081b960175",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:12.241Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4742",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1286\"",
+          "bytes": 4742,
+          "bodyComplete": true,
+          "sha256": "f732fc65539480404498fa3f8d9586c26fefc7843493f2215ac600081b960175",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:12.982Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/countdown.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/countdown.ogg",
+      "expectedBytes": 4182,
+      "expectedSHA256": "e33cf9c35b65a12488e778ee122361c52888278e09c587c5913616fa3ccfbde3",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:12.319Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4182",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1056\"",
+          "bytes": 4182,
+          "bodyComplete": true,
+          "sha256": "e33cf9c35b65a12488e778ee122361c52888278e09c587c5913616fa3ccfbde3",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:12.744Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/countdownLast.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/countdownLast.ogg",
+      "expectedBytes": 4798,
+      "expectedSHA256": "3828877a1d33a45c127f2c15f23cd6e36c8855a11f86c655eb04d9010df9c93b",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:12.746Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4798",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-12be\"",
+          "bytes": 4798,
+          "bodyComplete": true,
+          "sha256": "3828877a1d33a45c127f2c15f23cd6e36c8855a11f86c655eb04d9010df9c93b",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.139Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/deepseekCaughtDefeat.mp3",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/deepseekCaughtDefeat.mp3",
+      "expectedBytes": 17525,
+      "expectedSHA256": "3754fcec7a41785ad41d71decd84ce487257df18973f16e7ac2a13119b34c447",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:12.984Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "17525",
+          "type": "audio/mp3",
+          "etag": "\"6ad2132c-4475\"",
+          "bytes": 17525,
+          "bodyComplete": true,
+          "sha256": "3754fcec7a41785ad41d71decd84ce487257df18973f16e7ac2a13119b34c447",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.449Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/defeat.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/defeat.ogg",
+      "expectedBytes": 6898,
+      "expectedSHA256": "18619ccd8a1b709cb23647ae42743aee06fe67bb2fca0e687516c7aa024e1a1a",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.038Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "6898",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1af2\"",
+          "bytes": 6898,
+          "bodyComplete": true,
+          "sha256": "18619ccd8a1b709cb23647ae42743aee06fe67bb2fca0e687516c7aa024e1a1a",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.445Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/doorFail.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/doorFail.ogg",
+      "expectedBytes": 4493,
+      "expectedSHA256": "33d29e2ba62eacd1708c4c0676555f1cfcd67e736317764b3b1ecb87811b20e3",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.140Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4493",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-118d\"",
+          "bytes": 4493,
+          "bodyComplete": true,
+          "sha256": "33d29e2ba62eacd1708c4c0676555f1cfcd67e736317764b3b1ecb87811b20e3",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.546Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/doorLock.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/doorLock.ogg",
+      "expectedBytes": 4445,
+      "expectedSHA256": "f1f616afd1de5e1df41675bb8d454592104c966d3c41c46c132babd473db5913",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.242Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4445",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-115d\"",
+          "bytes": 4445,
+          "bodyComplete": true,
+          "sha256": "f1f616afd1de5e1df41675bb8d454592104c966d3c41c46c132babd473db5913",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.648Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/doorUnlock.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/doorUnlock.ogg",
+      "expectedBytes": 4909,
+      "expectedSHA256": "020b8f7d0afc8f689681586d22f9919f083b4d3df791e4690d6ee32d83c16a85",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.447Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4909",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-132d\"",
+          "bytes": 4909,
+          "bodyComplete": true,
+          "sha256": "020b8f7d0afc8f689681586d22f9919f083b4d3df791e4690d6ee32d83c16a85",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.853Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/eatComplete.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/eatComplete.ogg",
+      "expectedBytes": 5733,
+      "expectedSHA256": "58742dbc334f5282bc2beca02fa3b3469d5c05f1dfb9beae285670b214530e98",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.450Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5733",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1665\"",
+          "bytes": 5733,
+          "bodyComplete": true,
+          "sha256": "58742dbc334f5282bc2beca02fa3b3469d5c05f1dfb9beae285670b214530e98",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.861Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/eatInterrupt.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/eatInterrupt.ogg",
+      "expectedBytes": 4477,
+      "expectedSHA256": "87347d4d54b70b67df5ecdcc6a10e4c4274f6b06e64f008814141e0595bed1f7",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.547Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4477",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-117d\"",
+          "bytes": 4477,
+          "bodyComplete": true,
+          "sha256": "87347d4d54b70b67df5ecdcc6a10e4c4274f6b06e64f008814141e0595bed1f7",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:13.955Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/eatLoop.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/eatLoop.ogg",
+      "expectedBytes": 6474,
+      "expectedSHA256": "21544986e2c9e2e41b55212648036da218b3d51b3274f86e77948ae05d586409",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.649Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "6474",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-194a\"",
+          "bytes": 6474,
+          "bodyComplete": true,
+          "sha256": "21544986e2c9e2e41b55212648036da218b3d51b3274f86e77948ae05d586409",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.059Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/eatStart.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/eatStart.ogg",
+      "expectedBytes": 4720,
+      "expectedSHA256": "beb87f2dfbd331b4c173689d9b4f9b3eaa75b36afdabee339c03e68ef695958f",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.854Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4720",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1270\"",
+          "bytes": 4720,
+          "bodyComplete": true,
+          "sha256": "beb87f2dfbd331b4c173689d9b4f9b3eaa75b36afdabee339c03e68ef695958f",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.210Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/error.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/error.ogg",
+      "expectedBytes": 4611,
+      "expectedSHA256": "402d2bfd2345d2a08500d96aa483302a74d81330c6188ef6b4581dbbd1a3e542",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.863Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4611",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1203\"",
+          "bytes": 4611,
+          "bodyComplete": true,
+          "sha256": "402d2bfd2345d2a08500d96aa483302a74d81330c6188ef6b4581dbbd1a3e542",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.264Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/fall.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/fall.ogg",
+      "expectedBytes": 5900,
+      "expectedSHA256": "87a072835762684b66ab98a5dec7bb86cd42adc9af91e01386d6c39623beece1",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:13.956Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5900",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-170c\"",
+          "bytes": 5900,
+          "bodyComplete": true,
+          "sha256": "87a072835762684b66ab98a5dec7bb86cd42adc9af91e01386d6c39623beece1",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.365Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/game.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/game.ogg",
+      "expectedBytes": 66253,
+      "expectedSHA256": "8e6281961ec341bb031b63691400f33808e7dcd75a682b75dd4b20d96bfbe8f0",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.060Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "66253",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-102cd\"",
+          "bytes": 66253,
+          "bodyComplete": true,
+          "sha256": "8e6281961ec341bb031b63691400f33808e7dcd75a682b75dd4b20d96bfbe8f0",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.571Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/hideEnter.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/hideEnter.ogg",
+      "expectedBytes": 4891,
+      "expectedSHA256": "ab936e366f04e397217bc66931de6f69d03e86a521611f47a67dbe7565ff6d41",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.211Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4891",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-131b\"",
+          "bytes": 4891,
+          "bodyComplete": true,
+          "sha256": "ab936e366f04e397217bc66931de6f69d03e86a521611f47a67dbe7565ff6d41",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.673Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/hideExit.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/hideExit.ogg",
+      "expectedBytes": 4953,
+      "expectedSHA256": "45e830e9fb6c617874f21e6ea92c231991c7f65a6f5b8182a2507a868f2212ec",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.265Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4953",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1359\"",
+          "bytes": 4953,
+          "bodyComplete": true,
+          "sha256": "45e830e9fb6c617874f21e6ea92c231991c7f65a6f5b8182a2507a868f2212ec",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.675Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/hover.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/hover.ogg",
+      "expectedBytes": 3906,
+      "expectedSHA256": "3a77556690426bb96ba14af83cca8bf88a2fb3352bd931d7838f76c2502affc4",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.367Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "3906",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-f42\"",
+          "bytes": 3906,
+          "bodyComplete": true,
+          "sha256": "3a77556690426bb96ba14af83cca8bf88a2fb3352bd931d7838f76c2502affc4",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:14.774Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/menu.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/menu.ogg",
+      "expectedBytes": 67497,
+      "expectedSHA256": "db73583afd838170c1ff0f12ee5bcd6516ced55ef6fc0e11702e2935740f4f6c",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.572Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "67497",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-107a9\"",
+          "bytes": 67497,
+          "bodyComplete": true,
+          "sha256": "db73583afd838170c1ff0f12ee5bcd6516ced55ef6fc0e11702e2935740f4f6c",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.086Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/pulseCorrect.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/pulseCorrect.ogg",
+      "expectedBytes": 4300,
+      "expectedSHA256": "f575aaa1b76ca202534e47554731e01b3f4258d06a3df99d41bd097261fe5522",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.674Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4300",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-10cc\"",
+          "bytes": 4300,
+          "bodyComplete": true,
+          "sha256": "f575aaa1b76ca202534e47554731e01b3f4258d06a3df99d41bd097261fe5522",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.085Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/pulseInput.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/pulseInput.ogg",
+      "expectedBytes": 3936,
+      "expectedSHA256": "5192fc4d5ef6f3aacc5dd3513442eb7b8e7d1fcdb4db96b207043c2b2d4e1327",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.676Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "3936",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-f60\"",
+          "bytes": 3936,
+          "bodyComplete": true,
+          "sha256": "5192fc4d5ef6f3aacc5dd3513442eb7b8e7d1fcdb4db96b207043c2b2d4e1327",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.082Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/pulseSuccess.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/pulseSuccess.ogg",
+      "expectedBytes": 5518,
+      "expectedSHA256": "dbec56ccf4378c20c04d5bae7d065d0ef2e585bf69f006e29aa6870eaf09b58e",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:14.776Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5518",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-158e\"",
+          "bytes": 5518,
+          "bodyComplete": true,
+          "sha256": "dbec56ccf4378c20c04d5bae7d065d0ef2e585bf69f006e29aa6870eaf09b58e",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.184Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/pulseWrong.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/pulseWrong.ogg",
+      "expectedBytes": 4576,
+      "expectedSHA256": "e4faf6bd5cd34f6bb8505cbb74d580670e38d90e4b2d81c6a07bda719be289de",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.083Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4576",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-11e0\"",
+          "bytes": 4576,
+          "bodyComplete": true,
+          "sha256": "e4faf6bd5cd34f6bb8505cbb74d580670e38d90e4b2d81c6a07bda719be289de",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.492Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/recover.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/recover.ogg",
+      "expectedBytes": 4762,
+      "expectedSHA256": "043f6bdbcfc6cf8a7e94b669a76079de8bbbeafc8e411109da2a545da8e11180",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.086Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4762",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-129a\"",
+          "bytes": 4762,
+          "bodyComplete": true,
+          "sha256": "043f6bdbcfc6cf8a7e94b669a76079de8bbbeafc8e411109da2a545da8e11180",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.493Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/restart.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/restart.ogg",
+      "expectedBytes": 4834,
+      "expectedSHA256": "8c838d46ada45b554f0a31169e0a2ae52df5add707711872c46cf4c5c5fea7a2",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.087Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4834",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-12e2\"",
+          "bytes": 4834,
+          "bodyComplete": true,
+          "sha256": "8c838d46ada45b554f0a31169e0a2ae52df5add707711872c46cf4c5c5fea7a2",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.517Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/room.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/room.ogg",
+      "expectedBytes": 45007,
+      "expectedSHA256": "338059b27b6b23b9d0a56300d24c85800c259325a6e7980a37e21c87bb54b3aa",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.186Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "45007",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-afcf\"",
+          "bytes": 45007,
+          "bodyComplete": true,
+          "sha256": "338059b27b6b23b9d0a56300d24c85800c259325a6e7980a37e21c87bb54b3aa",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.599Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/search.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/search.ogg",
+      "expectedBytes": 5501,
+      "expectedSHA256": "788c71199d4dda9a4b513ec4840afc7f72b53e5add22a74d00ad721124955bf0",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.493Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5501",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-157d\"",
+          "bytes": 5501,
+          "bodyComplete": true,
+          "sha256": "788c71199d4dda9a4b513ec4840afc7f72b53e5add22a74d00ad721124955bf0",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.904Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/skill.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/skill.ogg",
+      "expectedBytes": 5274,
+      "expectedSHA256": "ca745adf849b1c5d48c1d53e64da0d8792a2488f734520eb6c6b7aec5026de76",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.494Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5274",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-149a\"",
+          "bytes": 5274,
+          "bodyComplete": true,
+          "sha256": "ca745adf849b1c5d48c1d53e64da0d8792a2488f734520eb6c6b7aec5026de76",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.902Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/skillReady.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/skillReady.ogg",
+      "expectedBytes": 4589,
+      "expectedSHA256": "2244ef4b939a0da2635d3c03f14424853db6fbe8c216f659597aec5be7c5fb8e",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.518Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4589",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-11ed\"",
+          "bytes": 4589,
+          "bodyComplete": true,
+          "sha256": "2244ef4b939a0da2635d3c03f14424853db6fbe8c216f659597aec5be7c5fb8e",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:15.917Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/skillUnavailable.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/skillUnavailable.ogg",
+      "expectedBytes": 4456,
+      "expectedSHA256": "3912b82482d5168eae2b84b9db2cdfb7395a8b021abba4c88c86f734ebaf4b1c",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.600Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "4456",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1168\"",
+          "bytes": 4456,
+          "bodyComplete": true,
+          "sha256": "3912b82482d5168eae2b84b9db2cdfb7395a8b021abba4c88c86f734ebaf4b1c",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:16.003Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/start.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/start.ogg",
+      "expectedBytes": 5577,
+      "expectedSHA256": "8e8b62cedc872b540b16063e3091c8ba3464914a0d5f4f6fada367cc970febb8",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.903Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5577",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-15c9\"",
+          "bytes": 5577,
+          "bodyComplete": true,
+          "sha256": "8e8b62cedc872b540b16063e3091c8ba3464914a0d5f4f6fada367cc970febb8",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:16.312Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/stun.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/stun.ogg",
+      "expectedBytes": 5105,
+      "expectedSHA256": "39ceeb96f49d303957cfb80f5812dbded024393189547844b091d450f65098bf",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.905Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "5105",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-13f1\"",
+          "bytes": 5105,
+          "bodyComplete": true,
+          "sha256": "39ceeb96f49d303957cfb80f5812dbded024393189547844b091d450f65098bf",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:16.310Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/audio/victory.ogg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/audio/victory.ogg",
+      "expectedBytes": 6836,
+      "expectedSHA256": "405d355e820025c158487a377d2624be170c2d5bce7ef6eed94f77d9b6ca0457",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:15.918Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "6836",
+          "type": "audio/ogg",
+          "etag": "\"6ad2132c-1ab4\"",
+          "bytes": 6836,
+          "bodyComplete": true,
+          "sha256": "405d355e820025c158487a377d2624be170c2d5bce7ef6eed94f77d9b6ca0457",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:16.354Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/characters/deepseek/deepseek_animated_v6_hair.glb",
+      "expectedBytes": 12496972,
+      "expectedSHA256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:16.004Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "11661393",
+          "type": "model/gltf-binary",
+          "etag": "W/\"6ad2132c-beb04c\"",
+          "bytes": 12496972,
+          "bodyComplete": true,
+          "sha256": "b74025c238bb884bdd0d05e2ef9ab6061916dad1512549207fef6f8ee3cfb026",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:18.257Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/index-C7hbd21C.css",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/index-C7hbd21C.css",
+      "expectedBytes": 70123,
+      "expectedSHA256": "2d7e761b111b2a17a8369b2b8593a0ab1a101b2bee900ceabe05d26cbfad96a3",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:16.311Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "14488",
+          "type": "text/css; charset=utf-8",
+          "etag": "W/\"6ad2132c-111eb\"",
+          "bytes": 70123,
+          "bodyComplete": true,
+          "sha256": "2d7e761b111b2a17a8369b2b8593a0ab1a101b2bee900ceabe05d26cbfad96a3",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:16.726Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/index-Ca4juWGy.js",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/index-Ca4juWGy.js",
+      "expectedBytes": 1138275,
+      "expectedSHA256": "41fe985fa469ee720d68e9e340ad8f8f112d95be4be5282d134f4859927761ec",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:16.313Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "315655",
+          "type": "application/javascript; charset=utf-8",
+          "etag": "W/\"6ad2132c-115e63\"",
+          "bytes": 1138275,
+          "bodyComplete": true,
+          "sha256": "41fe985fa469ee720d68e9e340ad8f8f112d95be4be5282d134f4859927761ec",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:17.037Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/props/rice-bag/rice-bag.glb",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/props/rice-bag/rice-bag.glb",
+      "expectedBytes": 632704,
+      "expectedSHA256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:16.355Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "510209",
+          "type": "model/gltf-binary",
+          "etag": "W/\"6ad2132c-9a780\"",
+          "bytes": 632704,
+          "bodyComplete": true,
+          "sha256": "c91eb81a33c6be245951a273c2970af1bc0d6c284c675c4a6eea51434273f2c6",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:17.452Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/deepseek-lose.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/deepseek-lose.png",
+      "expectedBytes": 1849977,
+      "expectedSHA256": "342bd2920014406668dd8973d60a51243229b7b5e2309bec0fb1fc0a9bad5c22",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:17.038Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "1849977",
+          "type": "image/png",
+          "etag": "\"6ad2132c-1c3a79\"",
+          "bytes": 1849977,
+          "bodyComplete": true,
+          "sha256": "342bd2920014406668dd8973d60a51243229b7b5e2309bec0fb1fc0a9bad5c22",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:18.559Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/deepseek-model-reference.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/deepseek-model-reference.png",
+      "expectedBytes": 2055779,
+      "expectedSHA256": "48ad44812f373987a76a3191f375afa50fa36b660e66a9b7b0105a588a60b7b3",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:17.181Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2055779",
+          "type": "image/png",
+          "etag": "\"6ad2132c-1f5e63\"",
+          "bytes": 2055779,
+          "bodyComplete": true,
+          "sha256": "48ad44812f373987a76a3191f375afa50fa36b660e66a9b7b0105a588a60b7b3",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:18.720Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/deepseek-normal.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/deepseek-normal.png",
+      "expectedBytes": 2130874,
+      "expectedSHA256": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:17.453Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2130874",
+          "type": "image/png",
+          "etag": "\"6ad2132c-2083ba\"",
+          "bytes": 2130874,
+          "bodyComplete": true,
+          "sha256": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.419Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/deepseek-portrait-sheet.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/deepseek-portrait-sheet.png",
+      "expectedBytes": 2190023,
+      "expectedSHA256": "036dd3ded6ab02da0de1224288fb175780b7c430998b37e1b57a708fda76adc1",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:18.258Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2190023",
+          "type": "image/png",
+          "etag": "\"6ad2132c-216ac7\"",
+          "bytes": 2190023,
+          "bodyComplete": true,
+          "sha256": "036dd3ded6ab02da0de1224288fb175780b7c430998b37e1b57a708fda76adc1",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:18.892Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/deepseek-rice-v1.webp",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/deepseek-rice-v1.webp",
+      "expectedBytes": 213776,
+      "expectedSHA256": "1c97d96cbf0d683a354a129ce4d64f41999c46c4865274d1889309c54fbcd004",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:18.560Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "213776",
+          "type": "image/webp",
+          "etag": "\"6ad2132c-34310\"",
+          "bytes": 213776,
+          "bodyComplete": true,
+          "sha256": "1c97d96cbf0d683a354a129ce4d64f41999c46c4865274d1889309c54fbcd004",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.076Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/deepseek-win.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/deepseek-win.png",
+      "expectedBytes": 2229626,
+      "expectedSHA256": "0e0dcb6a78057e3eb1c39ec732f052d9dbfc03b7d1fb2eab1faaa0877e47ba79",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:18.721Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2229626",
+          "type": "image/png",
+          "etag": "\"6ad2132c-22057a\"",
+          "bytes": 2229626,
+          "bodyComplete": true,
+          "sha256": "0e0dcb6a78057e3eb1c39ec732f052d9dbfc03b7d1fb2eab1faaa0877e47ba79",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.698Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/human-guardian-v1.webp",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/human-guardian-v1.webp",
+      "expectedBytes": 75696,
+      "expectedSHA256": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:18.893Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "75696",
+          "type": "image/webp",
+          "etag": "\"6ad2132c-127b0\"",
+          "bytes": 75696,
+          "bodyComplete": true,
+          "sha256": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.300Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "assets/ui/portraits/README.md",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/assets/ui/portraits/README.md",
+      "expectedBytes": 1344,
+      "expectedSHA256": "822a3c0608aff3e9156d3f8bd0655113fc7bb95c1a50020df9a4258e16163741",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:16.727Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "943",
+          "type": "text/markdown; charset=utf-8",
+          "etag": "W/\"6ad2132c-540\"",
+          "bytes": 1344,
+          "bodyComplete": true,
+          "sha256": "822a3c0608aff3e9156d3f8bd0655113fc7bb95c1a50020df9a4258e16163741",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:17.180Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "index.html",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/index.html",
+      "expectedBytes": 437,
+      "expectedSHA256": "00b7cb648238a37342a06dcc82da0521c3182b1fc939dcb11f121077bbf8b089",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.077Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "307",
+          "type": "text/html; charset=utf-8",
+          "etag": "W/\"6ad2132c-1b5\"",
+          "bytes": 437,
+          "bodyComplete": true,
+          "sha256": "00b7cb648238a37342a06dcc82da0521c3182b1fc939dcb11f121077bbf8b089",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.466Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/components/blue-strip.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/components/blue-strip.png",
+      "expectedBytes": 13316,
+      "expectedSHA256": "e6fc2df89b6afb1f785509256f7e926f904e3d3d77e06200b2ff5d720cab8a35",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.421Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "13316",
+          "type": "image/png",
+          "etag": "\"6ad2132c-3404\"",
+          "bytes": 13316,
+          "bodyComplete": true,
+          "sha256": "e6fc2df89b6afb1f785509256f7e926f904e3d3d77e06200b2ff5d720cab8a35",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.116Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/components/button-endcap.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/components/button-endcap.png",
+      "expectedBytes": 16805,
+      "expectedSHA256": "8cfbd560655bd634e7d38f0ebdbe1bb6c2a2e0e2eb2f7bdcb357d4684c72c9aa",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.468Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "16805",
+          "type": "image/png",
+          "etag": "\"6ad2132c-41a5\"",
+          "bytes": 16805,
+          "bodyComplete": true,
+          "sha256": "8cfbd560655bd634e7d38f0ebdbe1bb6c2a2e0e2eb2f7bdcb357d4684c72c9aa",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.939Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/components/button-shell-stretch.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/components/button-shell-stretch.png",
+      "expectedBytes": 21978,
+      "expectedSHA256": "d65fc513326027835c8b936504cc2f06b5943299255c132740484ef5fad4558b",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.699Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "21978",
+          "type": "image/png",
+          "etag": "\"6ad2132c-55da\"",
+          "bytes": 21978,
+          "bodyComplete": true,
+          "sha256": "d65fc513326027835c8b936504cc2f06b5943299255c132740484ef5fad4558b",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.412Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/components/button-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/components/button-shell.png",
+      "expectedBytes": 35693,
+      "expectedSHA256": "be98abedc2cffaa564d16a2afe4811a6ddc6b7c64e81e24e399a58430c98168e",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.740Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "35693",
+          "type": "image/png",
+          "etag": "\"6ad2132c-8b6d\"",
+          "bytes": 35693,
+          "bodyComplete": true,
+          "sha256": "be98abedc2cffaa564d16a2afe4811a6ddc6b7c64e81e24e399a58430c98168e",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.137Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/components/dark-label.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/components/dark-label.png",
+      "expectedBytes": 14496,
+      "expectedSHA256": "1f271c39203b58983d5835ee4300c1eab20a88fee023c84533ecf4c2cd1e53b7",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.941Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "14496",
+          "type": "image/png",
+          "etag": "\"6ad2132c-38a0\"",
+          "bytes": 14496,
+          "bodyComplete": true,
+          "sha256": "1f271c39203b58983d5835ee4300c1eab20a88fee023c84533ecf4c2cd1e53b7",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.398Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/components/header-strip.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/components/header-strip.png",
+      "expectedBytes": 39726,
+      "expectedSHA256": "733b1c58e457d843b23e0c6480968646387e3cf4e14554eb054c3a8a9ef7fc36",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.117Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "39726",
+          "type": "image/png",
+          "etag": "\"6ad2132c-9b2e\"",
+          "bytes": 39726,
+          "bodyComplete": true,
+          "sha256": "733b1c58e457d843b23e0c6480968646387e3cf4e14554eb054c3a8a9ef7fc36",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.606Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/faction-name-gradient-clean.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/faction-name-gradient-clean.png",
+      "expectedBytes": 313221,
+      "expectedSHA256": "95a08c94c34d3ab7b80e57f3444299c8dd7fa26b8c84547d7c27e21c9ddf3cbe",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.138Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "313221",
+          "type": "image/png",
+          "etag": "\"6ad2132c-4c785\"",
+          "bytes": 313221,
+          "bodyComplete": true,
+          "sha256": "95a08c94c34d3ab7b80e57f3444299c8dd7fa26b8c84547d7c27e21c9ddf3cbe",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.532Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/faction-name-gradient-clean.svg",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/faction-name-gradient-clean.svg",
+      "expectedBytes": 1816,
+      "expectedSHA256": "8a284bee9882295d20e0b840442d306ed94774c92bf07323cb98b06e1ab5d4ef",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.399Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "587",
+          "type": "image/svg+xml",
+          "etag": "W/\"6ad2132c-718\"",
+          "bytes": 1816,
+          "bodyComplete": true,
+          "sha256": "8a284bee9882295d20e0b840442d306ed94774c92bf07323cb98b06e1ab5d4ef",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:20.771Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/faction-name-gradient.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/faction-name-gradient.png",
+      "expectedBytes": 1668139,
+      "expectedSHA256": "1e3be331f9690f526011f3d98559deca823ea4605354f847fd317481353e8bac",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.413Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "1668139",
+          "type": "image/png",
+          "etag": "\"6ad2132c-19742b\"",
+          "bytes": 1668139,
+          "bodyComplete": true,
+          "sha256": "1e3be331f9690f526011f3d98559deca823ea4605354f847fd317481353e8bac",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.136Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/faction-warm.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/faction-warm.png",
+      "expectedBytes": 28458,
+      "expectedSHA256": "7fd92e19984ba859b2fd038274969692592fd778dd239bec76cc192eeddf8d69",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.533Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "28458",
+          "type": "image/png",
+          "etag": "\"6ad2132c-6f2a\"",
+          "bytes": 28458,
+          "bodyComplete": true,
+          "sha256": "7fd92e19984ba859b2fd038274969692592fd778dd239bec76cc192eeddf8d69",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.033Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/interaction-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/interaction-shell.png",
+      "expectedBytes": 21384,
+      "expectedSHA256": "9505282ae8ce5eb62e47694db0ce84d8f0f2c9cb0dc79d18e0a0a5021f16abe4",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.607Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "21384",
+          "type": "image/png",
+          "etag": "\"6ad2132c-5388\"",
+          "bytes": 21384,
+          "bodyComplete": true,
+          "sha256": "9505282ae8ce5eb62e47694db0ce84d8f0f2c9cb0dc79d18e0a0a5021f16abe4",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.032Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/rice-bowl.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/rice-bowl.png",
+      "expectedBytes": 11564,
+      "expectedSHA256": "054bf5d6fb44021f7a22be74f78933aa8574824eaca8df9c6029248264d87d7e",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:20.773Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "11564",
+          "type": "image/png",
+          "etag": "\"6ad2132c-2d2c\"",
+          "bytes": 11564,
+          "bodyComplete": true,
+          "sha256": "054bf5d6fb44021f7a22be74f78933aa8574824eaca8df9c6029248264d87d7e",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.161Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/rice-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/rice-shell.png",
+      "expectedBytes": 32146,
+      "expectedSHA256": "a6f7f838e9de9af3c68d70c5fd1d143fb042c32ea26943af2209ea27d26ff7b0",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.033Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "32146",
+          "type": "image/png",
+          "etag": "\"6ad2132c-7d92\"",
+          "bytes": 32146,
+          "bodyComplete": true,
+          "sha256": "a6f7f838e9de9af3c68d70c5fd1d143fb042c32ea26943af2209ea27d26ff7b0",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.428Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/skill-blue.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/skill-blue.png",
+      "expectedBytes": 24784,
+      "expectedSHA256": "9596d84511631a28ecd17c24ab1fa9e0bb9498cd28c0bcd6f98342e7a66d2df1",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.034Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "24784",
+          "type": "image/png",
+          "etag": "\"6ad2132c-60d0\"",
+          "bytes": 24784,
+          "bodyComplete": true,
+          "sha256": "9596d84511631a28ecd17c24ab1fa9e0bb9498cd28c0bcd6f98342e7a66d2df1",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.426Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/skill-warm.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/skill-warm.png",
+      "expectedBytes": 23069,
+      "expectedSHA256": "9245f8e6f01bed0701a3ef935d8016ed6d39133af9adaf44977a38626b181454",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.138Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "23069",
+          "type": "image/png",
+          "etag": "\"6ad2132c-5a1d\"",
+          "bytes": 23069,
+          "bodyComplete": true,
+          "sha256": "9245f8e6f01bed0701a3ef935d8016ed6d39133af9adaf44977a38626b181454",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.526Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/hud/timer-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/hud/timer-shell.png",
+      "expectedBytes": 30570,
+      "expectedSHA256": "d55c01f449d9ca93c9a834a8efc8b10e51aefc452e292f2eff34aecd47e00454",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.163Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "30570",
+          "type": "image/png",
+          "etag": "\"6ad2132c-776a\"",
+          "bytes": 30570,
+          "bodyComplete": true,
+          "sha256": "d55c01f449d9ca93c9a834a8efc8b10e51aefc452e292f2eff34aecd47e00454",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.547Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/compact-dots-upper.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/compact-dots-upper.png",
+      "expectedBytes": 429,
+      "expectedSHA256": "e6e7ac06d3f02a7dade981085925aac02aaff30afcb9880fa5035eb73fae69e0",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.427Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "429",
+          "type": "image/png",
+          "etag": "\"6ad2132c-1ad\"",
+          "bytes": 429,
+          "bodyComplete": true,
+          "sha256": "e6e7ac06d3f02a7dade981085925aac02aaff30afcb9880fa5035eb73fae69e0",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.832Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/compact-shell-stretch.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/compact-shell-stretch.png",
+      "expectedBytes": 57714,
+      "expectedSHA256": "d175f154343f1b33e032a3bd94d12ca9d6ffcbcc6835ae5bb5f37627d327858f",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.429Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "57714",
+          "type": "image/png",
+          "etag": "\"6ad2132c-e172\"",
+          "bytes": 57714,
+          "bodyComplete": true,
+          "sha256": "d175f154343f1b33e032a3bd94d12ca9d6ffcbcc6835ae5bb5f37627d327858f",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:22.102Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/compact-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/compact-shell.png",
+      "expectedBytes": 57863,
+      "expectedSHA256": "8db950f10aa0c9319fd5638a1c8631d9888db04ae8edd6dd7dd183a0dead75a5",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.527Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "57863",
+          "type": "image/png",
+          "etag": "\"6ad2132c-e207\"",
+          "bytes": 57863,
+          "bodyComplete": true,
+          "sha256": "8db950f10aa0c9319fd5638a1c8631d9888db04ae8edd6dd7dd183a0dead75a5",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.945Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/main-dots-left.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/main-dots-left.png",
+      "expectedBytes": 2063,
+      "expectedSHA256": "e692188a6c1892894a1c92802eaf6d0f9fa02ff91c997169b6e0a9feb85605f0",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.548Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2063",
+          "type": "image/png",
+          "etag": "\"6ad2132c-80f\"",
+          "bytes": 2063,
+          "bodyComplete": true,
+          "sha256": "e692188a6c1892894a1c92802eaf6d0f9fa02ff91c997169b6e0a9feb85605f0",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:21.948Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/main-dots-right.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/main-dots-right.png",
+      "expectedBytes": 943,
+      "expectedSHA256": "aea9e3d8a255132c315b3c6097633b8db5a05522f3b1f8c202e1c5c28d6ef501",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.833Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "943",
+          "type": "image/png",
+          "etag": "\"6ad2132c-3af\"",
+          "bytes": 943,
+          "bodyComplete": true,
+          "sha256": "aea9e3d8a255132c315b3c6097633b8db5a05522f3b1f8c202e1c5c28d6ef501",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:22.250Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/main-shell-stretch.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/main-shell-stretch.png",
+      "expectedBytes": 153565,
+      "expectedSHA256": "3654e1282c3a1099e12763c26855fca7a53f98971ac2d4ead67224c7ae1cceb8",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.947Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "153565",
+          "type": "image/png",
+          "etag": "\"6ad2132c-257dd\"",
+          "bytes": 153565,
+          "bodyComplete": true,
+          "sha256": "3654e1282c3a1099e12763c26855fca7a53f98971ac2d4ead67224c7ae1cceb8",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:22.360Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/panels/main-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/panels/main-shell.png",
+      "expectedBytes": 154709,
+      "expectedSHA256": "37c54a31081c89f108684f79e03e7e270d1e24df474bc5323ad44b7de59fc08f",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:21.949Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "154709",
+          "type": "image/png",
+          "etag": "\"6ad2132c-25c55\"",
+          "bytes": 154709,
+          "bodyComplete": true,
+          "sha256": "37c54a31081c89f108684f79e03e7e270d1e24df474bc5323ad44b7de59fc08f",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:22.388Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/pulselock/track-shell.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/pulselock/track-shell.png",
+      "expectedBytes": 20957,
+      "expectedSHA256": "e85d5fa7e02af1695402ac6c1861945f6f0d84f29e1091285f51f298dfeb3086",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:22.104Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "20957",
+          "type": "image/png",
+          "etag": "\"6ad2132c-51dd\"",
+          "bytes": 20957,
+          "bodyComplete": true,
+          "sha256": "e85d5fa7e02af1695402ac6c1861945f6f0d84f29e1091285f51f298dfeb3086",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:22.557Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/README.md",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/README.md",
+      "expectedBytes": 2255,
+      "expectedSHA256": "c96598f2a4c2000c835ff254d3451ea5768acfd0941b471ba95dbbf980b4020a",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:19.301Z",
+          "status": 200,
+          "contentEncoding": "gzip",
+          "contentLength": "1373",
+          "type": "text/markdown; charset=utf-8",
+          "etag": "W/\"6ad2132c-8cf\"",
+          "bytes": 2255,
+          "bodyComplete": true,
+          "sha256": "c96598f2a4c2000c835ff254d3451ea5768acfd0941b471ba95dbbf980b4020a",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:19.738Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/screens/result-accent.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/screens/result-accent.png",
+      "expectedBytes": 24110,
+      "expectedSHA256": "2fff98b4c3b1c107203ca79a4aa84eb8a0a22b6c02753c58b998cdcc22426c9a",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:22.251Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "24110",
+          "type": "image/png",
+          "etag": "\"6ad2132c-5e2e\"",
+          "bytes": 24110,
+          "bodyComplete": true,
+          "sha256": "2fff98b4c3b1c107203ca79a4aa84eb8a0a22b6c02753c58b998cdcc22426c9a",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:22.660Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/sheet-a-pulselock.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/sheet-a-pulselock.png",
+      "expectedBytes": 2395390,
+      "expectedSHA256": "fcad647c247eb634c7aceca9f13fd1e3c10d8eed4914da73670bb4fe5ab5ae12",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:22.362Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2395390",
+          "type": "image/png",
+          "etag": "\"6ad2132c-248cfe\"",
+          "bytes": 2395390,
+          "bodyComplete": true,
+          "sha256": "fcad647c247eb634c7aceca9f13fd1e3c10d8eed4914da73670bb4fe5ab5ae12",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:23.205Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/sheet-b-panels.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/sheet-b-panels.png",
+      "expectedBytes": 2441087,
+      "expectedSHA256": "4b1f9f82fe4256c6dcf53cc7265c3454f42da882c6c92ac2300699037582bf71",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:22.389Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2441087",
+          "type": "image/png",
+          "etag": "\"6ad2132c-253f7f\"",
+          "bytes": 2441087,
+          "bodyComplete": true,
+          "sha256": "4b1f9f82fe4256c6dcf53cc7265c3454f42da882c6c92ac2300699037582bf71",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:23.101Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/sheet-c-hud.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/sheet-c-hud.png",
+      "expectedBytes": 2200339,
+      "expectedSHA256": "28c2687cb7d573bb42288f9c7b897d99e72a90da0fffa7ae0bee46b52cb7bda2",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:22.558Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2200339",
+          "type": "image/png",
+          "etag": "\"6ad2132c-219313\"",
+          "bytes": 2200339,
+          "bodyComplete": true,
+          "sha256": "28c2687cb7d573bb42288f9c7b897d99e72a90da0fffa7ae0bee46b52cb7bda2",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:24.221Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/sheet-d-menu-result.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/sheet-d-menu-result.png",
+      "expectedBytes": 2360797,
+      "expectedSHA256": "bf913a049b72dab563ab4851ac50537417416ccc52abfb620b15c3fb8d98c3ec",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:22.661Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2360797",
+          "type": "image/png",
+          "etag": "\"6ad2132c-2405dd\"",
+          "bytes": 2360797,
+          "bodyComplete": true,
+          "sha256": "bf913a049b72dab563ab4851ac50537417416ccc52abfb620b15c3fb8d98c3ec",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:23.329Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/sheet-e-textures.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/sheet-e-textures.png",
+      "expectedBytes": 2404049,
+      "expectedSHA256": "bafc9ea7e3da48c2e54db1809c6e8bbb14ec1315f54b7544089e37b1d7084550",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:23.103Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2404049",
+          "type": "image/png",
+          "etag": "\"6ad2132c-24aed1\"",
+          "bytes": 2404049,
+          "bodyComplete": true,
+          "sha256": "bafc9ea7e3da48c2e54db1809c6e8bbb14ec1315f54b7544089e37b1d7084550",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:23.916Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/sheet-f-modern-textures.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/sheet-f-modern-textures.png",
+      "expectedBytes": 2914858,
+      "expectedSHA256": "47c4708ce5d6b24d3d39d36698b2e22a9c33b901de83d5f62a933eb57a486097",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:23.206Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "2914858",
+          "type": "image/png",
+          "etag": "\"6ad2132c-2c7a2a\"",
+          "bytes": 2914858,
+          "bodyComplete": true,
+          "sha256": "47c4708ce5d6b24d3d39d36698b2e22a9c33b901de83d5f62a933eb57a486097",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:24.139Z"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "path": "ui/textures/paper.png",
+      "url": "https://yunzha-bot.github.io/who-ate-my-rice/ui/textures/paper.png",
+      "expectedBytes": 32860,
+      "expectedSHA256": "f827e72742a7824ee85fdc4fb834c854e4ec72e8f5f5a7acc4029e7568a0f663",
+      "attempts": [
+        {
+          "attempt": 1,
+          "startedAt": "2026-10-16T13:12:23.331Z",
+          "status": 200,
+          "contentEncoding": null,
+          "contentLength": "32860",
+          "type": "image/png",
+          "etag": "\"6ad2132c-805c\"",
+          "bytes": 32860,
+          "bodyComplete": true,
+          "sha256": "f827e72742a7824ee85fdc4fb834c854e4ec72e8f5f5a7acc4029e7568a0f663",
+          "passed": true,
+          "endedAt": "2026-10-16T13:12:24.178Z"
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

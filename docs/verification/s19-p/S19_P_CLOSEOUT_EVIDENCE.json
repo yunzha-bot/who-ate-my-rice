@@ -1,0 +1,62 @@
+{
+  "reviewedAt": "2026-10-16T13:32:57.891038+00:00",
+  "sourceSHA": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+  "runId": 38897897043,
+  "artifactId": 12044274455,
+  "archiveSHA256": "c21a3c56c507e681e0aab75ccebf928a72264ef281ad79e03ac8bbb6bf514e08",
+  "archiveBytes": 40299469,
+  "originalArchiveRechecked": true,
+  "archiveCRCRechecked": true,
+  "all85OriginalTARFilesRehashed": true,
+  "publicRecordCoverage": 85,
+  "historicalPublicMatches": 85,
+  "failedFiles": [],
+  "historicalPublicCheckedAt": "2026-10-16T13:12:24.221Z",
+  "publicNetworkRefetchedThisRound": false,
+  "reportSection6SHA256UTF8": "b7e9d5e347d34d28217a9e5136b37c7a5ff364dc4541523aa3c4c0eb389cd9cc",
+  "evidenceFiles": [
+    {
+      "path": "docs/verification/s19-p/hash-verification/ci-pages-manifest.json",
+      "bytes": 15337,
+      "sha256": "80eccb8382318a05bcdf832fb90cd0174a2ac6555b74ddd85b986b29d6b5c476"
+    },
+    {
+      "path": "docs/verification/s19-p/hash-verification/content-decoding-check.json",
+      "bytes": 385,
+      "sha256": "fcb0995719bf6ee503b78f9ebc97c076e0048ddc30c42c8d4553cda317d8c90a"
+    },
+    {
+      "path": "docs/verification/s19-p/hash-verification/final-state-check.json",
+      "bytes": 552,
+      "sha256": "b55b2f22afa1883ea3169fa2f29fcbe094bc34eafdcedfe4e7195ff27d6f1c7a"
+    },
+    {
+      "path": "docs/verification/s19-p/hash-verification/public-files.json",
+      "bytes": 69108,
+      "sha256": "debdc9f32afd02dd0f499da63985de9b624bb24d5ea24c0443ddb5f06a560354"
+    },
+    {
+      "path": "docs/verification/s19-p/hash-verification/ranged-download.json",
+      "bytes": 1745,
+      "sha256": "3056541fb5499ca7d8b65c58926a31f462414930d545f5af55f23f5d09932498"
+    },
+    {
+      "path": "docs/verification/s19-p/hash-verification/source-chain.json",
+      "bytes": 1361,
+      "sha256": "90cffadada28280ba2119d44616bd63be5ead4434f57f0e0b53f2cc87b3539d0"
+    },
+    {
+      "path": "docs/verification/s19-p/hash-verification/verification-summary.json",
+      "bytes": 698,
+      "sha256": "efd1179440e16f5b3e3db67e5d6276cbecc6c50c29159c00a11894797cc056c0"
+    }
+  ],
+  "stageSource": {
+    "fileName": "完整制作阶段.docx",
+    "sha256": "6e638ef2bba3ab1708c6e5b47d7c1bf4c2fb2a65bd8fafff0b527059605f1551",
+    "approvedScope": "S19-S22 only; user confirmed relevant goals/Gates/milestones match the (5) copy, not full-document equivalence"
+  },
+  "protectedFileCount": 336,
+  "scope": "Local evidence closeout and S20 admission planning only; no Git write, build or deployment",
+  "S20Gate": "NOT_PASSED"
+}

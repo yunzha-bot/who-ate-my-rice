@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { DEEPSEEK_CLIPS } from './DeepSeekAnimation.ts';
+import type { ModelLoadPhase } from './StartupReadiness.ts';
 
 // Vite supplies the hosting base; direct Node module tests keep root URLs.
 const assetBase = typeof import.meta.env === 'undefined' ? '/' : import.meta.env.BASE_URL;
@@ -11,6 +12,12 @@ const DEEPSEEK_PREVIOUS_ANIMATED_GLB_URL = `${assetBase}assets/characters/deepse
 
 let modelPromise: Promise<THREE.Group> | null = null;
 let staticPromise: Promise<THREE.Group> | null = null;
+let phase: ModelLoadPhase = 'downloading';
+const phaseListeners = new Set<(phase: ModelLoadPhase) => void>();
+function reportPhase(next: ModelLoadPhase): void {
+  phase = next;
+  for (const listener of phaseListeners) listener(next);
+}
 
 function loadStatic(): Promise<THREE.Group> {
   if (import.meta.env.PROD) return Promise.reject(new Error('Production uses the procedural fallback, not private GLBs'));
@@ -32,15 +39,26 @@ export function disposeDeepSeekModel(model: THREE.Object3D): void {
 }
 
 /** One download for the player or NPC; callers receive independent render objects. */
-export function loadDeepSeekModel(staticOnly = false): Promise<THREE.Group> {
-  const loadAnimated = (url: string) => new GLTFLoader().loadAsync(url).then(gltf => {
-    if (!gltf.scene.getObjectByProperty('isSkinnedMesh', true) ||
-        !DEEPSEEK_CLIPS.every(name => gltf.animations.some(clip => clip.name === name && clip.duration > 0))) {
-      throw new Error('DeepSeek GLB is missing its rig or required clips');
-    }
-    gltf.scene.animations = gltf.animations;
-    return gltf.scene;
-  });
+export function loadDeepSeekModel(staticOnly = false, onPhase?: (phase: ModelLoadPhase) => void): Promise<THREE.Group> {
+  if (onPhase) { phaseListeners.add(onPhase); onPhase(phase); }
+  const loadAnimated = (url: string) => {
+    reportPhase('downloading');
+    const loader = new GLTFLoader();
+    const parse = loader.parse.bind(loader);
+    // Observe the existing loader boundary; do not change fetch, cancellation or retry policy.
+    loader.parse = (data, path, onLoad, onError) => {
+      reportPhase('parsing');
+      parse(data, path, onLoad, onError);
+    };
+    return loader.loadAsync(url).then(gltf => {
+      if (!gltf.scene.getObjectByProperty('isSkinnedMesh', true) ||
+          !DEEPSEEK_CLIPS.every(name => gltf.animations.some(clip => clip.name === name && clip.duration > 0))) {
+        throw new Error('DeepSeek GLB is missing its rig or required clips');
+      }
+      gltf.scene.animations = gltf.animations;
+      return gltf.scene;
+    });
+  };
   if (!staticOnly) modelPromise ??= loadAnimated(DEEPSEEK_ANIMATED_GLB_URL).catch(error => {
     if (import.meta.env.PROD) throw error;
     console.warn('DeepSeek v6 hair GLB unavailable; loading v5 animated GLB', error);
@@ -64,5 +82,5 @@ export function loadDeepSeekModel(staticOnly = false): Promise<THREE.Group> {
       object.castShadow = object.receiveShadow = true;
     });
     return model;
-  });
+  }).finally(() => { if (onPhase) phaseListeners.delete(onPhase); });
 }

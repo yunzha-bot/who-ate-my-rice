@@ -18,7 +18,8 @@ import { furnitureApproachSurfacePoint }
 import { DOOR_NODES, FURNITURE, HIDE_SPOTS, MAP_DEPTH, MAP_WIDTH, WALLS }
   from '../src/three/map/apartmentMap.ts';
 
-// S7C-2 修复轮 三：Human 玩家 Q 的**目标优先级**（用户本轮批准的规则）。
+// S7C-2 legacy plan helper compatibility tests. Human now splits E furniture / V fan;
+// actual current input/executor behavior is covered in human-e-priority.test.mjs.
 //
 //   ① 12 秒冷却中 → 什么都不做；
 //   ② 当帧存在**合法暴露目标**（未藏身 + 1.5 u + 120° + 无墙门遮挡）→ 原有普通扇形抓捕，
@@ -280,12 +281,14 @@ test('§四.7 during cooldown no branch runs and no "Q 搜查可用" hint is pro
   assert.equal(cooling.spotId, null);
   assert.equal(cooling.furnitureId, null);
   assert.match(cooling.message, /冷却中：剩 8\.4 秒/);
-  // 「Q 可用」提示只在冷却就绪、且没有暴露目标优先时出现（源码级的唯一判据）。
+  // E家具与V扇形已拆开：E高亮只依赖合法家具和共用冷却，不被暴露目标压掉。
   const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
-  assert.match(source, /this\.humanSearchCooldown\.ready && !exposed\.available/,
-    '白色高亮的「可用」必须同时要求冷却就绪且没有暴露目标优先');
-  assert.match(source, /this\.hideTargetLegal && !this\.hideTargetExposedPriority/,
-    'HUD 不得在暴露目标优先时继续提示「可以搜家具」');
+  const highlight = source.slice(source.indexOf('private syncPlayerFurnitureTarget('),
+    source.indexOf('private syncDeepSeekVisualTarget('));
+  assert.match(highlight, /this\.humanSearchCooldown\.ready\)/);
+  assert.doesNotMatch(highlight, /ready && !exposed\.available/);
+  assert.match(source, /if \(target && this\.hideTargetLegal\)/,
+    'E家具提示不被V扇形暴露目标压掉');
 });
 
 test('§四.8 the ordinary fan keeps its 1.5 u / 120° / wall-door rules', () => {

@@ -1,0 +1,61 @@
+{
+  "artifactId": 12044274455,
+  "priorAttempt": {
+    "file": "ci-pages-attempt-1.zip",
+    "reason": "Own verification downloader stopped after measuring slow single-connection throughput; partial preserved, not a valid artifact",
+    "bytes": 8486912
+  },
+  "attempts": [
+    {
+      "attempt": 2,
+      "startedAt": "2026-10-16T13:01:55.235Z",
+      "segments": [
+        {
+          "index": 0,
+          "start": 0,
+          "end": 10074867,
+          "bytes": 10074868,
+          "status": 206,
+          "contentRange": "bytes 0-10074867/40299469",
+          "file": "artifact-attempt-2-part-0",
+          "complete": true
+        },
+        {
+          "index": 1,
+          "start": 10074868,
+          "end": 20149735,
+          "bytes": 10074868,
+          "status": 206,
+          "contentRange": "bytes 10074868-20149735/40299469",
+          "file": "artifact-attempt-2-part-1",
+          "complete": true
+        },
+        {
+          "index": 2,
+          "start": 20149736,
+          "end": 30224603,
+          "bytes": 10074868,
+          "status": 206,
+          "contentRange": "bytes 20149736-30224603/40299469",
+          "file": "artifact-attempt-2-part-2",
+          "complete": true
+        },
+        {
+          "index": 3,
+          "start": 30224604,
+          "end": 40299468,
+          "bytes": 10074865,
+          "status": 206,
+          "contentRange": "bytes 30224604-40299468/40299469",
+          "file": "artifact-attempt-2-part-3",
+          "complete": true
+        }
+      ],
+      "bytes": 40299469,
+      "sha256": "c21a3c56c507e681e0aab75ccebf928a72264ef281ad79e03ac8bbb6bf514e08",
+      "passed": true,
+      "file": "ci-pages-attempt-2.zip",
+      "endedAt": "2026-10-16T13:11:24.133Z"
+    }
+  ]
+}

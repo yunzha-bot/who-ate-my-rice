@@ -20,9 +20,9 @@ export class InputManager {
     );
   }
 
-  debugDirection(): Direction {
+  debugDirection(ignoreL = false): Direction {
     return this.direction(
-      this.held.has('KeyJ'), this.held.has('KeyL'),
+      this.held.has('KeyJ'), !ignoreL && this.held.has('KeyL'),
       this.held.has('KeyI'), this.held.has('KeyK'),
     );
   }

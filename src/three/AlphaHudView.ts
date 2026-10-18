@@ -12,6 +12,13 @@ export interface AlphaHudFrame {
   qDurationMs: number;
   sprintRemainingMs: number;
   sprintDurationMs: number;
+  forceBreakRemainingMs: number;
+  forceBreakDurationMs: number;
+  netRemainingMs: number;
+  netDurationMs: number;
+  netStatus: string | null;
+  netSlots: number;
+  lockSlots: number;
   sprintState: string;
   concealed: boolean;
   captureRatio: number;
@@ -28,6 +35,7 @@ export class AlphaHudView {
   private readonly goal: HTMLElement;
   private readonly q: HTMLElement;
   private readonly sprint: HTMLElement;
+  private readonly net: HTMLElement;
   private readonly ready: HTMLElement;
   private readonly progress: HTMLElement;
   private readonly pips: HTMLElement[];
@@ -50,7 +58,7 @@ export class AlphaHudView {
       <footer class="movement-guide"><b>W A S D</b> 移动 <span>Esc 暂停</span></footer>
       <section class="alpha-skills" aria-label="当前技能">
         <span class="alpha-key"><b>E</b><span>交互<small>门 · 藏身 · 吃米</small></span></span>
-        <span class="alpha-cooldown alpha-q"></span><span class="alpha-cooldown alpha-sprint"></span>
+        <span class="alpha-cooldown alpha-q"></span><span class="alpha-cooldown alpha-net"></span><span class="alpha-cooldown alpha-sprint"></span>
       </section><div class="world-interaction" aria-hidden="true"><kbd>E</kbd><span class="world-interaction-copy"><strong></strong><small></small></span></div>
       <div class="alpha-ready" role="status"><small></small><strong></strong><span>准备出发</span></div>`;
     this.faction = this.root.querySelector('.alpha-faction')!;
@@ -59,6 +67,7 @@ export class AlphaHudView {
     this.goal = this.root.querySelector('.alpha-goal')!;
     this.q = this.root.querySelector('.alpha-q')!;
     this.sprint = this.root.querySelector('.alpha-sprint')!;
+    this.net = this.root.querySelector('.alpha-net')!;
     this.ready = this.root.querySelector('.alpha-ready')!;
     this.progress = this.root.querySelector('.alpha-progress')!;
     this.objective = this.root.querySelector('.alpha-objective')!;
@@ -75,6 +84,7 @@ export class AlphaHudView {
     this.prompt.dataset.pressed = String(!!hint?.held && !hint.blocked);
     this.prompt.dataset.blocked = String(!!hint?.blocked);
     if (hint) {
+      this.set(this.root.querySelector('.world-interaction kbd')!, hint.key ?? 'E');
       this.prompt.style.setProperty('left', `${hint.x}px`);
       this.prompt.style.setProperty('top', `${hint.y}px`);
       this.set(this.root.querySelector('.world-interaction strong')!, hint.label);
@@ -86,14 +96,32 @@ export class AlphaHudView {
     this.root.dataset.faction = frame.faction!;
     this.set(this.faction, dp ? '01 / DeepSeek 娘' : '02 / Human');
     this.set(this.objective, dp ? '吃完五份米' : '找到并抓住 DeepSeek 娘');
-    this.set(this.interactionHint, dp ? '门 · 藏身 · 吃米' : '开门 · 解锁');
+    this.set(this.interactionHint, dp ? '门 · 藏身 · 吃米' : '开门 · 搜查');
     this.set(this.rice, dp ? `${frame.completed} / ${frame.total} 份已吃完` : `${frame.total - frame.completed} / ${frame.total} 份米还在`);
     this.pips.forEach((pip, index) => { pip.dataset.done = String(index < frame.completed); });
     this.set(this.time, frame.time);
-    this.set(this.goal, dp ? '找米 → 停下按住 E\n用门与家具躲开追捕。' : '观察米痕，追上她。\nQ 抓捕，或面向家具搜查。');
-    this.cooldown(this.q, dp ? 'Q 锁门' : 'Q 抓捕 / 搜查', frame.qRemainingMs, frame.qDurationMs);
-    this.sprint.hidden = !dp;
-    this.cooldown(this.sprint, 'Space 冲刺', frame.sprintRemainingMs, frame.sprintDurationMs);
+    this.set(this.goal, dp ? '找米 → 停下按住 E\n用门与家具躲开追捕。' : '观察米痕，追上她。\nE 操作门或搜查家具；V 前方扇形抓捕。');
+    this.q.hidden = false;
+    this.cooldown(this.q, dp ? 'Q 锁门' : 'V 抓捕', frame.qRemainingMs, frame.qDurationMs);
+    if (dp) this.q.dataset.slots = String(frame.lockSlots);
+    else delete this.q.dataset.slots;
+    this.q.setAttribute('aria-label', dp ? `Q 锁门，剩余可锁 ${frame.lockSlots} 扇` : this.q.textContent!);
+    this.q.setAttribute('title', dp ? `剩余可同时锁门名额：${frame.lockSlots}` : 'V 抓捕前方未藏身角色，与 E 家具搜查共用冷却');
+    this.net.hidden = dp;
+    if (!dp) {
+      this.net.dataset.slots = String(frame.netSlots);
+      this.net.setAttribute('aria-label', `Q 布网，剩余可布置 ${frame.netSlots} 张`);
+      this.net.setAttribute('title', `布设捕捉网；剩余可布置名额：${frame.netSlots}`);
+      this.cooldown(this.net, 'Q 布网', frame.netRemainingMs, frame.netDurationMs);
+      if (frame.netStatus) {
+        this.set(this.net, `Q 布网\n${frame.netStatus}`);
+        this.net.dataset.ready = 'false';
+      }
+    }
+    this.sprint.hidden = false;
+    this.cooldown(this.sprint, dp ? 'Space 冲刺' : 'Space 破门',
+      dp ? frame.sprintRemainingMs : frame.forceBreakRemainingMs,
+      dp ? frame.sprintDurationMs : frame.forceBreakDurationMs);
     if (dp && frame.sprintState === 'STUNNED') this.set(this.sprint, '稍等 · 眩晕中');
     else if (dp && frame.sprintState === 'SPRINT_RUNNING') this.set(this.sprint, 'Space · 冲刺中');
     const readyNow = frame.phase === 'READY';
@@ -136,7 +164,10 @@ export class AlphaHudView {
   }
 
   private cooldown(node: HTMLElement, label: string, remaining: number, duration: number): void {
-    this.set(node, `${label} · ${remaining > 0 ? `${Math.ceil(remaining / 1000)}s` : '就绪'}`);
+    const human = this.root.dataset.faction === 'HUMAN';
+    const status = remaining > 0 ? human ? `冷却 ${Math.ceil(remaining / 1000)} 秒`
+      : `${Math.ceil(remaining / 1000)}s` : '就绪';
+    this.set(node, `${label}${human ? '\n' : ' · '}${status}`);
     node.dataset.ready = String(remaining <= 0);
     node.style.setProperty('--cooldown', `${cooldownFraction(remaining, duration) * 360}deg`);
     node.style.setProperty('--cooldown-width', `${cooldownFraction(remaining, duration) * 100}%`);

@@ -6,12 +6,14 @@ export interface ThrowPoint { x: number; z: number }
 export interface ThrowableSpawn extends ThrowPoint { id: string; roomId: string; kind: ThrowableKind }
 export interface ThrowActor extends ThrowPoint { faction: ThrowFaction; hidden: boolean; canAct: boolean }
 export interface ThrowableHit extends ThrowPoint { victim: ThrowFaction; kind: ThrowableKind }
+export interface ThrowableNetTarget extends ThrowPoint { radius: number; destroy: () => void }
 export type ThrowTrace = (from: ThrowPoint, to: ThrowPoint, radius: number) => number | null;
 export interface ThrowableItem extends ThrowableSpawn {
   state: 'GROUND' | 'HELD' | 'FLIGHT' | 'USED';
   holder: ThrowFaction | null;
   height: number;
   readyAt: number;
+  remainingThrows: number;
   flight: { from: ThrowPoint; to: ThrowPoint; owner: ThrowFaction; elapsed: number } | null;
 }
 
@@ -60,7 +62,7 @@ export class ThrowableSystem {
   }
   nearest(actor: ThrowActor, trace: ThrowTrace): ThrowableItem | undefined {
     if (!this.config.enabled || !actor.canAct || actor.hidden || this.isStunned(actor.faction)) return;
-    return this.items.filter(item => item.state === 'GROUND' && item.readyAt <= this.nowMs &&
+    return this.items.filter(item => item.state === 'GROUND' && item.remainingThrows > 0 && item.readyAt <= this.nowMs &&
       Math.hypot(item.x - actor.x, item.z - actor.z) <= this.config.pickupRange &&
       trace(actor, item, 0) === null).sort((a, b) =>
       Math.hypot(a.x - actor.x, a.z - actor.z) - Math.hypot(b.x - actor.x, b.z - actor.z))[0];
@@ -84,10 +86,11 @@ export class ThrowableSystem {
   }
   throw(actor: ThrowActor, requested: ThrowPoint, trace: ThrowTrace): boolean {
     const item = this.held(actor.faction);
-    if (!this.config.enabled || !item || !actor.canAct || actor.hidden ||
+    if (!this.config.enabled || !item || item.remainingThrows <= 0 || !actor.canAct || actor.hidden ||
         this.isStunned(actor.faction) || this.readyAt[actor.faction] > this.nowMs) return false;
     const target = this.aim(actor, requested, trace).point;
     if (Math.hypot(target.x - actor.x, target.z - actor.z) < .05) return false;
+    item.remainingThrows--;
     item.state = 'FLIGHT'; item.holder = null; item.x = actor.x; item.z = actor.z;
     item.flight = { from: { x: actor.x, z: actor.z }, to: target, owner: actor.faction, elapsed: 0 };
     item.height = .75;
@@ -108,7 +111,7 @@ export class ThrowableSystem {
       this.stunRemaining[faction] = Math.max(0, this.stunRemaining[faction] - dt);
   }
   advanceFlights(deltaMs: number, actors: readonly ThrowActor[], trace: ThrowTrace,
-    onHit?: (hit: ThrowableHit) => void): ThrowFaction[] {
+    onHit?: (hit: ThrowableHit) => void, netTargets?: () => readonly ThrowableNetTarget[]): ThrowFaction[] {
     const dt = Math.max(0, deltaMs), hits: ThrowFaction[] = [];
     for (const item of this.items) {
       if (!item.flight || item.state !== 'FLIGHT') continue;
@@ -128,12 +131,20 @@ export class ThrowableSystem {
           contact = t; victim = actor.faction;
         }
       }
+      // DP can sacrifice a projectile to remove a net. First contact still wins:
+      // no destruction behind a wall or an actor hit earlier on the segment.
+      let hitNet: ThrowableNetTarget | null = null;
+      for (const net of flight.owner === 'DEEPSEEK' ? netTargets?.() ?? [] : []) {
+        const t = segmentCircleEntry(start, end, net, net.radius + this.config.projectileRadius);
+        if (t !== null && t < contact) { contact = t; victim = null; hitNet = net; }
+      }
+      hitNet?.destroy();
       item.x = start.x + (end.x - start.x) * contact;
       item.z = start.z + (end.z - start.z) * contact;
       item.height = end.height;
-      if (victim || wall !== null || progress >= 1) {
+      if (victim || hitNet || wall !== null || progress >= 1) {
         item.flight = null; item.height = 0;
-        item.state = item.kind === 'BASIN' ? 'GROUND' : 'USED';
+        item.state = item.kind === 'BASIN' && item.remainingThrows > 0 ? 'GROUND' : 'USED';
         item.readyAt = this.nowMs + this.config.pickupDelayAfterLandingMs;
         if (victim) { this.stunRemaining[victim] = this.config.stunDurationMs; hits.push(victim);
           onHit?.({ victim, kind: item.kind, x: item.x, z: item.z }); }
@@ -144,7 +155,8 @@ export class ThrowableSystem {
   }
   reset(): void {
     this.items.splice(0, this.items.length, ...this.spawns.map(spawn => ({ ...spawn,
-      state: 'GROUND' as const, holder: null, height: 0, readyAt: 0, flight: null })));
+      state: 'GROUND' as const, holder: null, height: 0, readyAt: 0, flight: null,
+      remainingThrows: spawn.kind === 'BASIN' ? this.config.basinMaxThrows : 1 })));
     this.nowMs = 0; this.previous.clear();
     for (const faction of ['DEEPSEEK', 'HUMAN'] as const) {
       this.stunRemaining[faction] = 0; this.readyAt[faction] = 0;

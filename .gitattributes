@@ -1,0 +1,3 @@
+# Keep historical SHA-256 evidence byte-exact across Windows checkouts.
+docs/verification/s19-p/hash-verification/*.json -text
+docs/verification/s19-p/S19_P_CLOSEOUT_EVIDENCE.json -text

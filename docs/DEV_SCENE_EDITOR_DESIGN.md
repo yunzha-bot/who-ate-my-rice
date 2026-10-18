@@ -287,3 +287,14 @@
 ## 12. 2026-10-10 项目文件持久化修复
 
 旧V2的浏览器 `localStorage` 存档是历史格式与手动备份，不再自动覆盖项目布局。家具与藏身锚点唯一权威文件改为 `src/three/map/sceneLayout.json`，其余地图结构仍由 `apartmentMap.ts` 定义。DEV工具栏「应用编辑」后点「保存布局」会调用本地Vite保存接口：校验地图、比较项目文件SHA-256版本、防止旧标签页覆盖、写前留备份、成功后触发HMR。生产构建不开放保存接口。Chrome旧存档与当前布局冲突的复现、原始备份、81/13→82/15合并和刷新/重启/HMR/409验收记录见 `docs/verification/SCENE_LAYOUT_PERSISTENCE/REPORT.md`。后续添加家具须修改JSON并保持稳定ID，不能另建坐标副本。
+
+## 13. 2026-10-18 灯光开关位置扩展（本地待用户验收）
+
+复用既有扩展区与SceneEditorView的拾取/拖动，不改变家具/藏身点数据格式。在「区域灯光 · 开关位置」中可选择18区、聚焦、改X/Z及安装高度，或拖动实体自动吸附同区墙面；编辑期间显示开关，退出后恢复原难度显隐。总应用/保存/放弃、刷新离页提示包含灯位，灯位亦有独立按钮；项目文件roomLightLayout.json与家具/投掷物文件分开。实际功能、限制、持久化/校验与浏览器证据统一见[区域灯光设计](ROOM_LIGHTS_DESIGN.md#dev开关位置编辑2026-10-18本地待用户验收)，不据本轮开发提前标记新阶段PASS。
+
+## 14. 2026-10-18 属性区被压成细条的滚动修复
+
+- 用户截图确认坐标输入被挤在面板底部，无法向下操作。以实际SceneEditorPanel、ThrowableEditor、RoomLightEditor及真实style.css建立独立浏览器夹具，762×484时detail仅16px、面板clientHeight426px/scrollHeight811px，overflow:hidden，精准复现。不是对象不能移动或字段只读。
+- 仅调整编辑器CSS：外层overflow:auto，直接子区不压缩；列表保留自身34vh上限和滚动，属性区按自然内容高度展开，由整块面板滚动承载；关闭标题栏sticky。两列字段使用minmax(0,1fr)，输入最小宽度归零并限制盒宽，避免较窄窗口横向裁切。不扩大窗口到视口外，不改DEV入口/玩法/布局保存逻辑。
+- scripts/verify-scene-editor-panel.mjs为可重复DOM/CSS回归，需要已运行的5173和可导入Playwright（或PLAYWRIGHT_MODULE模块地址），无账号/不访问日常浏览器/不保存项目布局。Chrome及Edge，762×484、1280×720、1920×1080，灯位区展开/收起共12项：属性区328px、外层滚动可达；真实输入/Tab触发坐标回调、elementFromPoint确认字段未被祖先裁切、可滚动点击保存、无横向溢出和运行异常。原始日志在系统临时目录rice-editor-panel-before.log与rice-editor-panel-after.log。
+- 夹具不执行真实地图保存或自然对局，用户仍需刷新5173确认自己的屏幕缩放/鼠标滚轮手感；不将浏览器布局回归写成玩法平衡或正式发布验收。

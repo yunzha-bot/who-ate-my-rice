@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GAME_CONFIG as C } from '../config/gameConfig';
 import { DIFFICULTY_COPY, resolveAiDifficulty, type Difficulty } from '../config/difficultyConfig.ts';
 import { DifficultyView } from './DifficultyView.ts';
+import { ControlsHelpView } from './ControlsHelpView';
 import { GameStateSystem } from '../systems/GameStateSystem';
 import { RiceField } from '../systems/RiceField';
 import { SprintSystem } from '../systems/SprintSystem';
@@ -27,6 +28,7 @@ import { HUMAN_CLUE_DEFER_TEXT, HumanAIController, humanAiMovementSpeed,
 import { DeepSeekAIController, isHumanPursuitSound, shouldRunDeepSeekAI,
   type DeepSeekAICommand } from '../systems/DeepSeekAIController';
 import { AILogCollector } from '../systems/AILogCollector';
+import { AIThrowableController } from '../systems/AIThrowableController.ts';
 import { createMatchSetup, freshMatchSeed, parseMatchSeed,
   type MatchSetup } from '../systems/MatchRandom';
 import { HideSystem, type HideExitReason } from '../systems/HideSystem';
@@ -54,6 +56,11 @@ import { createDeepSeekHideMapSnapshot,
 import { resolveDeepSeekAiHideEntry, humanBlocksHideExit,
   DEEPSEEK_HIDE_ENTRY_CODE_TEXT } from '../systems/DeepSeekHideResolution';
 import { HideSearchView } from './HideSearchView';
+import { HardNightView } from './HardNightView';
+import { RoomLightSystem, createRoomLightSwitches } from '../systems/RoomLightSystem.ts';
+import roomLightLayout from './map/roomLightLayout.json';
+import { mountLight, type LightPlacement } from './map/RoomLightLayout.ts';
+import { RoomLightView } from './RoomLightView.ts';
 import { type HideRegionWorld } from './map/HideInteractionRegion';
 import { precheckMapApplication } from './map/MapApplicationPrecheck';
 import { AISafetyPathView } from './AISafetyPathView';
@@ -64,6 +71,7 @@ import { CollisionWorld, canInteractWithDoorXZ } from './CollisionWorld';
 import { DoorView } from './DoorView';
 import { InteriorShadowView, applyInteriorSunShadow, isCoveredInterior } from './InteriorShadowView';
 import { CharacterActionView } from './CharacterActionView';
+import { StartupReadiness } from './StartupReadiness';
 import { DebugDetailsPanel, escapeCandidateProperties,
   type DebugCategory, type DebugProperty } from './DebugDetailsPanel';
 import { InputManager } from './InputManager';
@@ -83,6 +91,8 @@ import { GameFeedback } from './GameFeedback';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { ThrowableSystem, type ThrowableSpawn, type ThrowActor, type ThrowPoint } from '../systems/ThrowableSystem.ts';
 import { ThrowableView, THROWABLE_NAMES } from './ThrowableView.ts';
+import { CaptureNetSystem, humanNetPlacement } from '../systems/CaptureNetSystem.ts';
+import { CaptureNetView } from './CaptureNetView.ts';
 import throwableLayout from './map/throwableLayout.json';
 import { formatMatchTime, populateFactionMenu, populateRoundActions,
   REPORT_MARKUP, updateResultPortrait } from './GameUiLayout';
@@ -110,6 +120,11 @@ const pointText = (value: { x: number; z: number } | null | undefined) => value
 // AI 真实听觉（`PerceptionSystem` / `SoundEventSystem`）与 DEV-B 调试完全不受影响。
 const PLAYER_SOUND_VISUAL_ENABLED: boolean = false;
 
+// 最小操作教学：独立说明层只在**每个浏览器第一次开局**自动弹出一次，
+// 之后从暂停菜单的「操作说明」重看。首次阅读阻止倒计时推进，但不改变 READY 时长。
+const CONTROLS_HELP_AUTO_OPEN = true;
+const CONTROLS_HELP_SEEN_KEY = 'who-ate-my-rice/controls-help-seen-v1';
+
 export class ThreeGame {
   private readonly runtime = new RuntimeDebugOverrides();
   private scene = new THREE.Scene();
@@ -120,6 +135,12 @@ export class ThreeGame {
   private input = new InputManager();
   private readonly throwables = new ThrowableSystem(throwableLayout as ThrowableSpawn[]);
   private readonly throwableView: ThrowableView;
+  private readonly aiThrowers = { DEEPSEEK: new AIThrowableController(), HUMAN: new AIThrowableController() };
+  private readonly captureNet = new CaptureNetSystem();
+  private readonly captureNetView: CaptureNetView;
+  private netAiNextAttemptAt = 0;
+  private netAiApproachAt = 0;
+  private netAiSawRooted = false;
   private control = new LocalControl();
   private readonly cameraOffset = new THREE.Vector3(12, 14, 12);
   private readonly cameraOrbit = new IsometricCameraOrbit(this.cameraOffset);
@@ -154,6 +175,8 @@ export class ThreeGame {
   private menuSettings!: MenuSettingsView;
   private pauseSettingsOpen = false;
   private pauseSettingsButton!: HTMLButtonElement;
+  // 独立操作说明层（教学）：可在首次开局自动出现，也可从暂停菜单重看；不参与玩法。
+  private controlsHelp!: ControlsHelpView;
   private feedback!: GameFeedback;
   private lastReadySeconds = 0;
   private lastAudioPhase = 'FACTION_SELECT';
@@ -161,10 +184,18 @@ export class ThreeGame {
   private lastRiceActive: string | null = null;
   private lastRiceCompleted = 0;
   private lastSprintReadiness = this.sprint.readiness;
+  private lastHumanLockDecision = '';
+  private lastHumanDecisionReason = '';
   private lastQReady = true;
   private soundVisual: SoundVisualView | null = null;
   private traces = new RiceTraceSystem();
-  private vision = new VisionSystem(this.runtime);
+  private roomLights!: RoomLightSystem;
+  private roomLightView!: RoomLightView;
+  private lightOwnsL = false;
+  private vision = new VisionSystem(this.runtime, () => this.difficulty === 'HARD'
+    ? C.difficulty.hardNightVisionRange : Number.POSITIVE_INFINITY,
+    target => this.difficulty === 'HARD' && this.roomLights?.rangeFor(target, 0) === Number.POSITIVE_INFINITY);
+  private readonly hardNightView: HardNightView;
   private perceptionGeometry = new PerceptionGeometry(WALLS, DOOR_NODES,
     () => this.doorSystem.doors, this.runtime);
   private traceViews = new Map<string, THREE.Group>();
@@ -277,7 +308,7 @@ export class ThreeGame {
   private disposed = false;
   private readonly debugPossessionEnabled = import.meta.env.DEV && C.development.factionSwitchEnabled;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, readonly startupReadiness = new StartupReadiness()) {
     this.fixedMatchSeed = import.meta.env.DEV
       ? parseMatchSeed(new URLSearchParams(window.location.search).get('matchSeed')) : null;
     this.scene.background = new THREE.Color(HOME_PALETTE.background);
@@ -287,7 +318,8 @@ export class ThreeGame {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.append(this.renderer.domElement);
-    this.scene.add(new THREE.HemisphereLight(0xfff5e4, 0x9c9988, 2.0));
+    const ambient = new THREE.HemisphereLight(0xfff5e4, 0x9c9988, 2.0);
+    this.scene.add(ambient);
     const light = new THREE.DirectionalLight(0xffefd8, 2.4);
     light.position.set(-8, 24, 12);
     light.castShadow = true;
@@ -298,6 +330,7 @@ export class ThreeGame {
     light.shadow.camera.bottom = -MAP_DEPTH / 2;
     light.shadow.camera.top = MAP_DEPTH / 2;
     this.scene.add(light);
+    this.hardNightView = new HardNightView(this.scene, ambient, light);
 
     // 家具与藏身锚点从项目布局文件载入，浏览器旧存档不覆盖项目布局。
     this.apartment = buildApartment(this.scene, {
@@ -307,6 +340,13 @@ export class ThreeGame {
     this.collision = new CollisionWorld(MAP_WIDTH / 2, MAP_DEPTH / 2, this.apartment.obstacles,
       this.apartment.orientedObstacles);
     this.navigation = new NavigationSystem(this.collision, MAP_WIDTH, MAP_DEPTH, DOOR_NODES);
+    this.roomLights = new RoomLightSystem(createRoomLightSwitches(p => this.collision.canOccupyStaticXZ(
+      p.x, p.z, C.collision.playerRadius, C.three.actorHeight), roomLightLayout.map((p: LightPlacement) => {
+        const mounted = mountLight(p);
+        if (!mounted) throw Error(`灯位文件无效：${p.roomId}`);
+        return mounted;
+      })));
+    this.roomLightView = new RoomLightView(this.scene, container, this.roomLights, ambient, light);
     this.humanAI = new HumanAIController(this.navigation, ROOMS, DOOR_NODES, Math.random,
       this.humanAiMapSnapshot());
     this.deepseekAI = new DeepSeekAIController(this.navigation, DOOR_NODES, ROOMS);
@@ -328,7 +368,7 @@ export class ThreeGame {
       SPAWNS.deepseek.x, actorHeight / 2, SPAWNS.deepseek.z);
     this.human = this.box(actorWidth, actorHeight, actorWidth, C.human.color,
       SPAWNS.human.x, actorHeight / 2, SPAWNS.human.z);
-    this.playerAction = new CharacterActionView(this.player, 'DEEPSEEK');
+    this.playerAction = new CharacterActionView(this.player, 'DEEPSEEK', Math.random, this.startupReadiness);
     this.humanAction = new CharacterActionView(this.human, 'HUMAN');
     this.actorShadows.add(this.player);
     this.actorShadows.add(this.human);
@@ -427,6 +467,7 @@ export class ThreeGame {
       restart: () => this.restart(), menu: () => this.returnToFactionSelect(),
       switchFaction: () => this.switchPrimaryFactionFromPause(),
       developerMode: this.debugPossessionEnabled,
+      help: () => this.openControlsHelp(),
     });
     this.menu = this.label(container, 'faction-menu');
     populateFactionMenu(this.menu, faction => this.chooseFaction(faction));
@@ -434,6 +475,7 @@ export class ThreeGame {
     this.pulseLockView = new PulseLockView(container, C.pulseLock.timing,
       () => this.closePulseLock());
     this.audioSettings = new AudioSettingsView(container, this.audio, () => this.closePauseSettings());
+    this.controlsHelp = new ControlsHelpView(container, () => this.closeControlsHelp());
     this.menuSettings = new MenuSettingsView(this.menu, this.audioSettings.root);
     this.feedback = new GameFeedback(container, this.camera);
     this.throwableView = new ThrowableView(this.renderer.domElement, this.scene, this.camera,
@@ -443,6 +485,12 @@ export class ThreeGame {
         this.feedback.show('投掷！', 'soft');
       });
     this.sceneEditor?.attachThrowables(throwableLayout as ThrowableSpawn[],this.throwables,this.throwableView);
+    this.sceneEditor?.attachLights(this.roomLights,this.roomLightView,roomLightLayout);
+    this.captureNetView = new CaptureNetView(this.renderer.domElement, this.scene, this.camera,
+      this.captureNet, () => this.human.position, () => this.player.position,
+      () => this.canPlaceNet() && this.control.isControlling('HUMAN'),
+      this.traceThrow, this.netGroundClear, () => this.control.selectedFaction === 'HUMAN',
+      () => !this.nightActive || this.control.selectedFaction === 'DEEPSEEK' || this.opponentRendered);
     this.audio.setMusic('menu');
     container.addEventListener('pointerdown', this.onAudioGesture);
     container.addEventListener('pointerover', this.onAudioHover);
@@ -490,6 +538,9 @@ export class ThreeGame {
   private showWorldFeedback(text: string, tone: 'good' | 'bad' | 'soft',
     source: THREE.Vector3, rice = false): void {
     const listener = this.control.selected(this.player, this.human)?.position;
+    // Keep feedback at the player's own position, never label the hidden opponent.
+    if (this.nightActive && !this.opponentVisible &&
+        (!listener || source.x !== listener.x || source.z !== listener.z)) return;
     if (!listener || this.perceptionGeometry.inspectVision(listener, source, 11).status !== 'VISIBLE') return;
     if (source === this.player.position && this.hide.isConcealed('DEEPSEEK') &&
         this.control.selectedFaction !== 'DEEPSEEK') return;
@@ -548,6 +599,7 @@ export class ThreeGame {
   }
 
   private chooseFaction(faction: Faction): void {
+    if (!this.startupReadiness.canStart) return;
     if (!this.match.beginFromFactionSelect()) return;
     this.difficulty = this.difficultyView.value;
     this.control.choose(faction);
@@ -559,7 +611,10 @@ export class ThreeGame {
     this.resize();
     this.followCamera();
     this.updateHud(this.nearestRice());
+    this.maybeOpenControlsHelp(faction);
   }
+
+  useSimplifiedStartupVisual(): void { this.playerAction.useSimplifiedVisual(); }
 
   private followCamera(deltaMs = 0): void {
     const target = this.control.cameraTarget === 'DEEPSEEK' ? this.player
@@ -573,6 +628,8 @@ export class ThreeGame {
         this.pulseLock.isOpen || this.sceneEditor?.isOpen ||
         !this.control.setTemporaryInputTarget(faction)) return;
     this.input.clear();
+    this.aiThrowers.DEEPSEEK.cancel(); this.aiThrowers.HUMAN.cancel();
+    this.captureNet.cancel(); this.captureNetView.cancel();
     this.lastDeepseekVisualHeadingRad = null;
     this.deepseekVisualTarget = { kind: 'NONE' };
     this.hideSearchView.clearPlayerTarget();
@@ -594,17 +651,89 @@ export class ThreeGame {
   private traceThrow = (from: ThrowPoint, to: ThrowPoint, radius: number): number | null =>
     this.collision.traceCircleXZ(from, to, radius);
 
-  private throwActors(): (ThrowActor & { heading: number })[] {
+  private canPlaceNet(): boolean {
+    return this.match.phase === 'PLAYING' && !this.devFreeze.isFrozen &&
+      !this.sceneEditor?.isOpen && !this.controlsHelp.visible && !this.pulseLock.isOpen &&
+      !this.throwables.isStunned('HUMAN');
+  }
+
+  /** Physical authority only; never sends hidden occupancy/coordinates to AI policy. */
+  private netGroundClear = (point: ThrowPoint): boolean => {
+    const c = C.captureNet;
+    if (!this.collision.canOccupyStaticXZ(point.x, point.z, c.radius, C.three.actorHeight) ||
+        this.traceThrow(point, point, c.radius) !== null) return false;
+    const overlap = (p: ThrowPoint, radius: number) =>
+      Math.hypot(point.x - p.x, point.z - p.z) < c.radius + radius;
+    if ([this.human.position, this.player.position].some(p => overlap(p, C.collision.playerRadius))) return false;
+    // Protect every possible enter=exit position, not just today's anchor or
+    // concealed actor. Sector regions use a conservative enclosing circle.
+    if (this.hideSpots.some(spot => {
+      const furniture = this.mapFurniture.find(item => item.id === spot.furnitureId);
+      return furniture && overlap(furniture, spot.interactionRegion.radius + C.collision.playerRadius);
+    })) return false;
+    const protectedPoints = [...this.riceViews.values()].map(v => v.position);
+    const spawns = this.matchSetup ? [this.matchSetup.human, this.matchSetup.deepseek] : [SPAWNS.human, SPAWNS.deepseek];
+    return ![...protectedPoints, ...spawns, ...this.hideSpots,
+      ...(this.hide.entryPosition ? [this.hide.entryPosition] : [])]
+      .some(p => overlap(p, c.protectedClearance));
+  };
+
+  private throwActors(): (ThrowActor & { heading: number; renderVisible: boolean })[] {
     return (['DEEPSEEK', 'HUMAN'] as const).map(faction => {
       const actor = faction === 'DEEPSEEK' ? this.player : this.human;
       return { faction, x: actor.position.x, z: actor.position.z,
         hidden: this.hide.isConcealed(faction),
+        renderVisible: !this.nightActive || faction === this.control.selectedFaction || this.opponentRendered,
         canAct: this.match.phase === 'PLAYING' && !this.devFreeze.isFrozen &&
           !this.sceneEditor?.isOpen && !this.pulseLock.isOpen &&
-          !this.throwables.isStunned(faction) && this.control.isControlling(faction) &&
+          !this.controlsHelp.visible &&
+          (faction !== 'HUMAN' || this.captureNet.mode === 'NONE') &&
+          (faction !== 'DEEPSEEK' || this.captureNet.rootMs <= 0) &&
+          !this.throwables.isStunned(faction) &&
           (faction !== 'DEEPSEEK' || this.sprint.state !== 'STUNNED'),
         heading: faction === 'DEEPSEEK' ? this.playerAction.headingRad : this.humanAction.headingRad };
     });
+  }
+
+  private tryHumanAiNet(visibleTarget: ThrowPoint | null, direction: ThrowPoint): void {
+    const profile = C.captureNetAI[this.difficulty];
+    if (!visibleTarget || !this.captureNet.ready || this.captureNet.rootMs > 0 ||
+        this.captureNet.nets.length >= profile.maxActiveNets ||
+        this.throwables.nowMs < this.netAiNextAttemptAt) return;
+    this.netAiNextAttemptAt = this.throwables.nowMs + profile.attemptIntervalMs;
+    const point = humanNetPlacement(this.human.position, visibleTarget, direction);
+    if (point && this.canPlaceNet())
+      this.captureNet.place(this.human.position, point, this.traceThrow, this.netGroundClear);
+  }
+
+  private humanNetReactionWaiting(aiEnabled: boolean): boolean {
+    if (!aiEnabled) {
+      this.netAiSawRooted = false; this.netAiApproachAt = 0; return false;
+    }
+    const rootedVisible = this.captureNet.rootMs > 0 && this.vision.get('HUMAN').visible;
+    if (rootedVisible && !this.netAiSawRooted)
+      this.netAiApproachAt = this.throwables.nowMs + C.captureNetAI[this.difficulty].approachDelayMs;
+    this.netAiSawRooted = rootedVisible;
+    return rootedVisible && this.throwables.nowMs < this.netAiApproachAt;
+  }
+
+  private updateAiThrowables(deepseekEnabled: boolean, humanEnabled: boolean): void {
+    const actors = this.throwActors();
+    for (const actor of actors) {
+      const faction = actor.faction, opponent = faction === 'HUMAN' ? 'DEEPSEEK' : 'HUMAN';
+      const target = actors.find(a => a.faction === opponent)!;
+      const allowed = faction === 'DEEPSEEK' ? deepseekEnabled && this.sprint.state === 'NORMAL' : humanEnabled;
+      const targetFree = !this.throwables.isStunned(opponent) &&
+        (opponent !== 'DEEPSEEK' || (this.captureNet.rootMs <= 0 && this.sprint.state !== 'STUNNED'));
+      const visibleTarget = targetFree && !target.hidden && this.vision.get(faction).visible ? target : null;
+      const controller = this.aiThrowers[faction];
+      const result = controller.update(this.throwables, { ...actor, canAct: actor.canAct && allowed },
+        visibleTarget, this.difficulty, this.traceThrow);
+      if (result?.started && this.control.selectedFaction === opponent && this.vision.get(opponent).visible) {
+        const position = faction === 'HUMAN' ? this.human.position : this.player.position;
+        this.showWorldFeedback('准备投掷…', 'soft', position);
+      }
+    }
   }
 
   private box(w: number, h: number, d: number, color: number, x: number, y: number, z: number): THREE.Mesh {
@@ -687,6 +816,7 @@ export class ThreeGame {
     this.input.setTabCaptureEnabled(
       this.debugPossessionEnabled && C.development.directHotkeysEnabled &&
       this.match.phase === 'PLAYING' && !frozen);
+    const helpWasVisible = this.controlsHelp.visible;
     const pausePressed = this.input.consumePress('Escape');
     const restartPressed = this.input.consumePress('KeyR');
     const menuPressed = this.input.consumePress('KeyM');
@@ -702,11 +832,19 @@ export class ThreeGame {
       // The finished scene remains frozen until a global shortcut or button is used.
     } else if (this.match.phase !== 'FACTION_SELECT') {
       if (pausePressed) {
-        if (this.match.phase === 'PAUSED' && this.pauseSettingsOpen) this.closePauseSettings();
+        if (this.controlsHelp.visible) this.closeControlsHelp();
+        else if (this.captureNet.mode !== 'NONE' && this.control.isControlling('HUMAN')) {
+          this.captureNet.cancel(); this.captureNetView.cancel();
+        }
+        else if (this.match.phase === 'PAUSED' && this.pauseSettingsOpen) this.closePauseSettings();
         else if (this.pulseLock.isOpen) this.closePulseLock();
         else this.togglePause();
       }
-      if (this.match.phase === 'READY') {
+      if (helpWasVisible || this.controlsHelp.visible) {
+        // Reading help must not spend READY time or advance the match. Escape
+        // only closes help this frame; buffered movement must not leak through.
+        this.input.clear();
+      } else if (this.match.phase === 'READY') {
         // The pre-round countdown must keep advancing (see readyDelta): it is a
         // phase timer, not the gameplay delta the DEV freeze is allowed to gate.
         const readyMs = this.devFreeze.readyDelta(document.hidden || !document.hasFocus() ? 0 : deltaMs);
@@ -736,6 +874,9 @@ export class ThreeGame {
       }
     }
     const editorOpen = this.sceneEditor?.isOpen ?? false;
+    if (frozen || editorOpen || this.match.phase !== 'PLAYING') {
+      this.captureNet.cancel(); this.captureNetView.cancel();
+    }
     if (editorOpen && !this.editorOpenLast) {
       if (this.pulseLock.isOpen) this.closePulseLock();
       const actor = this.control.selected(this.player, this.human);
@@ -774,9 +915,15 @@ export class ThreeGame {
     this.updateHud(this.nearestRice());
     this.updatePerceptionHud();
     this.syncAudio();
+    // Final render visibility after all gameplay updates, before shadows and held props.
+    this.syncNightPresentation(helpWasVisible ? 0 : gameplayMs);
+    const lightActor = this.control.controlled(this.player, this.human);
+    this.roomLightView.sync(this.nightActive, this.roomLights, lightActor?.position ?? null,
+      this.roomLightBlocked, !!this.control.controlledFaction && this.canUseRoomLight(this.control.controlledFaction));
     this.apartment.interiorShadows.update();
     this.actorShadows.update();
     this.throwableView.sync();
+    this.captureNetView.sync();
     fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
@@ -841,6 +988,8 @@ export class ThreeGame {
     const signature = this.mapSignature(map);
     const changed = signature !== this.appliedMapSignature;
     if (changed) {
+      this.aiThrowers.DEEPSEEK.cancel(); this.aiThrowers.HUMAN.cancel();
+      this.captureNet.destroy(); this.captureNet.cancel(); this.captureNetView.cancel();
       this.appliedMapSignature = signature;
       this.releaseHide('MAP_APPLIED');
       this.deepseekVisualTarget = { kind: 'NONE' };
@@ -925,8 +1074,65 @@ export class ThreeGame {
     return result.ok ? null : result.message;
   }
 
+  private roomLightBlocked = (a: { x: number; z: number }, b: { x: number; z: number }): boolean =>
+    this.collision.isLineBlockedXZ(new THREE.Vector3(a.x, 0, a.z), new THREE.Vector3(b.x, 0, b.z));
+
+  private canUseRoomLight(faction: Faction): boolean {
+    const actor = this.throwActors().find(a => a.faction === faction);
+    return this.difficulty === 'HARD' && !!actor?.canAct && !actor.hidden &&
+      (faction !== 'DEEPSEEK' || this.sprint.state === 'NORMAL');
+  }
+
+  private roomLightDebugDirection(): { x: number; y: number } {
+    if (!this.input.isHeld('KeyL')) this.lightOwnsL = false;
+    const actor = this.control.controlled(this.player, this.human);
+    if (this.input.isHeld('KeyL') && this.difficulty === 'HARD' && actor &&
+        this.roomLights.nearby(actor.position, this.roomLightBlocked)) this.lightOwnsL = true;
+    return this.input.debugDirection(this.lightOwnsL);
+  }
+
+  private handleRoomLightInput(): void {
+    if (!this.input.consumePress('KeyL')) return;
+    if (['ControlLeft', 'ControlRight', 'MetaLeft', 'MetaRight', 'AltLeft', 'AltRight']
+      .some(key => this.input.isHeld(key))) return;
+    const faction = this.control.controlledFaction;
+    const actor = this.control.controlled(this.player, this.human);
+    if (!faction || !actor || !this.canUseRoomLight(faction) ||
+        document.activeElement?.matches('input,textarea,select,[contenteditable="true"]')) return;
+    const item = this.roomLights.nearby(actor.position, this.roomLightBlocked);
+    if (!item) return;
+    this.lightOwnsL = true;
+    const changed = this.roomLights.toggle(item.roomId, actor.position, true, this.roomLightBlocked);
+    this.feedback.show(changed ? (this.roomLights.isOn(item.roomId) ? '已开灯' : '已关灯') : '开关冷却中', 'soft');
+  }
+
+  private roomLightAiDirection(faction: Faction, actor: THREE.Mesh, allowApproach: boolean,
+    visibleOpponent: { x: number; z: number } | null): { x: number; z: number } | null {
+    if (!this.canUseRoomLight(faction)) return null;
+    const item = this.roomLights.aiCandidate(faction, actor.position, visibleOpponent);
+    if (!item) return null;
+    // No remote commands: use the identical physical interaction gate as the player.
+    if (this.roomLights.toggle(item.roomId, actor.position, true, this.roomLightBlocked)) return null;
+    if (!allowApproach || Math.hypot(actor.position.x - item.approach.x, actor.position.z - item.approach.z) >
+        C.roomLights.aiDetourRange) return null;
+    const path = this.navigation.findPath(actor.position, item.approach, this.doorSystem.doors);
+    if (!path || path.some(p => !this.roomLights.sameArea(this.roomLights.roomId(p), item.roomId))) return null;
+    if (faction === 'DEEPSEEK' && visibleOpponent && path.some(p =>
+        Math.hypot(p.x - visibleOpponent.x, p.z - visibleOpponent.z) < Math.max(C.roomLights.aiSafeDistance,
+          Math.hypot(actor.position.x - visibleOpponent.x, actor.position.z - visibleOpponent.z)))) return null;
+    const next = path.find(p => Math.hypot(p.x - actor.position.x, p.z - actor.position.z) > .35);
+    if (!next || this.roomLightBlocked(actor.position, next)) return null;
+    const dx = next.x - actor.position.x, dz = next.z - actor.position.z, length = Math.hypot(dx, dz);
+    return { x: dx / length, z: dz / length };
+  }
+
   private updatePlaying(deltaMs: number): void {
+    if (this.difficulty === 'HARD') this.roomLights.advance(deltaMs);
+    this.handleRoomLightInput();
     this.throwables.advanceTime(deltaMs);
+    this.captureNet.advance(deltaMs, this.human.position, this.canPlaceNet(),
+      this.traceThrow, this.netGroundClear,
+      Math.max(this.throwables.stunRemaining.DEEPSEEK, this.sprint.stunRemainingMs));
     const focusedControl = document.activeElement;
     if (this.input.consumePress('KeyF') &&
         !['ControlLeft','ControlRight','MetaLeft','MetaRight','AltLeft','AltRight'].some(key => this.input.isHeld(key)) &&
@@ -947,7 +1153,7 @@ export class ThreeGame {
       ? this.humanSearchCooldown : this.deepseekLockCooldown).ready;
     if (qReady && !this.lastQReady) {
       this.audio.play('skillReady', 'ui', .55);
-      this.feedback.show('Q 技能就绪', 'good');
+      this.feedback.show(this.control.selectedFaction === 'HUMAN' ? 'E 搜查 / V 抓捕就绪' : 'Q 技能就绪', 'good');
     }
     this.lastQReady = qReady;
     this.hideSearchView.advance(deltaMs);
@@ -971,7 +1177,7 @@ export class ThreeGame {
     this.pulseLock.advance(deltaMs, this.match.phase);
     this.renderPulseLock();
     const local = cameraRelativeDirection(this.camera, this.input.localDirection());
-    const debug = cameraRelativeDirection(this.camera, this.input.debugDirection());
+    const debug = cameraRelativeDirection(this.camera, this.roomLightDebugDirection());
     const { deepseek: direction, human: humanDirection } = this.control.directions(local, debug);
     const aimHeading = this.throwableView.heading('HUMAN');
     if (aimHeading !== undefined)
@@ -994,7 +1200,7 @@ export class ThreeGame {
     let deepseekCommand: DeepSeekAICommand | null = null;
     this.aiLogCollector?.advance(deltaMs, this.match.phase === 'PLAYING');
     this.aiLogCollector?.notePhase(this.match.phase);
-    if (deepseekAiEnabled && !this.throwables.isStunned('DEEPSEEK')) {
+    if (deepseekAiEnabled && !this.throwables.isStunned('DEEPSEEK') && this.captureNet.rootMs <= 0) {
       if (!this.deepseekAiWasActive) this.deepseekAI.resumeAfterManualControl();
       const sight = this.vision.get('DEEPSEEK');
       const heardHuman = this.sound.heardBy(this.player.position, 'DEEPSEEK',
@@ -1141,9 +1347,17 @@ export class ThreeGame {
       });
     }
     this.deepseekAiWasActive = deepseekAiEnabled;
+    if (deepseekCommand && !concealedDeepseek && !deepseekCommand.startSprint &&
+        !deepseekCommand.eatRiceId && !deepseekCommand.openDoorId && !deepseekCommand.closeDoorId &&
+        !deepseekCommand.lockDoorId && !deepseekCommand.hideSpotId && !deepseekCommand.hideExitRequest &&
+        this.sprint.state === 'NORMAL') {
+      const lightDirection = this.roomLightAiDirection('DEEPSEEK', this.player,
+        true, this.vision.get('DEEPSEEK').visible ? this.human.position : null);
+      if (lightDirection) deepseekCommand.direction = lightDirection;
+    }
     const activeDeepseekDirection = deepseekCommand
       ? { x: deepseekCommand.direction.x, y: deepseekCommand.direction.z } : direction;
-    if (deepseekCommand?.startSprint && !concealedDeepseek && !this.throwables.isStunned('DEEPSEEK')) {
+    if (deepseekCommand?.startSprint && !concealedDeepseek && !this.throwables.isStunned('DEEPSEEK') && this.captureNet.rootMs <= 0) {
       if (this.sprint.tryStart(activeDeepseekDirection, ratio,
           `AI_${this.deepseekAI.sprintDecision}`)) {
         this.aiLogCollector?.recordSprintStart();
@@ -1152,13 +1366,13 @@ export class ThreeGame {
       }
     }
     if (this.input.consumePress('Space')) {
-      if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek && !this.throwables.isStunned('DEEPSEEK')) {
+      if (this.control.isControlling('DEEPSEEK') && !concealedDeepseek && !this.throwables.isStunned('DEEPSEEK') && this.captureNet.rootMs <= 0) {
         if (this.sprint.tryStart(direction, ratio, 'PLAYER_SPACE')) {
           this.aiLogCollector?.recordSprintStart();
           this.playWorld('sprintStart', this.player.position, 'DEEPSEEK');
           this.showWorldFeedback('冲刺', 'soft', this.player.position);
         } else this.audio.play('skillUnavailable', 'ui', .6);
-      } else if (this.control.isControlling('HUMAN') && !this.pulseLock.isOpen && !this.throwables.isStunned('HUMAN')) {
+      } else if (this.control.isControlling('HUMAN') && !this.pulseLock.isOpen && !this.throwables.isStunned('HUMAN') && this.captureNet.mode === 'NONE') {
         const nearby = this.nearestInteractableDoor(this.human.position);
         if (nearby) {
           const result = this.humanDoorSkill.use(
@@ -1190,10 +1404,11 @@ export class ThreeGame {
       this.showWorldFeedback('恢复', 'good', this.player.position);
     }
     // 藏身中禁止移动（与 STUNNED 同构：位移强制为 0，不新增物理特性）。
-    const movement = concealedDeepseek || this.throwables.isStunned('DEEPSEEK')
+    const movement = concealedDeepseek || this.throwables.isStunned('DEEPSEEK') || this.captureNet.rootMs > 0
       ? { x: 0, y: 0 } : this.sprint.movementDirection(activeDeepseekDirection);
     const speed = effectiveSpeeds(this.runtime).player / U *
-      (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1);
+      (this.sprint.state === 'SPRINT_RUNNING' ? C.sprint.speedMultiplier : 1) *
+      (deepseekAiEnabled ? this.deepseekAI.difficultyConfig.movementSpeedMultiplier : 1);
     const oldDeepseek = this.player.position.clone();
     this.move(this.player, movement.x * speed * deltaMs / 1000, movement.y * speed * deltaMs / 1000);
     if (this.control.isControlling('DEEPSEEK') && !deepseekCommand) {
@@ -1210,8 +1425,10 @@ export class ThreeGame {
       this.perceptionGeometry);
     const aiEnabled = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
       this.control.temporaryInputTarget, debug, this.debugPossessionEnabled);
-    const aiCanAct = aiEnabled && !doorInteraction.humanMovementLocked && !this.throwables.isStunned('HUMAN');
+    const humanNetWait = this.humanNetReactionWaiting(aiEnabled);
+    const aiCanAct = aiEnabled && !humanNetWait && !doorInteraction.humanMovementLocked && !this.throwables.isStunned('HUMAN') && !this.captureNet.placing;
     let aiHumanDirection: { x: number; y: number } | null = null;
+    let humanAiBusy = false;
     if (aiCanAct) {
       if (!this.humanAiWasActive) this.humanAI.resumeAfterManualControl();
       const sight = this.vision.get('HUMAN');
@@ -1246,9 +1463,18 @@ export class ThreeGame {
         const result = this.doorSystem.disableLock(command.unlockDoorId, 'HUMAN');
         this.applyDoorResult(command.unlockDoorId, result, 'HUMAN');
       }
-      if (command.forceBreakDoorId) {
-        const result = this.humanDoorSkill.use(command.forceBreakDoorId,
-          'HUMAN', this.match.phase);
+      const preparingDoor = this.humanDoorSkill.aiForceBreakDoorId;
+      const forceResult = this.humanDoorSkill.tryAiForceBreak(command.forceBreakDoorId,
+        deltaMs, this.match.phase);
+      if (this.humanDoorSkill.aiForceBreakDoorId &&
+          preparingDoor !== this.humanDoorSkill.aiForceBreakDoorId &&
+          (this.vision.get('DEEPSEEK').visible ||
+           this.nearestInteractableDoor(this.player.position)?.door.id === command.forceBreakDoorId)) {
+        const node = this.doorSystem.definition(this.humanDoorSkill.aiForceBreakDoorId)!;
+        this.showWorldFeedback('正在强行破锁…', 'soft', new THREE.Vector3(node.x, .8, node.z));
+      }
+      if (command.forceBreakDoorId && forceResult !== null) {
+        const result = forceResult;
         if (result !== 'COOLDOWN')
           this.applyDoorResult(command.forceBreakDoorId, result, 'HUMAN');
       }
@@ -1259,16 +1485,38 @@ export class ThreeGame {
           y: Math.sin(command.faceHeadingRad) };
       }
       if (command.checkHideSpotId) this.runHumanAiHideCheck(command.checkHideSpotId);
+      humanAiBusy = !!(command.openDoorId || command.unlockDoorId || command.forceBreakDoorId ||
+        command.checkHideSpotId || this.humanAI.unlockProgressMs > 0 || this.humanAI.checkHidePhase === 'DWELL');
+      if (!humanAiBusy) this.tryHumanAiNet(sight.visible ? this.player.position : null, command.direction);
       aiHumanDirection = { x: command.direction.x, y: command.direction.z };
+      if (!humanAiBusy) {
+        const lightDirection = this.roomLightAiDirection('HUMAN', this.human,
+          this.humanAI.state === 'PATROL' || this.humanAI.state === 'INVESTIGATE',
+          sight.visible ? this.player.position : null);
+        if (lightDirection) aiHumanDirection = { x: lightDirection.x, y: lightDirection.z };
+      }
     }
+    if (!aiCanAct) this.humanDoorSkill.cancelAiForceBreak();
     this.humanAiWasActive = aiCanAct || (aiEnabled && this.throwables.isStunned('HUMAN'));
     // S7C-2 修复轮 五：AI 搜查的可见反馈跟随 AI 自己公开的搜查状态（不参与判定）。
     this.syncHumanAiSearchFeedback(aiCanAct);
+    // 本轮新增：Human AI 的路线决策（绕行 / 解锁 / 强破）单独留证。
+    // 刻意与门的实际结果分开记录：**决策不等于门被打开**，混记就无法事后分辨。
+    if (this.humanAI.lockDecision !== this.lastHumanLockDecision ||
+        this.humanAI.decisionReason !== this.lastHumanDecisionReason) {
+      this.lastHumanLockDecision = this.humanAI.lockDecision;
+      this.lastHumanDecisionReason = this.humanAI.decisionReason;
+      this.aiLogCollector?.recordHumanRoute({
+        decision: this.humanAI.lockDecision,
+        reason: this.humanAI.decisionReason,
+        doorId: this.humanAI.targetDoorId,
+      });
+    }
     const baseHumanSpeed = effectiveSpeeds(this.runtime).human / U;
     const humanSpeed = aiHumanDirection
       ? humanAiMovementSpeed(baseHumanSpeed, this.runtime.humanAIMovementMultiplier)
       : baseHumanSpeed;
-    const activeHumanDirection = doorInteraction.humanMovementLocked || this.throwables.isStunned('HUMAN')
+    const activeHumanDirection = humanNetWait || doorInteraction.humanMovementLocked || this.throwables.isStunned('HUMAN') || this.captureNet.placing
       ? { x: 0, y: 0 } : aiHumanDirection ?? humanDirection;
     const oldHuman = this.human.position.clone();
     this.move(this.human, activeHumanDirection.x * humanSpeed * deltaMs / 1000,
@@ -1276,11 +1524,19 @@ export class ThreeGame {
     this.humanStillness.update(this.human.position, 0);
     this.emitMovementSound('HUMAN', oldHuman, this.human.position, false);
     // Both actor positions now describe this frame, matching the projectile interval.
+    this.vision.update(0, this.human.position, this.player.position, this.perceptionGeometry);
+    this.updateAiThrowables(!!deepseekCommand && deepseekAiEnabled && !deepseekCommand.eatRiceId &&
+      !deepseekCommand.openDoorId && !deepseekCommand.closeDoorId && !deepseekCommand.lockDoorId &&
+      !deepseekCommand.hideSpotId && !deepseekCommand.hideExitRequest, aiCanAct && !humanAiBusy);
     const throwHits = this.throwables.advanceFlights(deltaMs, this.throwActors(), this.traceThrow,
-      hit => { if(hit.kind === 'BASIN') this.playWorld('basinHit', hit, hit.victim); });
+      hit => { if(hit.kind === 'BASIN') this.playWorld('basinHit', hit, hit.victim); },
+      () => this.captureNet.nets.map(net => ({ ...net, radius: C.captureNet.radius,
+        destroy: () => this.captureNet.destroy(net) })));
     for (const faction of throwHits) {
+      this.aiLogCollector?.recordThrowHit(faction);
       if (faction === 'DEEPSEEK') this.rice.interrupt();
       if (faction === 'HUMAN' && this.pulseLock.isOpen) this.closePulseLock();
+      if (faction === 'HUMAN') { this.captureNet.cancel(); this.captureNetView.cancel(); }
       if (faction === this.control.controlledFaction) this.throwableView.cancel();
       const actor = faction === 'DEEPSEEK' ? this.player : this.human;
       this.showWorldFeedback(`砸中！眩晕${C.throwables.stunDurationMs / 1000}秒`, 'bad', actor.position);
@@ -1297,7 +1553,7 @@ export class ThreeGame {
     this.rice.update(deltaMs,
       deepseekCommand ? aiInRange ? deepseekCommand.eatRiceId : null
         : inRange ? nearest!.id : null,
-      !this.throwables.isStunned('DEEPSEEK') && (deepseekCommand ? aiInRange && this.sprint.state === 'NORMAL' &&
+      !this.throwables.isStunned('DEEPSEEK') && this.captureNet.rootMs <= 0 && (deepseekCommand ? aiInRange && this.sprint.state === 'NORMAL' &&
         activeDeepseekDirection.x === 0 && activeDeepseekDirection.y === 0 :
       this.control.isControlling('DEEPSEEK') && !concealedDeepseek &&
       this.sprint.state === 'NORMAL' && this.input.isHeld('KeyE') &&
@@ -1350,6 +1606,8 @@ export class ThreeGame {
     }
     this.lastSprintReadiness = this.sprint.readiness;
     this.syncTraceViews();
+    // Presentation follows the final collision-resolved position; V still hits only on release.
+    this.hideSearchView.followPlayer(this.human.position);
     this.vision.update(0, this.human.position, this.player.position,
       this.perceptionGeometry);
     const insideCaptureRadius = isInsideCaptureZoneXZ(
@@ -1377,8 +1635,21 @@ export class ThreeGame {
         durationMs: this.match.result.elapsedMs,
         riceCompleted: this.rice.completedCount,
       });
+      // 本轮新增：结算瞬间的状态事实。必须在这里冲写——局终后 updatePlaying 不再运行，
+      // 拖到下一帧就会出现「有结果、没有抓捕状态」的断尾。
+      this.aiLogCollector?.recordCapture({
+        reason: this.match.result.reason, winner: this.match.result.winner,
+        mode: this.match.result.reason === 'CAPTURED' ? 'ZONE' : 'NONE',
+        deepseekStunned: this.throwables.isStunned('DEEPSEEK') ||
+          this.sprint.state === 'STUNNED',
+        deepseekConcealed: this.hide.isConcealed('DEEPSEEK'),
+        humanStunned: this.throwables.isStunned('HUMAN'),
+        sprintState: this.sprint.state,
+        captureProgressMs: this.match.captureProgressMs,
+      });
       this.rice.interrupt();
       this.closePulseLock();
+      this.captureNet.cancel(); this.captureNetView.cancel();
       this.releaseHide('ROUND_FINISHED');
       // S7C-2 修复轮 二：本帧的正式搜查很可能就是分出胜负的那一次（家具搜查命中
       // 会立即 forceCapture）。局终之后 `updatePlaying` 不再运行，如果不在这里
@@ -1399,7 +1670,7 @@ export class ThreeGame {
       falling: throwHits.includes('DEEPSEEK') || previousSprintState !== 'STUNNED' && this.sprint.state === 'STUNNED',
       stunned: this.throwables.isStunned('DEEPSEEK') || this.sprint.state === 'STUNNED',
       eating: riceState === 'PREPARING' || riceState === 'EATING',
-      startled: this.match.captureProgressMs > 0,
+      startled: this.match.captureProgressMs > 0 || this.captureNet.rootMs > 0,
       curiosityPeek: deepseekAiEnabled && this.deepseekAI.state === 'CURIOUS_OBSERVE' &&
         this.deepseekAI.curiosityObserveRemainingMs > C.deepseekAI.curiosityObserveMs / 2,
       curiosityLook: deepseekAiEnabled && this.deepseekAI.state === 'CURIOUS_OBSERVE' &&
@@ -1410,7 +1681,7 @@ export class ThreeGame {
     }), deltaMs, {
       concealed: this.hide.isConcealed('DEEPSEEK'),
       eating: riceState === 'EATING',
-    }, this.throwableView.heading('DEEPSEEK'));
+    }, this.throwableView.heading('DEEPSEEK') ?? this.aiThrowers.DEEPSEEK.heading);
     this.humanAction.update(resolveCharacterAction({
       falling: throwHits.includes('HUMAN'),
       stunned: this.throwables.isStunned('HUMAN'),
@@ -1420,11 +1691,12 @@ export class ThreeGame {
       // S7C-2 修复轮 五：正式搜查停留期间让 Human 走既有的 INTERACT 动作，
       // 配合橙色扇形与家具轮廓，玩家能辨认「它正在检查这件家具」。纯表现，
       // 不参与命中判定，也不触发玩家 Q 的冷却。
-      interacting: (aiEnabled && this.humanAI.unlockProgressMs > 0) ||
+      interacting: this.captureNet.placing || (aiEnabled && (this.humanAI.unlockProgressMs > 0 ||
+        this.humanDoorSkill.aiForceBreakProgressMs > 0)) ||
         (aiEnabled && this.humanAI.checkHidePhase === 'DWELL') ||
         this.pulseLock.isOpen || (this.control.isControlling('HUMAN') &&
         this.input.isHeld('KeyE') && !!this.nearestInteractableDoor(this.human.position)),
-    }), deltaMs, undefined, this.throwableView.heading('HUMAN'));
+    }), deltaMs, undefined, this.throwableView.heading('HUMAN') ?? this.aiThrowers.HUMAN.heading);
   }
 
   private handleDoorInteractions(): {
@@ -1434,22 +1706,33 @@ export class ThreeGame {
   } {
     const faction = this.control.controlledFaction;
     const actor = this.control.controlled(this.player, this.human);
-    if (!faction || !actor || this.throwables.isStunned(faction)) {
+    if (!faction || !actor || this.throwables.isStunned(faction) ||
+        (faction === 'DEEPSEEK' && this.captureNet.rootMs > 0)) {
       this.input.consumePress('KeyE');
       this.input.consumePress('KeyQ');
+      this.input.consumePress('KeyV');
       return { doorOwnsInteraction: false, hideOwnsInteraction: false,
         humanMovementLocked: false };
     }
     if (this.pulseLock.isOpen) {
       if (this.input.consumePress('KeyE')) this.pressPulseLock();
       this.input.consumePress('KeyQ');
+      this.input.consumePress('KeyV');
       return { doorOwnsInteraction: true, hideOwnsInteraction: false,
         humanMovementLocked: this.pulseLock.movementLocked };
     }
     const nearby = this.nearestInteractableDoor(actor.position);
     const rice = faction === 'DEEPSEEK' ? this.nearestRice() : null;
-    // Q 是按阵营区分的技能：DeepSeek 锁门（成功才开始 20 秒冷却），Human 扇形搜查。
-    if (this.input.consumePress('KeyQ')) this.useSkillQ(faction, actor, nearby);
+    if (this.input.consumePress('KeyQ')) {
+      if (faction === 'DEEPSEEK') this.useSkillQ(faction, actor, nearby);
+      else { this.throwableView.cancel(); this.captureNetView.begin(); }
+    }
+    if (faction === 'HUMAN' && this.captureNet.mode !== 'NONE') {
+      this.input.consumePress('KeyE');
+      this.input.consumePress('KeyV');
+      return { doorOwnsInteraction: false, hideOwnsInteraction: false,
+        humanMovementLocked: this.captureNet.placing };
+    }
     const concealed = this.hide.isConcealed(faction);
     const hideCandidate = faction === 'DEEPSEEK' && !concealed && this.match.phase === 'PLAYING'
       ? this.nearestHideCandidate(actor.position) : null;
@@ -1480,14 +1763,22 @@ export class ThreeGame {
         this.enterHide(actor.position, hideCandidate);
       } else if (intent === 'HIDE_EXIT') {
         this.exitHide();
+      } else if (faction === 'HUMAN') {
+        this.useSkillQ(faction, actor, nearby, 'FURNITURE');
       }
+    }
+    const searchPressed = this.input.consumePress('KeyV');
+    if (searchPressed && faction === 'HUMAN' && !this.pulseLock.isOpen) {
+      this.useSkillQ(faction, actor, nearby);
     }
     return { doorOwnsInteraction, hideOwnsInteraction,
       humanMovementLocked: this.pulseLock.movementLocked };
   }
 
-  // S7C-1B：Q 技能按阵营分流（本轮仅人工控制的角色会走到这里）。
-  private useSkillQ(faction: Faction, actor: THREE.Mesh, nearby: NearbyDoor | null): void {
+  // Existing skill executor; legacy name retained for diagnostic/test compatibility.
+  // DP Q locks; Human E searches furniture, V captures in the forward fan.
+  private useSkillQ(faction: Faction, actor: THREE.Mesh, nearby: NearbyDoor | null,
+    humanAction: 'FAN' | 'FURNITURE' = 'FAN'): void {
     const skill = resolveQSkill(faction);
     if (skill === 'LOCK_DOOR') {
       const gate = deepseekLockGate({
@@ -1508,21 +1799,17 @@ export class ThreeGame {
       return;
     }
     if (skill !== 'FAN_SEARCH') return;
-    // S7C-2 修复轮 三：Human 玩家 Q 的唯一输入优先级（用户本轮批准的 ①→②→③→④）：
-    //   ① 12 秒冷却中 → 直接拒绝（不搜查、不抓捕、不产生新冷却）；
-    //   ② 当帧有**合法暴露目标** → 原有普通扇形抓捕（即使正站在家具交互区域内、
-    //      并正对着家具，也绝不改为家具搜查）；
-    //   ③ 否则当帧有**合法 + 被指向**的家具 → 只搜查这件家具；
-    //   ④ 否则 → 原有普通扇形空挥。
-    // 三条输入全部来自**按键当帧**重新解析，绝不复用上一帧的高亮目标，因此不存在
-    // 「UI 高亮 A 家具、技能层搜 B 家具」，也不会出现「有暴露目标却提示可以搜家具」。
-    const pressResolution = this.playerQTargetResolution(actor.position);
+    // E and V select disjoint targets. Reuse the original plan/cooldown authority,
+    // but never fall back from missing/invalid furniture to a fan sweep.
+    const pressResolution = humanAction === 'FURNITURE'
+      ? this.playerQTargetResolution(actor.position) : null;
+    if (humanAction === 'FURNITURE' && !pressResolution?.pointedLegalTarget) return;
     const exposed = this.probeExposedTarget();
     const plan = resolvePlayerQPlan({
       cooldownReady: this.humanSearchCooldown.ready,
       remainingSeconds: this.humanSearchCooldown.remainingSeconds,
-      exposedTargetAvailable: exposed.available,
-      furnitureTarget: pressResolution.pointedLegalTarget,
+      exposedTargetAvailable: humanAction === 'FAN' && exposed.available,
+      furnitureTarget: pressResolution?.pointedLegalTarget ?? null,
     });
     this.lastPlayerQPlanReason = plan.reason;
     if (plan.kind === 'REJECT_COOLDOWN') {
@@ -1531,20 +1818,22 @@ export class ThreeGame {
       this.setHideNotice(plan.message ?? '搜查被拒绝');
       return;
     }
-    // 有效释放（对局中且不在冷却）就先开始计时：扇形命中、家具搜查、合法搜空与
-    // 普通扇形空挥同样消耗这 12 秒冷却。
-    if (plan.armsCooldown) this.humanSearchCooldown.arm();
-    if (plan.armsCooldown) this.playWorld('skill', actor.position, faction);
-    if (plan.kind === 'FURNITURE' && pressResolution.pointedLegalTarget &&
-        this.performFurnitureSearch(actor.position, pressResolution.pointedLegalTarget)) {
+    if (plan.kind === 'FURNITURE') {
+      if (pressResolution?.pointedLegalTarget &&
+          this.performFurnitureSearch(actor.position, pressResolution.pointedLegalTarget)) {
+        this.humanSearchCooldown.arm();
+        this.playWorld('skill', actor.position, faction);
+      }
       return;
     }
-    // ② 与 ④：都是原有普通扇形，只是原因不同（`reason` 只进 DEV / AI 日志）。
+    // V's hit and whiff both use the same original cooldown; no furniture read.
+    if (plan.armsCooldown) this.humanSearchCooldown.arm();
+    if (plan.armsCooldown) this.playWorld('skill', actor.position, faction);
     this.performHumanSearch(actor, plan.reason, exposed);
   }
 
   /**
-   * S7C-2 修复轮 二 / 三：Human 玩家 Q 的**家具交互搜查**。
+   * Human E 的家具交互搜查（与 V 扇形完全分开）。
    *
    * 与 Human AI 共用「指定家具权威占用」这一个小接口，但上游几何是另一套：
    * 玩家只要站在合法交互区域内、并且朝向大致对着这件家具（指向条件选完家具之后
@@ -1552,8 +1841,8 @@ export class ThreeGame {
    *
    * 判定顺序（用户本轮批准）：按键当帧解析出的唯一「合法 + 被指向」家具 → ① 该藏身点
    * 与家具仍属于当前已应用地图 → ② 玩家确实位于合法交互区域 → ③ 与家具之间没有墙或
-   * 非 OPEN 门叶 → ④ 才读一次权威占用。返回 true 表示这次 Q 已经由家具搜查消费掉
-   * （搜中或合法搜空），false 表示没有可用的家具目标，调用方应回退到普通扇形。
+   * 非 OPEN 门叶 → ④ 才读一次权威占用。返回 true 表示家具搜中或合法搜空；
+   * false 表示没有可执行的家具目标，调用方不消耗冷却，也绝不回退到扇形。
    */
   private performFurnitureSearch(position: THREE.Vector3,
     target: HideTargetCandidate): boolean {
@@ -1617,7 +1906,7 @@ export class ThreeGame {
       this.releaseHide('SEARCHED');
       this.setHideNotice(`家具搜查命中：已从「${label}」搜出藏身目标并立即抓捕`);
       // 复用 S7C-1B 的同一套正式结算，不新开胜负系统。
-      this.aiLogCollector?.recordForcedCapture();
+      this.aiLogCollector?.recordForcedCapture('FURNITURE_CHECK');
       this.match.forceCapture();
       return true;
     }
@@ -1625,11 +1914,10 @@ export class ThreeGame {
       this.playWorld('search', position, 'HUMAN');
       this.humanSearchTargetKind = 'FURNITURE';
       this.setHideNotice(`家具搜查完成：「${label}」没有人，` +
-        `Q 进入 ${(C.humanSearch.cooldownMs / 1000).toFixed(0)} 秒冷却`);
+        `E 家具搜查 / V 扇形抓捕共用 ${(C.humanSearch.cooldownMs / 1000).toFixed(0)} 秒冷却`);
       return true;
     }
-    // NOT_LEGAL / PLAN_STALE / NO_TARGET：家具目标在按键当帧已不成立，
-    // 按用户规则回退到「原有普通扇形角色抓捕」。
+    // NOT_LEGAL / PLAN_STALE / NO_TARGET: no cooldown, no fan fallback.
     this.setHideNotice(`家具搜查未执行：${HUMAN_FURNITURE_SEARCH_CODE_TEXT[resolution.code]}`);
     return false;
   }
@@ -1637,9 +1925,8 @@ export class ThreeGame {
   // 释放瞬间只做一次命中判定；扇形表现与真实判定共用同一个朝向快照，之后的淡入
   // 淡出不会产生第二次命中。
   //
-  // S7C-2 修复轮 三：这里就是「原有普通扇形」的唯一执行点——分支②（有合法暴露目标）
-  // 与分支④（无暴露目标也无指向家具，空挥）都走它，因此两条路径的几何完全一致；
-  // `reason` 与预检测结果只用于 DEV / AI 日志，绝不改变判定。
+    // Player V uses the original fan geometry but only exposed characters;
+    // concealed furniture is exclusively searched by E. AI search is separate.
   private performHumanSearch(actor: THREE.Mesh, reason: PlayerQPlanReason,
     probe: ExposedFanProbe): void {
     const origin = { x: actor.position.x, z: actor.position.z };
@@ -1650,7 +1937,7 @@ export class ThreeGame {
     const result = evaluateHumanSearch({
       origin,
       headingRad,
-      target: this.humanSearchTarget(),
+      target: this.hide.isConcealed('DEEPSEEK') ? null : this.humanSearchTarget(),
       // 正式遮挡规则与视觉同源：墙体与非 OPEN 的门叶都会挡住扇形。
       lineBlocked: (a, b) => this.perceptionGeometry
         .inspectVision(a, b, Number.POSITIVE_INFINITY).status !== 'VISIBLE',
@@ -1690,21 +1977,15 @@ export class ThreeGame {
     });
     if (result.outcome === 'MISS') {
       this.playWorld('search', actor.position, 'HUMAN');
-      this.setHideNotice(`搜查未命中：${HUMAN_SEARCH_CODE_TEXT[result.code]}`);
+      this.setHideNotice(`扇形抓捕未命中：${HUMAN_SEARCH_CODE_TEXT[result.code]}`);
       return;
     }
     this.humanSearchHitCount++;
     this.playWorld('capture', actor.position, 'HUMAN');
     this.feedback.show('抓到了！', 'good', actor.position);
-    if (result.outcome === 'FLUSH_CONCEALED') {
-      this.showSearchFurnitureFeedback(result.spotId);
-      this.releaseHide('SEARCHED');
-      this.setHideNotice(`搜查命中：已搜出藏身目标（${result.spotId ?? '未知藏身点'}）`);
-    } else {
-      this.setHideNotice('搜查命中：抓到未藏身的 DeepSeek 娘');
-    }
+    this.setHideNotice('扇形抓捕命中：抓到未藏身的 DeepSeek 娘');
     // 立即抓捕成功走正式结算路径（同一 GameStateSystem，不新开胜负系统）。
-    this.aiLogCollector?.recordForcedCapture();
+    this.aiLogCollector?.recordForcedCapture('Q_FAN');
     this.match.forceCapture();
   }
 
@@ -1920,7 +2201,7 @@ export class ThreeGame {
       centre: { x: furniture.x, z: furniture.z },
       size: { width: furniture.width, depth: furniture.depth, height: furniture.height },
       rotationRad: furniture.rotation ?? 0,
-    }, this.humanSearchCooldown.ready && !exposed.available);
+    }, this.humanSearchCooldown.ready);
   }
 
   /** 人工 DP 的唯一白色指向目标；E 的正式判定仍走 handleDoorInteractions()。 */
@@ -2078,7 +2359,7 @@ export class ThreeGame {
       if (realSpotId) this.showSearchFurnitureFeedback(realSpotId);
       this.releaseHide('SEARCHED');
       // 复用 S7C-1B 的正式结算：同一条抓捕路径、同一套胜负与 UI 结果。
-      this.aiLogCollector?.recordForcedCapture();
+      this.aiLogCollector?.recordForcedCapture('FURNITURE_CHECK');
       this.match.forceCapture();
     }
     this.humanAI.onCheckHideResult(spotId, resolution.hit);
@@ -2218,6 +2499,34 @@ export class ThreeGame {
     this.player.visible = !this.hide.isConcealed('DEEPSEEK');
   }
 
+  private get nightActive(): boolean {
+    return this.difficulty === 'HARD' && this.control.selectedFaction !== null && !this.sceneEditor?.isOpen;
+  }
+
+  private get opponentVisible(): boolean {
+    const observer = this.control.selectedFaction;
+    if (observer === null) return false;
+    const opponent = observer === 'HUMAN' ? 'DEEPSEEK' : 'HUMAN';
+    if (this.hide.isConcealed(opponent)) return false;
+    // Player display range is independent of the AI's limited sight range.
+    return this.perceptionGeometry.inspectVision(this.human.position, this.player.position,
+      this.roomLights?.rangeFor(observer === 'HUMAN' ? this.player.position : this.human.position,
+        C.difficulty.hardNightRenderRange) ?? C.difficulty.hardNightRenderRange).status === 'VISIBLE';
+  }
+
+  private get opponentRendered(): boolean {
+    return this.hardNightView.opponentVisible &&
+      !(this.control.selectedFaction === 'HUMAN' && this.hide.isConcealed('DEEPSEEK'));
+  }
+
+  private syncNightPresentation(deltaMs = 0): void {
+    const presentationMs = this.match.phase === 'PLAYING' && !this.devFreeze.isFrozen &&
+      !this.controlsHelp.visible && !this.sceneEditor?.isOpen ? deltaMs : 0;
+    this.hardNightView.sync(this.nightActive, this.control.selectedFaction,
+      this.hide.isConcealed('DEEPSEEK'), this.player, this.human, this.opponentVisible, presentationMs);
+    this.hideSearchView.setAiPresentationVisible(!this.nightActive || this.control.selectedFaction === 'HUMAN' || this.opponentVisible);
+  }
+
   private setHideNotice(text: string): void {
     this.hideNotice = text;
     this.hideNoticeRemainingMs = HIDE_NOTICE_MS;
@@ -2246,21 +2555,20 @@ export class ThreeGame {
             ? '停下，按住 E 吃米'
             : '靠近家具按 E 藏身 · 靠近米堆停下按住 E';
       this.skillHudState.textContent = targetText;
-      this.skillHudState.title = `E 藏身不要求朝向；轮廓仅提示目标。Q 锁门：${lockText}`;
+      this.skillHudState.title = `E 藏身不要求朝向。Q 锁门：${lockText}`;
     } else {
       const target = this.hideTargetSpotId
         ? this.hideSpots.find(spot => spot.id === this.hideTargetSpotId) ?? null : null;
-      // S7C-2 修复轮 三：只有「合法 + 被指向 + 当帧没有暴露目标」时，Q 才会搜这件家具。
-      // 三者缺一都不能给出「可以搜家具」的提示，否则就是误导性提示（用户本轮红线）。
-      if (target && this.hideTargetLegal && !this.hideTargetExposedPriority) {
+      // E furniture availability is independent of V's exposed target.
+      if (target && this.hideTargetLegal) {
         this.skillHudState.textContent = this.humanSearchCooldown.ready
-          ? `Q 搜查「${target.label}」`
-          : `「${target.label}」可搜查 · 等待 Q 冷却`;
+          ? `E 搜查「${target.label}」`
+          : `「${target.label}」可搜查 · 等待共用冷却`;
       } else {
         this.skillHudState.textContent =
-          '靠近她按 Q 抓捕 · 面向白色轮廓家具按 Q 搜查';
+          '靠近即可抓捕 · E 搜查家具 · V 前方扇形抓捕';
       }
-      this.skillHudState.title = `Q：${searchText}；普通抓捕半径 ${C.humanSearch.range}、张角 ${C.humanSearch.halfAngleDeg * 2}°`;
+      this.skillHudState.title = `共用冷却：${searchText}；E 门优先，否则搜查家具；V 前方扇形抓捕`;
     }
     const actor = this.control.controlled(this.player, this.human);
     const door = actor ? this.nearestInteractableDoor(actor.position) : null;
@@ -2273,11 +2581,10 @@ export class ThreeGame {
     }
     this.skillHudNotice.textContent = this.hideNotice;
     // Contextual E lives beside the actor; retain Q feedback and rejection notices.
-    const showQ = faction === 'HUMAN' && !!this.hideTargetSpotId &&
-      this.hideTargetLegal && !this.hideTargetExposedPriority;
+    const showQ = faction === 'HUMAN' && !door && !!this.hideTargetSpotId && this.hideTargetLegal;
     const showBreak = faction === 'HUMAN' && door?.door.state === 'LOCKED';
     if (showQ) this.skillHudState.textContent = this.humanSearchCooldown.ready
-      ? 'Q 搜查白色轮廓家具' : `Q 搜查冷却 ${Math.ceil(this.humanSearchCooldown.remainingSeconds)} 秒`;
+      ? 'E 搜查面前的家具' : `E 搜查 / V 抓捕共用冷却 ${Math.ceil(this.humanSearchCooldown.remainingSeconds)} 秒`;
     if (showBreak) this.skillHudState.textContent = 'Space 强破门锁';
     this.skillHudState.hidden = !showQ && !showBreak;
     this.skillHud.hidden = phase !== 'PLAYING' || !!this.sceneEditor?.isOpen ||
@@ -2340,7 +2647,12 @@ export class ThreeGame {
   private applyDoorResult(id: string | null, result: DoorActionResult,
     actorOverride?: Faction): void {
     // S7D：整局摘要只做计数，不复制门状态（门状态唯一来源仍是 DoorSystem）。
-    this.aiLogCollector?.recordDoorResult(result);
+    // 本轮新增：同时留一条「门实际被怎么打开」的逐条证据（含锁门到打开的时间差）。
+    const doorActor: Faction | null = result === 'LOCKED' ? 'DEEPSEEK'
+      : result === 'FORCE_OPENED' || result === 'UNLOCKED' ? 'HUMAN'
+        : actorOverride ?? this.control.controlledFaction;
+    this.aiLogCollector?.recordDoorResult(result, {
+      doorId: id, actor: doorActor });
     if (id && (result === 'OPENED' || result === 'CLOSED' ||
         result === 'LOCKED' || result === 'UNLOCKED' || result === 'FORCE_OPENED')) {
       this.syncDoor(id);
@@ -2348,9 +2660,7 @@ export class ThreeGame {
         : result === 'CLOSED' ? 'DOOR_CLOSE'
         : result === 'LOCKED' ? 'DOOR_LOCK'
         : result === 'FORCE_OPENED' ? 'FORCE_BREAK' : 'LOCK_BREAK';
-      const sourceFaction = result === 'LOCKED' ? 'DEEPSEEK' :
-        result === 'FORCE_OPENED' || result === 'UNLOCKED' ? 'HUMAN'
-          : actorOverride ?? this.control.controlledFaction;
+      const sourceFaction = doorActor;
       const door = this.doorSystem.definition(id);
       if (door && sourceFaction) {
         this.sound.emit(soundType, door, sourceFaction);
@@ -2401,14 +2711,32 @@ export class ThreeGame {
   }
 
   private move(mesh: THREE.Mesh, dx: number, dz: number): void {
-    mesh.position.copy(this.collision.move(mesh.position, dx, dz,
+    const next = this.collision.move(mesh.position, dx, dz,
+      C.collision.playerRadius, C.three.actorHeight);
+    if (mesh === this.player) {
+      const t = this.captureNet.trigger(mesh.position, next, this.hide.isConcealed('DEEPSEEK'), this.traceThrow);
+      if (t !== null) {
+        this.moveToNetContact(mesh, next, t);
+        this.rice.interrupt();
+        this.showWorldFeedback('捕捉网！暂时无法移动', 'bad', mesh.position);
+        return;
+      }
+    }
+    mesh.position.copy(next);
+  }
+
+  private moveToNetContact(mesh: THREE.Mesh, next: THREE.Vector3, t: number): void {
+    mesh.position.copy(this.collision.move(mesh.position,
+      (next.x - mesh.position.x) * t, (next.z - mesh.position.z) * t,
       C.collision.playerRadius, C.three.actorHeight));
   }
 
   private togglePause(): void {
     this.throwableView.cancel();
+    this.captureNet.cancel(); this.captureNetView.cancel();
     if (this.match.pause()) {
       this.pauseSettingsOpen = false;
+      this.controlsHelp.hide();
       this.rice.interrupt();
       this.closePulseLock();
       // 藏身状态本身在暂停期间保留；只有表现层的扇形特效需要安全清掉。
@@ -2426,6 +2754,7 @@ export class ThreeGame {
   private resumeFromPause(): void {
     if (!this.match.resume()) return;
     this.pauseSettingsOpen = false;
+    this.controlsHelp.hide();
     this.input.clear();
     this.updateHud(this.nearestRice());
   }
@@ -2435,6 +2764,29 @@ export class ThreeGame {
     this.input.clear();
     this.updateHud(this.nearestRice());
     this.pauseSettingsButton.focus();
+  }
+
+  // 暂停菜单重看说明不恢复游戏；首次说明由帧循环阻止 READY 推进。
+  private openControlsHelp(): void {
+    if (this.pauseSettingsOpen) this.closePauseSettings();
+    this.controlsHelp.show(this.control.selectedFaction);
+  }
+
+  private closeControlsHelp(): void {
+    if (!this.controlsHelp.visible) return;
+    this.controlsHelp.hide();
+    this.input.clear();
+    if (this.match.phase === 'PAUSED') this.overlay.focus({ preventScroll: true });
+  }
+
+  /** 每个浏览器只自动打开一次；localStorage 不可用时静默跳过，绝不阻断开局。 */
+  private maybeOpenControlsHelp(faction: Faction): void {
+    if (!CONTROLS_HELP_AUTO_OPEN) return;
+    try {
+      if (globalThis.localStorage?.getItem(CONTROLS_HELP_SEEN_KEY)) return;
+      globalThis.localStorage?.setItem(CONTROLS_HELP_SEEN_KEY, '1');
+    } catch { return; }
+    this.controlsHelp.show(faction);
   }
 
   private applyDifficulty(): void {
@@ -2448,6 +2800,7 @@ export class ThreeGame {
     if (this.match.phase !== 'PAUSED' || this.pulseLock.isOpen ||
         !this.debugPossessionEnabled || !this.control.switchPrimaryFaction()) return;
     this.applyDifficulty();
+    this.aiThrowers.DEEPSEEK.cancel(); this.aiThrowers.HUMAN.cancel();
     this.input.clear();
     this.lastDeepseekVisualHeadingRad = null;
     this.deepseekVisualTarget = { kind: 'NONE' };
@@ -2505,6 +2858,7 @@ export class ThreeGame {
     if (this.match.phase === 'FACTION_SELECT' || this.control.selectedFaction === null) return;
     this.match.reset();
     this.pauseSettingsOpen = false;
+    this.controlsHelp.hide();
     this.resetRound();
     this.followCamera();
     this.updateHud(this.nearestRice());
@@ -2513,6 +2867,7 @@ export class ThreeGame {
   private returnToFactionSelect(): void {
     if (!this.match.returnToFactionSelect()) return;
     this.pauseSettingsOpen = false;
+    this.controlsHelp.hide();
     this.resetRound();
     this.control.clear();
     this.cameraOrbit.snapDefault();
@@ -2524,6 +2879,11 @@ export class ThreeGame {
   }
 
   private resetRound(): void {
+    this.roomLights.reset(); this.lightOwnsL = false;
+    this.hardNightView.resetVisibility();
+    this.aiThrowers.DEEPSEEK.reset(); this.aiThrowers.HUMAN.reset();
+    this.captureNet.reset(); this.captureNetView.cancel();
+    this.netAiNextAttemptAt = this.netAiApproachAt = 0; this.netAiSawRooted = false;
     this.throwables.reset();
     this.throwableView.cancel();
     this.audio.reset();
@@ -2648,6 +3008,13 @@ export class ThreeGame {
       qRemainingMs: (hudFaction === 'HUMAN' ? this.humanSearchCooldown : this.deepseekLockCooldown).remainingSeconds * 1000,
       qDurationMs: hudFaction === 'HUMAN' ? C.humanSearch.cooldownMs : C.door.playerLockCooldownMs,
       sprintRemainingMs: this.sprint.cooldownRemainingMs, sprintDurationMs: C.sprint.cooldownMs,
+      forceBreakRemainingMs: this.humanDoorSkill.cooldownRemainingMs,
+      forceBreakDurationMs: this.humanDoorSkill.cooldownMs,
+      netRemainingMs: this.captureNet.cooldownMs, netDurationMs: C.captureNet.cooldownMs,
+      netStatus: this.captureNet.placing ? '布置中' : this.captureNet.mode === 'AIMING' ? '选择落点'
+        : this.captureNet.remainingSlots === 0 ? '已放满' : null,
+      netSlots: this.captureNet.remainingSlots,
+      lockSlots: Math.max(0, this.doorSystem.maxActiveLocks - this.doorSystem.activeLockedDoorCount),
       sprintState: this.sprint.state,
       concealed: hudFaction === 'DEEPSEEK' && this.hide.isConcealed('DEEPSEEK'),
       captureRatio: this.match.captureProgressMs / C.match.captureMs,
@@ -2701,9 +3068,11 @@ export class ThreeGame {
 
   /** Read-only projection of the current E target beside the controlled actor. */
   private currentInteractionPrompt() {
+    if ((this.control.controlledFaction === 'HUMAN' && this.captureNet.mode !== 'NONE') ||
+        (this.control.controlledFaction === 'DEEPSEEK' && this.captureNet.rootMs > 0)) return null;
     const faction = this.control.controlledFaction;
     const actor = this.control.controlled(this.player, this.human);
-    if (!faction || !actor || this.match.phase !== 'PLAYING' || this.sceneEditor?.isOpen ||
+    if (!faction || !actor || this.match.phase !== 'PLAYING' || this.pulseLock.isOpen || this.sceneEditor?.isOpen ||
         this.devFreeze.isFrozen) return null;
     const concealed = this.hide.isConcealed(faction);
     const door = this.nearestInteractableDoor(actor.position);
@@ -2727,10 +3096,13 @@ export class ThreeGame {
       riceInRange: !!rice && rice.range <= C.rice.interactionRange / U,
       moving: direction.x !== 0 || direction.y !== 0,
     });
-    // Human can see a hide point, but E remains unauthorized by HideSystem.
-    const shown = prompt ?? (hideCandidate ? {
-      label: '躲藏', detail: faction === 'HUMAN' ? '仅 DeepSeek 娘可用' :
-        !hideCandidate.legal ? '当前位置不可用' : '当前无法躲藏', blocked: true,
+    const searchTarget = faction === 'HUMAN' && !prompt
+      ? this.playerQTargetResolution(actor.position).pointedLegalTarget : null;
+    const shown = prompt ?? (faction === 'HUMAN' ? searchTarget ? {
+      key: 'E' as const, label: '搜查家具', detail: this.humanSearchCooldown.ready ? '搜查面前家具' :
+        `冷却 ${Math.ceil(this.humanSearchCooldown.remainingSeconds)} 秒`, blocked: !this.humanSearchCooldown.ready,
+    } : null : hideCandidate ? {
+      label: '躲藏', detail: !hideCandidate.legal ? '当前位置不可用' : '当前无法躲藏', blocked: true,
     } : null);
     if (!shown) return null;
     const screen = actor.position.clone().add(new THREE.Vector3(0, 2.1, 0)).project(this.camera);
@@ -2885,12 +3257,12 @@ export class ThreeGame {
               ? '按住 E 进食，移动可中断' : '靠近大米后按住 E';
     const humanPath = this.humanAI.getPathProgress();
     const humanActive = shouldRunHumanAI(this.match.phase, this.control.selectedFaction,
-      this.control.temporaryInputTarget, this.input.debugDirection(), this.debugPossessionEnabled);
+      this.control.temporaryInputTarget, this.roomLightDebugDirection(), this.debugPossessionEnabled);
     const humanMode = this.match.phase === 'PAUSED' ? 'PAUSED'
       : this.match.phase === 'READY' ? 'STANDBY' : humanActive ? this.humanAI.state : 'MANUAL';
     const deepseekPath = this.deepseekAI.getPathProgress();
     const deepseekActive = shouldRunDeepSeekAI(this.match.phase, this.control.selectedFaction,
-      this.control.temporaryInputTarget, this.input.debugDirection(), this.debugPossessionEnabled);
+      this.control.temporaryInputTarget, this.roomLightDebugDirection(), this.debugPossessionEnabled);
     const deepseekMode = this.match.phase === 'PAUSED' ? 'PAUSED'
       : this.match.phase === 'READY' ? 'STANDBY'
         : deepseekActive ? this.deepseekAI.state : 'MANUAL';
@@ -3176,33 +3548,33 @@ export class ThreeGame {
           make('hide-capture', '常规抓捕资格（藏身中必须不累计）',
             this.captureZoneActive ? '圈内累计中' : '不累计',
             this.captureZoneActive ? 'danger' : 'normal'),
-          make('hide-search', 'Human Q 搜查：冷却 / 最近判定',
+          make('hide-search', 'Human E搜查 / V抓捕：共用冷却 / 最近判定',
             `${this.humanSearchCooldown.ready ? '可用'
               : `${this.humanSearchCooldown.remainingSeconds.toFixed(1)} 秒`} / ${this.lastSearchCode}`),
           // S7C-2 修复轮 二 / 三：玩家 Q 的唯一家具交互目标（公开解析结果）与家具搜查结果。
           // 「当前高亮」是**本帧**的公开解析结果，「最近一次 Q」是上一次真正执行的用途。
-          make('hide-search-target', 'Human Q 当前高亮 / 最近一次执行',
+          make('hide-search-target', 'Human E 当前家具高亮 / 最近一次执行',
             `高亮 ${this.hideTargetSpotId ? 'FURNITURE' : 'NONE'}` +
             `（${this.hideTargetSpotId ?? '无'}｜家具 ${this.hideTargetFurnitureId ?? '无'}｜` +
             `合法 ${this.hideTargetLegal ? '是' : '否'}｜指向 ` +
             `${this.hideTargetPointed ? '是' : '否'}` +
             `${Number.isNaN(this.hideTargetPointingDeltaDeg) ? '' :
               ` ${this.hideTargetPointingDeltaDeg.toFixed(1)}°`}` +
-            `｜暴露目标优先 ${this.hideTargetExposedPriority ? '是' : '否'}）｜` +
-            `最近一次 Q：${this.humanSearchTargetKind}（${this.lastPlayerQPlanReason}）`,
+            `｜V扇形可命中 ${this.hideTargetExposedPriority ? '是' : '否'}）｜` +
+            `最近一次 E/V：${this.humanSearchTargetKind}（${this.lastPlayerQPlanReason}）`,
             this.hideTargetSpotId && this.hideTargetLegal &&
-              !this.hideTargetExposedPriority ? 'success' : 'normal'),
+              this.humanSearchCooldown.ready ? 'success' : 'normal'),
           make('hide-search-region', '家具交互区域合法性（公开解析）',
             `${this.hideTargetCode}｜${HIDE_TARGET_CODE_TEXT[this.hideTargetCode] ?? '—'}` +
             `｜区域内候选 ${this.hideTargetCandidates} 件`,
             this.hideTargetLegal ? 'success' : 'normal'),
-          make('hide-search-furniture', 'Human Q 家具搜查最近结果',
+          make('hide-search-furniture', 'Human E 家具搜查最近结果',
             `${this.furnitureSearchCode}｜${this.furnitureSearchDetail}｜` +
             `家具搜查 ${this.furnitureSearchCount} 次 / 命中 ${this.furnitureSearchHitCount} 次`),
-          make('hide-search-detail', 'Human Q 最近结果', this.lastSearchDetail),
-          make('hide-search-counts', 'Human Q 释放 / 命中次数',
+          make('hide-search-detail', 'Human E/V 最近结果', this.lastSearchDetail),
+          make('hide-search-counts', 'Human V 扇形释放 / 命中次数',
             `${this.humanSearchCount} / ${this.humanSearchHitCount}`),
-          make('hide-search-spot', 'Human Q 最近瞄到的藏身点', this.lastSearchSpotId ?? '无'),
+          make('hide-search-spot', 'Human 最近搜查的藏身点', this.lastSearchSpotId ?? '无'),
           make('hide-lock-cooldown', 'DeepSeek Q 锁门冷却',
             this.deepseekLockCooldown.ready ? '可用'
               : `${this.deepseekLockCooldown.remainingSeconds.toFixed(1)} 秒`,
@@ -3211,7 +3583,7 @@ export class ThreeGame {
           make('hide-controls', '藏身操作',
             this.control.isControlling('DEEPSEEK')
               ? '走到藏身点附近点按 E 进入 / 再按 E 退出（藏身中禁止移动、冲刺、进食、锁门）'
-              : '控制 Human：面朝方向点按 Q 放出 120° 扇形，命中藏身家具即搜出并抓捕'),
+              : '控制 Human：E 门优先，否则搜查家具；V 前方扇形抓捕（共用冷却）'),
         ] : [],
       },
       {
@@ -3516,6 +3888,7 @@ export class ThreeGame {
     this.audioSettings.dispose();
     this.feedback.dispose();
     this.throwableView.dispose();
+    this.captureNetView.dispose();
     const container = this.renderer.domElement.parentElement;
     container?.removeEventListener('pointerdown', this.onAudioGesture);
     container?.removeEventListener('pointerover', this.onAudioHover);
@@ -3525,6 +3898,7 @@ export class ThreeGame {
     window.removeEventListener('focus', this.onAudioFocus);
     document.removeEventListener('visibilitychange', this.onAudioFocus);
     this.actorShadows.dispose();
+    this.roomLightView.dispose();
     this.apartment.dispose();
     this.safetyPaths?.dispose();
     for (const view of this.riceViews.values()) {

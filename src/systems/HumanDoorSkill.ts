@@ -6,6 +6,8 @@ export type HumanDoorSkillResult = DoorActionResult | 'COOLDOWN';
 
 export class HumanDoorSkill {
   cooldownRemainingMs = 0;
+  aiForceBreakProgressMs = 0;
+  aiForceBreakDoorId: string | null = null;
   private readonly doors: DoorSystem;
   readonly cooldownMs: number;
 
@@ -35,5 +37,29 @@ export class HumanDoorSkill {
     }
   }
 
-  reset(): void { this.cooldownRemainingMs = 0; }
+  /** Caller supplies only the AI's current legally interactable locked door. */
+  tryAiForceBreak(doorId: string | null, deltaMs: number,
+    phase: GamePhase): HumanDoorSkillResult | null {
+    if (phase === 'PAUSED') return null;
+    if (phase !== 'PLAYING' || !doorId ||
+        this.doors.get(doorId)?.state !== 'LOCKED' || this.cooldownRemainingMs > 0) {
+      this.cancelAiForceBreak();
+      return null;
+    }
+    if (this.aiForceBreakDoorId !== doorId) {
+      this.cancelAiForceBreak();
+      this.aiForceBreakDoorId = doorId;
+    }
+    this.aiForceBreakProgressMs += Math.max(0, deltaMs);
+    if (this.aiForceBreakProgressMs < GAME_CONFIG.humanAI.aiForceBreakWindupMs) return null;
+    this.cancelAiForceBreak();
+    return this.use(doorId, 'HUMAN', phase);
+  }
+
+  cancelAiForceBreak(): void {
+    this.aiForceBreakDoorId = null;
+    this.aiForceBreakProgressMs = 0;
+  }
+
+  reset(): void { this.cooldownRemainingMs = 0; this.cancelAiForceBreak(); }
 }

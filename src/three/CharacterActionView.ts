@@ -6,6 +6,7 @@ import { HomeAvatar } from './AlphaPresentation.ts';
 import { loadDeepSeekModel, disposeDeepSeekModel } from './DeepSeekGlbModel.ts';
 import { DeepSeekAnimation, type DeepSeekVisualState } from './DeepSeekAnimation.ts';
 import { DeepSeekHairMotion } from './DeepSeekHairMotion.ts';
+import type { StartupReadiness } from './StartupReadiness.ts';
 
 /** Visual-only bridge shared by the DeepSeek player and NPC. */
 export class CharacterActionView {
@@ -27,6 +28,9 @@ export class CharacterActionView {
   private readonly random: () => number;
   private readonly avatar: HomeAvatar;
   private disposed = false;
+  private visualAttempt = 0;
+  private simplifiedVisual = false;
+  private readonly startupReadiness?: StartupReadiness;
   private deepseekAnimation: DeepSeekAnimation | null = null;
   private deepseekHair: DeepSeekHairMotion | null = null;
   private readonly onMixerFinished = (event: { action: THREE.AnimationAction }): void => {
@@ -38,7 +42,9 @@ export class CharacterActionView {
     this.playClip();
   };
 
-  constructor(mesh: THREE.Mesh, faction: Faction, random: () => number = Math.random) {
+  constructor(mesh: THREE.Mesh, faction: Faction, random: () => number = Math.random,
+    startupReadiness?: StartupReadiness) {
+    this.startupReadiness = startupReadiness;
     this.mesh = mesh;
     this.faction = faction;
     this.random = random;
@@ -50,15 +56,25 @@ export class CharacterActionView {
   }
 
   private async loadVisual(staticOnly = false): Promise<void> {
+    const attempt = this.visualAttempt = (this.visualAttempt ?? 0) + 1;
     let model: THREE.Group | null = null;
     try {
-      model = await loadDeepSeekModel(staticOnly);
-      if (this.disposed) { disposeDeepSeekModel(model); return; }
+      this.startupReadiness?.setModel('downloading');
+      model = await loadDeepSeekModel(staticOnly, phase => {
+        if (!this.disposed && attempt === this.visualAttempt && !this.simplifiedVisual)
+          this.startupReadiness?.setModel(phase);
+      });
+      if (this.disposed || attempt !== this.visualAttempt || this.simplifiedVisual) {
+        disposeDeepSeekModel(model); return;
+      }
+      this.startupReadiness?.setModel('initializing');
       this.avatar.useExternalVisual(model);
       if (model.animations.length) this.deepseekAnimation = new DeepSeekAnimation(model,
         C.characterAnimation.transitionMs / 1000);
       this.deepseekHair = new DeepSeekHairMotion(model, this.mesh);
+      this.startupReadiness?.setModel('ready');
     } catch (error) {
+      if (attempt !== this.visualAttempt || this.simplifiedVisual) return;
       console.warn('DeepSeek visual unavailable; falling back', error);
       this.deepseekAnimation?.dispose();
       this.deepseekAnimation = null;
@@ -67,9 +83,21 @@ export class CharacterActionView {
       if (model && model.parent !== this.avatar.root) disposeDeepSeekModel(model);
       if (this.disposed) return;
       this.avatar.clearExternalVisual();
+      this.startupReadiness?.setModel('failed');
       // Development tries old GLBs; production tries only the formal v6 model;
       // if that is also absent, keep the procedural avatar instead of retrying it.
     }
+  }
+
+  /** Explicit startup choice: late downloads may populate the cache, never this avatar. */
+  useSimplifiedVisual(): void {
+    this.simplifiedVisual = true;
+    this.visualAttempt++;
+    this.deepseekAnimation?.dispose();
+    this.deepseekAnimation = null;
+    this.deepseekHair = null;
+    this.avatar.clearExternalVisual();
+    this.startupReadiness?.setModel('simplified');
   }
 
   attachMixer(mixer: THREE.AnimationMixer,

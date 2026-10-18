@@ -40,7 +40,7 @@ test('matchSummary 记录本局的种子、阵营、结算与完成米数', () =
   collector.noteMatchResult({ winner: 'DEEPSEEK', reason: 'RICE_COMPLETED',
     durationMs: 74_300, riceCompleted: 5 });
   const data = collector.export({ matchSeed: 20260927 });
-  assert.equal(data.formatVersion, '1.7');
+  assert.equal(data.formatVersion, '1.8');
   assert.equal(data.matchSummary.matchSeed, 20260927);
   assert.equal(data.matchSummary.playerFaction, 'HUMAN');
   assert.equal(data.matchSummary.winner, 'DEEPSEEK');
@@ -89,7 +89,8 @@ test('门 / 冲刺 / 摔倒 / 强制抓捕只做计数，不复制门状态', ()
   assert.deepEqual(summary.counts, {
     doorOpened: 2, doorClosed: 1, doorLocked: 1, doorUnlocked: 1, forceBreak: 1,
     sprintStarted: 2, falls: 1, hideEntered: 0, hideExited: 0, hideRejected: 0,
-    humanCheckStarted: 0, humanCheckHit: 0, humanCheckMiss: 0, forcedCaptures: 1 });
+    humanCheckStarted: 0, humanCheckHit: 0, humanCheckMiss: 0, forcedCaptures: 1,
+    throwHitsHuman: 0, throwHitsDeepseek: 0 });
 });
 
 test('藏身与 Human AI 搜查的计数来自既有事件时间线（不新建第二套统计）', () => {

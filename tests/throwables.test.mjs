@@ -114,6 +114,50 @@ test('sweep catches a fast projectile; both victims fall for exactly 3000ms and 
   assert.deepEqual(s.advance(600,[a,victim],clear),[],'no repeated hit from landed basin');}
 });
 
+test('each basin lasts three successful throws across both holders; final flight resolves before disposal',()=>{
+ for(const mode of ['miss','wall','actor','net']){
+  const s=system('BASIN');let at={x:0,z:0},hitCount=0,netCount=0;
+  for(let used=1;used<=3;used++){
+   const a=actor(used===2?'HUMAN':'DEEPSEEK',at.x,at.z);
+   const victim=actor(a.faction==='HUMAN'?'DEEPSEEK':'HUMAN',a.x+2,a.z);
+   s.advanceFlights(0,mode==='actor'?[a,victim]:[a],clear);
+   assert(s.pickup(a,clear));assert.equal(s.held(a.faction).remainingThrows,4-used);
+   assert(s.throw(a,{x:a.x+4,z:a.z},clear));
+   const item=s.items[0];assert.equal(item.remainingThrows,3-used);assert.equal(item.state,'FLIGHT');
+   s.advanceFlights(600,mode==='actor'?[a,victim]:[a],mode==='wall'?()=>.1:clear,
+    ()=>hitCount++,()=>mode==='net'?[{x:a.x+2,z:a.z,radius:.55,destroy(){netCount++;}}]:[]);
+   assert.equal(item.state,used<3?'GROUND':'USED');at={x:item.x,z:item.z};
+   assert(!s.pickup(actor(a.faction,at.x,at.z),clear));
+   s.advanceTime(3000);
+  }
+  assert.equal(hitCount,mode==='actor'?3:0,'last impact must still apply stun/callback');
+  assert.equal(netCount,mode==='net'?2:0,'DP final throw still destroys its first-contact net');
+  assert.equal(s.nearest(actor('DEEPSEEK',at.x,at.z),clear),undefined);
+  assert(!s.pickup(actor('HUMAN',at.x,at.z),clear));
+  s.applyLayout([{...spawn('BASIN')[0],x:2}]);assert.equal(s.items[0].state,'USED');
+  assert.equal(s.items[0].remainingThrows,0,'editing position must not repair the basin');
+  s.reset();assert.equal(s.items[0].state,'GROUND');assert.equal(s.items[0].remainingThrows,3);
+ }
+});
+
+test('failed/cancelled basin throws do not spend durability, and distinct basins own separate counters',()=>{
+ const s=new ThrowableSystem([...spawn('BASIN'),{...spawn('BASIN')[0],id:'two',x:10}],
+  {...C.throwables,throwCooldownMs:2000});
+ const a=actor();assert(s.pickup(a,clear));
+ for(const blocked of [{...a,canAct:false},{...a,hidden:true}])
+  assert(!s.throw(blocked,{x:4,z:0},clear));
+ assert(!s.throw(a,a,clear));assert(!s.throw(a,{x:4,z:0},()=>0));
+ assert.equal(s.items[0].remainingThrows,3);
+ assert(s.throw(a,{x:4,z:0},clear));
+ const snapshot=JSON.stringify(s);s.advance(20000,[a],clear,false);assert.equal(JSON.stringify(s),snapshot);
+ s.advance(600,[a],clear);const at=actor('DEEPSEEK',s.items[0].x);
+ s.advanceTime(500);assert(s.pickup(at,clear));
+ s.applyLayout([{...spawn('BASIN')[0],x:2},{...spawn('BASIN')[0],id:'two',x:9}]);
+ assert.equal(s.items[0].remainingThrows,2);assert.equal(s.items[1].remainingThrows,3);
+ assert(!s.throw(at,{x:at.x+4,z:0},clear));
+ assert.equal(s.items[0].remainingThrows,2);
+});
+
 test('moving actors can dodge or cross the real flight; concealed targets and owner never hit',()=>{
  for(const [start,end,expected]of[[actor('HUMAN',4),actor('HUMAN',4,4),false],
   [actor('HUMAN',2,2),actor('HUMAN',2,-2),true],
@@ -190,7 +234,7 @@ test('pointer aiming uses the actual offset canvas and all four camera angles; c
  t.after(()=>{globalThis.window=oldWindow;globalThis.document=oldDocument;});
  const canvas=new EventTarget();canvas.parentElement={append(){}};
  canvas.getBoundingClientRect=()=>({left:100,top:50,right:900,bottom:650,width:800,height:600});
- const camera=new THREE.OrthographicCamera(-6,6,4.5,-4.5,.1,100),scene=new THREE.Scene(),s=system('BOX');
+ const camera=new THREE.OrthographicCamera(-6,6,4.5,-4.5,.1,100),scene=new THREE.Scene(),s=system('BASIN');
  const a={...actor(),heading:0},throws=[];
  const view=new ThrowableView(canvas,scene,camera,s,()=>[a],()=>a.faction,clear,(...args)=>throws.push(args));
  const event=(type,button,x,y)=>Object.assign(new Event(type,{cancelable:true}),{button,clientX:x,clientY:y});
@@ -198,13 +242,16 @@ test('pointer aiming uses the actual offset canvas and all four camera angles; c
   const p=new THREE.Vector3(2,0,2).project(camera),x=100+(p.x+1)*400,y=50+(1-p.y)*300;
   canvas.dispatchEvent(event('pointerdown',0,x,y));assert(Math.abs(view.heading('DEEPSEEK')-Math.PI/4)<1e-8);
   view.sync();assert.equal(view.root.getObjectByName('one').visible,true);
+  assert.match(view.status.textContent,/剩余 3 次投掷/);
   canvas.dispatchEvent(event('pointerdown',2,x,y));window.dispatchEvent(event('pointerup',0,x,y));assert(s.held('DEEPSEEK'));
+  assert.equal(s.held('DEEPSEEK').remainingThrows,3,'cancelled aiming spends no durability');
   canvas.dispatchEvent(event('pointerdown',0,x,y));canvas.dispatchEvent(event('pointerup',0,x,y));window.dispatchEvent(event('pointerup',0,x,y));
   // Window delivery target is deliberately outside the canvas: releases over UI cancel.
   assert(s.held('DEEPSEEK'));view.cancel();
   canvas.dispatchEvent(event('pointerdown',0,x,y));
   const release=event('pointerup',0,x,y);Object.defineProperty(release,'target',{value:canvas});
   window.dispatchEvent(release);assert.equal(s.items[0].state,'FLIGHT');
+  assert.equal(s.items[0].remainingThrows,2);
   assert(Math.abs(throws.at(-1)[1]-Math.PI/4)<1e-8);}
  view.dispose();view.dispose();assert.equal(scene.children.length,0);assert.equal(view.models.size,0);
  assert.equal(view.status.removed,true);

@@ -1,11 +1,49 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Matrix4, Scene, Vector3 } from 'three';
+import { readFileSync } from 'node:fs';
+import { runInNewContext } from 'node:vm';
 import { HideSearchView, HIDE_PLAYER_TARGET_COLOR, HIDE_PLAYER_TARGET_BREATH_MS,
   HIDE_PLAYER_TARGET_MARGIN, HIDE_PLAYER_TARGET_OPACITY_MAX, HIDE_PLAYER_TARGET_OPACITY_MIN,
   HIDE_PLAYER_TARGET_UNAVAILABLE_OPACITY, HIDE_AI_INSPECT_COLOR }
   from '../src/three/HideSearchView.ts';
 import { headingRadToMeshRotationY } from '../src/systems/HumanSearchSkill.ts';
+
+test('player fan follows Human after actual frame movement without moving furniture or restarting fade', () => {
+  const source = readFileSync(new URL('../src/three/ThreeGame.ts', import.meta.url), 'utf8');
+  const start = source.indexOf('    this.syncTraceViews();', source.indexOf('private updatePlaying('));
+  const end = source.indexOf('    const insideCaptureRadius', start);
+  assert.ok(start > 0 && end > start);
+  const followFrame = runInNewContext(`(function() { ${source.slice(start, end)} })`);
+  const scene = new Scene(), view = new HideSearchView(scene);
+  const [fan, feedback, aiFan, aiOutline, playerTarget] = parts(scene);
+  const game = { hideSearchView: view, human: { position: new Vector3(2, 0, 3) },
+    player: { position: new Vector3() }, syncTraceViews() {}, vision: { update() {} } };
+  view.show({ x: 2, z: 3 }, Math.PI / 3);
+  view.showHitFeedback(CENTRE, SIZE);
+  view.setPlayerTarget(SPOT, { centre: CENTRE, size: SIZE, rotationRad: 0 }, true);
+  view.showAiInspection({ x: 8, z: 9 }, 0, CENTRE, SIZE);
+  const fixedPositions = [feedback, aiFan, aiOutline, playerTarget].map(node => node.position.clone());
+  const heading = fan.quaternion.clone(), geometry = fan.geometry;
+  view.advance(50);
+  for (const [x, z] of [[3, 4], [-2, 5], [0, -1]]) {
+    game.human.position.set(x, 0, z); followFrame.call(game);
+    assert.equal(fan.getWorldPosition(new Vector3()).x, x, 'fan must follow current Human X');
+    assert.equal(fan.getWorldPosition(new Vector3()).z, z, 'fan must follow current Human Z');
+    assert.equal(fan.position.y, .035);
+    assert.ok(fan.quaternion.equals(heading), 'release heading remains unchanged');
+    assert.equal(fan.geometry, geometry); assert.equal(view.releaseCount, 1);
+    [feedback, aiFan, aiOutline, playerTarget].forEach((node, index) =>
+      assert.ok(node.position.equals(fixedPositions[index]), 'only player fan may follow'));
+  }
+  view.advance(470); followFrame.call(game);
+  assert.equal(fan.visible, false, 'original 520ms lifetime is not restarted');
+  const ended = fan.position.clone(); game.human.position.set(20, 0, 20); followFrame.call(game);
+  assert.ok(fan.position.equals(ended), 'expired fan stays inactive');
+  view.show({ x: 1, z: 1 }, 0); view.reset(); followFrame.call(game);
+  assert.equal(fan.visible, false, 'reset must not resurrect the fan');
+  view.dispose(); assert.equal(scene.children.length, 0);
+});
 
 // S7C-2 修复轮 二 / 四：Human **玩家** Q 的唯一家具白色呼吸高亮（纯表现层）。
 //

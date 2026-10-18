@@ -2,13 +2,75 @@
 
 当前 Web / Three.js 灰盒版本的可调玩法数值统一放在 [`src/config/gameConfig.ts`](../src/config/gameConfig.ts)。下表里的 `C` 均表示 `GAME_CONFIG`。时间变量以 `Ms` 结尾时单位为毫秒，1 秒 = 1,000 毫秒；世界单位指 3D 场景的 XZ 地面坐标。改完配置后运行 `npm test`、`npm run build`，再对受影响玩法做人工验收。
 
-2026-10-14 当前规则：本表的 AI 列记录 `GAME_CONFIG` 基础值（EASY），NORMAL/HARD 仅按玩家阵营覆盖对手的11个批准字段，完整档位表与接入说明见 [难度配置](DIFFICULTY_DESIGN.md)。正式游戏实际使用30秒/份；DEV-B保存预设保留但不再在刷新／新局自动应用，只能手动加载。有效值优先级为本局显式DEV覆盖＞本局难度＞GAME_CONFIG基础值，不能只看本表默认值。
+当前规则：本表的 AI 列记录 `GAME_CONFIG` 基础值；各档仅按玩家阵营覆盖对手的批准字段，完整档位表与接入说明见 [难度配置](DIFFICULTY_DESIGN.md)。2026-10-17用户批准本地正式配置试调为20秒/份（原30秒），仍5份；DEV-B保存预设保留但不再在刷新／新局自动应用，只能手动加载。有效值优先级为本局显式DEV覆盖＞本局难度＞GAME_CONFIG基础值，不能只看本表默认值。
+
+2026-10-18困难区域灯光新增`C.roomLights`：`interactionRange=1.5`世界单位（默认1.5，玩家/AI近距操作）、`toggleCooldownMs=3000`毫秒（默认3000，同一照明区域双方及多开关共享冷却，暂停冻结）、`aiDetourRange=4`世界单位（默认4，仅本照明区就近绕行）、`aiSafeDistance=2.5`世界单位（默认2.5，DP不能为关灯更靠近可见Human或进入安全距离）。用户后续批准无墙连通的两个健身分区共用照明及冷却，复用地图开放连接，不改变这些数值。调大交互距离更易操作，缩短切换间隔更易争抢；调大绕行距离/缩小安全距离可能影响AI任务压力，均需两方试玩。默认全关；亮区目标取消玩家/AI距离限制，墙门/真正藏身门禁仍在；关灯回到5单位和原1秒显示保留，不改变AI目击丢失时机。简单/普通不使用这套规则，详见[区域灯光设计](ROOM_LIGHTS_DESIGN.md)。
+
+2026-10-18显示延迟补充：`C.difficulty.hardNightHideDelayMs=1000`（毫秒，默认1000）。仅困难两种主控阵营：已看见对手超距/墙门遮挡后，模型、手持物、阴影和身体网保留1秒；重新看见重置，真正藏身立即清零隐藏，从未看见不显示。该值只影响表现，不延长下述AI视觉/Last Seen；增大保留更久，0恢复即时隐藏。使用既有游戏时间，暂停/说明层/DEV冻结不扣时，换局/观察者清空；不是渐隐或固定位置残影。
+
+2026-10-18用户批准仅困难夜间模式，最新将两方AI和画面上限一起由10试调为5单位：`C.difficulty.hardNightVisionRange=5`（世界单位，默认5），限制两阵营AI的Vision，实际距离取原运行时视距与该上限的min；DEV加大基础视距不能越过上限，不修改/保存运行时预设。选DP时Human AI及选Human时DP AI均读取此上限。画面`C.difficulty.hardNightRenderRange=5`（世界单位，默认5），恰好5单位可显示，超距/墙门遮挡/真正藏身时隐藏；Last Seen不参与显形。两个参数独立、须为正数，当前默认一致；不调整速度、反应、逃跑阈值或记忆时长。简单/普通不设这些上限，保留原11单位默认视距和白天/角色显示。该夜间AI规则是上文DEV覆盖优先级的明确例外，其他规则不变，详见[夜间设计](HARD_NIGHT_MODE_DESIGN.md)。
+
+2026-10-17锁门收益本地调整：新增 `C.humanAI.aiForceBreakWindupMs = 1000`（毫秒，默认1000，三档共用）。只约束AI执行强破请求，连续合法准备满1秒才调用既有HumanDoorSkill.use；玩家手动强破仍即时，普通解锁/PulseLock/30秒强破冷却不改。准备取消、换门、失去交互条件、眩晕或人工接管不消耗冷却并清零，暂停冻结；增大值增加锁门争取时间，减小则缩短。Human可见或玩家近处能交互该门时显示破锁提示，不公开远处AI位置。效果待真人试玩。
+
+2026-10-17速度分档更新：用户确认简单0.90手感可以，并授权按此调整普通/困难。当前Human主控时对手DP AI倍率为EASY 0.90、NORMAL 0.95、HARD 1.00；普通值统一定义在 `C.difficulty.normalDeepseekMovementMultiplier = 0.95`，默认0.95，仅AI步行和冲刺读取。默认步行约3.45/3.6417/3.8333、冲刺5.52/5.8267/6.1333世界单位/秒。困难原1.00保持，不额外加速；普通/困难手感尚待试玩。其他角色速度、时长、冷却与风险规则不变。下文简单试调段落描述其实施时范围，普通当前值以本段为准。
+
+2026-10-17追加用户授权的简单DP AI降速试验：`C.deepseekAI.movementSpeedMultiplier = 1`为基础倍率；`C.difficulty.easyDeepseekSprint.movementSpeedMultiplier = 0.9`仅覆盖Human主控/EASY对手AI。ThreeGame和无头仿真在同一实际位移速度处应用，步行3.8333→3.45、冲刺6.1333→5.52世界单位/秒（未手动DEV调速时）。手动控制含DEV接管不乘AI倍率；普通/困难为1，Human速度不变，冲刺时长/冷却/风险不变。增大倍率加快AI，减小则减慢；保持上一轮approachSprintDistance=4.5，待真人验收，不据自动测试宣称追捕平衡完成。
+
+2026-10-17简单Human追捕体验本地试调：新增 `GAME_CONFIG.difficulty.easyDeepseekSprint.approachSprintDistance = 4.5`（世界单位，原对手有效值6）。仅在玩家选Human且EASY时覆盖DP AI面对明显逼近的提前冲刺距离；普通/困难、玩家DP及AI基础速度、冷却与持续时间不变。减小值推迟该入口，增大则提前。近距阈值5、声音冲刺、出口受阻的紧急入口均保留，因此部分距离仍会触发其他入口，不宣称抓捕平衡已完成。曾试验近距阈值3.5但触发固定种子整局回归，已撤回；实际效果待真人试玩。
 
 2026-10-15追捕手感调整：`DIFFICULTY_OVERRIDES.NORMAL.humanAI.movementSpeedMultiplier` 为0.64（原0.78），`HARD`同字段为0.76（原0.95）；EASY基础0.52不变。只影响DeepSeek主控时对手Human AI的巡逻/追逐移动及行程估计，不改玩家速度、破解/搜查、DeepSeek AI、进食或技能。暂停界面只显示难度名称，有效值仍可在DEV-B中核查。数值是待试玩的新基线，不宣称胜率已平衡。
 
 此前 [结构审计与平衡准备](CODEBASE_BALANCE_AUDIT.md) 的226项读取目录、38项DEV覆盖及填写表是调整前快照，不代表本轮的进食模式或自动恢复行为；其他未授权数值保持不变。
 
 听觉生效时机待决策：9项声音 `range` 实际在每次分析时读取，因此改变范围会影响存量事件（现有测试同样要求）；DEV元数据和旧设计写“仅新事件”，与运行矛盾。`strength`／`lifetimeMs` 则确实按生成快照。本轮只记录，未修源码／测试或选择新语义，详见审计A15。
+
+## Human 捕捉网（2026-10-17本地实现，待人工验收）
+
+三档共用，玩家与AI复用同一个CaptureNetSystem；不改E搜查、Space强破、移动速度或其他技能数值。完整状态/限制见 [捕捉网设计与验收](CAPTURE_NET_DESIGN.md)。
+
+| 参数路径 `C.captureNet.*` | 默认值 | 单位 / 作用 |
+|---|---:|---|
+| `maxActiveNets` | 4 | 张；场上同时存在上限，待启动网也占名额 |
+| `placeRange` | 3 | 世界单位；鼠标放置范围，必须无遮挡 |
+| `radius` | 0.55 | 世界单位；网本体半径，触发扫掠加角色原有碰撞半径 |
+| `placeMs` | 600 | 毫秒；原地布置，成功后才开始冷却 |
+| `armMs` | 1000 | 毫秒；放置成功至启动 |
+| `rootMs` | 5000 | 毫秒；定身，不倒地，不自动判胜 |
+| `cooldownMs` | 20000 | 毫秒；成功放置起算，CD结束且有剩余名额才可再放 |
+| `immunityMs` | 2000 | 毫秒；网定身及重叠的既有控制均结束后仅免疫网 |
+| `protectedClearance` | 0.9 | 世界单位；米点、实际出生、藏身锚点/当前出口的附加禁放距离 |
+| `aiThreatRange` | 6 | 世界单位；AI只对当前可见且此范围内的目标考虑布网 |
+| `aiPlaceDistance` | 1.4 | 世界单位；沿AI当前行进方向布网距离 |
+
+捕捉网永久留场，不再有lifetimeMs或自动到期计时；触发后消耗对应一张并释放名额，重开/应用地图清空。Q右上角圆标显示剩余名额4→0；DP锁门圆标显示原3扇上限的剩余名额3→0，破锁/解锁后恢复名额。上述共享参数须保持正值；placeRange应能容纳网与角色的无重叠位置。增大容量/半径/定身或缩短启动/冷却会增强Human；玩家/AI共用技能物理数值，AI主动布网预算与反应节奏另按下表分档。藏身区域还按现有interactionRegion半径的包围圆保守禁放，避免任意合法进入/退出位置被网覆盖，不修改区域数据。
+
+### Human AI布网与中网追捕节奏
+
+| 参数路径 `C.captureNetAI.<难度>.*` | EASY | NORMAL | HARD | 单位 / 作用 |
+|---|---:|---:|---:|---|
+| `maxActiveNets` | 1 | 2 | 4 | 张；Human AI主动布网预算，玩家仍4张 |
+| `attemptIntervalMs` | 5000 | 1500 | 500 | 毫秒；两次布网提案的最短间隔，替代旧captureNet.aiCheckMs |
+| `approachDelayMs` | 1200 | 500 | 0 | 毫秒；真正看见DP中网后额外等待再靠近，允许0 |
+
+AI仍遵守20秒技能CD和完整物理禁放校验，不会预先知道隐藏的DP位置。等待期间停止Human AI动作和移动，不延迟玩家操作；丢失可见中网状态/禁锢结束不继续等待。原抓捕圈/350ms连续抓捕规则不变，已处在抓捕圈内时仍可能按原规则抓住。中网反应和提案节奏使用原throwables.nowMs，暂停冻结，重开清空。难度切换后已存在超出新AI预算的网保留，只限制继续布置，不删除网或缩小玩家上限。
+
+## 三档双阵营AI投掷（2026-10-17本地实现，待试玩）
+
+Human/DP两方AI均启用，简单较差、普通居中、困难较准；参数唯一来源C.throwableAI，与玩家投掷数值分开。顺路调用原1.2单位拾取入口，不新增捡道具寻路；原ThrowableSystem冷却仍裁决出手，AI间隔仅限制决策频率。
+
+| 参数路径 `C.throwableAI.*` | 默认值 | 单位 / 作用 |
+|---|---:|---|
+| `pickupScanMs` | 300 | 毫秒；AI尝试拾取身边道具的间隔 |
+| `minTargetDistance` | 1.5 | 世界单位；贴脸不投掷 |
+| `maxTargetDistance` | 5.5 | 世界单位；只向此范围内无遮挡且可见目标投掷 |
+| `HARD.maxTargetDistance` | 6 | 世界单位；困难目标距离上限，物理射程仍受throwables.maxThrowDistance=6约束 |
+| `EASY.windupMs` / `NORMAL.windupMs` / `HARD.windupMs` | 1300 / 900 / 650 | 毫秒；固定落点后的准备时间，期间不追踪 |
+| `EASY.intervalMs` / `NORMAL.intervalMs` / `HARD.intervalMs` | 9000 / 6500 / 5000 | 毫秒；上次成功投掷后至少等待，再开始下一次瞄准 |
+| `EASY.aimErrorRadius` / `NORMAL.aimErrorRadius` / `HARD.aimErrorRadius` | 1.8 / 1.25 / 0.25 | 世界单位；落点均匀圆盘随机偏差半径，不是命中率 |
+| `HARD.leadTimeMs` | 600 | 毫秒；仅困难的可见移动预判时长上限，实际不超过弹体飞行时间 |
+| `HARD.maxLeadDistance` | 2.4 | 世界单位；预测位移分量的最大幅度，另叠加原随机误差 |
+
+目标必须当前真实视觉可见且未藏身/禁锢/眩晕；不使用声音/Last Seen推算位置。前摇保持原快照，出手时按当前仍可见目标位置重新计算一次落点，并保留起手时同一份随机误差，避免AI追赶过程中跑到旧落点旁边只扔到脚下。简单/普通不预判；用户追加明确批准困难使用前摇期间连续可见的位置变化估计平均速度，在出手时预测最多600ms/2.4单位，仍经原6单位物理射程和墙体裁剪。弹体一旦出手三档均不追踪，变向可使预测失效。所有时间读取ThrowableSystem.nowMs，暂停冻结；手动接管、门/藏身/进食/布网等动作互斥，丢失目标取消瞄准及本次运动估计，重新看到后重新前摇。冷却期间可顺路拾取但不出手。真实弹道/墙/移动角色决定命中，沿用3秒眩晕和盆3次耐久；不据偏差参数承诺实际命中率或胜率。
 
 ## 生活投掷物（2026-10-15初始值，待试玩）
 
@@ -24,9 +86,10 @@
 | `C.throwables.projectileRadius` | 0.12 | 世界单位；物件扫掠半径，角色判定还加自身逻辑半径 |
 | `C.throwables.throwCooldownMs` | 800 | 毫秒；每个角色出手间隔 |
 | `C.throwables.pickupDelayAfterLandingMs` | 500 | 毫秒；盆落地禁拾 |
+| `C.throwables.basinMaxThrows` | 3 | 次；每个盆的成功投掷次数，第三次落地后损坏，不能再拾取 |
 | `C.throwables.stunDurationMs` | 3000 | 毫秒；命中倒地眩晕，重复命中刷新而不累加 |
 
-每区域2件属于关卡内容，在 `src/three/map/throwableLayout.json` 持久化；花瓶/盒子实际投出后一次性消耗，只有盆可回收。眩晕期间阻止位移/交互/进食/抓捕，暂停冻结计时；重开复位。参数尚未经过统计平衡测试，尤其注意盆循环压制风险。
+每区域2件属于关卡内容，在 `src/three/map/throwableLayout.json` 持久化；花瓶/盒子实际投出后一次性消耗，盆前两次落地可回收，第三次正常命中/拆网/落地后进入USED损坏，不再拾取或显示。每个盆独立累计，两阵营交换拾取不重置；取消瞄准、出手失败不扣次数，投空/撞墙/拆网也算成功投出一次。提示显示盆剩余次数；重开恢复，编辑布局不修复耐久。眩晕期间阻止位移/交互/进食/抓捕，暂停冻结计时。参数尚未经过统计平衡测试。
 
 2026-10-15用户追加批准：眩晕由2000ms改为3000ms；DEV场景编辑器新增道具拖动、X/Z输入、独立应用及保存，详见 [投掷物编辑验收](verification/THROWABLE_EDITOR_REPORT.md)。其他8项投掷数值及所有既有平衡参数不变。
 
@@ -34,10 +97,10 @@
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
-| `RICE_MAX_PROGRESS_MS.production` | 30,000 | 毫秒；每份米正式进食进度 | 所有难度一致，不含开始／恢复时400ms准备。 |
+| `RICE_MAX_PROGRESS_MS.production` | 20,000 | 毫秒；每份米正式进食进度 | 所有难度一致，不含开始／恢复时400ms准备；2026-10-17用户批准试调。 |
 | `RICE_MAX_PROGRESS_MS.development` | 5,000 | 毫秒；开发测试时间 | 仅为频繁测试提速。 |
 | `RICE_TIMING_MODE` | `production` | 模式；决定 `C.rice.maxProgressMs` | 不随Vite dev/build自动变化；仅显式开发测试才能选择5秒。 |
-| `C.rice.maxProgressMs` | 30,000 | 毫秒；运行时每份米最大进度 | 从上述模式自动得出，RiceField、HUD比例和AI估时读取同一进度。 |
+| `C.rice.maxProgressMs` | 20,000 | 毫秒；运行时每份米最大进度 | 从上述模式自动得出，RiceField、HUD比例和AI估时读取同一进度。 |
 
 当前没有对局倒计时或“开发/正式不同对局时限”的运行规则；`GameStateSystem.elapsedMs` 只累计已进行时间。不能只填写一个配置值就得到限时胜负，需要另行设计与实现该玩法。
 
@@ -209,19 +272,21 @@ AI 只在玩家正式选择 DeepSeek 时接管 Human。声音调查只使用声�
 | `C.pulseLock.timing.targetWidth` / `targetCenters` | 0.20 / `[0.48, 0.56, 0.43]` | 轨道归一化位置与宽度 | 所有门使用相同目标区域，不影响门锁、导航或 AI。 |
 | `C.pulseLock.timing.feedbackMs` | 240 | 毫秒；成功 / 失手的纯视觉反馈 | 不改变 DoorSystem 状态。 |
 
-## S7C-1B 藏身与 Q 技能（Human 扇形搜查 / DeepSeek 锁门）
+## S7C-1B 藏身与阵营技能（Human E 家具搜查 / V 扇形抓捕，DeepSeek Q 锁门）
+
+2026-10-17用户批准Human搜查由Q迁至E：PulseLock已打开时E只操作锁芯；附近有合法可交互门时E只操作门（包括关门受阻，不回落搜查）；无门才执行原扇形/家具搜查。后续同日授权的捕捉网已接Human Q（见上表），选点/布置时E交互暂不可用；DP按键不变。以下历史“Q搜查”指原搜查判定，不代表当前输入键；内部日志字段和resolvePlayerQPlan命名为兼容保留。
 
 藏身（E）本身**没有新增可调数值**：进入是点按即切换，没有进入耗时、也没有独立的 Human 距离门槛；「精确交互区域」复用 DEV-A 已批准的地图创作数据（`HideSpot.interactionRegion`，床与纸箱圆形 2.0 / 1.2，衣柜与柜架扇形 1.6·55°），因此不在本表重复。
 
 | 变量 | 当前值 | 单位 / 作用 | 修改注意 |
 |---|---:|---|---|
-| `C.humanSearch.range` | 1.5 | 世界单位；Human Q 扇形半径 | 与 `C.match.captureRadius`（0.70）、`C.door.interactionRange`（1.3）不同，不要混用；改大等于增强手动搜查。 |
-| `C.humanSearch.halfAngleDeg` | 60 | 度（每侧）；扇形半角，整体张角 = 2 × 60 = 120° | 只影响 Human 玩家的 Q；判定与扇形特效共用 `GAME_CONFIG.humanSearch`，两者不会不一致。 |
-| `C.humanSearch.cooldownMs` | 12,000 | 毫秒；每次有效释放（含未命中）后的冷却 | 冷却只随 PLAYING 的玩法时间推进（暂停与 DEV 冻结期间不推进）；重开/返回阵营页清零。 |
+| `C.humanSearch.range` | 1.5 | 世界单位；Human V 扇形抓捕半径 | 与 `C.match.captureRadius`（0.70）、`C.door.interactionRange`（1.3）不同，不要混用；家具E不使用此距离。 |
+| `C.humanSearch.halfAngleDeg` | 60 | 度（每侧）；扇形半角，整体张角 = 2 × 60 = 120° | 只影响 Human 玩家搜查；判定与扇形特效共用 `GAME_CONFIG.humanSearch`，两者不会不一致。 |
+| `C.humanSearch.cooldownMs` | 12,000 | 毫秒；E 家具搜查与 V 扇形抓捕共用冷却 | E搜中/合法搜空、V命中/空挥消耗；E无合法家具或执行拒绝不消耗。仅PLAYING推进，暂停/DEV冻结不推进；重开清零。 |
 
-Q 的**判定**与**冷却**是两条独立路径：`evaluateHumanSearch()`（`src/systems/HumanSearchSkill.ts`）只回答「释放瞬间打到了什么」，`SkillCooldown` + `SkillGates` 负责可用性与冷却；藏身目标必须命中其绑定家具的**可接近表面**且不被墙/非 OPEN 门叶挡住，命中即调用 `GameStateSystem.forceCapture()` 走同一条抓捕结算。扇形特效的淡入/停留/淡出时长是表现层常量（`src/three/HideSearchView.ts`），不是玩法数值。
+玩家V只对未藏身角色调用 `evaluateHumanSearch()`，保留距离/角度/墙门遮挡；不会搜索隐藏家具。E家具沿用 `resolveHumanFurnitureSearch()` 的合法指向/区域/遮挡与惰性权威占用读取，搜中立即走原 `GameStateSystem.forceCapture()`；无效目标不回退扇形。两者共用同一 `SkillCooldown`，未新增计时。AI仍走既有搜查路径，不受本轮按键拆分影响。扇形特效时长是表现层常量，不是玩法数值。
 
-**玩家 Q 的输入优先级（S7C-2 第三轮修复轮起，见 `docs/S7C_HIDE_RANDOMIZATION_DESIGN.md` §4.7）**：① 冷却中 → 直接拒绝；② 当帧存在**未藏身**的合法暴露目标（即上表 `range` 1.5 / `halfAngleDeg` 60 与墙门遮挡全部通过）→ 原有普通扇形抓捕，**即使玩家站在家具交互区域内并正对着家具也不改为家具搜查**；③ 否则若当帧有「合法 + 被玩家指向」的家具 → 只搜查这一件家具（该分支**不做** 1.5 u / 120° 判定，也不对隐藏者本人做二次判定）；④ 都没有 → 普通扇形空挥。**指向容差直接复用上表的 `halfAngleDeg`（±60°），本轮没有新增任何 `GAME_CONFIG` 数值**；它只比较角度、不比较距离，因此若要调整「算不算指向」的松紧，等于同时改动普通扇形的张角，必须连同玩法一起重新验收。
+**2026-10-17用户授权拆分后的玩家输入**：E先处理PulseLock/门，无门才尝试合法且被指向家具；无目标不释放、不耗冷却，永不扇形空挥。V只做前方未藏身角色的扇形抓捕，不选家具，空挥也耗原冷却。E/V同时按且家具成功执行时，先E后V，由同一冷却阻止第二次释放。Q捕捉网、Space强破不变。原S7C-2 §4.7的自动“暴露目标优先→家具→空挥”是历史方案，不再是当前玩家分流；兼容计划函数保留，由调用方传互斥目标。家具指向仍复用 `halfAngleDeg`（±60°），本轮没有调整或新增任何 `GAME_CONFIG` 数值。
 
 ## S7C-2 Human AI 米痕循迹与家具搜查
 

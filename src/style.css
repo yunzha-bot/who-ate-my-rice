@@ -92,11 +92,13 @@ canvas { display: block; }
 .scene-editor-notice[hidden] { display: none; }
 .scene-editor-panel { position: absolute; z-index: 5; top: 46px; right: 10px;
   display: flex; flex-direction: column; width: min(340px, calc(100vw - 20px));
-  max-height: calc(100vh - 56px); overflow: hidden; color: #d6d9de;
+  max-height: calc(100vh - 56px); overflow: auto; color: #d6d9de;
   border: 1px solid #4b5057; border-radius: 4px; background: #202327f2;
   box-shadow: 0 5px 18px #0006; font: 12px/1.4 system-ui, sans-serif; }
 .scene-editor-panel[hidden] { display: none; }
+.scene-editor-panel > * { flex-shrink: 0; }
 .scene-editor-panel header { display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  position: sticky; top: 0; z-index: 1;
   border-bottom: 1px solid #41464d; background: #292d32; }
 .scene-editor-freeze { margin-left: auto; color: #e5c56f; font-size: 10px; font-weight: 700; }
 .scene-editor-close { width: 24px; height: 24px; font-size: 18px; line-height: 18px;
@@ -116,7 +118,7 @@ canvas { display: block; }
 .scene-editor-layout[data-layout-state="IMPORT_FAILED"] { color: #f0a0a0; }
 .scene-editor-search { margin: 8px; border: 1px solid #4d535b; border-radius: 3px;
   padding: 6px 8px; color: #e4e6e9; background: #191c20; font: inherit; }
-.scene-editor-list { flex: 0 1 auto; min-height: 72px; max-height: 34vh; overflow: auto;
+.scene-editor-list { flex: 0 0 auto; min-height: 72px; max-height: 34vh; overflow: auto;
   border-bottom: 1px solid #3f444a; }
 .scene-editor-section-title { padding: 5px 10px; color: #aeb4bc; background: #262a2f;
   font-weight: 600; }
@@ -126,14 +128,15 @@ canvas { display: block; }
 .scene-editor-row:hover { background: #2f343b; }
 .scene-editor-row[aria-pressed="true"] { background: #3b4650; color: #fff; }
 .scene-editor-row small { color: #9aa1a9; overflow-wrap: anywhere; }
-.scene-editor-detail { flex: 1 1 auto; min-height: 0; overflow: auto;
+.scene-editor-detail { flex: 0 0 auto; min-height: 0; overflow: visible;
   padding: 8px; }
 .scene-editor-identity .scene-editor-readonly { display: grid;
   grid-template-columns: 40% 60%; padding: 2px 0; }
 .scene-editor-readonly span:first-child { color: #aeb4bc; }
-.scene-editor-form { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
-.scene-editor-field { display: flex; flex-direction: column; gap: 2px; }
+.scene-editor-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 5px; margin-top: 8px; }
+.scene-editor-field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .scene-editor-field input, .scene-editor-field select { border: 1px solid #4d535b;
+  min-width: 0; width: 100%; box-sizing: border-box;
   border-radius: 3px; padding: 3px 5px; color: #e4e6e9; background: #191c20; font: inherit; }
 .scene-editor-region-legend { display: grid; gap: 4px; margin-top: 10px; padding: 7px;
   border: 1px solid #3f444a; border-radius: 3px; color: #b9c0c8; background: #1a1d21; }

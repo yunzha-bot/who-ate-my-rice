@@ -29,7 +29,9 @@ test('Pages build selects repository base only with the explicit build flag; DEV
       const loaded = await loadConfigFromFile({ command, mode: command === 'build' ? 'production' : 'development' });
       assert.equal(loaded.config.base ?? '/', expected, `${command}/${flag}`);
       assert.deepEqual(loaded.config.server, { host: '127.0.0.1', port: 5173, strictPort: true });
-      assert.deepEqual(loaded.config.plugins.map(p => p.name), ['scene-layout-save', 'throwable-layout-save', 'production-asset-filter']);
+      assert.deepEqual(loaded.config.plugins.map(p => p.name), ['scene-layout-save', 'throwable-layout-save', 'room-light-layout-save', 'production-asset-filter']);
+      assert.equal(loaded.config.plugins.find(p=>p.name==='room-light-layout-save').apply,'serve',
+        'light position writes must remain unavailable in production builds');
     }
   } finally {
     if (saved === undefined) delete process.env.PAGES_DEPLOYMENT;
@@ -115,7 +117,7 @@ test('upload audit rejects wrong base and resurrected development or old-model r
 });
 
 test('Pages workflow is manual, main-only, production-only and uploads audited dist with pinned actions', () => {
-  const workflow = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
+  const workflow = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
   assert.match(workflow, /on:\n  workflow_dispatch:/);
   assert.doesNotMatch(workflow, /^\s+(?:push|pull_request|pull_request_target|release|schedule):/m);
   assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);

@@ -5,8 +5,9 @@ import { stripTypeScriptTypes } from 'node:module';
 import { runInNewContext } from 'node:vm';
 import * as THREE from 'three';
 import { disposeDeepSeekModel } from '../src/three/DeepSeekGlbModel.ts';
+import { StartupReadiness } from '../src/three/StartupReadiness.ts';
 
-const source = readFileSync(new URL('../src/three/CharacterActionView.ts', import.meta.url), 'utf8');
+const source = readFileSync(new URL('../src/three/CharacterActionView.ts', import.meta.url), 'utf8').replaceAll('\r\n', '\n');
 const method = source.match(/  private async loadVisual\([\s\S]*?\n  }\n/)?.[0];
 assert.ok(method);
 
@@ -28,6 +29,7 @@ for (const failure of ['before-attach', 'animation-init', 'hair-init']) {
       C: { characterAnimation: { transitionMs: 80 } }, console: { warn() {} },
     });
     const view = new Harness(); view.disposed = false; view.deepseekAnimation = null; view.deepseekHair = null;
+    view.startupReadiness = new StartupReadiness();
     view.avatar = { root,
       useExternalVisual(object) { if (failure === 'before-attach') throw Error('injected bounds failure'); externalVisual = object; root.add(object); },
       clearExternalVisual() { if (externalVisual) disposeDeepSeekModel(externalVisual); externalVisual = null; },
@@ -36,5 +38,30 @@ for (const failure of ['before-attach', 'animation-init', 'hair-init']) {
     assert.equal(root.children.length, 0); assert.equal(geometryDisposals, 1); assert.equal(materialDisposals, 1);
     assert.equal(view.deepseekAnimation, null); assert.equal(view.deepseekHair, null);
     assert.equal(animationDisposals, failure === 'hair-init' ? 1 : 0);
+    assert.equal(view.startupReadiness.model, 'failed', 'initialization failures cannot report formal readiness');
+  });
+}
+
+for (const lateFailure of [false, true]) {
+  test(`explicit simplified choice ignores late v6 ${lateFailure ? 'rejection' : 'success'} and disposes late clones`, async () => {
+    let resolve, reject;
+    const pending = new Promise((a, b) => { resolve = a; reject = b; });
+    const simplify = source.match(/  useSimplifiedVisual\([\s\S]*?\n  }\n/)[0];
+    let disposals = 0, attachments = 0;
+    const Harness = runInNewContext(stripTypeScriptTypes(`class Harness { ${method} ${simplify} }; Harness;`), {
+      loadDeepSeekModel: () => pending, disposeDeepSeekModel: () => { disposals++; },
+      DeepSeekAnimation: class {}, DeepSeekHairMotion: class {},
+      C: { characterAnimation: { transitionMs: 80 } }, console: { warn() {} },
+    });
+    const view = new Harness();
+    view.startupReadiness = new StartupReadiness();
+    view.avatar = { clearExternalVisual() {}, useExternalVisual() { attachments++; } };
+    const loading = view.loadVisual();
+    view.useSimplifiedVisual();
+    if (lateFailure) reject(Error('request canceled')); else resolve({ animations: [] });
+    await loading;
+    assert.equal(attachments, 0);
+    assert.equal(disposals, lateFailure ? 0 : 1);
+    assert.equal(view.startupReadiness.model, 'simplified');
   });
 }

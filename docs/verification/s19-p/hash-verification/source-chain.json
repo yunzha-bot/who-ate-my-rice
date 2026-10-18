@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-16T12:58:25.589Z",
+  "repo": "yunzha-bot/who-ate-my-rice",
+  "sourceSHA": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+  "run": {
+    "id": 38897897043,
+    "attempt": 1,
+    "headSHA": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "workflow_dispatch",
+    "url": "https://github.com/yunzha-bot/who-ate-my-rice/actions/runs/38897897043"
+  },
+  "artifact": {
+    "id": 12044274455,
+    "name": "github-pages",
+    "bytes": 40299469,
+    "digest": "sha256:c21a3c56c507e681e0aab75ccebf928a72264ef281ad79e03ac8bbb6bf514e08",
+    "expired": false,
+    "createdAt": "2026-10-16T12:05:50Z",
+    "expiresAt": "2026-10-23T12:05:48Z",
+    "workflowRun": {
+      "id": 38897897043,
+      "repository_id": 1377223269,
+      "head_repository_id": 1377223269,
+      "head_branch": "main",
+      "head_sha": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108"
+    }
+  },
+  "deployment": {
+    "id": 7118498976,
+    "sha": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+    "state": "success",
+    "url": "https://yunzha-bot.github.io/who-ate-my-rice/"
+  },
+  "remoteMain": "e9f361fce9dd5f392e2165ec2cf0b5f1148ed108",
+  "release": {
+    "id": 414708471,
+    "fingerprint": "2179c2df4b5440ec8cc65a669118f53166fc04d80e02860ae7458a058de4d731",
+    "unchanged": true
+  },
+  "operations": "GET only"
+}
