@@ -42,7 +42,7 @@ Pages 白名单审查通过：[产物清单](pages-artifact.json)，99 个文件
 
 ## 手动部署入口
 
-- 工作流：GitHub → Actions → Deploy RC to GitHub Pages → Run workflow，选择 main。
+- 工作流：GitHub → Actions → Deploy production game to GitHub Pages → Run workflow，选择 main。
 - `approved_sha` 必须填本轮最后推送、经用户复核的完整 HEAD；工作流实际 checkout 必须完全相等。不要使用旧 RC Tag SHA 代替最新 main。
 - 预期站点：https://yunzha-bot.github.io/who-ate-my-rice/ 。本次不触发工作流，推送不代表线上更新。
 - 旧 v1.0.0-rc1 Tag/Release 保留；上次公开可核实的手动部署为 2026-10-16 成功记录，不能据此断言线上已包含本轮功能。
@@ -51,3 +51,12 @@ Pages 白名单审查通过：[产物清单](pages-artifact.json)，99 个文件
 ## 已知限制
 
 手机真机 Android / Safari / 微信、系统后台与手感尚待用户验证。开屏 D 的真实后台与 GPU 树叶边缘采样差异保留原报告结论，不改阈值制造通过。构建的大包警告如实保留；本轮不是正式版发布，不改变 S20/S21 授权状态。
+
+## 实际 Git 回执
+
+- 功能与工程整理提交：`71ef50670d6b1ec704c372358a793678dc429009`，`feat: archive opening UI and mobile control improvements`。
+- 已正常推送 `origin main`，远端由历史基线 `1b42259445b9648685d63697d8cb2e7e015a23ed` 前进至上述提交；推送后 HEAD、origin/main、ls-remote main 三者一致，跟踪文件无残留修改。
+- 该功能提交实际为105文件，明细见 selected-files.json；约39.2MiB必要证据/资源/文本。未移动或删除文件，未提交dist/依赖/私人目录/备份。
+- 本节随第二次纯文档回执提交：仅更新本报告、交接与追加日志，不改运行源码，执行diff检查，不重复将历史测试声称为新跑。
+- 最后一次推送的完整SHA以交付回复和本地 `PUSH_RECEIPT.md` 为准，后者明确仅本地保留，避免把提交自身SHA写入自身造成循环。部署时读取 `git rev-parse HEAD`，再核对 `git ls-remote origin refs/heads/main`，完全一致后由用户填入 approved_sha。
+- 旧RC Tag对象 `b7194124e0c328ff59882642392e17c60f39ee28` 与目标 `870c69050cf80ff83aa79531e7d9f2590a8834d5` 推送后未变。Release未操作，部署未触发。

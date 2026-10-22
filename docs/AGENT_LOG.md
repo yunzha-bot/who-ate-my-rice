@@ -4666,3 +4666,11 @@
 ### 已知限制与下一项
 
 保留手机真机、开屏后台与树叶采样、既有大包警告；S20/S21授权不变。GitHub API公共速率限制403，未借Token绕过；旧Release与成功部署记录改用公开页面只读确认。线上入口HTTP200仅代表可达，不证明本轮已上线。下一步由用户审核最新远端SHA后手动运行Pages，不自动触发。
+
+## Git 推送成功回执（纯文档）— 2026-10-22
+
+- 完成内容：功能与工程归档提交 `71ef50670d6b1ec704c372358a793678dc429009`（feat: archive opening UI and mobile control improvements）已正常push至origin/main，远端从历史基线1b42259445b9648685d63697d8cb2e7e015a23ed正常前进，无force/amend/rebase。105个精确文件，约39.2MiB；完整明细在本轮selected-files.json，未移动删除文件。
+- 实际核对：push退出0；HEAD、origin/main及ls-remote main均为上述功能SHA，跟踪工作区干净。v1.0.0-rc1 tag对象与目标保持原值，Release未操作；没有触发Pages或其他线上部署。
+- 测试：功能提交最终重新npm test为1097/1097，定向75/75，类型/default与Pages构建、安全审计及浏览器记录在交付目录；本回执只改报告/HANDOFF/追加日志，按纯文档适用性只执行git diff --check及暂存检查，不冒充重新运行游戏测试。
+- 修改文件：docs/verification/git-preparation-2026-10-22/README.md、docs/DEEPSEEK_HANDOFF.md、docs/AGENT_LOG.md。本回执本身另作正常文档提交推送；其最终SHA在交付回复和仅本地PUSH_RECEIPT.md中记录，避免自引用提交SHA。手动部署必须用最终HEAD，不是本段历史功能SHA。
+- 已知限制/下一步：真机、开屏D后台与GPU采样、大包警告等原限制保留；不改阶段验收结论。请用户复核最终SHA再手动部署，S20仍BLOCKED、S21不启动。
