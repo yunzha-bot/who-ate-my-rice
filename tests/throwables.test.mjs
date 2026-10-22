@@ -267,6 +267,27 @@ test('pointer aiming uses the actual offset canvas and all four camera angles; c
  s.reset();s.pickup(a,clear);view.touchAimStart(10,x,y);
  window.dispatchEvent(touch('pointercancel',10));view.touchAimEnd(10,x,y);
  assert(s.held('DEEPSEEK'));assert.equal(s.items[0].remainingThrows,3,'cancelled touch never spends durability');
+ // Only the owning pointer may aim. Leaving the canvas retains the last world landing point.
+ s.reset();s.pickup(a,clear);view.touchAimStart(11,x,y);const last=view.lastTouchTarget;
+ view.touchAimStart(12,800,200);assert.equal(view.touchAimPointer,11);
+ window.dispatchEvent(touch('pointermove',11,1500,-100));view.sync();assert(view.markers.visible);
+ view.touchAimEnd(11,1500,-100);assert.equal(s.items[0].state,'FLIGHT');assert.equal(s.items[0].remainingThrows,2);
+ assert.deepEqual(s.items[0].flight.to,s.aim(a,last,clear).point);
+ view.touchAimEnd(11,x,y);assert.equal(s.items[0].remainingThrows,2,'duplicate release cannot throw again');
+ // A held item during existing cooldown is not a valid aim-start, and blur cancels safely.
+ s.items[0].state='HELD';s.items[0].holder=a.faction;view.touchAimStart(13,x,y);assert.equal(view.touchAimPointer,null);
+ s.advanceTime(s.config.throwCooldownMs);view.touchAimStart(13,x,y);assert.equal(view.touchAimPointer,13);
+ window.dispatchEvent(new Event('blur'));view.touchAimEnd(13,x,y);assert(s.held(a.faction));assert.equal(s.items[0].remainingThrows,2);
  view.dispose();view.dispose();assert.equal(scene.children.length,0);assert.equal(view.models.size,0);
  assert.equal(view.status.removed,true);
+});
+
+test('throw availability shares execution cooldown, durability, concealment and stun gates without mutation',()=>{
+ const s=system('BASIN'),a=actor();assert.equal(s.canThrow(a),false);s.pickup(a,clear);
+ assert.equal(s.canThrow(a),true);assert.equal(s.canThrow({...a,hidden:true}),false);
+ assert.equal(s.canThrow({...a,canAct:false}),false);s.stunRemaining[a.faction]=1;assert.equal(s.canThrow(a),false);
+ s.stunRemaining[a.faction]=0;s.items[0].remainingThrows=0;assert.equal(s.canThrow(a),false);
+ s.items[0].remainingThrows=3;s.throw(a,{x:2,z:2},clear);s.items[0].state='HELD';s.items[0].holder=a.faction;
+ assert.equal(s.canThrow(a),false);const before=JSON.stringify(s.items);s.canThrow(a);assert.equal(JSON.stringify(s.items),before);
+ s.advanceTime(s.config.throwCooldownMs);assert.equal(s.canThrow(a),true);
 });

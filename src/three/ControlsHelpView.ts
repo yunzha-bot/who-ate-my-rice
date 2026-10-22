@@ -58,7 +58,7 @@ export function controlsHelpMarkup(): string {
   const side = (faction: ControlsHelpFaction): string =>
     `<section class="controls-help-side" data-side="${faction}">` +
     `<h3>${CONTROLS_HELP_TITLES[faction]}</h3><dl>${rowsMarkup(CONTROLS_HELP_ROWS[faction])}</dl>` +
-    `<p class="controls-help-touch">左侧摇杆移动。${faction === 'HUMAN' ? '交互按钮开关门、解锁或搜查家具；抓捕按钮抓前方目标，破门按钮强行开门。点布网后触摸空地拖动预览，绿色可放，松手布网。' : '交互按钮开关门、藏身；在米旁停下并按住交互吃米。冲刺按钮加速逃跑，锁门按钮给关着的门上锁。'}拾取后按住“瞄准投掷”拖向目标，松手投出；点取消可以退出瞄准或布网。右上角可暂停，靠近夜间开关会出现开灯或关灯按钮。</p></section>`;
+    `<p class="controls-help-touch">按住左侧空白区域拖动移动，松手收起摇杆。${faction === 'HUMAN' ? '交互按钮开关门、解锁或搜查家具；抓捕按钮抓前方目标，破门按钮强行开门。点布网后触摸空地拖动预览，绿色可放，松手布网。' : '交互按钮开关门、藏身；在米旁停下并按住交互吃米。冲刺按钮加速逃跑，锁门按钮给关着的门上锁。'}交互按钮出现白色描边时可以操作。拾取后按住“投掷”拖向目标，松手投出；点取消可以退出瞄准或布网。右上角可暂停，靠近夜间开关会出现开灯或关灯按钮。</p></section>`;
   return `<div class="controls-help-panel" role="dialog" aria-modal="true"
         aria-labelledby="controls-help-title">
       <header class="controls-help-head">

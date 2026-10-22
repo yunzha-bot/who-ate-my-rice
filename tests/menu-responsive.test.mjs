@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { populateFactionMenu } from '../src/three/GameUiLayout.ts';
+import { factionMenuFixture } from './helpers/faction-menu.mjs';
 
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
-test('faction cards reserve separate flow regions for identity, portrait and caption', () => {
-  const menu = { innerHTML: '', querySelectorAll: () => [] };
+test('faction cards retain separate identity, original portrait and caption layers', () => {
+  const menu = factionMenuFixture();
   populateFactionMenu(menu, () => {});
   assert.match(menu.innerHTML, /<header class="menu-topbar">/);
   assert.match(menu.innerHTML, /class="menu-audio-slot menu-setting-panel"/);
@@ -24,16 +25,24 @@ test('menu layout has a single stylesheet owner, rather than four competing casc
     assert.doesNotMatch(rules, /\.(?:faction-menu|faction-dock|faction-card|difficulty-select|difficulty-card|menu-credits)(?![\w-])/);
   }
   const main = read('src/main.ts');
-  assert.ok(main.indexOf("import './faction-menu.css'") > main.indexOf("import './game-ui.css'"));
+  assert.ok(main.indexOf("import './opening-menu.css'") > main.indexOf("import './game-ui.css'"));
+  assert.doesNotMatch(main, /import '.\/faction-menu.css'/);
 });
 
-test('short and narrow menus scroll and reflow instead of positioning primary controls', () => {
-  const css = read('src/faction-menu.css');
+test('reference menu keeps its static layout; optional opening motion is scoped and accessible', () => {
+  const css = read('src/opening-menu.css');
   assert.match(css, /overflow-y: auto; overflow-x: hidden/);
-  assert.match(css, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(css, /\.difficulty-select \{ grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1.1fr\) minmax\(0, 1fr\)/);
+  assert.match(css, /object-fit: contain/);
+  assert.match(css, /@media \(max-width: 600px\)/);
+  assert.match(css, /grid-template-columns: minmax\(0, 1fr\); gap: 64px/);
+  const interaction = css.slice(css.indexOf('/* Only opening interactions;'));
+  assert.doesNotMatch(css.slice(0,css.indexOf('/* Only opening interactions;')), /animation:|transition:|@keyframes/);
+  assert.match(interaction, /\.faction-menu\[data-menu-interaction\]/);
+  assert.match(interaction, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(interaction, /animation: none; transition: none; translate: none; scale: none/);
   assert.doesNotMatch(css, /!important|\b(?:vh|dvh)\b[^;]*min-height|transform:\s*scale/);
-  for (const region of ['menu-topbar', 'faction-dock', 'difficulty-select', 'menu-credits', 'faction-caption']) {
+  for (const region of ['menu-topbar', 'faction-dock', 'difficulty-select', 'menu-credits', 'menu-start-row']) {
     const declarations = [...css.matchAll(new RegExp(`\\.${region}\\s*\\{([^}]+)\\}`, 'g'))];
     assert.ok(declarations.length > 0);
     for (const [, body] of declarations) assert.doesNotMatch(body, /position:\s*(absolute|fixed)|transform:/);
@@ -47,7 +56,7 @@ test('one shared audio settings view stays in the home setting slot or existing 
 });
 
 test('home setting panels bound their height and scroll on short windows', () => {
-  const source = read('src/faction-menu.css');
+  const source = read('src/opening-menu.css');
   assert.match(source, /max-height: min\(520px, 65dvh\)/);
   assert.match(source, /overflow-y: auto; overscroll-behavior: contain/);
 });

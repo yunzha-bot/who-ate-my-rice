@@ -1,0 +1,549 @@
+{
+  "positions": [
+    {
+      "name": "center",
+      "dx": -0.016110773048097826,
+      "dy": -0.01611077304791677,
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "offset": {
+        "x": -0.0013425644206694464,
+        "y": -0.0013425644206694464
+      },
+      "seconds": 1.5616000000238395,
+      "visibleRice": 12,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 230.38388922695185,
+        "y": -0.01611077304780647
+      },
+      "camera": [
+        88.33274996839249,
+        103.05331820668286,
+        88.33171213076469
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "matrix(1, 0, 0, 1, -0.021481, -0.021481)",
+        "matrix(1, 0, 0, 1, -0.021481, -0.021481)"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126776,
+      "geometries": 1162,
+      "textures": 15
+    },
+    {
+      "name": "top-left",
+      "dx": -8.4731569347787,
+      "dy": -8.46628495262169,
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "offset": {
+        "x": -0.706096411231569,
+        "y": -0.7055237460518228
+      },
+      "seconds": 3.8773000000119153,
+      "visibleRice": 12,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 221.92684306522125,
+        "y": -8.46628495262158
+      },
+      "camera": [
+        88.77834906196148,
+        102.75639970605489,
+        88.232517954595
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "matrix(1, 0, 0, 1, -11.2975, -11.2884)",
+        "matrix(1, 0, 0, 1, -11.2975, -11.2884)"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126740,
+      "geometries": 1162,
+      "textures": 15
+    },
+    {
+      "name": "top-right",
+      "dx": 8.46642124202424,
+      "dy": -8.483439923174625,
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "offset": {
+        "x": 0.705535103502029,
+        "y": -0.7069533269312107
+      },
+      "seconds": 6.285200000017872,
+      "visibleRice": 12,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 238.8664212420242,
+        "y": -8.483439923174515
+      },
+      "camera": [
+        88.23308653130364,
+        102.75579692225108,
+        88.77848373302396
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "matrix(1, 0, 0, 1, 11.2886, -11.3113)",
+        "matrix(1, 0, 0, 1, 11.2886, -11.3113)"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126752,
+      "geometries": 1163,
+      "textures": 15
+    },
+    {
+      "name": "bottom-right",
+      "dx": 8.490070171440806,
+      "dy": 8.45900087018656,
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "offset": {
+        "x": 0.7075058476200763,
+        "y": 0.7049167391822173
+      },
+      "seconds": 8.693400000005946,
+      "visibleRice": 12,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 238.89007017144075,
+        "y": 8.45900087018667
+      },
+      "camera": [
+        87.88505713054082,
+        103.35111294893169,
+        88.43197776932608
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "matrix(1, 0, 0, 1, 11.3201, 11.2787)",
+        "matrix(1, 0, 0, 1, 11.3201, 11.2787)"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126788,
+      "geometries": 1165,
+      "textures": 15
+    },
+    {
+      "name": "bottom-left",
+      "dx": -8.46584291065517,
+      "dy": 8.482842786040573,
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "offset": {
+        "x": -0.7054869092212613,
+        "y": 0.7069035655033894
+      },
+      "seconds": 11.018300000011898,
+      "visibleRice": 12,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 221.93415708934478,
+        "y": 8.482842786040683
+      },
+      "camera": [
+        88.43070873746912,
+        103.35195069567595,
+        87.88534879119612
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "matrix(1, 0, 0, 1, -11.2878, 11.3105)",
+        "matrix(1, 0, 0, 1, -11.2878, 11.3105)"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126776,
+      "geometries": 1165,
+      "textures": 15
+    }
+  ],
+  "recentered": {
+    "phase": "FACTION_SELECT",
+    "active": true,
+    "offset": {
+      "x": -0.0006759748459417984,
+      "y": 0.0006754266100570118
+    },
+    "seconds": 15.94840000000592,
+    "visibleRice": 12,
+    "riceCount": 14,
+    "dom": 133,
+    "projected": {
+      "x": 230.39188830184898,
+      "y": 0.008105119320858415
+    },
+    "camera": [
+      88.3319959717872,
+      103.05416909404929,
+      88.3314734254425
+    ],
+    "quaternion": [
+      -0.3123551743977247,
+      0.36014854199301466,
+      0.12938174951295092,
+      0.8694754945484322
+    ],
+    "leaf": [
+      "matrix(1, 0, 0, 1, -0.0108155, 0.0108068)",
+      "matrix(1, 0, 0, 1, -0.0108155, 0.0108068)"
+    ],
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    },
+    "triangles": 126776,
+    "geometries": 1165,
+    "textures": 15
+  },
+  "riceSamples": [
+    13,
+    13,
+    12,
+    12,
+    12,
+    13,
+    13,
+    12,
+    12,
+    11,
+    12,
+    12,
+    13,
+    13,
+    14
+  ],
+  "cardBefore": {
+    "x": 410.875,
+    "y": 340.1875,
+    "width": 608.453125,
+    "height": 513
+  },
+  "cardHover": {
+    "x": 406.3116149902344,
+    "y": 331.3399963378906,
+    "width": 617.5798645019531,
+    "height": 520.6950378417969
+  },
+  "selection": {
+    "filter": "drop-shadow(rgba(82, 143, 170, 0.667) 0px 0px 3px) drop-shadow(rgba(20, 32, 41, 0.333) 0px 6px 10px)",
+    "scale": "1.015"
+  },
+  "pressed": {
+    "scale": "0.985",
+    "translate": "0px 1px"
+  },
+  "reducedBefore": {
+    "phase": "FACTION_SELECT",
+    "active": false,
+    "offset": {
+      "x": 0,
+      "y": 0
+    },
+    "seconds": 25.29150000000025,
+    "visibleRice": 0,
+    "riceCount": 14,
+    "dom": 133,
+    "projected": {
+      "x": 230.39999999999995,
+      "y": 1.1030042127884448e-13
+    },
+    "camera": [
+      88.33190082851519,
+      103.0538842999344,
+      88.3319008285152
+    ],
+    "quaternion": [
+      -0.3123551743977247,
+      0.36014854199301466,
+      0.12938174951295092,
+      0.8694754945484322
+    ],
+    "leaf": [
+      "none",
+      "none"
+    ],
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    },
+    "triangles": 126776,
+    "geometries": 1165,
+    "textures": 15
+  },
+  "reducedAfter": {
+    "phase": "FACTION_SELECT",
+    "active": false,
+    "offset": {
+      "x": 0,
+      "y": 0
+    },
+    "seconds": 25.29150000000025,
+    "visibleRice": 0,
+    "riceCount": 14,
+    "dom": 133,
+    "projected": {
+      "x": 230.39999999999995,
+      "y": 1.1030042127884448e-13
+    },
+    "camera": [
+      88.33190082851519,
+      103.0538842999344,
+      88.3319008285152
+    ],
+    "quaternion": [
+      -0.3123551743977247,
+      0.36014854199301466,
+      0.12938174951295092,
+      0.8694754945484322
+    ],
+    "leaf": [
+      "none",
+      "none"
+    ],
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    },
+    "triangles": 126776,
+    "geometries": 1165,
+    "textures": 15
+  },
+  "beforeLong": {
+    "phase": "FACTION_SELECT",
+    "active": true,
+    "offset": {
+      "x": 0,
+      "y": 0
+    },
+    "seconds": 0.10709999999403953,
+    "visibleRice": 11,
+    "riceCount": 14,
+    "dom": 133,
+    "projected": {
+      "x": 230.39999999999995,
+      "y": 1.1030042127884448e-13
+    },
+    "camera": [
+      88.33190082851519,
+      103.0538842999344,
+      88.3319008285152
+    ],
+    "quaternion": [
+      -0.3123551743977247,
+      0.36014854199301466,
+      0.12938174951295092,
+      0.8694754945484322
+    ],
+    "leaf": [
+      "matrix(1, 9.2759e-05, -9.2759e-05, 1, 0.0114588, 0.0053112)",
+      "matrix(1, 0.000839913, -0.000839913, 1, 0.114124, 0.072016)"
+    ],
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    },
+    "triangles": 126776,
+    "geometries": 1165,
+    "textures": 15
+  },
+  "afterLong": {
+    "phase": "FACTION_SELECT",
+    "active": true,
+    "offset": {
+      "x": 0,
+      "y": 0
+    },
+    "seconds": 90.12259999999414,
+    "visibleRice": 12,
+    "riceCount": 14,
+    "dom": 133,
+    "projected": {
+      "x": 230.39999999999995,
+      "y": 1.1030042127884448e-13
+    },
+    "camera": [
+      88.33190082851519,
+      103.0538842999344,
+      88.3319008285152
+    ],
+    "quaternion": [
+      -0.3123551743977247,
+      0.36014854199301466,
+      0.12938174951295092,
+      0.8694754945484322
+    ],
+    "leaf": [
+      "matrix(0.999966, 0.008191, -0.008191, 0.999966, 1.83817, -0.83677)",
+      "matrix(1, -0.000973239, 0.000973239, 1, -1.26441, 1.49179)"
+    ],
+    "canvas": {
+      "width": 1920,
+      "height": 1080
+    },
+    "triangles": 126776,
+    "geometries": 1165,
+    "textures": 15
+  },
+  "memoryBefore": {
+    "usedSize": 30080228,
+    "totalSize": 31219712,
+    "embedderHeapUsedSize": 6686072,
+    "backingStorageSize": 17378214
+  },
+  "memoryAfter": {
+    "usedSize": 30148588,
+    "totalSize": 30957568,
+    "embedderHeapUsedSize": 6477736,
+    "backingStorageSize": 17378214
+  },
+  "domBefore": {
+    "documents": 1,
+    "nodes": 1440,
+    "jsEventListeners": 187
+  },
+  "domAfter": {
+    "documents": 1,
+    "nodes": 1440,
+    "jsEventListeners": 187
+  },
+  "extraWorkMs": {
+    "median": 0,
+    "p95": 0.09999999403953552,
+    "max": 0.10000002384185791
+  },
+  "visibility": {
+    "nativeHidden": false,
+    "hiddenBefore": {
+      "phase": "FACTION_SELECT",
+      "active": false,
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "seconds": 92.26209999999402,
+      "visibleRice": 0,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 230.39999999999995,
+        "y": 1.1030042127884448e-13
+      },
+      "camera": [
+        88.33190082851519,
+        103.0538842999344,
+        88.3319008285152
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "none",
+        "none"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126776,
+      "geometries": 1165,
+      "textures": 15
+    },
+    "hiddenAfter": {
+      "phase": "FACTION_SELECT",
+      "active": false,
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "seconds": 92.26209999999402,
+      "visibleRice": 0,
+      "riceCount": 14,
+      "dom": 133,
+      "projected": {
+        "x": 230.39999999999995,
+        "y": 1.1030042127884448e-13
+      },
+      "camera": [
+        88.33190082851519,
+        103.0538842999344,
+        88.3319008285152
+      ],
+      "quaternion": [
+        -0.3123551743977247,
+        0.36014854199301466,
+        0.12938174951295092,
+        0.8694754945484322
+      ],
+      "leaf": [
+        "none",
+        "none"
+      ],
+      "canvas": {
+        "width": 1920,
+        "height": 1080
+      },
+      "triangles": 126776,
+      "geometries": 1165,
+      "textures": 15
+    }
+  },
+  "flows": [
+    "DEEPSEEK: start once, READY camera unaffected by pointer, opening animation stopped, PLAYING/pause/menu reset",
+    "HUMAN: start once, READY camera unaffected by pointer, opening animation stopped, PLAYING/pause/menu reset"
+  ],
+  "leaveListenersBefore": 1,
+  "leaveListenersAfter": 0,
+  "errors": []
+}

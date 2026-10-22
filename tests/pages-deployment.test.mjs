@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { stripTypeScriptTypes } from 'node:module';
 import { loadConfigFromFile } from 'vite';
 import { verifyPagesBuild } from '../scripts/verify-pages-build.mjs';
+import { factionMenuFixture } from './helpers/faction-menu.mjs';
 
 const base = '/who-ate-my-rice/';
 let serial = 0;
@@ -51,7 +52,7 @@ test('actual model modules expose base-aware public URLs for root and project ho
 
 test('menu and result markup use project-base portraits without changing faction controls', async () => {
   const ui = await moduleAt('GameUiLayout.ts', base);
-  const menu = { innerHTML: '', querySelectorAll: () => [] };
+  const menu = factionMenuFixture();
   ui.populateFactionMenu(menu, () => {});
   for (const url of Object.values(ui.UI_PORTRAITS)) assert(url.startsWith(`${base}assets/ui/portraits/`), url);
   for (const url of [ui.UI_PORTRAITS.DEEPSEEK, ui.UI_PORTRAITS.HUMAN]) {
@@ -60,6 +61,7 @@ test('menu and result markup use project-base portraits without changing faction
   assert.equal(ui.deepseekResultPortrait('DEEPSEEK'), ui.UI_PORTRAITS.DEEPSEEK_WIN);
   assert.equal(ui.deepseekResultPortrait('HUMAN'), ui.UI_PORTRAITS.DEEPSEEK_LOSE);
   assert.equal((menu.innerHTML.match(/class="faction-card"/g) ?? []).length, 2);
+  assert.ok(menu.innerHTML.includes(`${base}assets/ui/menu/logo.webp`));
 });
 
 test('existing audio loaders already respect the same build base', () => {

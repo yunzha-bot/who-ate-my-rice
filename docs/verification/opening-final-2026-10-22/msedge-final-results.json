@@ -1,0 +1,521 @@
+{
+  "channel": "msedge",
+  "version": "151.0.4129.86",
+  "layouts": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "dpr": 1,
+      "scale": 1,
+      "overflow": false,
+      "boxes": [
+        {
+          "selector": ".menu-logo",
+          "x": 49.90625,
+          "y": 41.03125,
+          "w": 777.59375,
+          "h": 313.625
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "x": 410.875,
+          "y": 340.1875,
+          "w": 608.453125,
+          "h": 513
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "x": 1086.515625,
+          "y": 350.984375,
+          "w": 553.15625,
+          "h": 513
+        },
+        {
+          "selector": ".menu-start",
+          "x": 729.59375,
+          "y": 881.265625,
+          "w": 460.796875,
+          "h": 140.390625
+        },
+        {
+          "selector": ".menu-settings",
+          "x": 1464.96875,
+          "y": 34.546875,
+          "w": 428.15625,
+          "h": 66
+        }
+      ],
+      "hitTargets": [
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-start",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-settings",
+          "ownsCenter": true
+        }
+      ],
+      "portraits": [
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "natural": [
+            1024,
+            1536
+          ],
+          "fit": "contain",
+          "x": 608.625,
+          "y": 288.890625,
+          "w": 413.734375,
+          "h": 605.328125
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "natural": [
+            768,
+            1152
+          ],
+          "fit": "contain",
+          "x": 1263.53125,
+          "y": 361.234375,
+          "w": 359.546875,
+          "h": 482.21875
+        }
+      ]
+    },
+    {
+      "width": 1768,
+      "height": 890,
+      "dpr": 1,
+      "scale": 1,
+      "overflow": false,
+      "boxes": [
+        {
+          "selector": ".menu-logo",
+          "x": 45.953125,
+          "y": 33.8125,
+          "w": 716.03125,
+          "h": 288.796875
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "x": 378.34375,
+          "y": 280.34375,
+          "w": 560.28125,
+          "h": 422.75
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "x": 1000.5,
+          "y": 289.234375,
+          "w": 509.359375,
+          "h": 422.75
+        },
+        {
+          "selector": ".menu-start",
+          "x": 671.84375,
+          "y": 726.21875,
+          "w": 424.3125,
+          "h": 115.6875
+        },
+        {
+          "selector": ".menu-settings",
+          "x": 1349,
+          "y": 28.46875,
+          "w": 394.25,
+          "h": 66
+        }
+      ],
+      "hitTargets": [
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-start",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-settings",
+          "ownsCenter": true
+        }
+      ],
+      "portraits": [
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "natural": [
+            1024,
+            1536
+          ],
+          "fit": "contain",
+          "x": 560.4375,
+          "y": 238.078125,
+          "w": 380.984375,
+          "h": 498.84375
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "natural": [
+            768,
+            1152
+          ],
+          "fit": "contain",
+          "x": 1163.515625,
+          "y": 297.6875,
+          "w": 331.078125,
+          "h": 397.375
+        }
+      ]
+    },
+    {
+      "width": 1600,
+      "height": 900,
+      "dpr": 1,
+      "scale": 1,
+      "overflow": false,
+      "boxes": [
+        {
+          "selector": ".menu-logo",
+          "x": 41.59375,
+          "y": 34.1875,
+          "w": 648,
+          "h": 261.359375
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "x": 342.390625,
+          "y": 283.5,
+          "w": 507.046875,
+          "h": 427.5
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "x": 905.4375,
+          "y": 292.5,
+          "w": 460.953125,
+          "h": 427.5
+        },
+        {
+          "selector": ".menu-start",
+          "x": 608,
+          "y": 734.390625,
+          "w": 384,
+          "h": 117
+        },
+        {
+          "selector": ".menu-settings",
+          "x": 1203.609375,
+          "y": 28.796875,
+          "w": 374,
+          "h": 66
+        }
+      ],
+      "hitTargets": [
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-start",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-settings",
+          "ownsCenter": true
+        }
+      ],
+      "portraits": [
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "natural": [
+            1024,
+            1536
+          ],
+          "fit": "contain",
+          "x": 507.1875,
+          "y": 240.75,
+          "w": 344.78125,
+          "h": 504.4375
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "natural": [
+            768,
+            1152
+          ],
+          "fit": "contain",
+          "x": 1052.953125,
+          "y": 301.046875,
+          "w": 299.609375,
+          "h": 401.84375
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "dpr": 1,
+      "scale": 1,
+      "overflow": false,
+      "boxes": [
+        {
+          "selector": ".menu-logo",
+          "x": 35.515625,
+          "y": 29.171875,
+          "w": 553.21875,
+          "h": 223.125
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "x": 292.3125,
+          "y": 241.90625,
+          "w": 432.890625,
+          "h": 364.796875
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "x": 773,
+          "y": 249.578125,
+          "w": 393.546875,
+          "h": 364.796875
+        },
+        {
+          "selector": ".menu-start",
+          "x": 519.078125,
+          "y": 626.65625,
+          "w": 327.828125,
+          "h": 99.828125
+        },
+        {
+          "selector": ".menu-settings",
+          "x": 972.890625,
+          "y": 24.5625,
+          "w": 374,
+          "h": 66
+        }
+      ],
+      "hitTargets": [
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-start",
+          "ownsCenter": true
+        },
+        {
+          "selector": ".menu-settings",
+          "ownsCenter": true
+        }
+      ],
+      "portraits": [
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "natural": [
+            1024,
+            1536
+          ],
+          "fit": "contain",
+          "x": 433,
+          "y": 205.4375,
+          "w": 294.359375,
+          "h": 430.453125
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "natural": [
+            768,
+            1152
+          ],
+          "fit": "contain",
+          "x": 898.953125,
+          "y": 256.859375,
+          "w": 255.796875,
+          "h": 342.90625
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "faction": "DEEPSEEK",
+      "teaching": true,
+      "ready": true,
+      "played": true,
+      "moveInput": true,
+      "positionBefore": {
+        "x": 17.800000000000004,
+        "z": 9.600000000000001
+      },
+      "positionAfter": {
+        "x": 16.811995049987086,
+        "z": 8.6119950499871
+      },
+      "pauseResume": true,
+      "restartReadyPlaying": true,
+      "returned": {
+        "phase": "FACTION_SELECT",
+        "active": true,
+        "seconds": 0.20390000000596045,
+        "pool": 14,
+        "visible": 13,
+        "offset": {
+          "x": 0,
+          "y": 0
+        },
+        "canvas": 1,
+        "leaves": 2
+      }
+    },
+    {
+      "faction": "HUMAN",
+      "teaching": false,
+      "ready": true,
+      "played": true,
+      "moveInput": true,
+      "positionBefore": {
+        "x": 13.800000000000004,
+        "z": -17.2
+      },
+      "positionAfter": {
+        "x": 12.765449038991285,
+        "z": -17.92951358092111
+      },
+      "pauseResume": true,
+      "restartReadyPlaying": true,
+      "returned": {
+        "phase": "FACTION_SELECT",
+        "active": true,
+        "seconds": 0.11459999999403954,
+        "pool": 14,
+        "visible": 10,
+        "offset": {
+          "x": 0,
+          "y": 0
+        },
+        "canvas": 1,
+        "leaves": 2
+      }
+    }
+  ],
+  "errors": [],
+  "startedAt": "2026-10-22T04:17:30.464Z",
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "keyboard": [
+    {
+      "faction": "DEEPSEEK",
+      "key": "Space",
+      "selectOnly": true
+    },
+    {
+      "faction": "HUMAN",
+      "key": "Enter",
+      "selectOnly": true
+    }
+  ],
+  "rapidSelection": {
+    "clicks": 12,
+    "selected": "HUMAN",
+    "scales": [
+      "none",
+      "none"
+    ]
+  },
+  "switches": [
+    {
+      "key": "rice",
+      "off": true,
+      "display": "none"
+    },
+    {
+      "key": "interaction",
+      "off": true,
+      "display": null
+    }
+  ],
+  "realPointerLeave": {
+    "phase": "FACTION_SELECT",
+    "active": true,
+    "seconds": 9.486499999999973,
+    "pool": 14,
+    "visible": 13,
+    "offset": {
+      "x": 0.0006749426416071948,
+      "y": -0.0006562221185441087
+    },
+    "canvas": 1,
+    "leaves": 2
+  },
+  "nativeBackground": {
+    "hidden": false,
+    "before": {
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "seconds": 9.553599999994011,
+      "pool": 14,
+      "visible": 13,
+      "offset": {
+        "x": 0.0005261136933940582,
+        "y": -0.0005115211592676978
+      },
+      "canvas": 1,
+      "leaves": 2
+    },
+    "after": {
+      "phase": "FACTION_SELECT",
+      "active": true,
+      "seconds": 9.553599999994011,
+      "pool": 14,
+      "visible": 13,
+      "offset": {
+        "x": 0.0005261136933940582,
+        "y": -0.0005115211592676978
+      },
+      "canvas": 1,
+      "leaves": 2
+    },
+    "verified": false
+  },
+  "listenersBefore": 187,
+  "listenersAfter": 197,
+  "final": {
+    "phase": "FACTION_SELECT",
+    "active": true,
+    "seconds": 4.179300000011917,
+    "pool": 14,
+    "visible": 13,
+    "offset": {
+      "x": 0.7073262169412486,
+      "y": -0.7067483264916973
+    },
+    "canvas": 1,
+    "leaves": 2
+  },
+  "protectedHashes": {
+    "src/three/MenuAtmosphereView.ts": "4b5ca43dc4c61db77aa650394a50bfa6ea9ccf204ec90e0e6debac60ae1db563",
+    "src/three/ThreeGame.ts": "2525c50cbcf49d7f103a78a1c9bd1ea9728671079821225c50070473619af3d4",
+    "src/opening-menu.css": "f89969a07b7c1f7b44d53d1a60d37829024d46d5ffcf866d8a50352fb98cd0de",
+    "src/config/gameConfig.ts": "334f7a583def91d1fa19feb7b1261052d626c5c76509f3e4726109b6778b1ac9",
+    "public/assets/ui/portraits/deepseek-normal.png": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b",
+    "public/assets/ui/portraits/human-guardian-v1.webp": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b"
+  }
+}

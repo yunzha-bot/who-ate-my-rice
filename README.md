@@ -2,7 +2,11 @@
 
 《谁吃了我的米》是一款使用 Three.js 制作的双阵营单机追逐游戏。DeepSeek 娘尝试吃完每局激活的 5 份米，Human 通过抓捕赢得对局。
 
-当前候选发布版为 **v1.0.0-rc1**（S19，带已知限制的预发布），不是v1.0.0正式上线。说明见 [候选版发布记录](docs/releases/v1.0.0-rc1.md)，阶段命名和实际边界见 [Git里程碑](docs/MILESTONES.md)。
+当前版本号仍为 **v1.0.0-rc1**，属于 RC 测试版，不是 v1.0.0 正式发布。旧 RC Tag/Release 是固定历史快照，后续 main 改进不移动该标签，也不因推送自动更新网站。说明见 [候选版发布记录](docs/releases/v1.0.0-rc1.md)。
+
+技术栈：TypeScript、Three.js、Vite、原生 HTML/CSS。推荐 Node.js 24 LTS 与 npm（工作流使用 Node 24；Node 需支持项目测试使用的 TypeScript stripping），桌面目标为 Chrome/Edge；手机版横屏优先，Safari/微信等仍需真机验收。
+
+文档入口：[文档职责与工程目录](docs/README.md)、[当前交接](docs/DEEPSEEK_HANDOFF.md)、[移动浏览器说明](docs/MOBILE_BROWSER_SUPPORT.md)。
 
 ## 本地运行
 
@@ -11,7 +15,7 @@ npm ci
 npm run dev
 ```
 
-开发服务器地址为 `http://127.0.0.1:5173/`。检查命令：`npm test`、`npx tsc --noEmit`、`npm run build`。
+开发服务器固定为 `http://127.0.0.1:5173/`，端口占用时不自动切换；已有本项目服务应复用。检查命令：`npm test`、`npx tsc --noEmit`、`npm run build`、`git diff --check`。
 
 ## 正式构建与预览
 
@@ -28,7 +32,7 @@ npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
 
 ### GitHub Pages RC构建与手动部署
 
-在隔离副本中使用 PowerShell 执行下列命令，避免覆盖正在运行的4173根路径预览的 `dist/`：
+根路径部署（如腾讯云）使用默认构建。GitHub Pages 必须使用下面的显式子路径构建；两个构建都会更新本机 `dist/`，不要混用根路径与 Pages 产物。需要同时保留时使用独立检出副本或先将现有产物复制到明确的备份目录。
 
 ```powershell
 $ricePagesPrevious = $env:PAGES_DEPLOYMENT
@@ -41,22 +45,32 @@ try {
 } finally { $env:PAGES_DEPLOYMENT = $ricePagesPrevious }
 ```
 
-产物审查命令需在具备Git追踪清单的检出副本中运行；无Git元数据的隔离副本须由验证脚本显式提供经过审核的public清单。严格本地验证应只挂载 `/who-ate-my-rice/`，不能依赖根 `/assets/` 或HTML回退掩盖缺失资源。
+产物审查命令需在具备 Git 追踪清单的完整检出中运行（新资源须已审核并纳入 Git）；无 Git 元数据的隔离副本须显式提供经过审核的 public 清单。严格本地验证只挂载 `/who-ate-my-rice/`，不能用根 `/assets/` 或 HTML 回退掩盖缺失资源。
 
 `.github/workflows/pages.yml` 只允许手动RC部署：限本仓库main、显式确认，并填写审核通过的40位`approved_sha`；触发提交必须与该SHA相同。生产构建和产物门禁后只上传 `./dist`，不随push/Tag/Release自动上线，也不自动启用Pages。`v1.0.0-rc1`里程碑保持固定，RC网页上线不等于正式v1.0.0或S20验收完成。实际准入与发布记录见 [S19-P报告](docs/verification/S19_P_RC_DEPLOYMENT_REPORT.md)，既有证据见 [Pages本地验收](docs/verification/GITHUB_PAGES_LOCAL_ACCEPTANCE_REPORT.md)，中国大陆访问见 [网络验收计划](docs/verification/GITHUB_PAGES_MAINLAND_ACCESS_PLAN.md)。
+
+后续由所有者打开 [Pages 工作流](https://github.com/yunzha-bot/who-ate-my-rice/actions/workflows/pages.yml)，选择 `main`，填写已审核且仍等于远端 main 的完整 SHA，并勾选确认。必须确认运行检出的 SHA 与 `approved_sha` 完全一致；若 main 已前移，先重审新提交，不填写旧 SHA 强行运行。[Pages 入口](https://yunzha-bot.github.io/who-ate-my-rice/) 与 GitHub 源码不是同一版本保证，最终以成功部署的提交为准。
 
 ## 操作与对局
 
 - WASD / 方向键移动；E交互、开关门；DeepSeek娘停下并按住E进食。
-- Q为阵营技能：DeepSeek娘锁门，Human搜查；具体可用目标与冷却以HUD为准。
-- Space为DeepSeek娘冲刺。仅开发版5173支持Z/C旋转视角、X恢复默认视角；正式构建不提供这组镜头快捷键。
-- F拾取附近生活物件；持有时按住鼠标左键瞄准、松开投掷，右键取消。角色面向落点，命中对手倒地眩晕3秒；花瓶/盒子一次性消耗，不锈钢盆落地后可回收。
+- E 复用真实目标仲裁：开关门、藏身、按住吃米；Human 无门时搜查面前合法家具，家具搜查与 V 共用冷却。
+- Q：DeepSeek 娘锁门，Human 布设捕捉网；V 为 Human 前方扇形抓捕。网最多4张，不自动到期，可被触发或投掷物拆除；锁门名额最多3扇。以当前 HUD 状态为准。
+- Space：DeepSeek 娘冲刺 / Human 强行破门；困难夜间靠近开关用 L 开关区域灯光。仅开发版5173支持Z/C旋转视角、X恢复默认视角。
+- F拾取附近生活物件；持有时按住鼠标左键瞄准、松开投掷，右键取消。命中对手眩晕3秒；花瓶/盒子一次性消耗，不锈钢盆最多投掷3次，尚有耐久时落地可回收。
 - Esc打开暂停菜单，可继续、调节声音、重新开始或返回首页。
-- 简单、普通、困难只改变对手AI。DeepSeek娘每份米需累计30秒进食进度，每局目标5份；中断后保留已有进度。
+- DeepSeek 娘每份米需累计20秒进食进度，每局目标5份，中断保留进度。三档难度区分对手 AI 速度、投掷/技能决策；困难还使用双方受限的夜间视野与区域开关灯。
+
+### 手机横屏
+
+- 在左侧空白移动区按住并拖动，浮动摇杆以首次触点起手，松手收起；可同时操作右侧技能。
+- 右侧交互按钮复用门/米/家具等真实判定，可操作时有白色扩散描边；吃米需停下按住。触屏隐藏头顶 E，切回键盘输入可恢复。
+- 点拾取后，按住投掷按钮拖向目标，松手投出；取消、系统中断或暂停不会投出。Human 点布网后触摸空地预览，松手确认；右上暂停与取消保留。
+- 竖屏显示旋转提示；旋转/切后台会按原规则暂停，恢复横屏后需主动继续。真机浏览器底栏、系统手势、Safari/微信及持续发热尚未全部验收，详见 [手机操作报告](docs/verification/mobile-feel-2026-10-22/README.md)。
 
 正常对局失焦或切到后台时自动暂停，返回后由玩家明确继续；开局倒计时失焦时停住。开发编辑器及已冻结调试会话保持原有冻结行为。刷新会开始新的会话，不保存进行中的对局；音量和难度偏好可保留。
 
-投掷物初始布局独立保存在 `src/three/map/throwableLayout.json`，18个可玩区域各2件；暂停不会推进射弹或眩晕，重开恢复初始物件。NPC可被砸中，但本轮没有自动拾取/投掷策略。规则、参数与夹具验证范围见 [`投掷物报告`](docs/verification/THROWABLES_REPORT.md)，新玩法手感及对胜率的影响仍需试玩。
+投掷物初始布局独立保存在 `src/three/map/throwableLayout.json`；暂停不会推进射弹或眩晕，重开恢复初始物件。两方 AI 均已有拾取/投掷策略，准度随难度区分，困难包含有限可见走位预判；Human AI 也会布网。早期 [`投掷物报告`](docs/verification/THROWABLES_REPORT.md) 仅说明当时基线，当前实现与数值以源码及 [配置索引](docs/GAME_BALANCE_CONFIG.md) 为准，不将固定夹具当作真实胜率证据。
 
 开发入口5173的场景编辑器可选择或拖动投掷物、输入X/Z，统一点上方“应用编辑 → 保存布局”会同时保存已修改的家具/藏身点和道具（仍写各自JSON）；下方专用道具按钮只处理道具。5173刷新会读取新位置，4173正式预览需重新构建同步。轨迹为米白虚线，当前命中眩晕3秒。详见 [道具编辑说明](docs/verification/THROWABLE_EDITOR_REPORT.md)。
 

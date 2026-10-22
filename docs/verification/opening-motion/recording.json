@@ -1,0 +1,47 @@
+{
+  "viewport": [
+    1920,
+    1080
+  ],
+  "requestedClipSec": 14,
+  "rawDurationSec": 16.36,
+  "realBrowser": true,
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "softwareRenderer": false,
+  "testOnlyCursor": true,
+  "frameTiming": {
+    "frames": 797,
+    "meanFps": 56.9156847042915,
+    "medianMs": 16.5,
+    "p95Ms": 24.600000023841858
+  },
+  "events": [
+    {
+      "x": 1820,
+      "y": 140,
+      "t": 1.753
+    },
+    {
+      "x": 120,
+      "y": 950,
+      "t": 3.908
+    },
+    {
+      "x": 680,
+      "y": 580,
+      "t": 5.676
+    },
+    {
+      "x": 1380,
+      "y": 560,
+      "t": 8.798
+    },
+    {
+      "x": 960,
+      "y": 150,
+      "t": 12.314
+    }
+  ],
+  "errors": [],
+  "encoder": "ION        : 00:00:16.360000000\r\n        encoder         : Lavc61.3.100 libvpx\r\n      Side data:\r\n        cpb: bitrate max/min/avg: 0/0/0 buffer size: 0 vbv_delay: N/A\r\nframe=   28 fps=0.0 q=49.0 size=       0KiB time=00:00:01.12 bitrate=   3.4kbits/s speed=2.23x    \rframe=   66 fps= 66 q=30.0 size=       0KiB time=00:00:02.64 bitrate=   1.4kbits/s speed=2.63x    \rframe=  104 fps= 69 q=18.0 size=       0KiB time=00:00:04.16 bitrate=   0.9kbits/s speed=2.74x    \rframe=  144 fps= 71 q=13.0 size=    1536KiB time=00:00:05.76 bitrate=2184.5kbits/s speed=2.84x    \rframe=  188 fps= 74 q=36.0 size=    1536KiB time=00:00:07.52 bitrate=1673.3kbits/s speed=2.97x    \rframe=  234 fps= 77 q=22.0 size=    1536KiB time=00:00:09.36 bitrate=1344.3kbits/s speed=3.08x    \rframe=  274 fps= 77 q=25.0 size=    3328KiB time=00:00:10.96 bitrate=2487.5kbits/s speed= 3.1x    \rframe=  320 fps= 79 q=19.0 size=    3328KiB time=00:00:12.80 bitrate=2129.9kbits/s speed=3.16x    \r[out#0/webm @ 000001c2b6d481c0] video:4477KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.067619%\r\nframe=  350 fps= 80 q=20.0 Lsize=    4480KiB time=00:00:14.00 bitrate=2621.5kbits/s speed=3.21x    \r\n"
+}

@@ -1,5 +1,6 @@
 /* Coarse-pointer browsers use touch commands; desktop presentation stays in game-ui.css. */
 .mobile-controls, .mobile-rotate { display: none; }
+.alpha-hud[data-input-mode='touch'] .world-interaction { display: none; }
 @media (pointer: coarse) {
   html, body, #app { height: 100dvh; }
   .game-canvas { touch-action: none; }
@@ -8,16 +9,21 @@
     width: min(278px, calc(100vw - 175px)); padding: 8px 12px; gap: 5px 8px; }
   .alpha-hud .match-clock time { font-size: 17px; }
   .alpha-hud .mobile-controls { display: block; position: absolute; inset: 0; pointer-events: none; }
-  .mobile-stick { position: absolute; left: max(18px, env(safe-area-inset-left));
-    bottom: max(18px, env(safe-area-inset-bottom)); width: 128px; height: 128px;
+  .mobile-move-zone { position: absolute; left: env(safe-area-inset-left, 0px); top: var(--mobile-zone-top, 28%);
+    width: calc(var(--mobile-zone-width, 50%) - env(safe-area-inset-left, 0px)); bottom: env(safe-area-inset-bottom, 0px);
+    pointer-events: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .mobile-stick { display: none; position: absolute; width: 128px; height: 128px;
     border: 1px solid #ffffffaa; border-radius: 50%; background: #293b4075;
-    box-shadow: 0 4px 18px #17252835; pointer-events: auto; touch-action: none; }
+    box-shadow: 0 4px 18px #17252835; pointer-events: none; touch-action: none; }
+  .mobile-stick[data-active='true'] { display: block; }
+  .mobile-move-zone[data-suspended='true'] { pointer-events: none; }
   .mobile-stick::before { content: ''; position: absolute; inset: 31%; border: 1px solid #ffffff65; border-radius: 50%; }
   .mobile-stick i { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px;
     border: 1px solid #ffffffc0; border-radius: 50%; background: #faf7efe8; box-shadow: 0 2px 8px #17252835; }
   .mobile-actions { position: absolute; right: max(14px, env(safe-area-inset-right));
     bottom: max(14px, env(safe-area-inset-bottom)); display: grid;
-    grid-template-columns: repeat(3, 74px); gap: 7px; pointer-events: auto; }
+    --mobile-action-width: 74px; --mobile-action-height: 54px;
+    grid-template-columns: repeat(3, var(--mobile-action-width)); gap: 7px; pointer-events: auto; }
   .mobile-actions button, .mobile-toolbar button { position: relative; min-height: 54px; padding: 6px;
     border: 1px solid #ffffffbd; border-radius: 13px; color: var(--game-ink); background: #faf7eff0;
     box-shadow: 0 4px 14px #17252828; font: 600 12px/1.45 system-ui, sans-serif; white-space: pre-line;
@@ -30,14 +36,22 @@
   .mobile-actions button[data-slots]::after { content: attr(data-slots); position: absolute; top: -6px; right: -4px;
     display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
     background: #4c929e; color: white; font-size: 11px; }
+  .mobile-actions button[data-interaction-state='READY']::after { content: ''; position: absolute; inset: 0;
+    border: 2px solid white; border-radius: inherit; pointer-events: none;
+    animation: mobile-interaction-ripple var(--mobile-ripple-ms, 1050ms) ease-out infinite; }
+  @keyframes mobile-interaction-ripple {
+    0% { transform: scale(1); opacity: .95; }
+    78%, 100% { transform: scale(1.3); transform: scale(
+      calc(1 + 2 * var(--mobile-ripple-spread) / var(--mobile-action-width)),
+      calc(1 + 2 * var(--mobile-ripple-spread) / var(--mobile-action-height))); opacity: 0; }
+  }
   .mobile-actions .mobile-throw { color: white; background: #4c929e; }
   .mobile-actions small { font-size: 10px; font-weight: 400; }
   .mobile-toolbar { position: absolute; top: max(8px, env(safe-area-inset-top));
     right: max(12px, env(safe-area-inset-right)); display: flex; gap: 6px; pointer-events: auto; }
   .mobile-toolbar button { min-width: 48px; min-height: 44px; padding: 6px 10px; }
   #app:has(.debug-top-row) .mobile-toolbar { top: max(52px, calc(env(safe-area-inset-top) + 44px)); }
-  .mobile-controls[data-enabled='false'] :is(.mobile-stick, .mobile-actions) { pointer-events: none; opacity: .45; }
-  .alpha-hud .world-interaction kbd { display: none; }
+  .mobile-controls[data-enabled='false'] :is(.mobile-move-zone, .mobile-actions) { pointer-events: none; opacity: .45; }
   .alpha-hud .alpha-progress { bottom: max(12px, env(safe-area-inset-bottom)); max-width: calc(100vw - 380px);
     min-width: 0; padding: 6px 10px; font-size: 11px; }
   .throwable-status { top: max(80px, calc(env(safe-area-inset-top) + 72px)); bottom: auto !important;
@@ -63,6 +77,9 @@
   .pulse-lock .pulse-lock-help { font-size: 11px; }
   .startup-content { width: min(620px, calc(100vw - 36px)); }
 }
+@media (prefers-reduced-motion: reduce) {
+  .mobile-actions button[data-interaction-state='READY']::after { animation: none; transform: none; opacity: .85; inset: -3px; }
+}
 @media (pointer: coarse) and (orientation: portrait) {
   .mobile-rotate { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column;
     align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center;
@@ -73,24 +90,13 @@
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 500px) {
   .mobile-stick { width: 106px; height: 106px; }
   .mobile-stick i { width: 42px; height: 42px; margin: -21px; }
-  .mobile-actions { grid-template-columns: repeat(3, 65px); gap: 6px; }
+  .mobile-actions { --mobile-action-width: 65px; --mobile-action-height: 49px; gap: 6px; }
   .mobile-actions button { min-height: 49px; font-size: 11px; }
-  .faction-menu { padding-top: max(12px, env(safe-area-inset-top)); gap: 16px; }
-  .menu-story h1 { font-size: 28px; }
-  .menu-intro { font-size: 11px; }
-  .menu-content { gap: 14px; }
-  .menu-content > .faction-dock { order: 0; }
-  .faction-dock { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: none; }
-  .faction-main { min-height: 150px; aspect-ratio: 1.7; padding: 12px 8px 0 12px;
-    grid-template-columns: minmax(95px, .8fr) minmax(0, 1fr); }
-  .faction-identity { gap: 12px; }
-  .faction-number { font-size: 44px; padding-bottom: 6px; }
-  .faction-copy strong, .faction-card[data-faction='HUMAN'] .faction-copy strong { font-size: 20px; }
-  .faction-caption { min-height: 80px; padding: 10px 12px; gap: 6px; }
-  .faction-description b { font-size: 14px; }
-  .faction-description em { display: none; }
-  .faction-arrow { padding: 8px; font-size: 20px; }
-  .faction-dock legend { margin-bottom: 8px; }
-  .menu-settings { order: 1; justify-content: center; }
-  .menu-settings .menu-setting-button { width: 70px; height: 52px; gap: 2px; }
+  .menu-topbar { height: 150px; }
+  .menu-story { left: 3%; top: 14px; width: 47%; }
+  .faction-dock { grid-template-columns: repeat(2, minmax(0, 1fr)); height: 250px; gap: 18px; }
+  .faction-card { height: 250px; }
+  .faction-copy strong { font-size: 18px; }
+  .faction-copy small { font-size: 12px; min-width: 65px; }
+  .faction-description b { padding: 6px 10px; font-size: 16px; }
 }

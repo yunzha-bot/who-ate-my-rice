@@ -87,6 +87,7 @@ import { AlphaHudView } from './AlphaHudView.ts';
 import { DISABLED_AUDIO_CUES, GameAudio, worldAudioGain, type AudioCue, type MusicCue } from './GameAudio';
 import { AudioSettingsView } from './AudioSettingsView';
 import { MenuSettingsView } from './MenuSettingsView.ts';
+import { MenuAtmosphereView } from './MenuAtmosphereView.ts';
 import { GameFeedback } from './GameFeedback';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
 import { ThrowableSystem, type ThrowableSpawn, type ThrowActor, type ThrowPoint } from '../systems/ThrowableSystem.ts';
@@ -146,6 +147,7 @@ export class ThreeGame {
   private readonly cameraOrbit = new IsometricCameraOrbit(this.cameraOffset);
   private readonly sceneVisualBounds = new THREE.Box3();
   private readonly gentleCamera = new GentleCameraFollow();
+  private readonly menuAtmosphere: MenuAtmosphereView;
   private readonly alphaHud: AlphaHudView;
   private match = new GameStateSystem(C.match.readyMs, C.match.captureMs, 'FACTION_SELECT');
   private rice = new RiceField([], C.rice.maxProgressMs, C.rice.prepareMs);
@@ -173,6 +175,7 @@ export class ThreeGame {
   })());
   private audioSettings!: AudioSettingsView;
   private menuSettings!: MenuSettingsView;
+  private readonly resetMenuSelection: () => void;
   private pauseSettingsOpen = false;
   private pauseSettingsButton!: HTMLButtonElement;
   // 独立操作说明层（教学）：可在首次开局自动出现，也可从暂停菜单重看；不参与玩法。
@@ -480,7 +483,8 @@ export class ThreeGame {
       help: () => this.openControlsHelp(),
     });
     this.menu = this.label(container, 'faction-menu');
-    populateFactionMenu(this.menu, faction => this.chooseFaction(faction));
+    this.resetMenuSelection = populateFactionMenu(this.menu, faction => this.chooseFaction(faction));
+    this.menuAtmosphere = new MenuAtmosphereView(this.menu, this.camera);
     this.difficultyView = new DifficultyView(this.menu);
     this.pulseLockView = new PulseLockView(container, C.pulseLock.timing,
       () => this.closePulseLock());
@@ -619,6 +623,7 @@ export class ThreeGame {
   private chooseFaction(faction: Faction): void {
     if (!this.startupReadiness.canStart) return;
     if (!this.match.beginFromFactionSelect()) return;
+    this.menuAtmosphere.setMenuVisible(false);
     this.difficulty = this.difficultyView.value;
     this.control.choose(faction);
     this.resetRound();
@@ -809,7 +814,8 @@ export class ThreeGame {
   };
 
   private tick = (): void => {
-    const deltaMs = Math.min(this.clock.getDelta() * 1000, C.match.maxFrameDeltaMs);
+    const frameMs = this.clock.getDelta() * 1000;
+    const deltaMs = Math.min(frameMs, C.match.maxFrameDeltaMs);
     // A portrait instruction must never leave a live match running behind it.
     const portrait = globalThis.matchMedia?.('(pointer: coarse) and (orientation: portrait)').matches ?? false;
     if (portrait && this.match.phase === 'PLAYING') this.togglePause();
@@ -949,6 +955,7 @@ export class ThreeGame {
     this.actorShadows.update();
     this.throwableView.sync();
     this.captureNetView.sync();
+    this.menuAtmosphere.update(frameMs);
     fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
     this.renderer.render(this.scene, this.camera);
     this.frame = requestAnimationFrame(this.tick);
@@ -2892,6 +2899,7 @@ export class ThreeGame {
   }
 
   private returnToFactionSelect(): void {
+    this.resetMenuSelection();
     if (!this.match.returnToFactionSelect()) return;
     this.pauseSettingsOpen = false;
     this.controlsHelp.hide();
@@ -2902,6 +2910,7 @@ export class ThreeGame {
     this.camera.lookAt(0, 0, 0);
     this.resize();
     this.menu.hidden = false;
+    this.menuAtmosphere.setMenuVisible(true);
     this.updateHud(this.nearestRice());
   }
 
@@ -3038,7 +3047,9 @@ export class ThreeGame {
     this.alphaHud.update({ phase, faction: hudFaction, time,
       controlsEnabled: phase === 'PLAYING' && !this.controlsHelp.visible &&
         !this.devFreeze.isFrozen && !this.sceneEditor?.isOpen,
-      throwReady: !!touchActor?.canAct && !!heldProp,
+      throwReady: !!touchActor && this.throwables.canThrow(touchActor),
+      interactionUnavailable: !!hudFaction && (this.throwables.isStunned(hudFaction) ||
+        (hudFaction === 'DEEPSEEK' && this.sprint.state === 'STUNNED')),
       pickupReady: !!touchActor?.canAct && !heldProp && !!this.throwables.nearest(touchActor, this.traceThrow),
       netMode: this.captureNet.mode, pulseLockOpen: this.pulseLock.isOpen,
       lightLabel: lightSwitch ? `${this.roomLights.isOn(lightSwitch.roomId) ? '关灯' : '开灯'}${lightCooldown > 0 ? ` ${Math.ceil(lightCooldown / 1000)}s` : ''}` : null,
@@ -3921,6 +3932,7 @@ export class ThreeGame {
     if (this.disposed) return;
     this.disposed = true;
     cancelAnimationFrame(this.frame);
+    this.menuAtmosphere.dispose();
     this.devBBinding?.stop();
     this.audio.dispose();
     this.menuSettings.dispose();

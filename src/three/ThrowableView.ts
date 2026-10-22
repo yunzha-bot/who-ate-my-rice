@@ -48,6 +48,7 @@ export class ThrowableView {
   private readonly pathPoints = new Float32Array(25*3);
   private pointer: { x: number; y: number } | null = null;
   private touchAimPointer: number | null = null;
+  private lastTouchTarget: ThrowPoint | null = null;
   private aiming: ThrowFaction | null = null;
   private suppressClick = false;
   private disposed = false;
@@ -100,10 +101,14 @@ export class ThrowableView {
   private target(actor: ViewActor): ThrowPoint | null {
     if(!this.pointer)return null;
     const rect=this.canvas.getBoundingClientRect(),p=this.pointer;
-    if(rect.width<=0||rect.height<=0||p.x<rect.left||p.x>rect.right||p.y<rect.top||p.y>rect.bottom)return null;
+    if(rect.width<=0||rect.height<=0)return null;
+    if(!Number.isFinite(p.x)||!Number.isFinite(p.y)||p.x<rect.left||p.x>rect.right||p.y<rect.top||p.y>rect.bottom)
+      return this.touchAimPointer !== null ? this.lastTouchTarget : null;
     this.mouse.set((p.x-rect.left)/rect.width*2-1,-(p.y-rect.top)/rect.height*2+1);
     this.camera.updateMatrixWorld(true); this.ray.setFromCamera(this.mouse,this.camera);
-    return this.ray.ray.intersectPlane(this.ground,this.hit)?{x:this.hit.x,z:this.hit.z}:null;
+    const target = this.ray.ray.intersectPlane(this.ground,this.hit)?{x:this.hit.x,z:this.hit.z}:null;
+    if (target && this.touchAimPointer !== null) this.lastTouchTarget = target;
+    return target;
   }
   heading(faction: ThrowFaction): number | undefined {
     const actor=this.active(); if(!actor||this.aiming!==faction||actor.faction!==faction)return;
@@ -111,11 +116,12 @@ export class ThrowableView {
     const target=this.system.aim(actor,requested,this.trace).point;
     return Math.atan2(target.x-actor.x,target.z-actor.z);
   }
-  cancel = (): void => { this.aiming=null; this.touchAimPointer=null; this.markers.visible=false; };
+  cancel = (): void => { this.aiming=null; this.touchAimPointer=null; this.lastTouchTarget=null; this.markers.visible=false; };
   touchAimStart(pointerId: number, x: number, y: number): void {
     const actor = this.active();
-    if (!actor || !this.system.held(actor.faction)) return;
+    if (!actor || !this.system.canThrow(actor) || this.touchAimPointer !== null) return;
     this.pointer = { x, y }; this.aiming = actor.faction; this.touchAimPointer = pointerId;
+    if (!this.target(actor)) this.cancel();
   }
   touchAimEnd(pointerId: number, x: number, y: number): void {
     if (pointerId !== this.touchAimPointer) return;
@@ -132,7 +138,11 @@ export class ThrowableView {
   };
   private move = (e: PointerEvent): void => {
     if (this.touchAimPointer !== null) {
-      if (e.pointerId === this.touchAimPointer) this.pointer = { x: e.clientX, y: e.clientY };
+      if (e.pointerId === this.touchAimPointer) {
+        this.pointer = { x: e.clientX, y: e.clientY };
+        const actor = this.active();
+        if (actor) this.target(actor); // Cache every valid gesture sample, even between two render frames.
+      }
       return;
     }
     if (e.pointerType === 'touch') return;
@@ -186,7 +196,7 @@ export class ThrowableView {
     const item=held||near;
     const durability=item?.kind==='BASIN'?` · 剩余 ${item.remainingThrows} 次投掷`:'';
     this.status.hidden=!active||(!held&&!near);
-    this.status.textContent=held?`${THROWABLE_NAMES[held.kind]}${durability} · ${this.touchControls ? '长按投掷瞄准' : '按住左键瞄准，松开投掷 · 右键取消'}`:
+    this.status.textContent=held?`${THROWABLE_NAMES[held.kind]}${durability} · ${this.touchControls ? '按住投掷拖动瞄准，松手投出' : '按住左键瞄准，松开投掷 · 右键取消'}`:
       near?`${this.touchControls ? '点拾取按钮：' : 'F 拾取'}${THROWABLE_NAMES[near.kind]}${durability}`:'';
     if(!active||!held||!this.aiming)return;
     const requested=this.target(active);if(!requested)return;

@@ -1,0 +1,7 @@
+{
+  "checkedFiles": 103,
+  "findings": [],
+  "forbidden": [],
+  "workflowUnchanged": true,
+  "limitations": "Pattern scan only. Historical log paths preserved; private directories not read."
+}

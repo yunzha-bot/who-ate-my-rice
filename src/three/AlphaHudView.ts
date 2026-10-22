@@ -1,6 +1,21 @@
 import { cooldownFraction } from './AlphaPresentation.ts';
 import type { InteractionPrompt } from './InteractionPrompt.ts';
 
+/** Touch presentation/input tuning only; does not change world movement or skill values. */
+export const MOBILE_CONTROLS = {
+  zoneWidthRatio: .5, zoneTopRatio: .28,
+  centerInsetPx: 64, edgeGapPx: 8, radiusRatio: .34, deadZoneRatio: .12, sensitivity: 1,
+  rippleMs: 1050, rippleSpreadPx: 12,
+};
+
+export function floatingStickCenter(x: number, y: number,
+  box: { left: number; top: number; width: number; height: number }, diameter: number) {
+  const inset = Math.max(MOBILE_CONTROLS.centerInsetPx, diameter / 2 + MOBILE_CONTROLS.edgeGapPx);
+  const clamp = (v: number, start: number, length: number) =>
+    Math.max(start + Math.min(inset, length / 2), Math.min(start + length - Math.min(inset, length / 2), v));
+  return { x: clamp(x, box.left, box.width), y: clamp(y, box.top, box.height) };
+}
+
 export interface MobileHudInput {
   direction(x: number, y: number): void;
   held(code: string, value: boolean): void;
@@ -38,6 +53,7 @@ export interface AlphaHudFrame {
   lightLabel?: string | null;
   throwReady?: boolean;
   pickupReady?: boolean;
+  interactionUnavailable?: boolean;
   netMode?: string;
   pulseLockOpen?: boolean;
 }
@@ -64,6 +80,8 @@ export class AlphaHudView {
   private readonly mobilePointers = new Map<number, string>();
   private stickPointer: number | null = null;
   private readonly stick: HTMLElement;
+  private readonly stickZone: HTMLElement;
+  private stickOrigin = { x: 0, y: 0 };
   private readonly stickThumb: HTMLElement;
   private readonly mobileInput: MobileHudInput;
   private readonly rotatePrompt: HTMLElement;
@@ -82,7 +100,7 @@ export class AlphaHudView {
       <div class="alpha-progress" role="status"></div>
       <footer class="movement-guide"><b>W A S D</b> 移动 <span>Esc 暂停</span></footer>
       <section class="mobile-controls" aria-label="触屏操作">
-        <div class="mobile-stick" role="application" aria-label="虚拟摇杆"><i></i></div>
+        <div class="mobile-move-zone" role="application" aria-label="浮动摇杆移动区域"><div class="mobile-stick" aria-hidden="true"><i></i></div></div>
         <div class="mobile-actions">
           <button type="button" data-touch-code="KeyE">交互</button>
           <button type="button" data-touch-code="KeyQ">锁门</button>
@@ -116,9 +134,18 @@ export class AlphaHudView {
     this.interactionHint = this.root.querySelector('.alpha-key small')!;
     this.prompt = this.root.querySelector('.world-interaction')!;
     this.stick = this.root.querySelector('.mobile-stick')!;
+    this.stickZone = this.root.querySelector('.mobile-move-zone')!;
     this.stickThumb = this.stick.querySelector('i')!;
     this.rotatePrompt = this.root.querySelector('.mobile-rotate')!;
-    this.stick.addEventListener('pointerdown', this.onStickDown);
+    this.stickZone.addEventListener('pointerdown', this.onStickDown);
+    this.root.dataset.inputMode = globalThis.matchMedia?.('(pointer: coarse)').matches ? 'touch' : 'keyboard';
+    this.root.style.setProperty('--mobile-zone-width', `${MOBILE_CONTROLS.zoneWidthRatio * 100}%`);
+    this.root.style.setProperty('--mobile-zone-top', `${MOBILE_CONTROLS.zoneTopRatio * 100}%`);
+    this.root.style.setProperty('--mobile-ripple-ms', `${MOBILE_CONTROLS.rippleMs}ms`);
+    this.root.style.setProperty('--mobile-ripple-spread', `${MOBILE_CONTROLS.rippleSpreadPx}px`);
+    globalThis.window?.addEventListener('pointerdown', this.onInputPointer, { passive: true });
+    globalThis.window?.addEventListener('keydown', this.onInputKey);
+    globalThis.window?.addEventListener('blur', this.releaseTouch);
     this.root.addEventListener('pointermove', this.onStickMove);
     this.root.addEventListener('pointerup', this.onPointerEnd);
     this.root.addEventListener('pointercancel', this.onPointerEnd);
@@ -128,7 +155,7 @@ export class AlphaHudView {
       button.addEventListener('pointerdown', event => {
         const pointer = event as PointerEvent;
         pointer.preventDefault();
-        if (!this.mobileEnabled) return;
+        if (!this.mobileEnabled || button.disabled || this.mobilePointers.has(pointer.pointerId) || this.stickPointer === pointer.pointerId) return;
         const code = button.dataset.touchCode!;
         if ([...this.mobilePointers.values()].includes(code)) return;
         this.mobilePointers.set(pointer.pointerId, code);
@@ -140,25 +167,54 @@ export class AlphaHudView {
     throwButton.addEventListener('pointerdown', event => {
       const pointer = event as PointerEvent;
       pointer.preventDefault();
-      if (!this.mobileEnabled) return;
+      if (!this.mobileEnabled || throwButton.disabled || this.mobilePointers.has(pointer.pointerId) ||
+          this.stickPointer === pointer.pointerId || [...this.mobilePointers.values()].includes('THROW')) return;
       this.mobilePointers.set(pointer.pointerId, 'THROW');
       throwButton.setPointerCapture?.(pointer.pointerId);
       this.mobileInput.aimStart(pointer.pointerId, pointer.clientX, pointer.clientY);
     });
-    this.root.querySelector('.mobile-pause')!.addEventListener('click', () => this.mobileInput.pause());
-    this.root.querySelector('.mobile-cancel')!.addEventListener('click', () => {
-      this.releaseTouch(); this.mobileInput.cancel();
-    });
+    for (const [selector, command] of [
+      ['.mobile-pause', () => this.mobileInput.pause()],
+      ['.mobile-cancel', () => { this.releaseTouch(); this.mobileInput.cancel(); }],
+    ] as const) {
+      const button = this.root.querySelector(selector)!;
+      // Secondary touches do not reliably synthesize click. Keyboard/mouse still use click.
+      button.addEventListener('pointerdown', event => {
+        const pointer = event as PointerEvent;
+        if (pointer.pointerType !== 'touch' && pointer.pointerType !== 'pen') return;
+        pointer.preventDefault(); command();
+      });
+      button.addEventListener('click', event => {
+        const pointer = event as PointerEvent;
+        if (pointer.pointerType !== 'touch' && pointer.pointerType !== 'pen') command();
+      });
+    }
     this.pips = Array.from(this.root.querySelectorAll('.rice-inventory i'));
     parent.append(this.root, this.rotatePrompt);
   }
 
   private onStickDown = (event: PointerEvent): void => {
     event.preventDefault();
-    if (!this.mobileEnabled || this.stickPointer !== null) return;
+    if (!this.mobileEnabled || this.stickPointer !== null || this.mobilePointers.has(event.pointerId)) return;
+    const zone = this.stickZone.getBoundingClientRect();
+    const size = this.stick.offsetWidth || (globalThis.innerHeight <= 500 ? 106 : 128);
+    const center = floatingStickCenter(event.clientX, event.clientY, zone, size);
+    // Keep direction anchored to the actual first contact, even when the visible base is inset.
+    this.stickOrigin = { x: event.clientX, y: event.clientY };
+    this.stick.style.left = `${center.x - zone.left - size / 2}px`;
+    this.stick.style.top = `${center.y - zone.top - size / 2}px`;
+    this.stick.dataset.active = 'true';
     this.stickPointer = event.pointerId;
-    this.stick.setPointerCapture?.(event.pointerId);
+    this.stickZone.setPointerCapture?.(event.pointerId);
     this.updateStick(event.clientX, event.clientY);
+  };
+
+  private onInputPointer = (event: PointerEvent): void => {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen') this.root.dataset.inputMode = 'touch';
+    else if (event.pointerType === 'mouse') this.root.dataset.inputMode = 'keyboard';
+  };
+  private onInputKey = (event: KeyboardEvent): void => {
+    if (!['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) this.root.dataset.inputMode = 'keyboard';
   };
 
   private onStickMove = (event: PointerEvent): void => {
@@ -167,12 +223,12 @@ export class AlphaHudView {
 
   private updateStick(clientX: number, clientY: number): void {
     const rect = this.stick.getBoundingClientRect();
-    const radius = rect.width * .34;
+    const radius = rect.width * MOBILE_CONTROLS.radiusRatio;
     if (radius <= 0) return;
-    const dx = clientX - (rect.left + rect.width / 2);
-    const dy = clientY - (rect.top + rect.height / 2);
+    const dx = (clientX - this.stickOrigin.x) * MOBILE_CONTROLS.sensitivity;
+    const dy = (clientY - this.stickOrigin.y) * MOBILE_CONTROLS.sensitivity;
     const length = Math.hypot(dx, dy);
-    if (length < radius * .12) {
+    if (length < radius * MOBILE_CONTROLS.deadZoneRatio) {
       this.stickThumb.style.transform = '';
       this.mobileInput.direction(0, 0);
       return;
@@ -186,6 +242,7 @@ export class AlphaHudView {
   private onPointerEnd = (event: PointerEvent): void => {
     if (event.pointerId === this.stickPointer) {
       this.stickPointer = null;
+      this.stick.dataset.active = 'false';
       this.stickThumb.style.transform = '';
       this.mobileInput.direction(0, 0);
     }
@@ -200,14 +257,19 @@ export class AlphaHudView {
   };
 
   releaseTouch = (): void => {
+    const captures = [...this.mobilePointers].map(([id, code]) => ({ id,
+      node: code === 'THROW' ? this.root.querySelector<HTMLElement>('.mobile-throw')! : this.touchButtons.get(code)! }));
+    if (this.stickPointer !== null) captures.push({ id: this.stickPointer, node: this.stickZone });
     this.mobilePointers.forEach(code => {
       if (code === 'THROW') this.mobileInput.aimCancel();
       else this.mobileInput.held(code, false);
     });
     this.mobilePointers.clear();
     this.stickPointer = null;
+    this.stick.dataset.active = 'false';
     this.stickThumb.style.transform = '';
     this.mobileInput.direction(0, 0);
+    for (const { id, node } of captures) if (node?.hasPointerCapture?.(id)) node.releasePointerCapture(id);
   };
 
   update(frame: AlphaHudFrame): void {
@@ -231,6 +293,8 @@ export class AlphaHudView {
     this.root.querySelector<HTMLButtonElement>('.mobile-pause')!.disabled = frame.phase !== 'PLAYING';
     if (this.root.hidden) return;
     const dp = frame.faction === 'DEEPSEEK';
+    // During net placement the canvas must own ground touches, including the left half.
+    this.stickZone.dataset.suspended = String(!dp && !!frame.netMode && frame.netMode !== 'NONE');
     this.root.dataset.faction = frame.faction!;
     this.set(this.faction, dp ? '01 / DeepSeek 娘' : '02 / Human');
     this.set(this.objective, dp ? '吃完五份米' : '找到并抓住 DeepSeek 娘');
@@ -297,9 +361,10 @@ export class AlphaHudView {
     const value = frame.captureRatio > 0 ? frame.captureRatio : frame.riceRatio ?? 0;
     this.progress.style.setProperty('--progress', `${Math.min(100, Math.max(0, value * 100))}%`);
     this.progress.dataset.danger = String(frame.captureRatio > 0);
-    this.set(this.progress, frame.concealed ? '藏身中 · 按 E 离开'
+    const touchCopy = this.root.dataset.inputMode === 'touch';
+    this.set(this.progress, frame.concealed ? touchCopy ? '藏身中 · 点交互离开' : '藏身中 · 按 E 离开'
       : frame.captureRatio > 0 ? `抓捕 ${Math.round(value * 100)}%`
-        : `这份米 ${Math.round(value * 100)}% · 停下按住 E`);
+        : `这份米 ${Math.round(value * 100)}% · 停下按住${touchCopy ? '交互' : ' E'}`);
   }
 
   private cooldown(node: HTMLElement, label: string, remaining: number, duration: number, compact = false): void {
@@ -317,6 +382,11 @@ export class AlphaHudView {
     const interact = this.touchButtons.get('KeyE');
     if (!interact) return;
     this.set(interact, frame.pulseLockOpen ? '点按解锁' : frame.interaction?.label ?? (dp ? '交互\n按住吃米' : '交互\n门·家具'));
+    const hint = frame.phase === 'PLAYING' ? frame.interaction : null;
+    const unavailable = !this.mobileEnabled || frame.interactionUnavailable;
+    const state = unavailable || hint?.blocked ? 'BLOCKED' : frame.pulseLockOpen || hint?.held ? 'BUSY' : hint ? 'READY' : 'NONE';
+    interact.dataset.interactionState = state;
+    interact.disabled = !!unavailable || (!frame.pulseLockOpen && (!hint || hint.blocked));
     const v = this.touchButtons.get('KeyV')!;
     v.hidden = dp;
     this.cooldown(v, '抓捕', frame.qRemainingMs, frame.qDurationMs, true);
@@ -348,6 +418,10 @@ export class AlphaHudView {
     this.root.removeEventListener('pointerup', this.onPointerEnd);
     this.root.removeEventListener('pointercancel', this.onPointerEnd);
     this.root.removeEventListener('lostpointercapture', this.onPointerEnd);
+    this.stickZone.removeEventListener('pointerdown', this.onStickDown);
+    globalThis.window?.removeEventListener('pointerdown', this.onInputPointer);
+    globalThis.window?.removeEventListener('keydown', this.onInputKey);
+    globalThis.window?.removeEventListener('blur', this.releaseTouch);
     this.releaseTouch();
     this.rotatePrompt.remove();
     this.root.remove();

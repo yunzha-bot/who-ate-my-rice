@@ -1,0 +1,80 @@
+{
+  "hashes": [
+    {
+      "path": "src/three/GameUiLayout.ts",
+      "unchanged": true
+    },
+    {
+      "path": "src/config/gameConfig.ts",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/logo.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/card-blue.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/card-yellow.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/start.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/foliage.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/rice-cat.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/rice-tub.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/labels/name-deepseek.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/labels/name-human.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/labels/role-deepseek.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/labels/role-human.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/labels/slogan-deepseek.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/menu/labels/slogan-human.webp",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/portraits/deepseek-normal.png",
+      "unchanged": true
+    },
+    {
+      "path": "public/assets/ui/portraits/human-guardian-v1.webp",
+      "unchanged": true
+    },
+    {
+      "path": "src/three/MenuAtmosphereView.ts",
+      "unchanged": true
+    },
+    {
+      "path": "src/opening-menu.css",
+      "unchanged": true
+    }
+  ]
+}

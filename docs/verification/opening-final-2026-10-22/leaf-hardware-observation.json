@@ -1,0 +1,13 @@
+{
+  "command": "OPENING_USE_GPU=1 node scripts/verify-opening-motion.mjs --leaf-proof",
+  "exitCode": 1,
+  "assertion": "interior leaf framing changed beyond alpha rounding",
+  "thresholdUnchanged": 2,
+  "renderer": "NVIDIA GeForce RTX 4060 / ANGLE Direct3D11",
+  "observations": [
+    {"viewport": [1920, 1080], "maxChannelDifference": 2, "interiorMax": 2, "meanChannelDifference": 0.0014637988683127573, "interiorChannelsAbove2": 0},
+    {"viewport": [1768, 890], "maxChannelDifference": 24, "interiorMax": 3, "meanChannelDifference": 0.07308836239768163, "interiorChannelsAbove2": 1, "interiorException": {"x": 1548, "y": 816, "difference": 3}}
+  ],
+  "scope": "Isolated original composite versus two clipped copies, not the normal full-page screenshot; max includes viewport outermost row/column.",
+  "disposition": "Keep failure visible. No runtime or threshold change; non-blocking subpixel GPU sampling discrepancy. Master-off uses the original image."
+}

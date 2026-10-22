@@ -1,0 +1,29 @@
+{
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "samples": [
+    {
+      "enabled": false,
+      "frames": 180,
+      "meanFps": 117.51575630344071,
+      "p95Ms": 10
+    },
+    {
+      "enabled": true,
+      "frames": 180,
+      "meanFps": 111.15941128899887,
+      "p95Ms": 10.199999988079071
+    },
+    {
+      "enabled": false,
+      "frames": 180,
+      "meanFps": 106.43358306500845,
+      "p95Ms": 12.400000005960464
+    },
+    {
+      "enabled": true,
+      "frames": 180,
+      "meanFps": 113.71577409356318,
+      "p95Ms": 10.099999994039536
+    }
+  ]
+}

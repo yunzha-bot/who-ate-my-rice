@@ -1,0 +1,26 @@
+[
+  {
+    "command": "npm test",
+    "exitCode": 0,
+    "durationMs": 49054,
+    "tail": "and throwing cooldown is enforced (0.2495ms)\n✔ low-poly household models contain real geometry, inner vessel profiles and box lid/tape (5.2974ms)\n✔ both character views face the aim even while moving; fall/stun recover without double tilt (37.7579ms)\n✔ pointer aiming uses the actual offset canvas and all four camera angles; cancel and cleanup work (9.8487ms)\n✔ throw availability shares execution cooldown, durability, concealment and stun gates without mutation (0.2357ms)\n(node:28016) ExperimentalWarning: stripTypeScriptTypes is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\n✔ one card entry plays once; child transitions never retrigger even without audio cooldown (2.2005ms)\n✔ leaving and reentering either card permits one new hover; two cards are independent (0.3191ms)\n✔ null or non-Node origins are valid entries, and non-button targets stay silent (0.2363ms)\n✔ feedback clear/dispose cancels every fallback timer and animation listener (3.177ms)\n✔ animation completion cancels its fallback without removing other live feedback (0.7743ms)\n✔ reduced motion still uses one 950ms feedback and no rice grains (0.5628ms)\n✔ safety path disposal releases geometry/material once and detaches its group (1.8766ms)\nℹ tests 1097\nℹ suites 0\nℹ pass 1097\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 48100.7771\n"
+  },
+  {
+    "command": "npx tsc --noEmit",
+    "exitCode": 0,
+    "durationMs": 1811,
+    "tail": ""
+  },
+  {
+    "command": "npm run build",
+    "exitCode": 0,
+    "durationMs": 4299,
+    "tail": "\n> who-ate-my-rice@1.0.0-rc1 build\n> tsc --noEmit && vite build\n\nvite v6.4.3 building for production...\ntransforming...\n✓ 138 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                     0.43 kB │ gzip:   0.31 kB\ndist/assets/index-B8AblkHA.css     82.30 kB │ gzip:  16.80 kB\ndist/assets/index-D6iFjS7e.js   1,211.79 kB │ gzip: 336.89 kB\n✓ built in 2.40s\n\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n"
+  },
+  {
+    "command": "git diff --check",
+    "exitCode": 0,
+    "afterDocumentation": true,
+    "tail": " Git touches it\nwarning: in the working copy of 'docs/MOBILE_BROWSER_SUPPORT.md', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'scripts/verify-mobile-controls.mjs', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/main.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/mobile-ui.css', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/systems/ThrowableSystem.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/three/AlphaHudView.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/three/ControlsHelpView.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/three/GameUiLayout.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/three/ThreeGame.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'src/three/ThrowableView.ts', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tests/alpha-hud.test.mjs', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tests/faction-card-ui.test.mjs', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tests/menu-responsive.test.mjs', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tests/pages-deployment.test.mjs', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'tests/throwables.test.mjs', LF will be replaced by CRLF the next time Git touches it\n"
+  }
+]

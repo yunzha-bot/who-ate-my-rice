@@ -2,22 +2,41 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { populateFactionMenu, UI_PORTRAITS, REPORT_MARKUP } from '../src/three/GameUiLayout.ts';
+import { factionMenuFixture } from './helpers/faction-menu.mjs';
 
-test('native faction buttons dispatch only their own faction, once per activation', () => {
+test('native cards select only; Start dispatches the latest faction and reset clears selection', () => {
   const callbacks = [];
-  const buttons = ['DEEPSEEK', 'HUMAN'].map(faction => ({
-    dataset: { faction }, listeners: {},
-    addEventListener(name, callback) { this.listeners[name] = callback; },
-  }));
-  const menu = { innerHTML: '', querySelectorAll: () => buttons };
-  populateFactionMenu(menu, faction => callbacks.push(faction));
+  const menu = factionMenuFixture(), buttons = menu.cards;
+  const reset = populateFactionMenu(menu, faction => callbacks.push(faction));
   assert.equal((menu.innerHTML.match(/type="button" class="faction-card"/g) ?? []).length, 2);
   assert.equal((menu.innerHTML.match(/type="button" class="menu-setting-button"/g) ?? []).length, 2);
   assert.doesNotMatch(menu.innerHTML, /type="radio"|确认阵营/);
   assert.doesNotMatch(menu.innerHTML, /menu-controls|CONTROL \//);
   buttons[0].listeners.click();
+  assert.equal(buttons[0].attributes['aria-pressed'], 'true');
+  assert.equal(menu.start.disabled, false);
   buttons[1].listeners.click();
-  assert.deepEqual(callbacks, ['DEEPSEEK', 'HUMAN']);
+  assert.deepEqual(callbacks, []);
+  assert.equal(buttons[0].attributes['aria-pressed'], 'false');
+  menu.start.listeners.click();
+  assert.deepEqual(callbacks, ['HUMAN']);
+  menu.hidden = true; menu.start.listeners.click();
+  assert.deepEqual(callbacks, ['HUMAN']);
+  menu.hidden = false; reset(); menu.start.listeners.click();
+  assert.equal(menu.start.disabled, true);
+  assert.ok(buttons.every(b => b.attributes['aria-pressed'] === 'false'));
+  assert.deepEqual(callbacks, ['HUMAN']);
+  buttons[0].listeners.click(); menu.start.listeners.click();
+  assert.deepEqual(callbacks, ['HUMAN', 'DEEPSEEK']);
+});
+
+test('menu native Space and arrows stop gameplay propagation without suppressing browser defaults', () => {
+  const menu = factionMenuFixture(); populateFactionMenu(menu, () => {});
+  const stopped = [];
+  for (const code of ['Space', 'ArrowRight', 'Escape', 'Tab'])
+    menu.listeners.keydown({code, stopPropagation:()=>stopped.push(code), preventDefault:()=>assert.fail('native behavior suppressed')});
+  assert.deepEqual(stopped,['Space','ArrowRight']);
+  menu.hidden=true; menu.listeners.keydown({code:'Space',stopPropagation:()=>assert.fail('hidden menu intercepted input')});
 });
 
 test('formal UI loads the industrial system and retains keyboard/reduced-motion access', () => {
@@ -36,11 +55,12 @@ test('returning from a match restores the button-based faction menu without remo
   const end = source.indexOf('private resetRound(): void', start);
   const method = source.slice(start, end);
   assert.match(method, /this\.menu\.hidden = false/);
+  assert.match(method, /this\.resetMenuSelection\(\)/);
   assert.doesNotMatch(method, /input\[value=/);
 });
 
 test('standalone PNG/WebP portraits are bounded assets, not baked UI screens', () => {
-  const menu = { innerHTML: '', querySelectorAll: () => [] };
+  const menu = factionMenuFixture();
   populateFactionMenu(menu, () => {});
   for (const path of Object.values(UI_PORTRAITS)) {
     const bytes = readFileSync(new URL(`../public${path}`, import.meta.url));

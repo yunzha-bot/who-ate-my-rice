@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AlphaHudView } from '../src/three/AlphaHudView.ts';
+import { AlphaHudView, MOBILE_CONTROLS, floatingStickCenter } from '../src/three/AlphaHudView.ts';
 
 // Deliberately small DOM stand-in. Rendering/layout is checked in the browser.
 function harness(input = { direction() {}, held() {}, aimStart() {}, aimEnd() {}, aimCancel() {}, pause() {}, cancel() {} }) {
@@ -63,13 +63,13 @@ test('independent touch owners preserve movement, cancel safely and release all 
   const calls = [], h = harness(Object.fromEntries(['direction', 'held', 'aimStart', 'aimEnd', 'aimCancel', 'pause', 'cancel']
     .map(key => [key, (...args) => calls.push([key, ...args])])));
   const event = (type, pointerId, clientX = 95, clientY = 50) => ({ type, pointerId, clientX, clientY, preventDefault() {} });
-  h.view.update(frame);
-  h.nodes.get('.mobile-stick').listeners.pointerdown(event('pointerdown', 1));
+  h.view.update({ ...frame, interaction: {label:'开门',detail:'',blocked:false} });
+  h.nodes.get('.mobile-move-zone').listeners.pointerdown(event('pointerdown', 1));
   assert.equal(h.view.stickPointer, 1);
   h.buttons.get('KeyE').listeners.pointerdown(event('pointerdown', 2));
   h.root.listeners.pointerup(event('pointerup', 2));
   assert.equal(h.view.stickPointer, 1, 'releasing E must not release the movement finger');
-  h.nodes.get('.mobile-stick').listeners.pointerdown(event('pointerdown', 3));
+  h.nodes.get('.mobile-move-zone').listeners.pointerdown(event('pointerdown', 3));
   assert.equal(h.view.stickPointer, 1, 'a second finger cannot steal the joystick');
   h.nodes.get('.mobile-throw').listeners.pointerdown(event('pointerdown', 4));
   h.root.listeners.pointercancel(event('pointercancel', 4));
@@ -81,6 +81,67 @@ test('independent touch owners preserve movement, cancel safely and release all 
   assert.deepEqual(calls.at(-1), ['direction', 0, 0]);
   assert(calls.some(call => call[0] === 'held' && call[1] === 'KeyE' && call[2] === false));
   assert.equal(h.view.mobilePointers.size, 0);
+  h.view.dispose();
+});
+
+test('floating base is safely inset while direction remains anchored to the true first contact', () => {
+  for(const box of [{left:0,top:100,width:333,height:275},{left:30,top:70,width:422,height:300}]) {
+    for(const [x,y] of [[0,0],[1000,1000],[180,200]]) {
+      const c=floatingStickCenter(x,y,box,106);
+      assert(c.x>=box.left+64&&c.x<=box.left+box.width-64);
+      assert(c.y>=box.top+64&&c.y<=box.top+box.height-64);
+    }
+  }
+  const calls=[],h=harness({direction:(...p)=>calls.push(p),held(){},aimStart(){},aimEnd(){},aimCancel(){},pause(){},cancel(){}});
+  h.view.update(frame);
+  const event=(type,x,y)=>({type,pointerId:1,clientX:x,clientY:y,preventDefault(){}});
+  h.view.onStickDown(event('pointerdown',2,99));assert.deepEqual(calls.at(-1),[0,0]);
+  const left=h.nodes.get('.mobile-stick').style.left;
+  h.view.onStickMove(event('pointermove',102,99));assert.deepEqual(calls.at(-1),[1,0]);
+  assert.equal(h.nodes.get('.mobile-stick').style.left,left,'base must never chase the finger');
+  h.view.onPointerEnd(event('pointerup',102,99));assert.deepEqual(calls.at(-1),[0,0]);
+  assert.equal(h.nodes.get('.mobile-stick').dataset.active,'false');h.view.dispose();
+});
+
+test('interaction hint state comes only from the supplied arbitration and stops while busy or blocked', () => {
+  const h=harness(),e=h.buttons.get('KeyE'),hint={label:'开门',detail:'',blocked:false};
+  for(const [extra,state,disabled] of [[{},'NONE',true],[{interaction:hint},'READY',false],
+    [{interaction:{...hint,held:true}},'BUSY',false],[{interaction:{...hint,blocked:true}},'BLOCKED',true],
+    [{pulseLockOpen:true},'BUSY',false],[{interaction:hint,interactionUnavailable:true},'BLOCKED',true]]) {
+    h.view.update({...frame,...extra});assert.equal(e.dataset.interactionState,state);assert.equal(e.disabled,disabled);
+  }
+  h.view.update({...frame,interaction:hint,controlsEnabled:false});assert.equal(e.dataset.interactionState,'BLOCKED');
+  h.view.onInputPointer({pointerType:'touch'});assert.equal(h.root.dataset.inputMode,'touch');
+  h.view.onInputKey({key:'e'});assert.equal(h.root.dataset.inputMode,'keyboard');
+  h.view.onInputPointer({pointerType:'touch'});h.view.onInputPointer({pointerType:'mouse'});assert.equal(h.root.dataset.inputMode,'keyboard');
+  h.view.dispose();
+});
+
+test('one throw owner cannot be stolen and a joystick pointer cannot also press an action',()=>{
+  const calls=[],h=harness(Object.fromEntries(['direction','held','aimStart','aimEnd','aimCancel','pause','cancel'].map(k=>[k,(...a)=>calls.push([k,...a])])));
+  h.view.update({...frame,interaction:{label:'开门',detail:'',blocked:false}});
+  const event=id=>({type:'pointerdown',pointerId:id,clientX:40,clientY:50,preventDefault(){}});
+  h.view.onStickDown(event(1));h.nodes.get('.mobile-throw').listeners.pointerdown(event(1));
+  h.buttons.get('KeyE').listeners.pointerdown(event(1));assert(!calls.some(c=>c[0]==='aimStart'||c[0]==='held'));
+  h.nodes.get('.mobile-throw').listeners.pointerdown(event(2));h.nodes.get('.mobile-throw').listeners.pointerdown(event(3));
+  assert.equal(calls.filter(c=>c[0]==='aimStart').length,1);
+  h.view.onPointerEnd({...event(3),type:'pointerup'});assert(h.view.mobilePointers.has(2));
+  h.view.onPointerEnd({...event(2),type:'pointerup'});h.view.onPointerEnd({...event(2),type:'pointerup'});
+  assert.equal(calls.filter(c=>c[0]==='aimEnd').length,1);assert.equal(h.view.stickPointer,1);
+  h.view.releaseTouch();assert.equal(h.view.stickPointer,null);h.view.dispose();
+});
+
+test('secondary touch can pause/cancel without a synthesized click or a duplicate command',()=>{
+  const calls=[],h=harness(Object.fromEntries(['direction','held','aimStart','aimEnd','aimCancel','pause','cancel'].map(k=>[k,(...a)=>calls.push([k,...a])])));
+  h.view.update(frame);
+  for(const [selector,command] of [['.mobile-pause','pause'],['.mobile-cancel','cancel']]) {
+    const button=h.nodes.get(selector);
+    button.listeners.pointerdown({pointerType:'touch',isPrimary:false,preventDefault(){}});
+    button.listeners.click({pointerType:'touch'});
+    assert.equal(calls.filter(c=>c[0]===command).length,1);
+    button.listeners.click({pointerType:'mouse'});
+    assert.equal(calls.filter(c=>c[0]===command).length,2);
+  }
   h.view.dispose();
 });
 
@@ -114,6 +175,11 @@ test('concealment progress uses one concise exit hint without duplicating the no
   assert.equal(h.nodes.get('.alpha-progress').textContent, '藏身中 · 按 E 离开');
   h.view.update({ ...frame, concealed: false });
   assert.equal(h.nodes.get('.alpha-progress').hidden, true);
+  h.view.onInputPointer({pointerType:'touch'});h.view.update({...frame,concealed:true});
+  assert.equal(h.nodes.get('.alpha-progress').textContent,'藏身中 · 点交互离开');
+  h.view.update({...frame,riceRatio:.3});assert.match(h.nodes.get('.alpha-progress').textContent,/停下按住交互/);
+  h.view.onInputKey({key:'e'});h.view.update({...frame,concealed:true});
+  assert.equal(h.nodes.get('.alpha-progress').textContent,'藏身中 · 按 E 离开');
   h.view.dispose();
 });
 

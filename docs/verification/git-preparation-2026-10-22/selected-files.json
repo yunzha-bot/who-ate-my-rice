@@ -1,0 +1,438 @@
+{
+  "entries": [
+    {
+      "path": "design-qa.md",
+      "bytes": 8437
+    },
+    {
+      "path": "docs/AGENT_LOG.md",
+      "bytes": 716284
+    },
+    {
+      "path": "docs/DEEPSEEK_HANDOFF.md",
+      "bytes": 166126
+    },
+    {
+      "path": "docs/MOBILE_BROWSER_SUPPORT.md",
+      "bytes": 8244
+    },
+    {
+      "path": "docs/OPENING_UI_RECONSTRUCTION_PLAN.md",
+      "bytes": 17239
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 2317
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/audit.json",
+      "bytes": 383
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/browser/results.json",
+      "bytes": 3508
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/gates.json",
+      "bytes": 1016
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/online-status.json",
+      "bytes": 222
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages-artifact.json",
+      "bytes": 16296
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages/chrome-production-menu.png",
+      "bytes": 2094425
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages/msedge-production-menu.png",
+      "bytes": 2095553
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages/results.json",
+      "bytes": 446
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/protection.json",
+      "bytes": 1778
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/README.md",
+      "bytes": 5260
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/security.json",
+      "bytes": 192
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/selected-files.json",
+      "bytes": null
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-667-DEEPSEEK-interaction-ripple.png",
+      "bytes": 756835
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-667-HUMAN-floating-stick.png",
+      "bytes": 811355
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-844-DEEPSEEK-aim-multitouch.png",
+      "bytes": 942738
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-844-DEEPSEEK-floating-stick.png",
+      "bytes": 882002
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-desktop-keyboard-mouse.png",
+      "bytes": 229113
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/results.json",
+      "bytes": 1808
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-edge/msedge-667-HUMAN-aim-multitouch.png",
+      "bytes": 787611
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-edge/msedge-desktop-keyboard-mouse.png",
+      "bytes": 234137
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-edge/results.json",
+      "bytes": 1806
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/gates.json",
+      "bytes": 4437
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/protection.json",
+      "bytes": 3099
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/README.md",
+      "bytes": 11020
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/chrome-final-results.json",
+      "bytes": 12013
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/chrome-static-1920x1080.png",
+      "bytes": 2099357
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/gates.json",
+      "bytes": 4111
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/leaf-hardware-observation.json",
+      "bytes": 962
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/motion-results.json",
+      "bytes": 11984
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/msedge-final-results.json",
+      "bytes": 12002
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/msedge-motion-results.json",
+      "bytes": 11993
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/msedge-static-1920x1080.png",
+      "bytes": 2098374
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/opening-motion-14s.webm",
+      "bytes": 4532541
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/protection-and-layout.json",
+      "bytes": 9867
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/README.md",
+      "bytes": 15729
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/recording.json",
+      "bytes": 2001
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/reference-left-current-right-1768x890.png",
+      "bytes": 6466807
+    },
+    {
+      "path": "docs/verification/opening-labels/compare-deepseek.png",
+      "bytes": 831006
+    },
+    {
+      "path": "docs/verification/opening-labels/compare-guard.png",
+      "bytes": 652104
+    },
+    {
+      "path": "docs/verification/opening-labels/compare-human.png",
+      "bytes": 518397
+    },
+    {
+      "path": "docs/verification/opening-labels/compare-rice.png",
+      "bytes": 762490
+    },
+    {
+      "path": "docs/verification/opening-labels/README.md",
+      "bytes": 4204
+    },
+    {
+      "path": "docs/verification/opening-labels/reference.png",
+      "bytes": 3084237
+    },
+    {
+      "path": "docs/verification/opening-labels/static-1920x1080.png",
+      "bytes": 2076909
+    },
+    {
+      "path": "docs/verification/opening-motion/all-motion.png",
+      "bytes": 2119351
+    },
+    {
+      "path": "docs/verification/opening-motion/hardware-performance.json",
+      "bytes": 616
+    },
+    {
+      "path": "docs/verification/opening-motion/leaf-proof.json",
+      "bytes": 394
+    },
+    {
+      "path": "docs/verification/opening-motion/motion-off-1920x1080.png",
+      "bytes": 2098840
+    },
+    {
+      "path": "docs/verification/opening-motion/motion-results.json",
+      "bytes": 12010
+    },
+    {
+      "path": "docs/verification/opening-motion/motion-soak-90s-results.json",
+      "bytes": 9898
+    },
+    {
+      "path": "docs/verification/opening-motion/msedge-motion-results.json",
+      "bytes": 12012
+    },
+    {
+      "path": "docs/verification/opening-motion/README.md",
+      "bytes": 9008
+    },
+    {
+      "path": "docs/verification/opening-motion/recording.json",
+      "bytes": 1984
+    },
+    {
+      "path": "docs/verification/opening-motion/regression/browser-results.json",
+      "bytes": 13261
+    },
+    {
+      "path": "docs/verification/opening-motion/regression/msedge-browser-results.json",
+      "bytes": 13261
+    },
+    {
+      "path": "docs/verification/opening-static/README.md",
+      "bytes": 5724
+    },
+    {
+      "path": "docs/verification/opening-static/reference.png",
+      "bytes": 2122816
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 49978
+    },
+    {
+      "path": "package.json",
+      "bytes": 438
+    },
+    {
+      "path": "public/assets/ui/menu/card-blue.webp",
+      "bytes": 233562
+    },
+    {
+      "path": "public/assets/ui/menu/card-yellow.webp",
+      "bytes": 148948
+    },
+    {
+      "path": "public/assets/ui/menu/foliage.webp",
+      "bytes": 124256
+    },
+    {
+      "path": "public/assets/ui/menu/labels/name-deepseek.webp",
+      "bytes": 50102
+    },
+    {
+      "path": "public/assets/ui/menu/labels/name-human.webp",
+      "bytes": 72220
+    },
+    {
+      "path": "public/assets/ui/menu/labels/role-deepseek.webp",
+      "bytes": 40318
+    },
+    {
+      "path": "public/assets/ui/menu/labels/role-human.webp",
+      "bytes": 40666
+    },
+    {
+      "path": "public/assets/ui/menu/labels/slogan-deepseek.webp",
+      "bytes": 48286
+    },
+    {
+      "path": "public/assets/ui/menu/labels/slogan-human.webp",
+      "bytes": 50510
+    },
+    {
+      "path": "public/assets/ui/menu/logo.webp",
+      "bytes": 224220
+    },
+    {
+      "path": "public/assets/ui/menu/rice-cat.webp",
+      "bytes": 38698
+    },
+    {
+      "path": "public/assets/ui/menu/rice-tub.webp",
+      "bytes": 33678
+    },
+    {
+      "path": "public/assets/ui/menu/start.webp",
+      "bytes": 64200
+    },
+    {
+      "path": "README.md",
+      "bytes": 8814
+    },
+    {
+      "path": "scripts/compare-opening-labels.mjs",
+      "bytes": 2548
+    },
+    {
+      "path": "scripts/record-opening-motion.mjs",
+      "bytes": 5114
+    },
+    {
+      "path": "scripts/summarize-opening-final.mjs",
+      "bytes": 2760
+    },
+    {
+      "path": "scripts/verify-mobile-controls.mjs",
+      "bytes": 27233
+    },
+    {
+      "path": "scripts/verify-opening-final.mjs",
+      "bytes": 12989
+    },
+    {
+      "path": "scripts/verify-opening-motion.mjs",
+      "bytes": 21132
+    },
+    {
+      "path": "scripts/verify-opening-static.mjs",
+      "bytes": 8289
+    },
+    {
+      "path": "scripts/verify-pages-preview.mjs",
+      "bytes": 3739
+    },
+    {
+      "path": "src/main.ts",
+      "bytes": 863
+    },
+    {
+      "path": "src/mobile-ui.css",
+      "bytes": 7829
+    },
+    {
+      "path": "src/opening-menu.css",
+      "bytes": 16014
+    },
+    {
+      "path": "src/systems/ThrowableSystem.ts",
+      "bytes": 9150
+    },
+    {
+      "path": "src/three/AlphaHudView.ts",
+      "bytes": 23554
+    },
+    {
+      "path": "src/three/ControlsHelpView.ts",
+      "bytes": 7042
+    },
+    {
+      "path": "src/three/GameUiLayout.ts",
+      "bytes": 8825
+    },
+    {
+      "path": "src/three/MenuAtmosphereView.ts",
+      "bytes": 13791
+    },
+    {
+      "path": "src/three/ThreeGame.ts",
+      "bytes": 223366
+    },
+    {
+      "path": "src/three/ThrowableView.ts",
+      "bytes": 13496
+    },
+    {
+      "path": "tests/alpha-hud.test.mjs",
+      "bytes": 18448
+    },
+    {
+      "path": "tests/faction-card-ui.test.mjs",
+      "bytes": 4824
+    },
+    {
+      "path": "tests/helpers/faction-menu.mjs",
+      "bytes": 787
+    },
+    {
+      "path": "tests/menu-atmosphere.test.mjs",
+      "bytes": 4630
+    },
+    {
+      "path": "tests/menu-responsive.test.mjs",
+      "bytes": 3650
+    },
+    {
+      "path": "tests/opening-labels.test.mjs",
+      "bytes": 2325
+    },
+    {
+      "path": "tests/pages-deployment.test.mjs",
+      "bytes": 8518
+    },
+    {
+      "path": "tests/throwables.test.mjs",
+      "bytes": 20393
+    }
+  ],
+  "missing": [
+    {
+      "file": "docs/DEEPSEEK_HANDOFF.md",
+      "target": "docs/verification/DEEPSEEK_ANIMATION_STAGE4/README.md",
+      "reason": "pre-existing local history outside this archive scope; preserved, not imported"
+    },
+    {
+      "file": "docs/DEEPSEEK_HANDOFF.md",
+      "target": "docs/verification/HOME_GYM/REPORT.md",
+      "reason": "pre-existing local history outside this archive scope; preserved, not imported"
+    }
+  ],
+  "totalBytes": 41130153,
+  "note": "Manifest size excluded from self-count; unchanged tracked docs are not restaged. No directory staging."
+}

@@ -1,0 +1,47 @@
+{
+  "viewport": [
+    1920,
+    1080
+  ],
+  "requestedClipSec": 14,
+  "rawDurationSec": 16.96,
+  "realBrowser": true,
+  "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "softwareRenderer": false,
+  "testOnlyCursor": true,
+  "frameTiming": {
+    "frames": 771,
+    "meanFps": 55.06174781714806,
+    "medianMs": 17.19999998807907,
+    "p95Ms": 24.400000005960464
+  },
+  "events": [
+    {
+      "x": 1820,
+      "y": 140,
+      "t": 1.797
+    },
+    {
+      "x": 120,
+      "y": 950,
+      "t": 3.941
+    },
+    {
+      "x": 680,
+      "y": 580,
+      "t": 5.691
+    },
+    {
+      "x": 1380,
+      "y": 560,
+      "t": 8.812
+    },
+    {
+      "x": 960,
+      "y": 150,
+      "t": 12.353
+    }
+  ],
+  "errors": [],
+  "encoder": "080 [SAR 1:1 DAR 16:9], q=2-31, 2500 kb/s, 25 fps, 1k tbn (default)\r\n      Metadata:\r\n        DURATION        : 00:00:16.960000000\r\n        encoder         : Lavc61.3.100 libvpx\r\n      Side data:\r\n        cpb: bitrate max/min/avg: 0/0/0 buffer size: 0 vbv_delay: N/A\r\nframe=   35 fps=0.0 q=33.0 size=       0KiB time=00:00:01.40 bitrate=   2.7kbits/s speed=2.74x    \rframe=   82 fps= 80 q=26.0 size=       0KiB time=00:00:03.28 bitrate=   1.2kbits/s speed=3.22x    \rframe=  129 fps= 84 q=58.0 size=    1536KiB time=00:00:05.16 bitrate=2438.5kbits/s speed=3.38x    \rframe=  181 fps= 89 q=24.0 size=    1536KiB time=00:00:07.24 bitrate=1738.0kbits/s speed=3.55x    \rframe=  231 fps= 91 q=27.0 size=    1536KiB time=00:00:09.24 bitrate=1361.8kbits/s speed=3.63x    \rframe=  282 fps= 92 q=31.0 size=    3328KiB time=00:00:11.28 bitrate=2416.9kbits/s speed= 3.7x    \rframe=  339 fps= 95 q=20.0 size=    3328KiB time=00:00:13.56 bitrate=2010.5kbits/s speed=3.81x    \r[out#0/webm @ 00000277bacc8100] video:4423KiB audio:0KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: 0.068397%\r\nframe=  350 fps= 97 q=20.0 Lsize=    4426KiB time=00:00:14.00 bitrate=2590.0kbits/s speed=3.86x    \r\n"
+}

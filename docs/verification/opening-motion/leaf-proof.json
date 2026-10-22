@@ -1,0 +1,21 @@
+{
+  "proof": [
+    {
+      "w": 1920,
+      "h": 1080,
+      "changedChannels": 464922,
+      "maxDifference": 2,
+      "interiorMax": 2,
+      "meanDifference": 0.07473717206790123
+    },
+    {
+      "w": 1768,
+      "h": 890,
+      "changedChannels": 372986,
+      "maxDifference": 25,
+      "interiorMax": 2,
+      "meanDifference": 0.0974992373786161
+    }
+  ],
+  "realPointerLeave": true
+}

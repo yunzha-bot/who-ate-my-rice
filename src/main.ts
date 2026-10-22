@@ -4,7 +4,7 @@ import './industrial-ui.css';
 import './sheet-ui.css';
 import './s13-ui.css';
 import './game-ui.css';
-import './faction-menu.css';
+import './opening-menu.css';
 import './mobile-ui.css';
 import { StartupView } from './three/StartupView';
 import { mountMenuCredits } from './three/MenuCreditsView';

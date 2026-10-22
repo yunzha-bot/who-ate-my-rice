@@ -1,0 +1,81 @@
+{
+  "hashes": {
+    "src/three/GameUiLayout.ts": {
+      "unchanged": true,
+      "hash": "e863c073555629677cb4591fec87d022ac3ed3be2b149761787ba62fa60f7176"
+    },
+    "src/config/gameConfig.ts": {
+      "unchanged": true,
+      "hash": "334f7a583def91d1fa19feb7b1261052d626c5c76509f3e4726109b6778b1ac9"
+    },
+    "public/assets/ui/menu/logo.webp": {
+      "unchanged": true,
+      "hash": "87a13bc9cab1bbdf9a707c19d68f3ab501c9bfa129043ffdb7eebd4de25938f6"
+    },
+    "public/assets/ui/menu/card-blue.webp": {
+      "unchanged": true,
+      "hash": "d1eb6ee0cf6e716352e46ecaba9e2c4b0919f2275e64476c4eef958f39315890"
+    },
+    "public/assets/ui/menu/card-yellow.webp": {
+      "unchanged": true,
+      "hash": "dceb7db80d60168855de36adad8a861b3e89260a4eca770778c0fb6cc5302d89"
+    },
+    "public/assets/ui/menu/start.webp": {
+      "unchanged": true,
+      "hash": "7b29b37cd730f757720f3306fd0654dcd92b509c4b0a86cae046f8d8fa861127"
+    },
+    "public/assets/ui/menu/foliage.webp": {
+      "unchanged": true,
+      "hash": "eba9dab8d2adc0c488d2ae6b7d1f5d8998b526a94addca534106fd4a87066965"
+    },
+    "public/assets/ui/menu/rice-cat.webp": {
+      "unchanged": true,
+      "hash": "e0be4d3f7b1b8442b5bf0bab2b33cdd346b84057d255ee608514e35ea587aca6"
+    },
+    "public/assets/ui/menu/rice-tub.webp": {
+      "unchanged": true,
+      "hash": "977517e666f91991b9822eeb71cab76ebcfc5a45914841db0e5446e81388ed62"
+    },
+    "public/assets/ui/menu/labels/name-deepseek.webp": {
+      "unchanged": true,
+      "hash": "4806c8b22423bad78c5a8047681b380632f997a7624ddc7ae127231c4f088b5f"
+    },
+    "public/assets/ui/menu/labels/name-human.webp": {
+      "unchanged": true,
+      "hash": "4cfff331414aca69c3f68819047b88b20dd82ef4675e013eab73b15bba374865"
+    },
+    "public/assets/ui/menu/labels/role-deepseek.webp": {
+      "unchanged": true,
+      "hash": "92766b4168035e07aa89cc8ddd7bb43d926b85f7ea8311fb7a3dc4a42f1919f3"
+    },
+    "public/assets/ui/menu/labels/role-human.webp": {
+      "unchanged": true,
+      "hash": "ae9d9d8ddc8777782f08c44137e321f79c83fdbfdad59ab5e4602994ed2e224a"
+    },
+    "public/assets/ui/menu/labels/slogan-deepseek.webp": {
+      "unchanged": true,
+      "hash": "c009267f3bfaad0c176b275ac6ba85080dc9a2db7eed2c870ef9dbf228349fac"
+    },
+    "public/assets/ui/menu/labels/slogan-human.webp": {
+      "unchanged": true,
+      "hash": "38f95e8be7cb39dc887819b9df6cf00a01c99bd925c67ace3db05c2873777fb8"
+    },
+    "public/assets/ui/portraits/deepseek-normal.png": {
+      "unchanged": true,
+      "hash": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b"
+    },
+    "public/assets/ui/portraits/human-guardian-v1.webp": {
+      "unchanged": true,
+      "hash": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b"
+    },
+    "src/three/MenuAtmosphereView.ts": {
+      "unchanged": true,
+      "hash": "4b5ca43dc4c61db77aa650394a50bfa6ea9ccf204ec90e0e6debac60ae1db563"
+    },
+    "src/opening-menu.css": {
+      "unchanged": true,
+      "hash": "f89969a07b7c1f7b44d53d1a60d37829024d46d5ffcf866d8a50352fb98cd0de"
+    }
+  },
+  "hostOnlyHudChange": true
+}

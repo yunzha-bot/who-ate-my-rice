@@ -1,0 +1,314 @@
+{
+  "runtimeUnchanged": true,
+  "hashes": {
+    "src/three/GameUiLayout.ts": {
+      "expected": "e863c073555629677cb4591fec87d022ac3ed3be2b149761787ba62fa60f7176",
+      "actual": "e863c073555629677cb4591fec87d022ac3ed3be2b149761787ba62fa60f7176",
+      "unchanged": true
+    },
+    "src/config/gameConfig.ts": {
+      "expected": "334f7a583def91d1fa19feb7b1261052d626c5c76509f3e4726109b6778b1ac9",
+      "actual": "334f7a583def91d1fa19feb7b1261052d626c5c76509f3e4726109b6778b1ac9",
+      "unchanged": true
+    },
+    "src/three/AlphaPresentation.ts": {
+      "expected": "772a44427d33596b716350a59fab201f516bbb1470c03f02d620244673f1832d",
+      "actual": "772a44427d33596b716350a59fab201f516bbb1470c03f02d620244673f1832d",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/logo.webp": {
+      "expected": "87a13bc9cab1bbdf9a707c19d68f3ab501c9bfa129043ffdb7eebd4de25938f6",
+      "actual": "87a13bc9cab1bbdf9a707c19d68f3ab501c9bfa129043ffdb7eebd4de25938f6",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/card-blue.webp": {
+      "expected": "d1eb6ee0cf6e716352e46ecaba9e2c4b0919f2275e64476c4eef958f39315890",
+      "actual": "d1eb6ee0cf6e716352e46ecaba9e2c4b0919f2275e64476c4eef958f39315890",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/card-yellow.webp": {
+      "expected": "dceb7db80d60168855de36adad8a861b3e89260a4eca770778c0fb6cc5302d89",
+      "actual": "dceb7db80d60168855de36adad8a861b3e89260a4eca770778c0fb6cc5302d89",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/start.webp": {
+      "expected": "7b29b37cd730f757720f3306fd0654dcd92b509c4b0a86cae046f8d8fa861127",
+      "actual": "7b29b37cd730f757720f3306fd0654dcd92b509c4b0a86cae046f8d8fa861127",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/foliage.webp": {
+      "expected": "eba9dab8d2adc0c488d2ae6b7d1f5d8998b526a94addca534106fd4a87066965",
+      "actual": "eba9dab8d2adc0c488d2ae6b7d1f5d8998b526a94addca534106fd4a87066965",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/rice-cat.webp": {
+      "expected": "e0be4d3f7b1b8442b5bf0bab2b33cdd346b84057d255ee608514e35ea587aca6",
+      "actual": "e0be4d3f7b1b8442b5bf0bab2b33cdd346b84057d255ee608514e35ea587aca6",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/rice-tub.webp": {
+      "expected": "977517e666f91991b9822eeb71cab76ebcfc5a45914841db0e5446e81388ed62",
+      "actual": "977517e666f91991b9822eeb71cab76ebcfc5a45914841db0e5446e81388ed62",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/labels/name-deepseek.webp": {
+      "expected": "4806c8b22423bad78c5a8047681b380632f997a7624ddc7ae127231c4f088b5f",
+      "actual": "4806c8b22423bad78c5a8047681b380632f997a7624ddc7ae127231c4f088b5f",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/labels/name-human.webp": {
+      "expected": "4cfff331414aca69c3f68819047b88b20dd82ef4675e013eab73b15bba374865",
+      "actual": "4cfff331414aca69c3f68819047b88b20dd82ef4675e013eab73b15bba374865",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/labels/role-deepseek.webp": {
+      "expected": "92766b4168035e07aa89cc8ddd7bb43d926b85f7ea8311fb7a3dc4a42f1919f3",
+      "actual": "92766b4168035e07aa89cc8ddd7bb43d926b85f7ea8311fb7a3dc4a42f1919f3",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/labels/role-human.webp": {
+      "expected": "ae9d9d8ddc8777782f08c44137e321f79c83fdbfdad59ab5e4602994ed2e224a",
+      "actual": "ae9d9d8ddc8777782f08c44137e321f79c83fdbfdad59ab5e4602994ed2e224a",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/labels/slogan-deepseek.webp": {
+      "expected": "c009267f3bfaad0c176b275ac6ba85080dc9a2db7eed2c870ef9dbf228349fac",
+      "actual": "c009267f3bfaad0c176b275ac6ba85080dc9a2db7eed2c870ef9dbf228349fac",
+      "unchanged": true
+    },
+    "public/assets/ui/menu/labels/slogan-human.webp": {
+      "expected": "38f95e8be7cb39dc887819b9df6cf00a01c99bd925c67ace3db05c2873777fb8",
+      "actual": "38f95e8be7cb39dc887819b9df6cf00a01c99bd925c67ace3db05c2873777fb8",
+      "unchanged": true
+    },
+    "public/assets/ui/portraits/deepseek-normal.png": {
+      "expected": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b",
+      "actual": "f54bf1c405355b974406048eed9cb21c1a3b5297160db8816c9edca058a0332b",
+      "unchanged": true
+    },
+    "public/assets/ui/portraits/human-guardian-v1.webp": {
+      "expected": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b",
+      "actual": "25aee062a7404ff40b83ce3bccb42682de6f0eba77f930e1d531c25a594ba23b",
+      "unchanged": true
+    },
+    "src/three/MenuAtmosphereView.ts": {
+      "expected": "4b5ca43dc4c61db77aa650394a50bfa6ea9ccf204ec90e0e6debac60ae1db563",
+      "actual": "4b5ca43dc4c61db77aa650394a50bfa6ea9ccf204ec90e0e6debac60ae1db563",
+      "unchanged": true
+    },
+    "src/three/ThreeGame.ts": {
+      "expected": "2525c50cbcf49d7f103a78a1c9bd1ea9728671079821225c50070473619af3d4",
+      "actual": "2525c50cbcf49d7f103a78a1c9bd1ea9728671079821225c50070473619af3d4",
+      "unchanged": true
+    },
+    "src/opening-menu.css": {
+      "expected": "f89969a07b7c1f7b44d53d1a60d37829024d46d5ffcf866d8a50352fb98cd0de",
+      "actual": "f89969a07b7c1f7b44d53d1a60d37829024d46d5ffcf866d8a50352fb98cd0de",
+      "unchanged": true
+    },
+    "tests/menu-atmosphere.test.mjs": {
+      "expected": "4facf747f0e3051178208cc35f7d8ca57a8141680ed7f519bc868dc977eca034",
+      "actual": "4facf747f0e3051178208cc35f7d8ca57a8141680ed7f519bc868dc977eca034",
+      "unchanged": true
+    },
+    "tests/menu-responsive.test.mjs": {
+      "expected": "e51435d13ec1d35b17dd64f6c7d876cdc3284b43a4563300dceb3c2449e51afe",
+      "actual": "e51435d13ec1d35b17dd64f6c7d876cdc3284b43a4563300dceb3c2449e51afe",
+      "unchanged": true
+    },
+    "scripts/verify-opening-motion.mjs": {
+      "expected": "7705f60b1dcd303e649e27462a7c5f4d72bad0a123236e0bce20ece252879ec3",
+      "actual": "a0f1fd883dc3ad1ab396d952a9f888b2587773c6b1ae17aa1a0c4229437df592",
+      "unchanged": false
+    },
+    "scripts/record-opening-motion.mjs": {
+      "expected": "b689e8bcb75de6f1a07013d71b33e8d6716023f92d00f087c7526297271113dd",
+      "actual": "1548891ab5ad2b3a1122c58e903cc6aebb7405a464fafaac4d1bff506c3642d8",
+      "unchanged": false
+    }
+  },
+  "layout": [
+    {
+      "viewport": [
+        1920,
+        1080
+      ],
+      "differences": [
+        {
+          "selector": ".menu-logo",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-start",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-settings",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        }
+      ],
+      "chromeEdgeGeometryEqual": true
+    },
+    {
+      "viewport": [
+        1768,
+        890
+      ],
+      "differences": [
+        {
+          "selector": ".menu-logo",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-start",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-settings",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        }
+      ],
+      "chromeEdgeGeometryEqual": true
+    },
+    {
+      "viewport": [
+        1600,
+        900
+      ],
+      "differences": [
+        {
+          "selector": ".menu-logo",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-start",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-settings",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        }
+      ],
+      "chromeEdgeGeometryEqual": true
+    },
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "differences": [
+        {
+          "selector": ".menu-logo",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"DEEPSEEK\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".faction-card[data-faction=\"HUMAN\"]",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-start",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        },
+        {
+          "selector": ".menu-settings",
+          "dx": 0,
+          "dy": 0,
+          "dw": 0,
+          "dh": 0
+        }
+      ],
+      "chromeEdgeGeometryEqual": true
+    }
+  ],
+  "reference": {
+    "path": "docs/verification/opening-static/reference.png",
+    "width": 1768,
+    "height": 890
+  },
+  "comparison": "left reference / right current, native size, no stretch"
+}

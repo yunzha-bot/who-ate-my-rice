@@ -84,10 +84,15 @@ export class ThrowableSystem {
       z: actor.z + (target.z - actor.z) * t }, blocked: hit !== null,
       rangeLimited: scale < 1 };
   }
-  throw(actor: ThrowActor, requested: ThrowPoint, trace: ThrowTrace): boolean {
+  /** Read-only input availability; shares the exact execution gates, including cooldown. */
+  canThrow(actor: ThrowActor): boolean {
     const item = this.held(actor.faction);
-    if (!this.config.enabled || !item || item.remainingThrows <= 0 || !actor.canAct || actor.hidden ||
-        this.isStunned(actor.faction) || this.readyAt[actor.faction] > this.nowMs) return false;
+    return !!(this.config.enabled && item && item.remainingThrows > 0 && actor.canAct && !actor.hidden &&
+      !this.isStunned(actor.faction) && this.readyAt[actor.faction] <= this.nowMs);
+  }
+  throw(actor: ThrowActor, requested: ThrowPoint, trace: ThrowTrace): boolean {
+    if (!this.canThrow(actor)) return false;
+    const item = this.held(actor.faction)!;
     const target = this.aim(actor, requested, trace).point;
     if (Math.hypot(target.x - actor.x, target.z - actor.z) < .05) return false;
     item.remainingThrows--;

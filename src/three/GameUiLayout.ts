@@ -57,31 +57,32 @@ export const REPORT_MARKUP = `<div class="report-art" aria-hidden="true">
   '<h1></h1><p></p><div class="overlay-stats"></div>';
 
 /** Menu presentation only. Native buttons preserve keyboard activation. */
-export function populateFactionMenu(menu: HTMLElement, choose: (faction: Faction) => void): void {
+export function populateFactionMenu(menu: HTMLElement, choose: (faction: Faction) => void): () => void {
   menu.innerHTML = `
+    <img class="menu-foliage" src="${assetBase}assets/ui/menu/foliage.webp" alt="" aria-hidden="true" width="1600" height="900" draggable="false">
     <header class="menu-topbar"><section class="menu-story">
-      <span class="menu-eyebrow">HOME / PEOPLE / RICE / CHASE</span>
-      <h1>谁吃了<br><em>我的米？</em></h1>
-      <p class="menu-english">THE LITTLE RICE CHASE</p>
-      <p class="menu-intro">偷吃一口而已，至于追这么久吗？</p>
-      <span class="menu-index" aria-hidden="true">HOME / CHASE / ESCAPE</span>
+      <h1><img class="menu-logo" src="${assetBase}assets/ui/menu/logo.webp" alt="谁吃了我的米？" width="1500" height="605" draggable="false"></h1>
+      <p class="menu-english menu-accessible">THE LITTLE RICE CHASE</p>
+      <p class="menu-intro menu-accessible">偷吃一口而已，至于追这么久吗？</p>
     </section></header>
     <div class="menu-content">
     <fieldset class="faction-dock">
-      <legend><span>选择你的阵营</span><small>CHOOSE YOUR SIDE / 点击出发</small></legend>
-      <button type="button" class="faction-card" data-faction="DEEPSEEK">
+      <legend class="menu-accessible">选择你的阵营</legend>
+      <button type="button" class="faction-card" data-faction="DEEPSEEK" aria-pressed="false" aria-label="选择 DeepSeek 娘，干饭人">
         <span class="faction-main"><span class="faction-identity"><span class="faction-number">01</span>
         <span class="faction-copy"><small>干饭人</small><strong>DeepSeek 娘</strong></span></span>
-        <img class="faction-portrait" src="${UI_PORTRAITS.DEEPSEEK}" alt="" width="768" height="1152" decoding="async" draggable="false"></span>
+        <img class="faction-portrait" src="${UI_PORTRAITS.DEEPSEEK}" alt="" width="1024" height="1536" decoding="async" draggable="false"></span>
+        <img class="faction-sticker faction-rice-cat" src="${assetBase}assets/ui/menu/rice-cat.webp" alt="" width="400" height="337" draggable="false">
+        <img class="faction-sticker faction-rice-tub" src="${assetBase}assets/ui/menu/rice-tub.webp" alt="" width="400" height="289" draggable="false">
         <span class="faction-caption"><span class="faction-description"><b>就吃亿口！</b>一点饭而已，应该不会被发现吧？<em>偷偷开饭 / SNEAK & EAT</em></span>
-        <span class="faction-arrow" aria-hidden="true">↗</span></span>
+        </span><span class="faction-selected" aria-hidden="true">已选择</span>
       </button>
-      <button type="button" class="faction-card" data-faction="HUMAN">
+      <button type="button" class="faction-card" data-faction="HUMAN" aria-pressed="false" aria-label="选择 Human，屋主人">
         <span class="faction-main"><span class="faction-identity"><span class="faction-number">02</span>
         <span class="faction-copy"><small>屋主人</small><strong>Human</strong></span></span>
         <img class="faction-portrait" src="${UI_PORTRAITS.HUMAN}" alt="" width="768" height="1152" decoding="async" draggable="false"></span>
-        <span class="faction-caption"><span class="faction-description"><b>大米保卫战</b>我的米饭！家里怎么还进小贼了？<em>守住晚饭 / SEEK & CATCH</em></span>
-        <span class="faction-arrow" aria-hidden="true">↗</span></span>
+        <span class="faction-caption"><span class="faction-description"><b>大米保卫战！</b>我的米饭！家里怎么还进小贼了？<em>守住晚饭 / SEEK & CATCH</em></span>
+        </span><span class="faction-selected" aria-hidden="true">已选择</span>
       </button>
     </fieldset>
     <aside class="menu-settings" aria-label="首页设置">
@@ -94,13 +95,36 @@ export function populateFactionMenu(menu: HTMLElement, choose: (faction: Faction
       </section>
       <section class="menu-setting-section">
         <button type="button" class="menu-setting-button" data-menu-panel="difficulty" aria-expanded="false" aria-controls="menu-difficulty-panel">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 5h16M4 12h16M4 19h16M8 2v6M16 9v6M10 16v6"/></svg>
-          <span>游戏难度</span><small data-difficulty-label></small>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 5h10c2 0 3 2 4 6l1 5c.5 3-2 4-4 2l-3-3H9l-3 3c-2 2-4.5 1-4-2l1-5c1-4 2-6 4-6Z M7 8v5M4.5 10.5h5M16 9h.01M19 12h.01"/></svg>
+          <span>游戏难度</span><small data-difficulty-label></small><span class="menu-chevron" aria-hidden="true">▾</span>
         </button>
         <div class="menu-difficulty-slot menu-setting-panel" id="menu-difficulty-panel" hidden></div>
       </section>
-    </aside></div>`;
-  menu.querySelectorAll<HTMLButtonElement>('.faction-card').forEach(card => {
-    card.addEventListener('click', () => choose(card.dataset.faction as Faction));
+    </aside></div>
+    <div class="menu-start-row"><button type="button" class="menu-start" disabled aria-describedby="menu-selection-help"><span>开始游戏</span><span aria-hidden="true">→</span></button>
+      <p id="menu-selection-help" class="menu-selection-help" role="status">先选择你的阵营</p></div>`;
+  const cards = menu.querySelectorAll<HTMLButtonElement>('.faction-card');
+  const start = menu.querySelector<HTMLButtonElement>('.menu-start')!;
+  const help = menu.querySelector<HTMLElement>('.menu-selection-help')!;
+  // Keep native button/slider keys away from the window-level gameplay input.
+  // Do not preventDefault: Space must still activate a focused native button.
+  menu.addEventListener('keydown', event => {
+    if (!menu.hidden && (event.code === 'Space' || event.code.startsWith('Arrow'))) event.stopPropagation();
   });
+  let selected: Faction | null = null;
+  const reset = () => {
+    selected = null; start.disabled = true;
+    help.textContent = '先选择你的阵营';
+    cards.forEach(card => card.setAttribute('aria-pressed', 'false'));
+  };
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      selected = card.dataset.faction as Faction;
+      cards.forEach(item => item.setAttribute('aria-pressed', String(item === card)));
+      start.disabled = false;
+      help.textContent = selected === 'DEEPSEEK' ? '已选择干饭人 · 准备开饭' : '已选择屋主人 · 守住大米';
+    });
+  });
+  start.addEventListener('click', () => { if (selected && !start.disabled && !menu.hidden) choose(selected); });
+  return reset;
 }
