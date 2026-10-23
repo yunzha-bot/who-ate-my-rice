@@ -4674,3 +4674,535 @@
 - 测试：功能提交最终重新npm test为1097/1097，定向75/75，类型/default与Pages构建、安全审计及浏览器记录在交付目录；本回执只改报告/HANDOFF/追加日志，按纯文档适用性只执行git diff --check及暂存检查，不冒充重新运行游戏测试。
 - 修改文件：docs/verification/git-preparation-2026-10-22/README.md、docs/DEEPSEEK_HANDOFF.md、docs/AGENT_LOG.md。本回执本身另作正常文档提交推送；其最终SHA在交付回复和仅本地PUSH_RECEIPT.md中记录，避免自引用提交SHA。手动部署必须用最终HEAD，不是本段历史功能SHA。
 - 已知限制/下一步：真机、开屏D后台与GPU采样、大包警告等原限制保留；不改阶段验收结论。请用户复核最终SHA再手动部署，S20仍BLOCKED、S21不启动。
+
+## 腾讯云根路径部署构建准备 — 2026-10-22
+
+### 完成内容
+
+- 用户明确仅授权生成、验证腾讯云根路径部署包，不上传/部署、不改腾讯云配置、不触发Pages。采用npm run build -- --base=/ --outDir dist-tencent，不覆盖原dist。
+- 实查vite.config默认base=/、Pages环境变量仅用于既有子路径；index入口、模型/音频/图片均随base构建，地图JSON由原导入打包。现有dist确为Pages子路径，完整99项SHA256前后不变。
+- 首次构建退出1，原因是production-assets插件仅允许dist，并非CLI参数失效。最小修正只允许项目内dist/dist-tencent，保留六项历史模型构建副本排除、原始资源和重定向保护；测试新增独立目录及符号链接保护。没有删除原dist/public/验证材料。
+- 修改.gitignore增加独立可重建产物；verify-pages-preview支持显式root/base且默认Pages不变，补全HTTP资源字节检查和真实PLAYING断言，修正根路径缺失favicon时验证服务提前发200导致重复响应头的既有问题。未改游戏代码、UI、角色或音频规则。
+
+### 自动化测试与人工验收
+
+| 项目 | 实际结果 |
+| --- | --- |
+| 最终npm test | 1100/1100，失败/取消/跳过0，57,615.7032ms |
+| 资产/Pages定向 | 17/17，其中生产过滤8项 |
+| 独立tsc、独立目录生产构建 | 均退出0；138模块，保留chunk>500kB警告 |
+| 根路径产物 | 99文件/44,305,670字节；39音频、2正式GLB，public逐项哈希相同，无Pages子路径/开发服务/DEV保存接口引用 |
+| 本地HTTP与浏览器 | 全99文件HTTP200且内容与磁盘相同，缺失资源真实404；Chrome/Edge1920×1080双阵营READY/教学/PLAYING/暂停/返回通过，各16音频解码，无pageerror/必需资源404 |
+| 兼容/保护 | 原dist全部哈希不变；默认Pages产物Chrome/Edge只读本地复验通过，Pages工作流未改/未运行 |
+| diff与真机 | git diff --check退出0；不是腾讯云线上/手机真机/声音听感验收 |
+
+### Git 检查点
+
+本次未暂存、commit、push、Tag或Release，未上传部署。历史起点为a3ea62f6b55c0602a5f6135408f65fb12a0af590（通过git log查询），HEAD不变，不沿用上一轮提交推送授权。修改文件：.gitignore、scripts/production-assets.mjs、scripts/verify-pages-preview.mjs、tests/production-assets.test.mjs、docs/DEEPSEEK_HANDOFF.md及本日志；新增docs/verification/tencent-root-2026-10-22报告、资源清单和实拍结果，dist-tencent保持忽略。
+
+### 已知限制与下一项
+
+上传目录为dist-tencent内部全部内容，网站根层应直接有index.html/assets/ui/maps。详细大小/路径/验证见该轮README和artifact.json。保留既有大包警告与真机等限制，腾讯云实际HTTPS/MIME/CDN缓存/访问权限待用户上传后检查；S20/S21不变。任务到此停止，等待用户手动上传，不自动部署或另起阶段。
+
+## 开屏按钮随阵营选择切换文案 — 2026-10-22
+
+- 完成内容：未选择阵营时按钮显示“选择阵营”并保持禁用；选中任一阵营后显示“开始游戏”；菜单重置时恢复“选择阵营”。不改布局和开局回调。
+- 修改文件：src/three/GameUiLayout.ts、tests/helpers/faction-menu.mjs、tests/faction-card-ui.test.mjs及本日志。既有腾讯云构建准备改动与未跟踪材料原样保留。
+- 自动化测试：首次全量发现测试替身缺少子元素查询接口，补齐后重新执行npm test，1100/1100通过，失败/跳过/取消0；独立tsc、npm run build、git diff --check通过。保留既有chunk大于500kB警告。
+- 浏览器：本轮真实Chrome无头验证初始文案及禁用状态、两个阵营选中后的“开始游戏”文案通过；重置文案由既有选择/重置测试验证，等待用户页面体验确认。
+- Git检查点：本轮未暂存、提交、推送或部署。默认dist随正式构建更新；dist-tencent仍为上轮产物，本轮未重建腾讯云部署包。
+
+## 手机交互白边外扩修正与范围收敛 — 2026-10-22
+
+### 完成内容
+
+- 用户反馈白边像闪白/内收。本轮使用真实HUD样例定时采样，旧版Chrome实际向外缩放，但650ms不透明度仅0.063；新增“650ms仍清晰可见”断言修复前实际失败。
+- 将CSS长度除法缩放改为负inset向外扩，前55%保留明显描边，再淡出；周期1050ms。用户补充标注仅供方向参考、12px太宽后，最终集中参数rippleSpreadPx收为5，白边从原轮廓外扩5px；不改HUD主题/布局/交互/玩法。
+- 修改src/mobile-ui.css、src/three/AlphaHudView.ts，新增scripts/verify-mobile-ripple.mjs和docs/verification/mobile-ripple-2026-10-22/验证说明、逐帧证据。保留其他既有改动与材料。
+
+### 自动化测试与人工验收
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 最终5px版npm test | 1100/1100，失败/取消/跳过0 |
+| 独立tsc / build / diff | 通过，保留chunk>500kB警告 |
+| 最终5px逐帧Chrome/Edge触屏模拟 | 0/350/650/900ms外框单调增长、单边最大5px、末尾透明；不可交互移除与reduced-motion通过 |
+| 跨系统浏览器回归 | 既有脚本Chrome/Edge两手机尺寸×双阵营8项及桌面2项通过；该回归始于12px候选，5px最终版另行定时验证，不冒充全部真机验收 |
+| 人工验收 | Android/iPhone/微信真机视觉仍待用户确认 |
+
+### Git检查点与已知限制
+
+未暂存、commit、push、Tag、Release或部署。默认dist已构建；dist-tencent未重建，仍为前轮包。旧手机CSS支持差异只作为兼容风险排除，没有证据认定为用户真机唯一根因。下一步由用户刷新本地页面确认轻微外扩幅度。
+
+## 手机交互波纹柔化 — 2026-10-22
+
+- 用户认为上一版像外部方框、线条太清晰。本轮src/mobile-ui.css将2px硬白边改为1px半透明细边，0.65→1.4px柔化，0.08渐亮后再淡出；保留5px外扩和1050ms周期。没有改HUD布局或玩法。
+- scripts/verify-mobile-ripple.mjs补充细边/模糊/渐亮断言及3倍像素局部截图；新增docs/verification/mobile-ripple-soft-2026-10-22说明与真实Chrome/Edge采样证据。旧证据保留，不覆盖用户材料。
+- 最终npm test 1100/1100，失败/跳过/取消0；独立tsc/build/diff通过，既有chunk警告保留。双浏览器0/350/650/900ms向外、渐亮渐隐、不可交互移除及低动态分支通过；正式手机真机观感待用户确认。
+- 未暂存/commit/push/Tag/Release/部署，dist已更新，dist-tencent未重建。下一步用户确认柔化后的呼吸外扩表现。
+
+## 手机交互波纹中段亮度调整 — 2026-10-22
+
+- 用户反馈柔化版线条中间太淡。仅调整src/mobile-ui.css白边底色透明度至90%、25%/55%动画透明度至0.85/0.75，保留1px柔边、5px外扩和1050ms周期。
+- Chrome/Edge重新逐帧检查通过，650ms透明度0.385→0.577，尺寸与方向不变；证据在docs/verification/mobile-ripple-soft-2026-10-22/brighter/，报告追加说明。
+- 本轮完整npm test 1100/1100，失败/取消/跳过0，独立tsc/build/diff通过；既有chunk警告保留，手机真机观感待用户确认。
+- 已追加本日志，未提交、推送或部署。默认dist更新，dist-tencent未重建。
+
+## 手机波纹进一步收细与增白 — 2026-10-22
+
+- 按用户要求，仅将src/mobile-ui.css波纹细化为0.65px纯白外描线，模糊0.3→0.65px、25%/55%透明度0.95/0.9，保留5px范围/1050ms周期。实测小数border会取整成1px，故用无模糊半径的box-shadow绘制小数细线。
+- scripts/verify-mobile-ripple.mjs同步验证细线和窄柔边；Chrome/Edge四个时间点通过，中段650ms透明度0.693；新截图在docs/verification/mobile-ripple-soft-2026-10-22/thinner/，报告同步追加。
+- 本轮全量1100/1100、独立tsc、最终build和diff通过，保留chunk警告。未提交/推送/部署，dist已更新、dist-tencent未重建，手机观感仍待用户确认。
+
+## 开屏视差边缘拉伸条修正 — 2026-10-22
+
+### 完成内容
+
+- 用户反馈鼠标移到上下左右边缘会出现接缝。Chrome真实复现并保存before截图；根因为移动树叶层把素材最外1像素通过border-image拉伸成40px补边，形成可见条带。
+- 删除补边伪元素，原树叶图按位移/摆角/视口计算等比覆盖余量；静止比例为1，原资源和主UI/相机视差幅度不改。画外剪裁余量80px，动画仍走原循环。
+- 修改src/opening-menu.css、src/three/MenuAtmosphereView.ts、tests/menu-atmosphere.test.mjs；新增scripts/verify-menu-edges.mjs及docs/verification/menu-edges-2026-10-22报告和截图，同步HANDOFF。既有未提交改动和材料保留。
+
+### 自动化测试与人工验收
+
+| 项目 | 实际结果 |
+| --- | --- |
+| 根因回归 | 修复前浏览器检测实际失败并保存边缘条带截图，修复后无border-image补边 |
+| 几何单元测试 | 左右旋转轴、正负位移/摆角、四尺寸逆变换角点均被覆盖；静止比例严格为1 |
+| 最终npm test | 1101/1101，失败/取消/跳过0 |
+| 独立tsc / 最终build / diff | 通过，保留chunk>500kB警告 |
+| 真实浏览器 | Chrome/Edge×1280×900、1920×1080、1768×890、1366×768，共8组，中心/四边/四角覆盖与UI矩形检查通过，恢复风摆截图保留 |
+| 人工验收 | 本地真实截图已提供，等待用户鼠标操作确认；未宣称手机真机或线上已验证 |
+
+### Git检查点与限制
+
+未暂存、commit、push、Tag、Release或部署。原5173服务已不在监听，本轮启动并保留本项目npm run dev。默认dist已更新；dist-tencent仍为前轮包。首次全量受旧测试禁止transform:scale约束失败后改用独立scale属性并完整重跑通过，没有降低原测试要求。
+
+## 树叶微风幅度收敛 — 2026-10-22
+
+- 用户明确反馈摆动太大，将src/three/MenuAtmosphereView.ts中MENU_MOTION.foliage.angleDeg由1.1降至0.35度、driftPx由3降至1像素；保留原周期与鼠标视差。覆盖余量随幅度自动减小，报告追加实际参数。
+- Chrome真实页面中心连续5次采样通过，保留微风且摆角≤0.35度、横漂≤1像素/竖漂≤0.6像素。本轮全量1101/1101，失败/跳过/取消0；独立tsc/build/diff通过，保留chunk警告。
+- 已追加本日志；未提交/推送/部署。默认dist更新，dist-tencent未重建，等待用户确认轻微摆动观感。
+
+## 取消树叶随鼠标和风摆缩放 — 2026-10-22
+
+- 用户明确不要鼠标移动时树叶放大缩小。将src/three/MenuAtmosphereView.ts的覆盖余量设置移出update，改为resize时按最大位移/摆角计算一次固定等比余量。帧更新只位移和旋转，保留0.35°/1px轻微摆动与原视差，不再出现大小呼吸；固定余量仍避免露边。
+- tests/menu-atmosphere.test.mjs新增缩放只在resize设置的回归；scripts/verify-menu-edges.mjs增加各鼠标位置与风摆前后scale一致性断言。报告补充最新行为、HANDOFF同步，旧截图保留，新证据在docs/verification/menu-edges-2026-10-22/fixed-size/。
+- 本轮全量1102/1102，失败/跳过/取消0；独立tsc/build/diff通过，保留chunk警告。Chrome/Edge×4尺寸共8组中心/四边/四角通过：scale保持不变、原图覆盖视口、无旧补边、核心UI不动；风摆恢复后scale仍相同。
+- 已追加日志，未暂存/commit/push/Tag/Release/部署。默认dist更新、dist-tencent未重建。窗口resize时会重新计算固定余量，正常鼠标移动不改变大小；用户实际观感待确认。
+
+## 前景树叶与场景独立视差、恢复可见微风 — 2026-10-22
+
+- 用户要求树叶微动、前景与游戏背景分开视差。查实原两层同向16/12px，相对位移仅4px；src/three/MenuAtmosphereView.ts改为场景沿鼠标12px、前景反向8px，单向极限相对20px。微风摆角调至0.55°、漂移1.5px，原周期保持；固定覆盖余量不变，不恢复随鼠标缩放。
+- scripts/verify-menu-edges.mjs新增真实场景投影/前景变换反向断言，修复前实际失败；新增鼠标静止时左右风摆采样、相位与幅度检查，保持原无缝/UI稳定/scale固定断言。新证据在docs/verification/menu-edges-2026-10-22/separate-layers/，报告与HANDOFF同步。
+- 本轮npm test 1102/1102，失败/取消/跳过0；独立tsc/build/diff通过，保留chunk警告。Chrome/Edge×4尺寸8组中心/四边/四角通过：真实背景移动、前景反向、树叶静止指针下继续微动、左右不同相位、scale恒定、边缘覆盖与核心UI稳定。
+- 已追加日志，未暂存/提交/推送/Tag/Release/部署。默认dist已更新，dist-tencent未重建；等待用户刷新查看整体层次与微风观感。
+
+## 开屏滚动条暖色样式 — 2026-10-22
+
+- 用户不接受截图右侧默认白灰滚动条。仅在src/opening-menu.css给阵营页/设置面板/制作信息弹窗增加细滚动条与暖金棕滑块、低透明暖色轨道；滚动功能保留，未改菜单布局/玩法。
+- Chrome/Edge真实1280×900确认thin、暖色计算值与实际滚动到底，截图与说明在docs/verification/menu-scrollbar-2026-10-22/。
+- 本轮全量1102/1102，失败/跳过/取消0；独立tsc/build/diff通过，保留原chunk警告。已追加日志，未提交/推送/部署；dist更新，dist-tencent未重建，等待用户确认配色。
+
+## 移除开始按钮下方可见提示 — 2026-10-22
+
+- 按用户标注去掉“已选择干饭人·准备开饭”等按钮下方可见文字。src/three/GameUiLayout.ts复用menu-accessible类保留读屏状态，src/opening-menu.css去掉该行margin/min-height，不留空白行；按钮仍按选择状态显示“选择阵营/开始游戏”，开局门禁不改。
+- Chrome真实验证未选/DP/Human三种状态，提示不可见且不占行、按钮文案正常；截图docs/verification/menu-no-helper-2026-10-22/chrome-selected.png。全量1102/1102，失败/跳过/取消0，独立tsc/build/diff通过，保留chunk警告。
+- 已追加日志，未提交/推送/部署；dist更新，dist-tencent未重建。用户刷新即可确认。
+
+## Esc设置新增自定义键位，保留原默认 — 2026-10-22
+
+### 完成内容
+
+- 用户授权玩家在Esc设置自行配置键位，并补充原默认不能改变。默认仍为WASD/方向键、E/Q/V/Space/F/L，Esc固定暂停；仅玩家主动修改后使用个性设置，测试G/H/Shift等仅在隔离浏览器上下文使用。
+- 新增src/three/KeyBindings.ts、KeyboardSettingsView.ts：按操作点击捕获、冲突/保留键提示、Esc取消、恢复默认、localStorage保存/异常回退。只映射物理键盘到既有操作码，不改触屏命令、玩法或正式数值。
+- 修改InputManager、ThreeGame、AlphaHudView、ControlsHelpView、RoomLightView、PulseLockView及game-ui.css；HUD/读屏/操作说明/道具/灯/锁芯和正式技能就绪提示跟随真实按键。按键列表可滚动，鼠标与组合键/输入框编辑保留正常行为。暂停退出/失焦取消捕获并清空输入。
+- 新增tests/key-bindings.test.mjs六项、scripts/verify-keybindings.mjs及docs/verification/key-bindings-2026-10-22报告/截图；README、HANDOFF同步，其他既有未提交改动保留。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 初次检查 | Node strip-only不支持参数属性，改为显式字段/赋值后定向与全量完整重跑通过，未修改测试门槛 |
+| 输入/帮助/门/灯定向 | 57/57，包含6项新改键测试 |
+| 最终npm test | 1108/1108，失败/取消/跳过0 |
+| 独立tsc / build / diff | 通过，140模块；保留既有chunk>500kB警告 |
+| Chrome/Edge真实键盘 | 原默认键位断言、Esc入口、冲突/保留键/取消、7项改绑、两阵营新HUD/教学提示、旧E失效/新G按住、T方向、B真实抓捕、H真实布网、Shift真实冲刺、刷新回读与恢复默认通过；无pageerror |
+| 触屏与桌面回归 | 既有脚本Chrome/Edge两横屏×双阵营8项及桌面E/鼠标2项，共10/10通过 |
+| 用户验收 | 原默认明确不改，新增设置等待用户体验确认；手机回归是浏览器触屏模拟，不冒充真机 |
+
+### Git检查点、限制与下一项
+
+未暂存/commit/push/Tag/Release/部署，不记Git Gate PASS；本地HEAD与origin/main仍相同。默认dist已更新，dist-tencent未重建。设置仅保存当前浏览器，禁用存储时仅当局生效并提示；Esc、方向键、系统/浏览器组合键和功能键保留，不支持鼠标改绑。下一步用户刷新后以原键位开局，从Esc → 设置 → 按键设置自行体验。
+
+## 室外街道生活化布景 — 2026-10-22
+
+### 完成内容
+
+- 用户要求改善空旷室外，按静态生活化布景实施：便利店条纹雨棚/招牌/橱窗/果蔬箱/配送推车，既有车棚旁两辆车/划线/充电设施，住宅门牌/信箱/门垫/盆栽及公告牌/路牌/井盖。未增加行人车流，不改游戏核心、地图JSON、碰撞/导航、输入或原开屏UI。
+- 新增src/three/StreetLifeView.ts，以19个实例化批次合并150个基本形体；ResidentialExterior单点接入，真实地基加入盆栽支撑高度。无新依赖/动画循环/监听器。
+- 全量发现共享几何体被按Mesh重复释放，MapBuilder最小修复去重释放geometry/material/texture并释放实例缓冲；alpha-presentation测试同步验证唯一资源及实例缓冲生命周期，原家具索引/raycast/清理断言保留。新增3项street-life几何保护测试。
+- 新增scripts/verify-street-life.mjs及docs/verification/street-life-2026-10-22实景/修改前证据/报告，同步HANDOFF。浏览器实景修正招牌遮挡和盆栽进绿篱；检查镜头与正常菜单/游戏截图明确区分。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 初次全量 | 1110通过/1失败，共1111；定位共享几何体重复释放，未跳过或隐藏失败 |
+| 外景/表现/生命周期定向 | 38/38，包含原17项外景几何、新3项布景保护 |
+| 最终npm test | 1111/1111，失败/取消/跳过0，约80.36秒 |
+| 独立tsc / 最终build / diff | 通过，141模块；保留既有chunk>500kB警告 |
+| Chrome/Edge真实浏览器 | 1600×900，两阵营各自开局→PLAYING→键盘输入→Esc→返回菜单共4条流程通过，无pageerror；新开屏及三处实景证据已保存 |
+| 用户验收 | 待用户确认布景密度/风格；无动态行人车流，不宣称真机/低端FPS已验收 |
+
+### Git检查点、限制与下一项
+
+main与origin/main一致，原工作区其他改动/未跟踪材料/备份保留。未暂存、commit、push、Tag、Release或部署，不记Git Gate PASS；默认dist已重建，dist-tencent未重建。装饰不参与碰撞/导航/交互；开屏卡片仍自然遮挡部分室外，不为展示新物件移动已验收UI。下一步用户刷新本地页面体验，后续动态行人/车流需另行授权。
+
+## 街道背景行人及缓慢车流 — 2026-10-22
+
+### 完成内容
+
+- 用户确认“行人走动＋缓慢车流，仅背景、不参与碰撞/追逐/AI感知”后实施。新增StreetActivityView：4名路人在人行道往返、四肢微动/平滑转身，2辆车沿相反车道缓慢行驶。既有停放车不动，不加声音/交通AI，不改原角色资产、静态布景、开屏UI、镜头、输入、地图JSON或玩法数值。
+- MapBuilder随原构建/释放持有表现实例，ThreeGame原tick增加单点更新，无额外rAF/计时器/事件监听器/依赖。菜单/PLAYING且可见有焦点时推进，暂停/READY/教学/DEV冻结/编辑器/减少动态时停止；总/两组独立开关暂停不补算时间，地图释放后不再更新。
+- 新增src/three/StreetActivityView.ts、tests/street-activity.test.mjs、scripts/verify-street-activity.mjs与docs/verification/street-activity-2026-10-22报告/截图/录屏/结果；修改MapBuilder、ThreeGame，同步HANDOFF并追加本日志。原其他未提交改动和历史材料保留。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 定向初次 | 3通过/1失败，发现鞋尖旋转穿地；修正鞋底最低点补抬升，保留原断言后4/4通过 |
+| 外景/表现/生命周期定向 | 42/42，其中新增动态4项：192秒路线模拟、30/60fps、暂停/独立开关/减少动态/释放、大帧间隔、10000帧对象固定及共享资源释放一次 |
+| 最终npm test | 1115/1115，失败/取消/跳过0，约84.59秒；此前完整执行也通过，未用历史数替代本轮结果 |
+| 独立tsc / 最终build / diff | 通过，142模块；保留既有chunk>500kB警告 |
+| Chrome/Edge实际流程 | 1600×900，六对象移动、开屏UI矩形稳定；双阵营READY/PLAYING、键盘输入、暂停/继续/重开/返回共4条流程通过，始终同一表现UUID和6对象，无pageerror；减少动态模拟与恢复通过 |
+| 实际运动证据 | 两浏览器新开屏/游戏/相隔2.4秒街道图，Chrome包含12秒连续街道运行的真实录屏；街道检查镜头临时调整，原正式镜头源码不改，保留实际帧循环 |
+| 未验证项 | 切换另一标签页后无头浏览器仍报告hidden=false/focused=true，backgroundVerified=false；不冒称真实切后台已验。真机/低端FPS及用户运动密度观感仍待确认 |
+
+### Git检查点、限制与下一项
+
+main与origin/main一致，暂存区为空；未commit/push/Tag/Release或部署，不记Git Gate PASS。默认dist已重建，dist-tencent未更新。静态街景/背景角色不变成可交互玩法，无交通规则/行人过街。下一步用户刷新本地界面确认缓慢车流与路人观感，并在真实窗口切后台/恢复补验。
+
+## 开屏上方辅路定点补景 — 2026-10-22
+
+### 完成内容
+
+- 用户圈出开屏LOGO与设置栏间的空背景，实际菜单相机射线确认对应后侧辅路/人行道。仅在StreetLifeView补小型候车棚、长椅、站牌/路线板、两组花箱绿植以及辅路虚线/停靠标记；不移动UI、相机，不改角色资源、地图JSON、碰撞、导航、AI、玩法、声音或上一轮背景人车运动。
+- 新增40个形体复用原批次（静态共190形体/19批次）和一张站名Canvas纹理，无新循环/监听器/依赖。新增street-life边界接地断言和verify-upper-street脚本、docs/verification/upper-street-2026-10-22前后证据；HANDOFF同步，本日志只追加。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 外景/动态/布景定向 | 25/25，含新增候车设施人行道边界、接地及辅路标记边界/高度测试 |
+| 最终npm test | 1116/1116，失败/取消/跳过0，约64.67秒 |
+| 独立tsc / 最终build / diff | 通过，142模块；保留既有chunk>500kB警告 |
+| Chrome/Edge真实页面 | 1280×1186、1920×1080、1366×768共6组，LOGO/两卡片/设置/开始共5个UI矩形与真实修改前数据严格相等；新增候车组投影位于上方可视区域，无pageerror |
+| 游戏入口 | 两浏览器各在1366下双阵营开局至PLAYING→Esc→返回，共4条实际流程通过 |
+| 证据与人工验收 | 新前后菜单图和原生局部截图保存；使用减少动态模式固定静态对照，不将静态图当作新动态验收。位置/密度等待用户刷新确认 |
+
+### Git检查点、限制与下一项
+
+本地main HEAD与origin/main引用仍一致，暂存区为空；未commit/push/Tag/Release/部署，不记Git Gate PASS，所有既有工作区改动保留。默认dist已重建、dist-tencent未更新。本轮未复测低端真机FPS或真实切后台；背景牌小字受原虚化与距离影响，不改前景UI提升背景清晰度。下一步用户确认圈出区域的街景效果。
+
+## Human 静态候选三维建模 — 2026-10-22
+
+### 完成内容
+
+- 用户授权按四视图用Blender MCP实际建模，后确认Blender已启动。连接3.6.9/addon1.8，保留原未保存场景及Cube/Camera/Light，使用独立候选场景和工程，不清空用户内容。
+- 新增incoming-assets/human-v2内建模/导出/验证脚本、r01～r03迭代、六角度真实渲染、Five-view汇总和Chrome GLB实景。r03最终普通工程为human_static_project.blend，GLB为human_static.glb；前者1270104字节，后者398148字节。12网格、6816三角面、14材质，无贴图/骨骼/动画。README记录文件、坐标、导出、差异与限制，HANDOFF同步。
+- 修正选择集跨场景导出夹带旧修订/默认Cube的问题，增加active scene限定后重导出和重验；被拒绝产物留诊断目录，不作为交付模型。没有改src/public、旧Human路径、控制、碰撞或游戏数值。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| Blender工程重开/GLB重导入 | 独立后台进程通过；1候选场景、12网格、13模型对象、14材质、6816三角面，脚底0；没有覆盖实时用户场景 |
+| Three.js与Chrome WebGL | GLTFLoader解析通过，真实浏览器渲染通过，34绘制primitive，pageerror 0；隔离预览非正式游戏替换 |
+| 多角度与拓扑 | 检查正/左/右/背/等距/后等距实际渲染；每网格非流形边/孤立顶点为0；块体设计性重叠，不声称穷尽式无自交 |
+| 游戏npm test/tsc/build | 未执行：只新增未接入的候选资源和文档，不改游戏代码，不重建dist；前轮1116不是本轮测试结果 |
+| 用户视觉验收 | 待确认；发型、灰蓝虹膜、帽兜及衣鞋细节有简化，不宣称85%～90%还原 |
+| 脚本语法 / Git差异 | 两个Node脚本语法检查和GLTFLoader最终复验通过；git diff --check通过，原LF/CRLF提示保留，暂存区为空 |
+
+### Git检查点、限制与下一项
+
+没有暂存/commit/push/Tag/Release/部署，不记Git Gate PASS；保留既有工作区改动和全部验证资料。原生工程可编辑，GLB已校验；无骨骼和动作是本轮边界。下一步由用户确认静态造型后另行授权绑定/动画或替换；本轮不自动进入后续阶段。
+
+## Human v2 游戏表现替换 — 2026-10-22
+
+### 完成内容
+
+- 用户确认候选并授权替换旧人类。原样复制候选GLB到public/assets/characters/human/human_v2.glb，398148字节；候选、public及dist哈希一致，不覆盖旧工程/资源或开屏立绘。
+- 新HumanGlbModel加载缓存、独立实例及共享资源去重释放；CharacterActionView接玩家/AI同源表现。HomeAvatar复用既有朝向/实际位移步态，建立刚性肩髋枢轴并等比适配旧视觉高度，走跑/交互/摔倒接地/复位，不改变角色代理、控制、速度、碰撞或抓捕规则。非骨骼绑定或新动画制作。
+- 初次测试发现GLTFLoader移除节点名句点，已用原生sanitizeNodeName修正；补齐摔倒接地与恢复步态复位。保留旧程序化模型及原显式简化入口，增加Human迟到/释放保护。Pages严格产物白名单加入新模型及URL断言，未改手动工作流和审核门禁。
+- 新增HumanGlbModel.ts、human-glb.test.mjs、verify-human-v2.mjs及本轮验证目录；修改AlphaPresentation、CharacterActionView、ThreeGame简化入口、Pages构建校验及测试，更新HANDOFF/候选README。本日志只追加，原工作区其他修改/未跟踪资料均保留。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮最终实际结果 |
+| --- | --- |
+| Human定向 | 5/5；GLB原样性、缓存与独立资源、比例/步态/鞋底和摔倒接地、销毁/简化竞态、失败重试 |
+| npm test | 1121/1121，失败/取消/跳过0，约62.32秒；不沿用前轮数字 |
+| 独立tsc/build/diff | 通过；143模块，保留既有chunk大于500kB及LF/CRLF提示 |
+| Chrome/Edge开发实景 | 1600×900，双阵营各两浏览器共4条READY/PLAYING、真实键盘Human移动/AI步态、暂停冻结/继续/重开/返回通过；一次下载、同模型UUID/单实例，pageerror 0 |
+| 模型失败 | 两浏览器模拟Human404，原加载门禁不静默放行，显式简化可继续且旧模型可见，无pageerror |
+| 生产根路径 | 默认dist100文件HTTP字节一致；Chrome/Edge各双阵营开局/返回、各16音频解码通过，无资源错误；Pages仅单元URL/白名单回归，不运行工作流 |
+| 用户验收与限制 | 等待游戏内观感确认；刚性动作非骨骼蒙皮，不新做投掷专用片段，真机/低端FPS未测。实际截图/结果/文件见docs/verification/human-v2-integration-2026-10-22/README.md |
+
+### Git检查点、限制与下一项
+
+main与origin/main本地引用仍一致、暂存区为空；没有commit/push/Tag/Release/部署，不记Git Gate PASS。默认dist重建，dist-tencent未更新；未触发Pages或上传腾讯云。下一步刷新本地页面确认Human玩家/AI造型与动作，后续骨骼/动画需另行授权。
+
+## 开屏标签右移与浏览器缩放修复 — 2026-10-22
+
+### 完成内容
+
+- 用户指出三类标签靠左、放大“娘”字越界和25%字号/控件过小。真实浏览器反馈环节复现：7组29条布局失败。根因是图片视口尺寸与文字/控件固定像素限制不一致，以及桌面缩放误触发190/330/108px紧凑布局；另有渲染DPR只在构造时设置的问题。
+- 仅运行时opening-menu.css调整：名称/身份组左距DeepSeek14.5%/Human13%，口号10%/9%；字号、padding、纸底留边使用卡片cqw。DeepSeek口号适度收窄避让裙摆，保留真实DOM与所有原图、角度/层级和主卡片位置。开始、设置、详情、页脚按统一视口尺度；触屏/窄竖屏保留可读例外，不增加新设计/依赖。
+- ThreeGame只把既有DPR规则在resize按当前值刷新，保留桌面≤2、触屏≤1.35，不改相机基准、玩法或碰撞。新增verify-menu-zoom脚本、menu-responsive回归断言、本轮证据；同步计划§11与HANDOFF，本日志只追加，其他工作区改动保留。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮最终实际结果 |
+| --- | --- |
+| 菜单/纸张/设置/动态接口/启动定向 | 37/37，包含新增cqw/桌面紧凑布局/DPR接线保护 |
+| npm test | 1122/1122，失败/取消/跳过0，约52.24秒 |
+| 独立tsc/build/diff | 通过；143模块，保留既有chunk>500kB与LF/CRLF提示 |
+| Chrome/Edge缩放等效 | 各25/100/125/150/200/250/300%共14组，文字装纸/内缩、字号比例、按钮在屏内、设置比例、DPR正确及原frustum不变通过；每组真实点击音量/难度/制作信息 |
+| 尺寸与正式入口 | 两浏览器各1920、1768、1600、1366、960、390六尺寸；两阵营选择/开始/READY/首次教学/PLAYING/暂停返回、五音量/静音/三难度/ESC焦点/制作信息通过，无运行或HTTP错误 |
+| 触屏与桌面输入回归 | 两浏览器两触屏尺寸双阵营8条，另桌面键盘/E/鼠标2条，共10/10；DPR1.35上限保留，不冒称真机验收 |
+| 实际证据与未验证 | docs/verification/menu-zoom-2026-10-22含新截图/结果。用CSS视口+DPR等效模拟，并以CDP截图；未操作浏览器工具栏缩放，不把等效测试冒充原生工具栏验证，用户实际缩放观感待确认 |
+
+### Git检查点、限制与下一项
+
+未暂存/commit/push/Tag/Release/部署，不记Git Gate PASS；默认dist已重建、dist-tencent未更新，既有资料与私人目录保留。原生工具栏、系统DPI/强制最小字号及真机/低端FPS不在已验范围。下一步用户刷新，在自己的缩放比例下确认标签右移、字与纸条比例及开始入口；本轮不自动归档或部署。
+
+## 开屏标签再右移与 Human 指定立绘替换 — 2026-10-22
+
+### 完成内容
+
+- 用户要求标签再向右、Human换为所提供米白卫衣少年。名称/身份与口号均再向右卡宽2个百分点；纸底/字号/倾斜/层级不变，不重新设计缩放。原样复制透明PNG为human-hoodie-v1.png，源/public/dist哈希一致；新HUMAN_MENU仅开屏使用，保留旧图及结算页/游戏GLB。
+- 修改opening-menu.css、GameUiLayout.ts及faction-card-ui/opening-labels/pages-deployment三测试，新增原图哈希/尺寸与标签位置保护。初版图片框right -10%在390宽撑出横溢出，最小调整到-3%修复，未移动主卡片。同步HANDOFF和计划§12，新增verification/human-portrait-2026-10-22报告与实际证据，本日志只追加。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮最终实际结果 |
+| --- | --- |
+| npm test | 1124/1124，失败/取消/跳过0，约191.30秒；本轮最后一次实际执行 |
+| 独立tsc/build/diff | 退出0；143模块；既有chunk>500kB和LF/CRLF提示保留 |
+| Chrome/Edge实景 | 各六尺寸加载/contain/无横溢出通过；各双阵营选择、开始、教学（适用时）、PLAYING、暂停返回，五音量/静音/三难度/ESC/制作信息通过，无pageerror或HTTP错误 |
+| 缩放回归 | 两浏览器14组25%～300%等效CSS视口+DPR及设置交互通过；不是原生工具栏缩放 |
+| 异常与复核 | Edge并行首轮截图超时，单独重跑完整通过；中间截图保留但不作最终证据。六尺寸核心UI及DeepSeek立绘矩形与前轮基线不变 |
+| 人工验收 | 真实最终截图见本轮报告；仍待用户确认标签位置/新立绘尺寸。未真机、未全面重验既有动态/性能 |
+
+### Git检查点、限制与下一项
+
+本轮仅本地修改；main与origin/main本地引用一致，暂存区为空，没有commit/push/Tag/Release/部署，不记Gate PASS。既有修改、原图和私人目录保留；dist已重建，dist-tencent仍旧版。下一步用户刷新本地页面验看，不自动扩大为结算页换图、玩法或缩放重构。
+
+## Human 开屏文案调整 — 2026-10-22
+
+### 完成内容
+
+按用户要求将开屏身份“屋主人”改为“人类方”，口号“大米保卫战！”改为“我的大米！”。GameUiLayout.ts同步卡片aria-label及隐藏选中播报；opening-labels.test.mjs同步新文案和旧文案排除断言。纸底、字号、位置、立绘和玩法不变，不扩改操作说明页。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| npm test | 1124/1124，失败/取消/跳过0，约72.87秒 |
+| 独立tsc/build/diff | 通过，保留既有chunk>500kB及LF/CRLF提示 |
+| 浏览器人工验收 | 本轮未重新进行浏览器交互或截图；仅替换文本，刷新本地页面确认文案 |
+
+### Git检查点、限制与下一项
+
+日志只追加，其他已有变更保留。未暂存、提交、推送或部署；默认dist已重建，dist-tencent未更新，无新已知阻断问题。下一步用户刷新验看，本轮不改变阶段状态。
+
+## 开屏桌面宽高比等比适配 — 2026-10-22
+
+### 完成内容
+
+- 用户授权修复内置预览压扁。先新增verify-menu-aspect真实检查，修复前七窗口20项比例失真；根因是卡宽vw与卡高vh独立变化、底图拉满，而人物contain/文字随宽，导致长条卡/人物变小靠底。
+- 仅opening-menu.css引入统一1920×1080视觉尺度和CSS居中余量，卡片、按钮、设置及文字共用尺度；Three.js/树叶仍全屏，保留原图/标签/最新文案/玩法/动态。无新增依赖/JS循环/根transform；触屏窄竖屏保留既有例外。
+- 新增宽高比脚本、menu-responsive统一尺度回归，verify-menu-zoom同步“我的大米！”类别且阈值不变。HANDOFF/阶段方案§13同步，verification/menu-aspect-2026-10-22保存真实证据及中间失败记录，本日志只追加，不覆盖其他成果。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 定向/全量 | 菜单/纸张/动态26/26；npm test 1125/1125，失败/取消/跳过0，约81.91秒 |
+| 独立tsc/build/diff | 退出0；143模块；保留既有chunk>500kB及LF/CRLF提示 |
+| 桌面比例 | Chrome/Edge共14组，含1266×1195、1000方形、2560超宽及resize返回；卡片/人物框/按钮比例、可达、无横溢出和设置/阵营点击通过；1920基准矩形不变 |
+| 等效缩放 | 两浏览器14组25%～300%CSS视口+DPR等效及设置通过，非工具栏操作 |
+| 正式流程 | 两浏览器各六尺寸、双阵营键盘选择/开始、加载门禁、READY/首次教学/PLAYING/暂停返回及音量/静音/难度/ESC/制作信息通过，无pageerror/HTTP错误 |
+| 人工验收/限制 | 已查看本轮实际截图；内置实例连接不可用，以同尺寸Chrome/Edge重现，用户实际面板/工具栏缩放/真机仍待确认。中间CSS模块旧内容已核对刷新后重新验证，失败截图不冒充最终效果 |
+
+### Git检查点、限制与下一项
+
+本轮保留全部既有变更/资源及私人目录；没有暂存、提交、推送、Tag/Release或部署，不记Git Gate PASS。默认dist更新，dist-tencent未重建。无已知阻断问题，下一步刷新实际内置预览和外部浏览器确认视觉，不自动上线。
+
+## Human 游戏内视觉尺寸增大 — 2026-10-23
+
+### 完成内容
+
+- 用户反馈Human太小；先在human-glb测试中建立25%放大断言并观察失败。AlphaPresentation增加HUMAN_GLB_SIZE=1.25，只在既有GLB适配入口等比放大，保持父缩放抵消、脚底定位、玩家/AI共用，不改GLB/代理/相机/开屏/碰撞/玩法。
+- 修改human-glb.test.mjs验证尺寸/比例/reset和原接地步态；verify-human-v2增加实际高度/脚底及READY截图测量，保留原流程/失败回退。同步HANDOFF及verification/human-size-2026-10-23证据报告，本日志只追加，其他成果不覆盖。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮最终实际结果 |
+| --- | --- |
+| 定向/全量 | Human/表现23/23；npm test 1125/1125，失败/取消/跳过0，约62.69秒 |
+| 独立tsc/build/diff | 通过；143模块；既有chunk>500kB及LF/CRLF提示保留 |
+| Chrome/Edge游戏 | 各双阵营共4条READY冻结、PLAYING、真实键盘Human移动/AI步态、暂停继续/重开/返回通过；UUID复用/单实例/一次请求、actor缩放[1,1,1]，pageerror 0 |
+| 尺寸/失败回退 | 静止世界高度1.869656216、脚底约5.96e-9，两浏览器两阵营一致；模拟404与显式简化通过。最初把GLB文件高度误作运行时高度的验证输入已据公式纠正并重新完整检查，未放宽阈值 |
+| 人工验收与限制 | 已查看本轮实际游戏/局部截图；用户大小观感待确认，碰撞仍旧大小、简化回退仍原尺寸。未真机/低端性能及新骨骼动画验收 |
+
+### Git检查点、限制与下一项
+
+未暂存、提交、推送、Tag/Release或部署，不记Git Gate PASS。默认dist重建，dist-tencent未更新；已有文件/资源/私人目录保留。无已知阻断问题，下一步用户刷新游戏重新开局查看，不自动调整碰撞或玩法。
+
+## 阵营卡片直接开局 — 2026-10-23
+
+### 完成内容
+
+- 用户明确授权移除底部黄色按钮，点击任一阵营直接开局。GameUiLayout移除按钮/提示DOM并将卡片接到原chooseFaction，隐藏菜单拒绝陈旧点击；opening-menu.css移除按钮专属样式，MenuAtmosphereView清理按钮参数及米粒避让目标。原按钮资源与其他美术/位置保留。
+- 更新阵营菜单与响应式测试、轻量菜单fixture；浏览器验证脚本同步新入口，文件清单与真实截图见verification/faction-card-start-2026-10-23/README.md。Human源码已有用户调整1.35，本轮未改变它；同步旧1.25测试预期，保留比例/接地/动作/玩法根节点断言。
+
+### 自动化测试与人工验收
+
+| 项目 | 实际结果 |
+| --- | --- |
+| 定向/全量 | 菜单定向13/13；最终npm test 1125/1125，失败/取消/跳过0，约52.94秒；首轮旧Human尺寸断言失败已据1.35更新 |
+| 类型/构建 | 独立tsc及build退出0，143模块；保留既有大于500kB包警告 |
+| 差异检查 | git diff --check退出0；保留已有LF/CRLF提示 |
+| 浏览器 | Chrome/Edge各六尺寸静态、两阵营直接点击开局/READY/教学/PLAYING/暂停返回、加载门禁与设置通过，pageerror及HTTP错误为空 |
+| 限制 | Chrome首轮并行键盘启动后等待PLAYING超时，真实鼠标单独重跑通过；原因未定，Chrome键盘完整流程未最终验收；手机真机未验 |
+
+### Git检查点、限制与下一项
+
+未暂存/提交/推送/Tag/部署，不记Gate PASS。默认dist已更新、dist-tencent未更新；保留其他工作区改动。等待用户刷新菜单验收。
+
+## 腾讯云最新上线包与安全工程整理 — 2026-10-23
+
+### 完成内容
+
+- 用户要求整理工程用于腾讯云上线；保持源码/素材/测试/文档/候选资源和历史证据原有职责。只将昨日dist-tencent完整移动到dist-tencent-delivery/previous-2026-10-23-160909保留备份，再以显式base=/生成最新独立dist-tencent；原dist101文件SHA256前后不变。
+- 新包101文件、46,166,103字节，包含当前工作区Human v2/1.35尺寸、新立绘、适配及阵营卡直接开局。生成upload-tencent-2026-10-23.zip，43,071,853字节，ZIP根层直接为index.html及资源目录，101项逐字节哈希核对通过。
+- 新增scripts/verify-tencent-build.mjs复用既有排除清单、显式批准两项新Human资源，审查允许文件/源资产哈希/路径/敏感特征；.gitignore仅增加已知生成目录dist-tencent-delivery。README、docs/README和HANDOFF更新部署与目录职责；新增verification/tencent-ready-2026-10-23报告、manifest和生产浏览器证据。本日志只追加，无游戏源码/玩法变化。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| npm test | 1125/1125，失败/取消/跳过0，约56.71秒 |
+| 独立tsc/腾讯云构建 | 退出0，143模块；保留chunk大于500kB提示 |
+| 产物与ZIP | base=/，101项源文件哈希一致；无意外资产/环境文件/私人目录，旧六模型不进构建；ZIP101项SHA256一致 |
+| 生产HTTP/浏览器 | 101文件HTTP200且字节相同，缺失URL404；Chrome154/Edge151各双阵营点卡开局/教学/PLAYING/暂停返回，各16实际音频解码通过，pageerror/必需资源错误为空 |
+| 依赖/差异 | npm audit --audit-level=high：0漏洞；git diff --check退出0，既有LF/CRLF提示保留；索引为空，Pages/Vite/package配置未改 |
+| 人工与限制 | 查看实际生产开屏截图；未操作腾讯云线上、HTTPS/域名/CDN/MIME/访问控制和手机真机。ZIP首次JSON校验因空扩展名统计键需-AsHashtable，修正解析后完成同一ZIP全部校验，未跳过 |
+
+### Git检查点、限制与下一项
+
+本次基于含既有本地变更的工作区构建，未暂存、commit、push、Tag/Release、腾讯云上传/部署或触发Pages，不记Gate PASS；旧RC标识保留。所有未知/私人资料及原资源不删除。下一步用户上传dist-tencent内部全部内容或交付ZIP，再验证线上资源与缓存；完整清单、SHA256与操作见verification/tencent-ready-2026-10-23/README.md。
+
+## 开屏正常浏览器缩放 — 2026-10-23
+
+### 完成内容
+
+- 用户明确批准所提方案：整套菜单正常缩放，窄处重排/纵向滚动。唯一运行时改动opening-menu.css：桌面设计单位改固定1.2rem，双卡1228.8×513px，1280px以下单列，479px以下设置栏内部换行，卡片内部cqw与人物contain保留；触屏专用规则独立。未改原素材、游戏源码、相机、玩法、已移除按钮或点卡直接开局逻辑。
+- verify-menu-zoom.mjs移除抵消缩放的断言及旧start空引用，新增字体物理等效变化、原1920矩形对照、卡片/人物比例、设置与双阵营滚动开局/返回验证；verify-menu-aspect补边界窗口；verify-opening-final允许纵向可达，menu-responsive测试同步。
+- 更新README、docs/README、HANDOFF、开屏阶段说明、本报告与旧Tencent交付入口，本日志只追加。完整证据/参数/文件清单见verification/menu-native-zoom-2026-10-23/README.md。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 定向/全量 | 17/17；npm test 1125/1125，失败/取消/跳过0，约67.16秒 |
+| 类型/构建 | 独立tsc、默认build和Tencent独立根路径build退出0，143模块；保留原chunk>500kB提示 |
+| 缩放/流程 | Chrome/Edge14组25/50/100/125/150/200/300%等效缩放、28条双阵营READY/教学/PLAYING/暂停返回、设置与制作信息通过；100%Human原生Enter开局通过。1920主要UI矩形对照差异<1px；无pageerror/HTTP错误 |
+| 窗口/触屏 | 两浏览器22组含1280/1279边界、方形、超宽、455窄窗及resize返回通过；模拟触屏布局8组+桌面键盘/E门/鼠标投掷2组，总10项通过 |
+| 生产包 | 101文件HTTP与字节核对；Chrome/Edge双阵营开局/暂停返回及各16音频解码通过，无pageerror/必需资源404；ZIP101项解压SHA256一致 |
+| 差异/人工 | git diff --check通过，已有LF/CRLF提示保留；查看125%和200%实际浏览器截图。原生工具栏缩放、实际内置面板、手机真机仍待用户验收，未用等效模拟冒充 |
+
+### Git检查点、限制与下一项
+
+用户要求暂缓Git和Tag，未暂存/提交/推送/打Tag/部署，不记Gate PASS。默认dist与dist-tencent已更新；新包upload-tencent-2026-10-23-zoom-v2.zip，43,072,103字节，SHA256=029edddee2b28bf93c4c7ca97a0980e1ae7e1b78d443e3b40b390919c51443dd。旧ZIP保留，原dist-tencent完整移入dist-tencent-delivery/previous-before-zoom-2026-10-23-185130。新根路径包101文件共46,167,333字节，不触发Pages，未登录或操作腾讯云。下一步用户刷新本地页面以真实工具栏缩放验收；缩放超出一屏需滚动是获批的预期行为，验收与Tag名称确定后再决定归档。
+
+## 阵营双卡水平居中 — 2026-10-23
+
+### 完成内容
+
+用户反馈双卡偏右，授权居中。仅opening-menu.css将桌面组中心计算34.32rem改38.4rem，1920宽左移65.28px，保留大小/间距/内部标签/立绘/纵向位置与单列触屏布局。verify-menu-aspect.mjs新增水平中心误差断言；同步HANDOFF，新增verification/menu-center-2026-10-23截图与报告。没有修改玩法、资源或直接开局逻辑。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| npm test | 1125/1125，失败/取消/跳过0，92.24秒 |
+| 独立tsc/build/diff | 均退出0，143模块；既有chunk>500kB及LF/CRLF提示保留 |
+| 浏览器 | Chrome/Edge共22组尺寸/边界/resize通过，组中心误差<1px、比例和无横向溢出通过，每组设置及双阵营点击入口通过，页面/HTTP错误0 |
+| 人工与限制 | 已查看本轮Chrome1920截图；未操作原生工具栏缩放，不将本轮入口检查写成完整教学/对局回归，待用户确认居中观感 |
+
+### Git检查点、已知限制与下一项
+
+未暂存/commit/push/Tag/部署，不记Gate PASS。默认dist重建；本轮小调整未重建dist-tencent和ZIP，原zoom-v2上传包不含此次居中，上线前须重建，旧包与证据保留。下一步刷新本地页面确认居中位置。
+
+## Human开屏立绘亮度微调 — 2026-10-23
+
+### 完成内容
+
+按用户反馈偏曝，仅opening-menu.css的Human立绘增加brightness(.92)，降低显示亮度8%；不改原图、透明度、其他立绘、卡片/背景、布局或游戏内模型。同步HANDOFF，新增verification/human-portrait-exposure-2026-10-23实际前后截图与报告。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| npm test | 1125/1125，失败/取消/跳过0，66.68秒 |
+| 独立tsc/build/diff | 均退出0，143模块；既有chunk>500kB及LF/CRLF提示保留 |
+| 浏览器 | Chrome/Edge1920×1080，Human滤镜.92、DeepSeek无滤镜、立绘矩形不变及Human点卡入口通过，页面/HTTP错误0 |
+| 人工与限制 | 查看同轮Chrome滤镜开/关实际截图；整体亮度压低不能恢复源图已丢失高光信息，最终观感待用户确认；未重复全流程对局检查 |
+
+### Git检查点、已知限制与下一项
+
+未暂存/commit/push/Tag/部署，不记Gate PASS。默认dist已更新；Tencent目录和旧ZIP未重建，上线前需同步。下一步用户刷新确认亮度。
+
+## Human结算立绘替换 — 2026-10-23
+
+### 完成内容
+
+用户反馈结算仍为旧Human，明确提供图一替换。原样新增human-report-hoodie-v1.png（1312×1199 RGBA，2150193字节，SHA256 e3cd1ff062348ca132c0da4d54bb0c0b2cb7e8c812ae7937d0b04b89372b5ad8）；GameUiLayout仅换Human结算引用/宽高，旧资源保留。faction-card-ui新增原图合同测试，Tencent审核脚本显式加入新资源；同步HANDOFF及verification/human-report-2026-10-23报告/截图。未改开屏、模型、玩法或胜负显示选择规则。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| npm test | 1126/1126，失败/取消/跳过0，63.44秒 |
+| 独立tsc/build/diff | 均退出0，143模块；保留既有chunk>500kB及LF/CRLF提示 |
+| Chrome/Edge | 各3种结算/返回，共6组通过，页面/HTTP错误0；新图正常加载与contain、WIN/LOSE及DeepSeek落败图正确 |
+| 人工与限制 | 查看Chrome人类获胜实际截图；结算由测试调用既有match方法触发，不冒充完整打赢；Human负局沿用同图灰度，手机仍按旧规则隐藏装饰，未验真机 |
+
+### Git检查点、已知限制与下一项
+
+未暂存/commit/push/Tag/部署，不记Gate PASS。默认dist的新图与附件哈希一致；dist-tencent与旧ZIP未重建，上线前需更新。下一步用户确认结算插画观感。
+
+## RC2工程整理、归档与腾讯云准备 — 2026-10-23
+
+### 完成内容
+
+用户重新明确授权正常Git提交/推送并指定v1.0.0-rc2 Tag；不自动部署。本轮检查main/远端一致、索引为空、无合并变基/Tag重名。保留工程目录，只审核既有功能及必要文档/证据；版本及lockfile升rc2，修正Human1.35注释，更新README/索引/素材来源/交接与发布记录。未动玩法配置或Pages流程；未删除用户文件、候选blend、备份、旧证据或私人目录。
+
+旧dist-tencent完整备份到dist-tencent-delivery/previous-before-rc2-20261023-215240。新根路径包102文件共48317553字节；ZIP upload-tencent-v1.0.0-rc2-2026-10-23.zip，45161202字节，SHA256 f29e9672a92b5c7c1b9fbcb57ff6382e65c20a9e862f9db1c579adde6b27403c，102项解压字节哈希核对一致。包含Human模型/亮度/居中/新结算图，旧包不覆盖。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| npm test | 1126/1126，失败/取消/跳过0，66.16秒 |
+| 独立tsc/默认及Tencent build/diff | 退出0，143模块；chunk>500kB和LF/CRLF提示保留 |
+| npm audit --audit-level=high | 0漏洞 |
+| 生产根路径 | 102文件HTTP/字节一致，Chrome154/Edge151各双阵营READY/教学/PLAYING/暂停返回、各16音频解码通过，无页面/必需资源错误 |
+| 输入与菜单 | 手机协议触摸/桌面键鼠10项、键位两浏览器通过；窗口22组，等效缩放14组及双阵营28条流程通过 |
+| 安全与限制 | 明确文件路径与高置信密钥模式审查；原生工具栏缩放、手机真机/腾讯云实际域名缓存与素材第三方许可仍非本轮验证内容 |
+
+### Git检查点、已知限制与下一项
+
+此条记录提交前已完成的构建/审核事实；后续实际commit/push/Tag结果另追加，不提前宣称成功。详细文件清单、必要截图与上传方法见verification/rc2-tencent-2026-10-23/README.md。既有RC1 Release与Pages最近成功部署只读核对保留；未登录/操作腾讯云，等待用户手动上传，不触发Pages。

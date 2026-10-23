@@ -1,0 +1,27 @@
+{
+  "base": "/",
+  "strictRoot404": true,
+  "httpFilesVerified": 99,
+  "results": [
+    {
+      "channel": "chrome",
+      "version": "154.0.8037.100",
+      "factions": [
+        "DEEPSEEK",
+        "HUMAN"
+      ],
+      "audioDecoded": 16,
+      "errors": []
+    },
+    {
+      "channel": "msedge",
+      "version": "151.0.4129.86",
+      "factions": [
+        "DEEPSEEK",
+        "HUMAN"
+      ],
+      "audioDecoded": 16,
+      "errors": []
+    }
+  ]
+}

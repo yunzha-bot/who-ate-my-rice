@@ -1,5 +1,7 @@
 # 手机版操作手感优化：本地实现与验证
 
+后续RC2归档说明：下文12px/2px波纹参数为最初实现的历史值；用户后续微调后，源码为5px外扩、.65px白色阴影线及.3～.65px柔化，周期1050ms。最终以AlphaHudView/MOBILE_CONTROLS和mobile-ui.css为准；本轮归档复验见[RC2报告](../rc2-tencent-2026-10-23/README.md)，历史测试不回改。
+
 日期：2026-10-22。依据用户贴文及手机横屏截图（原件仅本地）：保留左上状态、右上暂停、右侧技能布局，只优化触控输入与交互提示。实现当轮未修改开屏、原立绘、场景、美术或正式玩法数值，也未提交或部署；后续归档见 [Git 报告](../git-preparation-2026-10-22/README.md)。
 
 归档范围：明确链接的七张截图、final-chrome/results.json、final-edge/results.json、gates.json、protection.json 纳入仓库；通配符截图、原始日志及其他中间材料仅本地保留。本轮重新测试结果见 Git 报告，不替换下方历史记录。

@@ -2,7 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { OrthographicCamera, Vector3 } from 'three';
-import { MENU_MOTION, menuPointer, menuFollow, applyMenuCamera, menuLeafPose } from '../src/three/MenuAtmosphereView.ts';
+import { MENU_MOTION, menuPointer, menuFollow, applyMenuCamera, menuLeafPose, menuLeafCover } from '../src/three/MenuAtmosphereView.ts';
+
+test('leaf overscan preserves static framing and covers inverse-transformed viewport corners',()=>{
+  for(const [w,h] of [[1280,900],[1920,1080],[1768,890],[1366,768]]) {
+    assert.equal(menuLeafCover(0,0,0,w,h),1);
+    for(const x of [-19,0,19])for(const y of [-18,0,18])for(const degrees of [-1.1,0,1.1]) {
+      const scale=menuLeafCover(x,y,degrees,w,h),angle=degrees*Math.PI/180;
+      for(const pivot of [0,w])for(const cx of [0,w])for(const cy of [0,h]) {
+        const dx=cx-x-pivot,dy=cy-y-h/2;
+        const ix=pivot+dx*Math.cos(angle)+dy*Math.sin(angle);
+        const iy=h/2-dx*Math.sin(angle)+dy*Math.cos(angle);
+        assert(ix>=w*(1-scale)/2-1e-8 && ix<=w*(1+scale)/2+1e-8);
+        assert(iy>=h*(1-scale)/2-1e-8 && iy<=h*(1+scale)/2+1e-8);
+      }
+    }
+  }
+});
+
+test('leaf cover is set on viewport resize, never animated by the pointer or wind',()=>{
+  const source=readFileSync(new URL('../src/three/MenuAtmosphereView.ts',import.meta.url),'utf8');
+  const update=source.slice(source.indexOf('  update(deltaMs'),source.indexOf('  private onPointer'));
+  assert.doesNotMatch(update,/menuLeafCover|--menu-leaf-cover/);
+  const resize=source.slice(source.indexOf('  private resize'),source.indexOf('  private measureSafeBoxes'));
+  assert.match(resize,/menuLeafCover/);assert.match(resize,/--menu-leaf-cover/);
+});
 
 test('menu pointer is centered, screen-aligned and radially bounded, including outside coordinates',()=>{
   assert.deepEqual(menuPointer(960,540,1920,1080),{x:0,y:0});

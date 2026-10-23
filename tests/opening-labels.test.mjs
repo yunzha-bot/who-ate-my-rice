@@ -16,7 +16,9 @@ test('six independent transparent paper skins are small real WebP assets, never 
 
 test('name, identity and slogan text stays in DOM; paper is a separate non-intercepting layer',()=>{
   const menu=factionMenuFixture(); populateFactionMenu(menu,()=>{});
-  for(const text of ['DeepSeek 娘','Human','干饭人','屋主人','就吃亿口！','大米保卫战！']) assert.ok(menu.innerHTML.includes(text));
+  for(const text of ['DeepSeek 娘','Human','干饭人','人类方','就吃亿口！','我的大米！']) assert.ok(menu.innerHTML.includes(text));
+  assert.ok(menu.innerHTML.includes('aria-label="选择 Human，人类方"'));
+  assert.doesNotMatch(menu.innerHTML,/屋主人|大米保卫战！/);
   for(const [,body]of css.matchAll(/\.faction-(?:copy\s+(?:strong|small)|description\s+b)\s*\{([^}]+)\}/g))
     assert.doesNotMatch(body,/background(?:-color)?:\s*#/,'plain rectangular label fill must not return');
   assert.match(css,/background: var\(--label-paper\) center \/ 100% 100% no-repeat/);
@@ -31,4 +33,11 @@ test('caption paper sits behind the unchanged character layer, preserving refere
   assert.match(css,/\.faction-portrait \{[^}]*z-index: 1;/);
   assert.match(css,/\.faction-copy small \{[^}]*color: #fff8e9/);
   assert.match(css,/HUMAN'\] \.faction-copy small \{[^}]*color: #24343b/);
+});
+
+test('name-role groups and slogans have the requested extra right inset without moving the cards',()=>{
+  assert.match(css,/\.faction-identity \{[^}]*left: 16\.5%;/);
+  assert.match(css,/HUMAN'\] \.faction-identity \{ left: 15%;/);
+  assert.match(css,/\.faction-caption \{[^}]*left: 12%;/);
+  assert.match(css,/HUMAN'\] \.faction-caption \{ left: 11%;/);
 });

@@ -87,6 +87,7 @@ import { AlphaHudView } from './AlphaHudView.ts';
 import { DISABLED_AUDIO_CUES, GameAudio, worldAudioGain, type AudioCue, type MusicCue } from './GameAudio';
 import { AudioSettingsView } from './AudioSettingsView';
 import { MenuSettingsView } from './MenuSettingsView.ts';
+import { KeyboardSettingsView } from './KeyboardSettingsView.ts';
 import { MenuAtmosphereView } from './MenuAtmosphereView.ts';
 import { GameFeedback } from './GameFeedback';
 import { LocalControl, pickActorFaction, type Faction } from './LocalControl';
@@ -177,6 +178,9 @@ export class ThreeGame {
   private menuSettings!: MenuSettingsView;
   private readonly resetMenuSelection: () => void;
   private pauseSettingsOpen = false;
+  private pauseSettingsTab: 'audio' | 'keyboard' = 'audio';
+  private readonly keyboardSettings: KeyboardSettingsView;
+  private readonly pauseSettingsTabs: HTMLElement;
   private pauseSettingsButton!: HTMLButtonElement;
   // 独立操作说明层（教学）：可在首次开局自动出现，也可从暂停菜单重看；不参与玩法。
   private controlsHelp!: ControlsHelpView;
@@ -318,7 +322,6 @@ export class ThreeGame {
     this.soundVisual = PLAYER_SOUND_VISUAL_ENABLED
       ? new SoundVisualView(this.scene, import.meta.env.DEV) : null;
     const touchDevice = matchMedia('(pointer: coarse)').matches;
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, touchDevice ? 1.35 : 2));
     this.renderer.domElement.classList.add('game-canvas');
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -474,6 +477,7 @@ export class ThreeGame {
       resume: () => this.resumeFromPause(),
       settings: () => {
         this.pauseSettingsOpen = true;
+        this.pauseSettingsTab = 'audio';
         this.updateHud(this.nearestRice());
         this.audioSettings.root.querySelector('input')?.focus();
       },
@@ -489,6 +493,19 @@ export class ThreeGame {
     this.pulseLockView = new PulseLockView(container, C.pulseLock.timing,
       () => this.closePulseLock());
     this.audioSettings = new AudioSettingsView(container, this.audio, () => this.closePauseSettings());
+    this.keyboardSettings = new KeyboardSettingsView(this.overlay, this.input.bindings,
+      () => this.input.clear(), () => this.closePauseSettings());
+    this.pauseSettingsTabs = this.label(this.overlay, 'pause-settings-tabs');
+    this.overlay.insertBefore(this.pauseSettingsTabs, this.keyboardSettings.root);
+    this.pauseSettingsTabs.setAttribute('aria-label', '设置分类');
+    for (const [tab, label] of [['audio', '声音设置'], ['keyboard', '按键设置']] as const) {
+      const button = document.createElement('button'); button.type = 'button'; button.textContent = label;
+      button.dataset.settingsTab = tab;
+      button.addEventListener('click', () => {
+        this.input.clear(); this.pauseSettingsTab = tab; this.updateHud(this.nearestRice());
+      });
+      this.pauseSettingsTabs.append(button);
+    }
     this.controlsHelp = new ControlsHelpView(container, () => this.closeControlsHelp());
     this.menuSettings = new MenuSettingsView(this.menu, this.audioSettings.root);
     this.feedback = new GameFeedback(container, this.camera);
@@ -637,7 +654,10 @@ export class ThreeGame {
     this.maybeOpenControlsHelp(faction);
   }
 
-  useSimplifiedStartupVisual(): void { this.playerAction.useSimplifiedVisual(); }
+  useSimplifiedStartupVisual(): void {
+    this.playerAction.useSimplifiedVisual();
+    this.humanAction.useSimplifiedVisual();
+  }
 
   private followCamera(deltaMs = 0): void {
     const target = this.control.cameraTarget === 'DEEPSEEK' ? this.player
@@ -801,10 +821,13 @@ export class ThreeGame {
 
   private resize = (): void => {
     this.alphaHud?.releaseTouch();
-    if (globalThis.matchMedia?.('(pointer: coarse)').matches) this.input.clear();
+    const touchDevice = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false;
+    if (touchDevice) this.input.clear();
     this.throwableView?.cancel();
     this.captureNetView?.cancel();
     const width = Math.max(1, innerWidth), height = Math.max(1, innerHeight);
+    // Browser zoom changes DPR as well as CSS viewport; retain the existing quality caps.
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, touchDevice ? 1.35 : 2));
     Object.assign(this.camera, homeFrustum(width / height, this.match.phase === 'FACTION_SELECT',
       C.three.viewHeight * this.devZoom, MAP_DEPTH, MAP_WIDTH));
     this.camera.near = 0.1;
@@ -950,11 +973,16 @@ export class ThreeGame {
     this.syncNightPresentation(helpWasVisible ? 0 : gameplayMs);
     const lightActor = this.control.controlled(this.player, this.human);
     this.roomLightView.sync(this.nightActive, this.roomLights, lightActor?.position ?? null,
-      this.roomLightBlocked, !!this.control.controlledFaction && this.canUseRoomLight(this.control.controlledFaction));
+      this.roomLightBlocked, !!this.control.controlledFaction && this.canUseRoomLight(this.control.controlledFaction),
+      this.input.bindings.label('KeyL'));
     this.apartment.interiorShadows.update();
     this.actorShadows.update();
     this.throwableView.sync();
+    this.throwableView.status.textContent = this.input.bindings.text(this.throwableView.status.textContent ?? '');
     this.captureNetView.sync();
+    this.apartment.streetActivity.update(frameMs, !document.hidden && document.hasFocus() &&
+      !frozen && !editorOpen && !this.controlsHelp.visible &&
+      (this.match.phase === 'FACTION_SELECT' || this.match.phase === 'PLAYING'));
     this.menuAtmosphere.update(frameMs);
     fitOrthographicSceneDepth(this.camera, this.sceneVisualBounds);
     this.renderer.render(this.scene, this.camera);
@@ -1185,7 +1213,7 @@ export class ThreeGame {
       ? this.humanSearchCooldown : this.deepseekLockCooldown).ready;
     if (qReady && !this.lastQReady) {
       this.audio.play('skillReady', 'ui', .55);
-      this.feedback.show(this.control.selectedFaction === 'HUMAN' ? 'E 搜查 / V 抓捕就绪' : 'Q 技能就绪', 'good');
+      this.feedback.show(this.input.bindings.text(this.control.selectedFaction === 'HUMAN' ? 'E 搜查 / V 抓捕就绪' : 'Q 技能就绪'), 'good');
     }
     this.lastQReady = qReady;
     this.hideSearchView.advance(deltaMs);
@@ -2620,6 +2648,9 @@ export class ThreeGame {
     if (showQ) this.skillHudState.textContent = this.humanSearchCooldown.ready
       ? 'E 搜查面前的家具' : `E 搜查 / V 抓捕共用冷却 ${Math.ceil(this.humanSearchCooldown.remainingSeconds)} 秒`;
     if (showBreak) this.skillHudState.textContent = 'Space 强破门锁';
+    this.skillHudState.textContent = this.input.bindings.text(this.skillHudState.textContent ?? '');
+    this.skillHudState.title = this.input.bindings.text(this.skillHudState.title);
+    this.skillHudNotice.textContent = this.input.bindings.text(this.hideNotice);
     this.skillHudState.hidden = !showQ && !showBreak;
     this.skillHud.hidden = phase !== 'PLAYING' || !!this.sceneEditor?.isOpen ||
       (!showQ && !showBreak && !this.hideNotice);
@@ -2660,7 +2691,7 @@ export class ThreeGame {
   private renderPulseLock(): void {
     const doorId = this.pulseLock.openDoorId;
     this.pulseLockView.update(doorId ? this.pulseLock.get(doorId) ?? null : null,
-      this.pulseLock.coreCount, doorId);
+      this.pulseLock.coreCount, doorId, this.input.bindings.label('KeyE'));
   }
 
   private nearestInteractableDoor(position: THREE.Vector3): NearbyDoor | null {
@@ -2803,7 +2834,7 @@ export class ThreeGame {
   // 暂停菜单重看说明不恢复游戏；首次说明由帧循环阻止 READY 推进。
   private openControlsHelp(): void {
     if (this.pauseSettingsOpen) this.closePauseSettings();
-    this.controlsHelp.show(this.control.selectedFaction);
+    this.controlsHelp.show(this.control.selectedFaction, this.input.bindings.values);
   }
 
   private closeControlsHelp(): void {
@@ -2820,7 +2851,7 @@ export class ThreeGame {
       if (globalThis.localStorage?.getItem(CONTROLS_HELP_SEEN_KEY)) return;
       globalThis.localStorage?.setItem(CONTROLS_HELP_SEEN_KEY, '1');
     } catch { return; }
-    this.controlsHelp.show(faction);
+    this.controlsHelp.show(faction, this.input.bindings.values);
   }
 
   private applyDifficulty(): void {
@@ -3044,7 +3075,7 @@ export class ThreeGame {
     const lightSwitch = hudFaction && actor && this.canUseRoomLight(hudFaction)
       ? this.roomLights.nearby(actor.position, this.roomLightBlocked) : null;
     const lightCooldown = lightSwitch ? this.roomLights.cooldown(lightSwitch.roomId) : 0;
-    this.alphaHud.update({ phase, faction: hudFaction, time,
+    this.alphaHud.update({ phase, faction: hudFaction, time, keyBindings: this.input.bindings.values,
       controlsEnabled: phase === 'PLAYING' && !this.controlsHelp.visible &&
         !this.devFreeze.isFrozen && !this.sceneEditor?.isOpen,
       throwReady: !!touchActor && this.throwables.canThrow(touchActor),
@@ -3092,12 +3123,14 @@ export class ThreeGame {
     const settings = phase === 'PAUSED' && this.pauseSettingsOpen;
     this.overlay.dataset.view = settings ? 'settings' : 'pause';
     this.overlay.setAttribute('role', 'dialog');
-    this.overlay.setAttribute('aria-label', phase === 'PAUSED' ? (settings ? '声音设置' : '游戏暂停') : '对局结算');
+    const settingsTitle = this.pauseSettingsTab === 'keyboard' ? '按键设置' : '声音设置';
+    this.overlay.setAttribute('aria-label', phase === 'PAUSED' ? (settings ? settingsTitle : '游戏暂停') : '对局结算');
     this.overlayText.querySelector('.overlay-kicker')!.textContent = phase === 'PAUSED'
       ? 'THE LITTLE RICE CHASE / PAUSE' : 'THE LITTLE RICE CHASE / REPORT';
     if (settings) {
-      this.overlayHeading.textContent = '声音设置';
-      this.overlaySummary.textContent = '实时调节音量 · 自动保存 · ESC 返回上一级';
+      this.overlayHeading.textContent = settingsTitle;
+      this.overlaySummary.textContent = this.pauseSettingsTab === 'keyboard'
+        ? '自定义键盘操作 · Esc 返回上一级' : '实时调节音量 · 自动保存 · ESC 返回上一级';
     }
     if (phase !== 'FACTION_SELECT') this.menuSettings.close();
     const settingsParent = phase === 'PAUSED' ? this.overlay : this.menu.querySelector('.menu-audio-slot')!;
@@ -3105,7 +3138,12 @@ export class ThreeGame {
       settingsParent.append(this.audioSettings.root);
       this.audioSettings.root.open = phase === 'PAUSED';
     }
-    this.audioSettings.root.hidden = phase === 'PAUSED' ? !settings : phase !== 'FACTION_SELECT';
+    this.audioSettings.root.hidden = phase === 'PAUSED' ? !settings || this.pauseSettingsTab !== 'audio' : phase !== 'FACTION_SELECT';
+    this.keyboardSettings.setVisible(settings && this.pauseSettingsTab === 'keyboard');
+    this.pauseSettingsTabs.hidden = !settings;
+    this.pauseSettingsTabs.querySelectorAll<HTMLButtonElement>('button').forEach(button => {
+      button.setAttribute('aria-pressed', String(button.dataset.settingsTab === this.pauseSettingsTab));
+    });
     this.pauseActions.hidden = phase !== 'PAUSED' || settings;
     this.resultActions.hidden = phase !== 'FINISHED';
     this.overlay.hidden = phase !== 'PAUSED' && phase !== 'FINISHED';
@@ -3936,6 +3974,8 @@ export class ThreeGame {
     this.devBBinding?.stop();
     this.audio.dispose();
     this.menuSettings.dispose();
+    this.keyboardSettings.dispose();
+    this.pauseSettingsTabs.remove();
     this.audioSettings.dispose();
     this.feedback.dispose();
     this.throwableView.dispose();

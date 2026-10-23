@@ -119,6 +119,22 @@
 .audio-settings button { border: 1px solid var(--game-line); border-radius: 10px; color: var(--game-ink); background: #eeeee5; padding: 10px 14px; }
 .audio-settings .audio-settings-back { background: var(--game-blue); color: white; border-color: transparent; }
 
+.pause-settings-tabs { display: flex; gap: 8px; margin: 12px 0; }
+.pause-settings-tabs button, .keyboard-settings button { border: 1px solid var(--game-line); border-radius: 10px;
+  padding: 8px 12px; color: var(--game-ink); background: #eeeee5; font: inherit; cursor: pointer; min-height: 38px; }
+.pause-settings-tabs button[aria-pressed='true'], .keyboard-settings button[aria-pressed='true'] {
+  color: white; background: var(--game-blue); }
+.keyboard-settings { color: var(--game-ink); text-align: left; }
+.keyboard-settings > p { margin: 10px 0; color: var(--game-muted); font-size: 12px; line-height: 1.6; }
+.keyboard-settings-list { display: grid; gap: 4px; max-height: min(370px, 38dvh); overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: #b58a49 #dfc38d33; }
+.keyboard-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  border-bottom: 1px solid var(--game-line); padding: 4px 2px; font-size: 13px; }
+.keyboard-settings-row button { min-width: 86px; flex: none; }
+.keyboard-settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.keyboard-settings button:focus-visible, .pause-settings-tabs button:focus-visible {
+  outline: 2px solid var(--game-blue); outline-offset: 2px; }
+
 /* 门锁仍使用原有轨道位置和命中窗口，仅更换面板与轨道外观。 */
 .pulse-lock { border: 1px solid #ffffffb0; border-image: none; border-radius: 22px; padding: 22px; background: var(--game-paper); color: var(--game-ink); box-shadow: var(--game-shadow); }
 .pulse-lock::before, .pulse-lock-track::before { content: none; }

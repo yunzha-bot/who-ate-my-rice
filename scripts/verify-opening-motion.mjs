@@ -32,7 +32,7 @@ async function geometry() {
   return page.evaluate(()=>{
     const g=window.__openingGame;
     return { camera:g.camera.position.toArray(), quaternion:g.camera.quaternion.toArray(),
-      ui:[...document.querySelectorAll('.menu-logo,.faction-card,.faction-portrait,.menu-start,.menu-settings,.menu-credits')].map(n=>{
+      ui:[...document.querySelectorAll('.menu-logo,.faction-card,.faction-portrait,.menu-settings,.menu-credits')].map(n=>{
         const r=n.getBoundingClientRect(); return {selector:n.className,x:r.x,y:r.y,w:r.width,h:r.height};
       }) };
   });
@@ -165,14 +165,7 @@ try {
     await page.waitForTimeout(350);const cardHover=await card.boundingBox();
     console.log({cardBefore,cardHover,css:await card.evaluate(n=>({scale:getComputedStyle(n).scale,translate:getComputedStyle(n).translate,hover:n.matches(':hover'),attrs:n.parentElement.parentElement.parentElement.getAttributeNames()}))});
     assert(cardHover.width/cardBefore.width>1.01&&cardHover.width/cardBefore.width<1.0251);
-    await card.click();await page.waitForTimeout(400);assert.equal(await card.getAttribute('aria-pressed'),'true');
-    assert.equal(await page.locator('.faction-card[data-faction="HUMAN"]').getAttribute('aria-pressed'),'false');
-    const selection=await card.evaluate(n=>({filter:getComputedStyle(n).filter,scale:getComputedStyle(n).scale}));
-    const start=page.locator('.menu-start');await start.hover();await page.waitForTimeout(350);
-    await page.mouse.down();await page.waitForFunction(()=>Number(getComputedStyle(document.querySelector('.menu-start')).scale)<1);
-    const pressed=await start.evaluate(n=>({scale:getComputedStyle(n).scale,translate:getComputedStyle(n).translate}));
-    await page.mouse.move(1910,1070);await page.mouse.up(); // Release off-button: must not start a match.
-    assert.equal((await state()).phase,'FACTION_SELECT');
+    await page.screenshot({path:`${out}/${prefix}card-hover.png`});
     await page.screenshot({path:`${out}/${prefix}all-motion.png`});
     await page.emulateMedia({reducedMotion:'reduce'});
     await page.waitForFunction(()=>!window.__openingGame.menuAtmosphere.active);
@@ -199,7 +192,13 @@ try {
     await page.waitForFunction(()=>window.__openingGame.menuAtmosphere.active);
     const flows=[];
     for(const faction of ['DEEPSEEK','HUMAN']) {
-      await page.locator(`.faction-card[data-faction="${faction}"]`).click();await page.locator('.menu-start').click();
+      const card=page.locator(`.faction-card[data-faction="${faction}"]`);
+      if(faction==='DEEPSEEK') {
+        await page.evaluate(async()=>{const {StartupReadiness}=await import('/src/three/StartupReadiness.ts');window.__savedGate=window.__openingGame.startupReadiness;window.__openingGame.startupReadiness=new StartupReadiness();});
+        await card.click();assert.equal((await state()).phase,'FACTION_SELECT');
+        await page.evaluate(()=>{window.__openingGame.startupReadiness=window.__savedGate;delete window.__savedGate;});
+      }
+      await card.click();
       assert.equal((await state()).phase,'READY');assert.equal((await state()).active,false);
       assert.equal(await page.locator('.faction-menu[data-menu-motion]').count(),0);
       const stopped=await state();await page.mouse.move(1919,1);await page.waitForTimeout(300);
@@ -207,8 +206,8 @@ try {
       // not raw Z/position, so this check does not falsely reject the protected depth-fit system.
       const still=await state();assert(Math.hypot(still.projected.x-stopped.projected.x,still.projected.y-stopped.projected.y)<.001);
       assert.deepEqual(still.quaternion,stopped.quaternion);assert.equal(still.seconds,stopped.seconds);
-      // Re-dispatch stale button clicks after the real click: neither may restart READY.
-      await page.locator('.menu-start').dispatchEvent('click');await page.locator('.menu-start').dispatchEvent('click');
+      // Stale activation on a hidden faction card cannot start a second round.
+      await card.dispatchEvent('click');await card.dispatchEvent('click');
       assert.equal((await state()).phase,'READY');
       if(await page.locator('.controls-help').isVisible())await page.locator('.controls-help-close').click();
       await page.waitForFunction(()=>window.__openingGame.match.phase==='PLAYING',{timeout:30000});
@@ -231,7 +230,7 @@ try {
     const leaveListenersAfter=await countLeave();assert.equal(leaveListenersAfter,leaveListenersBefore-1);
     assert.equal(await page.locator('.menu-motion-rice,.menu-motion-foliage').count(),0);
     assert.deepEqual(errors,[]);
-    await writeFile(`${out}/${prefix}motion-results.json`,JSON.stringify({positions,recentered,riceSamples,cardBefore,cardHover,selection,pressed,reducedBefore,reducedAfter,beforeLong,afterLong,memoryBefore,memoryAfter,domBefore,domAfter,extraWorkMs,visibility:{nativeHidden,hiddenBefore,hiddenAfter},flows,leaveListenersBefore,leaveListenersAfter,errors},null,2));
+    await writeFile(`${out}/${prefix}motion-results.json`,JSON.stringify({positions,recentered,riceSamples,cardBefore,cardHover,reducedBefore,reducedAfter,beforeLong,afterLong,memoryBefore,memoryAfter,domBefore,domAfter,extraWorkMs,visibility:{nativeHidden,hiddenBefore,hiddenAfter},flows,leaveListenersBefore,leaveListenersAfter,errors},null,2));
     console.log(JSON.stringify({channel,positions:positions.map(({name,dx,dy})=>({name,dx,dy})),riceSamples,cardScale:cardHover.width/cardBefore.width,stablePool:afterLong.riceCount,errors},null,2));
   }
 } finally { await context.close(); await browser.close(); }

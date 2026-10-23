@@ -44,6 +44,8 @@ test('actual model modules expose base-aware public URLs for root and project ho
   for (const prefix of ['/', base]) {
     const deepseek = await moduleAt('DeepSeekGlbModel.ts', prefix);
     const rice = await moduleAt('RiceBagModel.ts', prefix);
+    const human = await moduleAt('HumanGlbModel.ts', prefix);
+    assert.equal(human.HUMAN_GLB_URL, `${prefix}assets/characters/human/human_v2.glb`);
     assert.equal(deepseek.DEEPSEEK_ANIMATED_GLB_URL, `${prefix}assets/characters/deepseek/deepseek_animated_v6_hair.glb`);
     assert.equal(deepseek.DEEPSEEK_GLB_URL, `${prefix}assets/characters/deepseek/deepseek_midpoly_18500_standalone.glb`);
     assert.equal(rice.RICE_BAG_MODEL_URL, `${prefix}assets/props/rice-bag/rice-bag.glb`);
@@ -55,9 +57,11 @@ test('menu and result markup use project-base portraits without changing faction
   const menu = factionMenuFixture();
   ui.populateFactionMenu(menu, () => {});
   for (const url of Object.values(ui.UI_PORTRAITS)) assert(url.startsWith(`${base}assets/ui/portraits/`), url);
-  for (const url of [ui.UI_PORTRAITS.DEEPSEEK, ui.UI_PORTRAITS.HUMAN]) {
+  for (const url of [ui.UI_PORTRAITS.DEEPSEEK]) {
     assert(menu.innerHTML.includes(url)); assert(ui.REPORT_MARKUP.includes(url));
   }
+  assert(menu.innerHTML.includes(`${base}assets/ui/portraits/human-hoodie-v1.png`));
+  assert(ui.REPORT_MARKUP.includes(ui.UI_PORTRAITS.HUMAN));
   assert.equal(ui.deepseekResultPortrait('DEEPSEEK'), ui.UI_PORTRAITS.DEEPSEEK_WIN);
   assert.equal(ui.deepseekResultPortrait('HUMAN'), ui.UI_PORTRAITS.DEEPSEEK_LOSE);
   assert.equal((menu.innerHTML.match(/class="faction-card"/g) ?? []).length, 2);
@@ -71,21 +75,22 @@ test('existing audio loaders already respect the same build base', () => {
 
 function artifact() {
   const root = mkdtempSync(join(tmpdir(), 'rice-pages-audit-'));
-  const publicFiles = ['assets/characters/deepseek/deepseek_animated_v6_hair.glb', 'assets/props/rice-bag/rice-bag.glb'];
+  const publicFiles = ['assets/characters/deepseek/deepseek_animated_v6_hair.glb',
+    'assets/characters/human/human_v2.glb', 'assets/props/rice-bag/rice-bag.glb'];
   const put = (file, content) => { mkdirSync(dirname(join(root, file)), { recursive: true }); writeFileSync(join(root, file), content); };
   for (const file of publicFiles) { put(`public/${file}`, file); put(`dist/${file}`, file); }
   put('dist/index.html', `<script src="${base}assets/index-test.js"></script><link href="${base}assets/index-test.css">`);
-  put('dist/assets/index-test.js', `const model = '${base}${publicFiles[0]}';`);
+  put('dist/assets/index-test.js', `const model = '${base}${publicFiles[0]}'; const human = '${base}${publicFiles[1]}';`);
   put('dist/assets/index-test.css', 'body { color: black }');
   return { root, publicFiles, put };
 }
 
 test('upload audit accepts only unchanged approved public files and exact app entries', () => {
   const { root, publicFiles, put } = artifact(), result = verifyPagesBuild(root, publicFiles);
-  assert.equal(result.base, base); assert.equal(result.count, 5);
+  assert.equal(result.base, base); assert.equal(result.count, 6);
   assert(result.files.every(file => /^[a-f0-9]{64}$/.test(file.sha256)));
-  put('dist/assets/index-test.js', `const prefix = '${base}'; const model = \`\${prefix}${publicFiles[0]}\`;`);
-  assert.equal(verifyPagesBuild(root, publicFiles).count, 5);
+  put('dist/assets/index-test.js', `const prefix = '${base}'; const model = \`\${prefix}${publicFiles[0]}\`; const human = \`\${prefix}${publicFiles[1]}\`;`);
+  assert.equal(verifyPagesBuild(root, publicFiles).count, 6);
 });
 
 test('upload audit rejects private/unknown files, changed assets and missing public files', () => {

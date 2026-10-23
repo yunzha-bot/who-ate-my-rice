@@ -34,7 +34,7 @@ test('reference menu keeps its static layout; optional opening motion is scoped 
   assert.match(css, /overflow-y: auto; overflow-x: hidden/);
   assert.match(css, /grid-template-columns: minmax\(0, 1.1fr\) minmax\(0, 1fr\)/);
   assert.match(css, /object-fit: contain/);
-  assert.match(css, /@media \(max-width: 600px\)/);
+  assert.match(css, /@media \(pointer: coarse\) and \(max-width: 600px\)/);
   assert.match(css, /grid-template-columns: minmax\(0, 1fr\); gap: 64px/);
   const interaction = css.slice(css.indexOf('/* Only opening interactions;'));
   assert.doesNotMatch(css.slice(0,css.indexOf('/* Only opening interactions;')), /animation:|transition:|@keyframes/);
@@ -42,7 +42,7 @@ test('reference menu keeps its static layout; optional opening motion is scoped 
   assert.match(interaction, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(interaction, /animation: none; transition: none; translate: none; scale: none/);
   assert.doesNotMatch(css, /!important|\b(?:vh|dvh)\b[^;]*min-height|transform:\s*scale/);
-  for (const region of ['menu-topbar', 'faction-dock', 'difficulty-select', 'menu-credits', 'menu-start-row']) {
+  for (const region of ['menu-topbar', 'faction-dock', 'difficulty-select', 'menu-credits']) {
     const declarations = [...css.matchAll(new RegExp(`\\.${region}\\s*\\{([^}]+)\\}`, 'g'))];
     assert.ok(declarations.length > 0);
     for (const [, body] of declarations) assert.doesNotMatch(body, /position:\s*(absolute|fixed)|transform:/);
@@ -57,6 +57,37 @@ test('one shared audio settings view stays in the home setting slot or existing 
 
 test('home setting panels bound their height and scroll on short windows', () => {
   const source = read('src/opening-menu.css');
+  assert.match(source, /max-height: min\(calc\(27\.1 \* var\(--menu-vw\)\), 65dvh\)/);
   assert.match(source, /max-height: min\(520px, 65dvh\)/);
   assert.match(source, /overflow-y: auto; overscroll-behavior: contain/);
+});
+
+test('desktop zoom keeps card text and paper in one container scale, with separate touch composition', () => {
+  const css = read('src/opening-menu.css');
+  assert.match(css,/\.faction-card \{[^}]*container-type: inline-size/s);
+  for (const selector of ['copy strong','copy small','description b']) {
+    const rule = [...css.matchAll(new RegExp(`\\.faction-${selector} \\{([^}]+)\\}`, 'g'))]
+      .find(([,body])=>/font(?:-size)?:/.test(body));
+    assert.ok(rule); assert.match(rule[1],/\dcqw/);
+    assert.doesNotMatch(rule[1],/clamp\(|max-width:\s*\d+px/);
+  }
+  assert.match(css,/@media \(pointer: coarse\) and \(max-width: 600px\) and \(max-aspect-ratio: 4\/5\)/);
+  assert.doesNotMatch(css,/\.menu-start|menu-start-row/);
+  assert.doesNotMatch(css,/width: min\(24vw, 475px\)/);
+  const game=read('src/three/ThreeGame.ts'),resize=game.slice(game.indexOf('private resize ='),game.indexOf('private tick ='));
+  assert.match(resize,/setPixelRatio\(Math\.min\(devicePixelRatio \|\| 1, touchDevice \? 1\.35 : 2\)\)/);
+});
+
+test('desktop artwork uses fixed rem dimensions and reflows without cancelling browser zoom', () => {
+  const css = read('src/opening-menu.css');
+  assert.match(css,/--menu-vw: 1\.2rem/);
+  assert.doesNotMatch(css,/100dvh \/ 56\.25/);
+  assert.match(css,/@media \(pointer: fine\) and \(max-width: 1279px\)/);
+  assert.match(css,/aspect-ratio: 608\.457143 \/ 513/);
+  assert.match(css,/aspect-ratio: 553\.142857 \/ 513/);
+  assert.match(css,/padding: var\(--menu-offset-y\) var\(--menu-offset-x\)/);
+  assert.match(css,/\.faction-dock \{[^}]*height: calc\(26\.71875 \* var\(--menu-vw\)\)/s);
+  assert.doesNotMatch(css,/\.menu-start/);
+  assert.match(css,/right: calc\(var\(--menu-offset-x\) \+ 1\.4 \* var\(--menu-vw\)\)/);
+  assert.match(css,/--menu-offset-x: 0px; --menu-offset-y: 0px; --menu-detail-unit: 1px/);
 });

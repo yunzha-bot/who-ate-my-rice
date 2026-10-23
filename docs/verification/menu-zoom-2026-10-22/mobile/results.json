@@ -1,0 +1,118 @@
+{
+  "passed": 10,
+  "artifacts": "docs/verification/menu-zoom-2026-10-22/mobile",
+  "results": [
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "HUMAN",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "net-placement/V-capture/space-break/E-furniture/pulse-lock",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "DEEPSEEK",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "sprint/lock-door/hold-to-eat/hide-enter-exit",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "HUMAN",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "net-placement/V-capture/space-break/E-furniture/pulse-lock",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "DEEPSEEK",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "sprint/lock-door/hold-to-eat/hide-enter-exit",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "chrome",
+      "desktop": true,
+      "touchUIHidden": true,
+      "keyboard": true,
+      "eDoor": true,
+      "mouseThrow": true
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "HUMAN",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "net-placement/V-capture/space-break/E-furniture/pulse-lock",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "DEEPSEEK",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "sprint/lock-door/hold-to-eat/hide-enter-exit",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "HUMAN",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "net-placement/V-capture/space-break/E-furniture/pulse-lock",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "DEEPSEEK",
+      "checks": "movement/pickup/multitouch-throw/cancel/skills/doors/lights/capacity/pause/rotation/results/restart/menu",
+      "factionChecks": "sprint/lock-door/hold-to-eat/hide-enter-exit",
+      "dpr": 1.35,
+      "model": "ready"
+    },
+    {
+      "channel": "msedge",
+      "desktop": true,
+      "touchUIHidden": true,
+      "keyboard": true,
+      "eDoor": true,
+      "mouseThrow": true
+    }
+  ]
+}

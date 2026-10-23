@@ -29,10 +29,10 @@ try {
     await page.mouse.move(x1,y1);events.push({x:x1,y:y1,t:(Date.now()-start)/1000});
   }
   await sweep(960,150,1820,140,1700);await sweep(1820,140,120,950,2100);
-  await sweep(120,950,680,580,1700);await page.locator('.faction-card[data-faction="DEEPSEEK"]').click();await page.waitForTimeout(1100);
-  await sweep(680,580,1380,560,1600);await page.locator('.faction-card[data-faction="HUMAN"]').click();await page.waitForTimeout(1100);
-  await page.locator('.menu-start').hover();await page.waitForTimeout(600);
-  await page.mouse.down();await page.waitForTimeout(250);await page.mouse.move(1800,950);await page.mouse.up();
+  await sweep(120,950,680,580,1700);await page.locator('.faction-card[data-faction="DEEPSEEK"]').hover();await page.waitForTimeout(600);
+  await sweep(680,580,1380,560,1600);await page.locator('.faction-card[data-faction="HUMAN"]').hover();await page.waitForTimeout(600);
+  await sweep(1380,560,1800,950,1400);
+  await page.locator('.faction-card[data-faction="HUMAN"]').click();await page.waitForTimeout(1100);
   await sweep(1800,950,960,150,1000);
   const remain=14000-(Date.now()-start);if(remain>0)await page.waitForTimeout(remain);
   const frames=await page.evaluate(()=>window.__recordFrames);

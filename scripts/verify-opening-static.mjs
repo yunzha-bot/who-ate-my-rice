@@ -32,7 +32,7 @@ try {
         return { x:r.x, y:r.y, width:r.width, height:r.height }; };
       return { width:innerWidth, height:innerHeight, overflowX:document.querySelector('.faction-menu').scrollWidth > innerWidth,
         logo:rect('.menu-logo'), cards:[rect('.faction-card[data-faction="DEEPSEEK"]'),rect('.faction-card[data-faction="HUMAN"]')],
-        start:rect('.menu-start'), settings:rect('.menu-settings'),
+        start:document.querySelector('.menu-start') ? rect('.menu-start') : null, settings:rect('.menu-settings'),
         portraits:[...document.querySelectorAll('.faction-portrait')].map(n=>{const r=n.getBoundingClientRect();return{x:r.x,y:r.y,width:r.width,height:r.height};}),
         footer:rect('.menu-credits'),
         images:[...document.querySelectorAll('.faction-menu img')].map(i=>({src:i.getAttribute('src'),loaded:i.complete&&i.naturalWidth>0,fit:getComputedStyle(i).objectFit})) };
@@ -41,7 +41,6 @@ try {
     assert(layout.images.every(i=>i.loaded));
     assert(layout.images.filter(i=>i.src.includes('portraits')).every(i=>i.fit==='contain'));
     if (width >= 1366) {
-      assert(layout.start.y + layout.start.height < height, 'desktop start must fit');
       assert(layout.logo.y + layout.logo.height < layout.cards[0].y + 50, 'logo must not cover character cards');
     }
     results.layouts.push(layout);
@@ -56,7 +55,7 @@ try {
   await page.reload();
   await page.locator('.startup-view').waitFor({state:'detached',timeout:90000});
   const phase = () => page.evaluate(() => window.__openingGame.match.phase);
-  assert(await page.locator('.menu-start').isDisabled());
+  assert.equal(await page.locator('.menu-start').count(),0,'separate start button must stay removed');
   assert.equal(await phase(),'FACTION_SELECT');
   await page.locator('[data-menu-panel="audio"]').click();
   assert(await page.locator('.menu-audio-slot').isVisible());
@@ -79,19 +78,16 @@ try {
   await page.keyboard.press('Escape'); assert(await page.locator('.menu-credits-dialog').isHidden());
   results.interactions.push('five real volume buses / mute / three difficulties / mutually exclusive panels / Escape focus / credits');
   for(const faction of ['DEEPSEEK','HUMAN']) {
-    await page.locator(`.faction-card[data-faction="${faction}"]`).focus();
-    await page.keyboard.press(faction==='DEEPSEEK'?'Space':'Enter');
-    assert.equal(await phase(),'FACTION_SELECT');
-    assert.equal(await page.locator(`.faction-card[data-faction="${faction}"]`).getAttribute('aria-pressed'),'true');
+    const card = page.locator(`.faction-card[data-faction="${faction}"]`);
     if(faction==='DEEPSEEK') {
       // A fresh authority is unready; the normal StartupView has already permanently admitted its own authority.
       await page.evaluate(async()=>{const {StartupReadiness}=await import('/src/three/StartupReadiness.ts');
         window.__savedOpeningGate=window.__openingGame.startupReadiness;
         window.__openingGame.startupReadiness=new StartupReadiness();});
-      await page.locator('.menu-start').click(); assert.equal(await phase(),'FACTION_SELECT','loading gate must reject early Start');
+      await card.click(); assert.equal(await phase(),'FACTION_SELECT','loading gate must reject early faction activation');
       await page.evaluate(()=>{window.__openingGame.startupReadiness=window.__savedOpeningGate;delete window.__savedOpeningGate;});
     }
-    await page.locator('.menu-start').click();
+    await card.click();
     assert.equal(await phase(),'READY');
     assert(await page.locator('.faction-menu').isHidden());
     assert.equal(await page.evaluate(()=>window.__openingGame.control.controlledFaction),faction);
@@ -105,9 +101,9 @@ try {
     await page.waitForFunction(()=>window.__openingGame.match.phase==='PAUSED');
     await page.getByRole('button',{name:'返回主菜单',exact:true}).click();
     assert.equal(await phase(),'FACTION_SELECT');
-    assert(await page.locator('.menu-start').isDisabled());
+    assert.equal(await page.locator('.menu-start').count(),0);
     assert.equal(await page.locator('.faction-card[aria-pressed="true"]').count(),0);
-    results.interactions.push(`${faction}: keyboard select only / Start / teaching where applicable / PLAYING / pause / reset menu`);
+    results.interactions.push(`${faction}: card click starts directly / teaching where applicable / PLAYING / pause / reset menu`);
   }
   assert.deepEqual(results.errors,[]);
   await writeFile(`${out}/${prefix}browser-results.json`,JSON.stringify(results,null,2));

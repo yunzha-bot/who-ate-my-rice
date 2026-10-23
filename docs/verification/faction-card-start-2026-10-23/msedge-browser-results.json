@@ -1,0 +1,574 @@
+{
+  "layouts": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "overflowX": false,
+      "logo": {
+        "x": 49.90625,
+        "y": 41.03125,
+        "width": 777.59375,
+        "height": 313.625
+      },
+      "cards": [
+        {
+          "x": 410.875,
+          "y": 340.1875,
+          "width": 608.453125,
+          "height": 513
+        },
+        {
+          "x": 1086.515625,
+          "y": 350.984375,
+          "width": 553.15625,
+          "height": 513
+        }
+      ],
+      "start": null,
+      "settings": {
+        "x": 1464.96875,
+        "y": 34.546875,
+        "width": 428.15625,
+        "height": 64.0625
+      },
+      "portraits": [
+        {
+          "x": 608.625,
+          "y": 288.890625,
+          "width": 413.734375,
+          "height": 605.328125
+        },
+        {
+          "x": 1186.09375,
+          "y": 299.6875,
+          "width": 470.171875,
+          "height": 605.328125
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 1041.9375,
+        "width": 1920,
+        "height": 38.0625
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-hoodie-v1.png",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 1768,
+      "height": 890,
+      "overflowX": false,
+      "logo": {
+        "x": 134,
+        "y": 33.8125,
+        "width": 640.796875,
+        "height": 258.453125
+      },
+      "cards": [
+        {
+          "x": 431.46875,
+          "y": 280.34375,
+          "width": 501.40625,
+          "height": 422.75
+        },
+        {
+          "x": 988.25,
+          "y": 289.234375,
+          "width": 455.828125,
+          "height": 422.75
+        }
+      ],
+      "start": null,
+      "settings": {
+        "x": 1300.140625,
+        "y": 28.46875,
+        "width": 352.828125,
+        "height": 54.171875
+      },
+      "portraits": [
+        {
+          "x": 594.421875,
+          "y": 238.078125,
+          "width": 340.953125,
+          "height": 498.84375
+        },
+        {
+          "x": 1070.296875,
+          "y": 246.96875,
+          "width": 387.453125,
+          "height": 498.84375
+        }
+      ],
+      "footer": {
+        "x": 92.875,
+        "y": 857.375,
+        "width": 1582.25,
+        "height": 32.625
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-hoodie-v1.png",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 1600,
+      "height": 900,
+      "overflowX": false,
+      "logo": {
+        "x": 41.59375,
+        "y": 34.1875,
+        "width": 648,
+        "height": 261.359375
+      },
+      "cards": [
+        {
+          "x": 342.390625,
+          "y": 283.5,
+          "width": 507.046875,
+          "height": 427.5
+        },
+        {
+          "x": 905.4375,
+          "y": 292.5,
+          "width": 460.953125,
+          "height": 427.5
+        }
+      ],
+      "start": null,
+      "settings": {
+        "x": 1220.8125,
+        "y": 28.796875,
+        "width": 356.796875,
+        "height": 54.71875
+      },
+      "portraits": [
+        {
+          "x": 507.1875,
+          "y": 240.75,
+          "width": 344.78125,
+          "height": 504.4375
+        },
+        {
+          "x": 988.421875,
+          "y": 249.75,
+          "width": 391.796875,
+          "height": 504.4375
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 866.28125,
+        "width": 1600,
+        "height": 33.71875
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-hoodie-v1.png",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "overflowX": false,
+      "logo": {
+        "x": 35.8125,
+        "y": 29.171875,
+        "width": 552.953125,
+        "height": 223.015625
+      },
+      "cards": [
+        {
+          "x": 292.5,
+          "y": 241.90625,
+          "width": 432.671875,
+          "height": 364.796875
+        },
+        {
+          "x": 772.953125,
+          "y": 249.578125,
+          "width": 393.359375,
+          "height": 364.796875
+        }
+      ],
+      "start": null,
+      "settings": {
+        "x": 1042.09375,
+        "y": 24.5625,
+        "width": 304.46875,
+        "height": 45.84375
+      },
+      "portraits": [
+        {
+          "x": 433.125,
+          "y": 205.4375,
+          "width": 294.203125,
+          "height": 430.453125
+        },
+        {
+          "x": 843.765625,
+          "y": 213.109375,
+          "width": 334.34375,
+          "height": 430.453125
+        }
+      ],
+      "footer": {
+        "x": 0.328125,
+        "y": 737.28125,
+        "width": 1365.34375,
+        "height": 30.71875
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-hoodie-v1.png",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 960,
+      "height": 450,
+      "overflowX": false,
+      "logo": {
+        "x": 100.796875,
+        "y": 17.09375,
+        "width": 324,
+        "height": 130.671875
+      },
+      "cards": [
+        {
+          "x": 251.1875,
+          "y": 141.75,
+          "width": 253.515625,
+          "height": 213.75
+        },
+        {
+          "x": 532.703125,
+          "y": 146.25,
+          "width": 230.484375,
+          "height": 213.75
+        }
+      ],
+      "start": null,
+      "settings": {
+        "x": 690.421875,
+        "y": 14.390625,
+        "width": 178.390625,
+        "height": 27.34375
+      },
+      "portraits": [
+        {
+          "x": 333.578125,
+          "y": 120.375,
+          "width": 172.390625,
+          "height": 252.21875
+        },
+        {
+          "x": 574.1875,
+          "y": 124.875,
+          "width": 195.90625,
+          "height": 252.21875
+        }
+      ],
+      "footer": {
+        "x": 80,
+        "y": 427.65625,
+        "width": 800,
+        "height": 22.34375
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-hoodie-v1.png",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "overflowX": false,
+      "logo": {
+        "x": 15.59375,
+        "y": 85,
+        "width": 343.1875,
+        "height": 138.40625
+      },
+      "cards": [
+        {
+          "x": 23.390625,
+          "y": 245,
+          "width": 343.1875,
+          "height": 340
+        },
+        {
+          "x": 23.390625,
+          "y": 651.1875,
+          "width": 343.1875,
+          "height": 340
+        }
+      ],
+      "start": null,
+      "settings": {
+        "x": 114.9375,
+        "y": 12,
+        "width": 263.0625,
+        "height": 56
+      },
+      "portraits": [
+        {
+          "x": 134.921875,
+          "y": 211,
+          "width": 233.359375,
+          "height": 401.1875
+        },
+        {
+          "x": 85.15625,
+          "y": 617.1875,
+          "width": 291.703125,
+          "height": 401.1875
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 1009,
+        "width": 390,
+        "height": 92.625
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-hoodie-v1.png",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    }
+  ],
+  "interactions": [
+    "five real volume buses / mute / three difficulties / mutually exclusive panels / Escape focus / credits",
+    "DEEPSEEK: card click starts directly / teaching where applicable / PLAYING / pause / reset menu",
+    "HUMAN: card click starts directly / teaching where applicable / PLAYING / pause / reset menu"
+  ],
+  "errors": []
+}

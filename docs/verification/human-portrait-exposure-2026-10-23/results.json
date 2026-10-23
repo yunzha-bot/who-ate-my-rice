@@ -1,0 +1,17 @@
+{
+  "rows": [
+    {
+      "channel": "chrome",
+      "filter": "brightness(0.92)",
+      "geometryUnchanged": true,
+      "humanEntry": true
+    },
+    {
+      "channel": "msedge",
+      "filter": "brightness(0.92)",
+      "geometryUnchanged": true,
+      "humanEntry": true
+    }
+  ],
+  "errors": []
+}

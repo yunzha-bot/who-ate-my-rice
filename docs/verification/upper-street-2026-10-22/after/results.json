@@ -1,0 +1,80 @@
+[
+  {
+    "channel": "chrome",
+    "width": 1280,
+    "height": 1186,
+    "projection": {
+      "left": 641.7021321489455,
+      "right": 803.7446805264086,
+      "top": 143.71876101613748,
+      "bottom": 282.34003571938274
+    },
+    "uiUnchanged": true,
+    "errors": []
+  },
+  {
+    "channel": "chrome",
+    "width": 1920,
+    "height": 1080,
+    "projection": {
+      "left": 1192.3404306497978,
+      "right": 1377.068935800106,
+      "top": 27.81938755839681,
+      "bottom": 185.84764072009636
+    },
+    "uiUnchanged": true,
+    "errors": []
+  },
+  {
+    "channel": "chrome",
+    "width": 1366,
+    "height": 768,
+    "projection": {
+      "left": 848.3005355560541,
+      "right": 979.7271699494503,
+      "top": 19.60483510665101,
+      "bottom": 132.03535272065187
+    },
+    "uiUnchanged": true,
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "width": 1280,
+    "height": 1186,
+    "projection": {
+      "left": 641.7021321489455,
+      "right": 803.7446805264086,
+      "top": 143.71876101613748,
+      "bottom": 282.34003571938274
+    },
+    "uiUnchanged": true,
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "width": 1920,
+    "height": 1080,
+    "projection": {
+      "left": 1192.3404306497978,
+      "right": 1377.068935800106,
+      "top": 27.81938755839681,
+      "bottom": 185.84764072009636
+    },
+    "uiUnchanged": true,
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "width": 1366,
+    "height": 768,
+    "projection": {
+      "left": 848.3005355560541,
+      "right": 979.7271699494503,
+      "top": 19.60483510665101,
+      "bottom": 132.03535272065187
+    },
+    "uiUnchanged": true,
+    "errors": []
+  }
+]

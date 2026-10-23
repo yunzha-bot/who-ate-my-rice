@@ -1,0 +1,74 @@
+[
+  {
+    "channel": "chrome",
+    "version": "154.0.8037.100",
+    "requests": [
+      {
+        "url": "http://127.0.0.1:5173/assets/characters/human/human_v2.glb",
+        "status": 200
+      }
+    ],
+    "flows": [
+      {
+        "faction": "HUMAN",
+        "ready": true,
+        "visualHeight": 1.8696562160085886,
+        "groundY": 5.960464427579026e-9,
+        "playing": true,
+        "humanAnimated": true,
+        "pauseFrozen": true,
+        "restartSameModel": true,
+        "returnedSingleModel": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "ready": true,
+        "visualHeight": 1.8696562160085886,
+        "groundY": 5.960464427579026e-9,
+        "playing": true,
+        "humanAnimated": true,
+        "pauseFrozen": true,
+        "restartSameModel": true,
+        "returnedSingleModel": true
+      }
+    ],
+    "explicitFailureFallback": true,
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "version": "151.0.4129.86",
+    "requests": [
+      {
+        "url": "http://127.0.0.1:5173/assets/characters/human/human_v2.glb",
+        "status": 200
+      }
+    ],
+    "flows": [
+      {
+        "faction": "HUMAN",
+        "ready": true,
+        "visualHeight": 1.8696562160085886,
+        "groundY": 5.960464427579026e-9,
+        "playing": true,
+        "humanAnimated": true,
+        "pauseFrozen": true,
+        "restartSameModel": true,
+        "returnedSingleModel": true
+      },
+      {
+        "faction": "DEEPSEEK",
+        "ready": true,
+        "visualHeight": 1.8696562160085886,
+        "groundY": 5.960464427579026e-9,
+        "playing": true,
+        "humanAnimated": true,
+        "pauseFrozen": true,
+        "restartSameModel": true,
+        "returnedSingleModel": true
+      }
+    ],
+    "explicitFailureFallback": true,
+    "errors": []
+  }
+]

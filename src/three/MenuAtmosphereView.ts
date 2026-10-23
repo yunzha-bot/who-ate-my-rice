@@ -3,11 +3,11 @@ import { OrthographicCamera, Vector3 } from 'three';
 /** Opening-only visual tuning. No gameplay state, clocks, input or balance values. */
 export const MENU_MOTION = {
   enabled: true, // One switch restores the accepted static opening.
-  parallax: { enabled: true, sceneMaxPx: 12, foliageMaxPx: 16, smoothingAt60Fps: .06 },
-  foliage: { enabled: true, angleDeg: 1.1, driftPx: 3, periodsSec: [6.4, 7.7] },
+  parallax: { enabled: true, sceneMaxPx: 12, foliageMaxPx: 8, smoothingAt60Fps: .06 },
+  foliage: { enabled: true, angleDeg: .55, driftPx: 1.5, periodsSec: [6.4, 7.7] },
   rice: { enabled: true, count: 14, minLifeSec: 6, maxLifeSec: 10, minLengthPx: 3, maxLengthPx: 6.5 },
-  interaction: { enabled: true, durationMs: 230, pressMs: 90, selectionMs: 340,
-    cardLiftPx: 5, cardScale: 1.015, selectionScale: 1.025, buttonLiftPx: 3, buttonScale: 1.012, pressScale: .985 },
+  interaction: { enabled: true, durationMs: 230, selectionMs: 340,
+    cardLiftPx: 5, cardScale: 1.015, selectionScale: 1.025 },
 };
 const cameraRight = new Vector3(), cameraUp = new Vector3();
 
@@ -43,6 +43,14 @@ export function menuLeafPose(seconds: number, side: number): { angle: number; x:
     x: Math.sin(t * .79 + side * 2.1) * envelope * MENU_MOTION.foliage.driftPx,
     y: Math.sin(t * .61 + side) * envelope * MENU_MOTION.foliage.driftPx * .6,
   };
+}
+
+/** Overscan the original artwork uniformly; never stretch edge texels into border strips. */
+export function menuLeafCover(x: number, y: number, angleDeg: number, width: number, height: number): number {
+  const w = Math.max(1, width), h = Math.max(1, height);
+  const angle = Math.abs(angleDeg) * Math.PI / 180;
+  return 1 + 2 * Math.max((Math.abs(x) + (h + Math.abs(y)) * angle) / w,
+    (Math.abs(y) + (w + Math.abs(x)) * angle) / h);
 }
 
 type Rice = { age: number; life: number; x: number; drift: number; length: number; angle: number; alpha: number };
@@ -101,11 +109,7 @@ export class MenuAtmosphereView {
     menu.style.setProperty('--menu-motion-ms', `${it.durationMs}ms`);
     menu.style.setProperty('--menu-card-lift', `${-it.cardLiftPx}px`);
     menu.style.setProperty('--menu-card-scale', String(it.cardScale));
-    menu.style.setProperty('--menu-button-lift', `${-it.buttonLiftPx}px`);
-    menu.style.setProperty('--menu-button-scale', String(it.buttonScale));
-    menu.style.setProperty('--menu-press-scale', String(it.pressScale));
     menu.style.setProperty('--menu-selection-scale', String(it.selectionScale));
-    menu.style.setProperty('--menu-press-ms', `${it.pressMs}ms`);
     menu.style.setProperty('--menu-selection-ms', `${it.selectionMs}ms`);
     menu.addEventListener('pointermove', this.onPointer, { passive: true });
     menu.addEventListener('scroll', this.measureSafeBoxes, { passive: true });
@@ -162,9 +166,9 @@ export class MenuAtmosphereView {
     const px = MENU_MOTION.parallax.foliageMaxPx;
     this.leaves.forEach((leaf, side) => {
       const wind = MENU_MOTION.foliage.enabled ? menuLeafPose(this.seconds, side) : { angle: 0, x: 0, y: 0 };
-      const moving = Math.abs(this.offset.x) + Math.abs(this.offset.y) + Math.abs(wind.x) + Math.abs(wind.y) + Math.abs(wind.angle) > .00001;
-      if (leaf.classList.contains('is-moving') !== moving) leaf.classList.toggle('is-moving', moving);
-      leaf.style.transform = `translate3d(${this.offset.x * px + wind.x}px, ${this.offset.y * px + wind.y}px, 0) rotate(${wind.angle}deg)`;
+      // Foreground counter-motion creates depth against the camera's scene translation.
+      const x = -this.offset.x * px + wind.x, y = -this.offset.y * px + wind.y;
+      leaf.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${wind.angle}deg)`;
     });
     // Parallax can remain enabled independently of wind.
     if (MENU_MOTION.rice.enabled) this.drawRice(ms / 1000);
@@ -180,13 +184,18 @@ export class MenuAtmosphereView {
 
   private resize = (): void => {
     this.width = Math.max(1, innerWidth); this.height = Math.max(1, innerHeight);
+    // Reserve the full motion envelope once per viewport, never resize artwork with the pointer/wind.
+    const px = MENU_MOTION.parallax.foliageMaxPx, wind = MENU_MOTION.foliage;
+    const cover = menuLeafCover(px + wind.driftPx, px + wind.driftPx * .6,
+      wind.angleDeg, this.width, this.height);
+    this.leaves.forEach(leaf => leaf.style.setProperty('--menu-leaf-cover', String(cover)));
     // Twelve-ish small grains do not need a Retina-sized full-screen bitmap.
     this.canvas.width = this.width; this.canvas.height = this.height;
     this.measureSafeBoxes();
   };
   private measureSafeBoxes = (): void => {
     this.safeBoxes = [...this.menu.querySelectorAll<HTMLElement>(
-      '.menu-logo,.menu-settings,.menu-start,.faction-copy,.faction-description b,.faction-portrait')]
+      '.menu-logo,.menu-settings,.faction-copy,.faction-description b,.faction-portrait')]
       .map(node => {
         const r = node.getBoundingClientRect();
         const face = node.classList.contains('faction-portrait');
@@ -249,7 +258,7 @@ export class MenuAtmosphereView {
     this.reduced.removeEventListener('change', this.onAvailability);
     this.finePointer.removeEventListener('change', this.onAvailability);
     this.foliage.remove(); this.canvas.remove();
-    for (const name of ['--menu-motion-ms', '--menu-card-lift', '--menu-card-scale', '--menu-button-lift',
-      '--menu-button-scale', '--menu-press-scale', '--menu-selection-scale', '--menu-press-ms', '--menu-selection-ms']) this.menu.style.removeProperty(name);
+    for (const name of ['--menu-motion-ms', '--menu-card-lift', '--menu-card-scale',
+      '--menu-selection-scale', '--menu-selection-ms']) this.menu.style.removeProperty(name);
   }
 }

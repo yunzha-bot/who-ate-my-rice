@@ -1,0 +1,30 @@
+[
+  {
+    "channel": "chrome",
+    "conflict": true,
+    "cancel": true,
+    "persistence": true,
+    "reset": true,
+    "bothFactions": true,
+    "realCapture": true,
+    "realNet": true,
+    "realSprint": true,
+    "customHud": true,
+    "help": true,
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "conflict": true,
+    "cancel": true,
+    "persistence": true,
+    "reset": true,
+    "bothFactions": true,
+    "realCapture": true,
+    "realNet": true,
+    "realSprint": true,
+    "customHud": true,
+    "help": true,
+    "errors": []
+  }
+]

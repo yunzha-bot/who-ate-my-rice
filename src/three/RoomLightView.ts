@@ -47,7 +47,7 @@ export class RoomLightView {
   }
 
   sync(enabled: boolean, system: RoomLightSystem, actor: Point | null,
-    blocked: (a: Point, b: Point) => boolean, canAct: boolean): void {
+    blocked: (a: Point, b: Point) => boolean, canAct: boolean, lightKey = 'L'): void {
     this.root.visible = enabled || this.editorLayout !== null;
     this.daylight.sync(enabled, system);
     for (const p of this.editorLayout ?? system.switches) {
@@ -65,7 +65,7 @@ export class RoomLightView {
     if (nearby) {
       const name = system.areaName(nearby.roomId);
       const cd = system.cooldown(nearby.roomId);
-      this.prompt.textContent = `L ${system.isOn(nearby.roomId) ? '关灯' : '开灯'} · ${name}${cd > 0 ? ` · 等待 ${Math.ceil(cd / 1000)} 秒` : ''}`;
+      this.prompt.textContent = `${lightKey} ${system.isOn(nearby.roomId) ? '关灯' : '开灯'} · ${name}${cd > 0 ? ` · 等待 ${Math.ceil(cd / 1000)} 秒` : ''}`;
     }
   }
 

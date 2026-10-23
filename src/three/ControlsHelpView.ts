@@ -9,6 +9,7 @@
  *
  * 为了在没有 DOM 库的测试环境里也能核对文案，这里把行数据与 markup 生成导出为纯函数。
  */
+import { DEFAULT_KEY_BINDINGS, formatBindingText, type KeyBindingMap } from './KeyBindings.ts';
 export type ControlsHelpFaction = 'HUMAN' | 'DEEPSEEK';
 
 export interface ControlsHelpRow {
@@ -46,11 +47,12 @@ export const CONTROLS_HELP_TITLES: Record<ControlsHelpFaction, string> = {
   DEEPSEEK: 'DeepSeek 娘 · 干饭人',
 };
 
-function rowsMarkup(items: readonly ControlsHelpRow[]): string {
+function rowsMarkup(items: readonly ControlsHelpRow[], bindings: Readonly<KeyBindingMap> = DEFAULT_KEY_BINDINGS): string {
   return items.map(item => `<div class="controls-help-row"><dt>${
-    item.keys.map(key => key.length === 1
-      ? `<kbd>${key}</kbd>` : `<kbd class="wide">${key}</kbd>`).join('')}</dt><dd>${
-    item.text}</dd></div>`).join('');
+    item.keys.map(original => {
+      const key = formatBindingText(original, bindings);
+      return key.length === 1 ? `<kbd>${key}</kbd>` : `<kbd class="wide">${key}</kbd>`;
+    }).join('')}</dt><dd>${formatBindingText(item.text, bindings)}</dd></div>`).join('');
 }
 
 /** 说明层的完整 markup。纯函数：不读玩法状态，也不依赖 DOM。 */
@@ -69,7 +71,7 @@ export function controlsHelpMarkup(): string {
       <p class="controls-help-foot">投掷命中会使对方眩晕 3 秒。不锈钢盆最多投掷三次，耐久耗尽后损坏；尚有耐久时落地后可再次拾取，其他道具投出后不可再次拾取。</p>
       <p class="controls-help-foot">捕捉网对 DeepSeek 娘不可见，冲刺也会中网；投掷物命中可以拆网。中网后暂时无法移动，身上会显示网的效果；Human 仍需靠近才能抓捕。</p>
       <p class="controls-help-foot">阅读期间对局不会推进。按 Esc 暂停后，可以从「操作说明」再打开这一页。</p>
-      <p class="controls-help-foot">困难夜间：靠近墙壁开关按 L 开灯或关灯。亮灯区域的对手不受距离限制，但墙门和真正藏身仍会遮挡；开关有短暂冷却，双方都能使用。</p>
+      <p class="controls-help-foot" data-light-help>困难夜间：靠近墙壁开关按 L 开灯或关灯。亮灯区域的对手不受距离限制，但墙门和真正藏身仍会遮挡；开关有短暂冷却，双方都能使用。</p>
     </div>`;
 }
 
@@ -98,7 +100,11 @@ export class ControlsHelpView {
   get visible(): boolean { return !this.root.hidden; }
 
   /** `faction` 只把当前阵营排到左侧并加标记；内容、玩法状态都不变。 */
-  show(faction: ControlsHelpFaction | null = null): void {
+  show(faction: ControlsHelpFaction | null = null, bindings: Readonly<KeyBindingMap> = DEFAULT_KEY_BINDINGS): void {
+    this.humanSection.querySelector('dl')!.innerHTML = rowsMarkup(CONTROLS_HELP_ROWS.HUMAN, bindings);
+    this.deepseekSection.querySelector('dl')!.innerHTML = rowsMarkup(CONTROLS_HELP_ROWS.DEEPSEEK, bindings);
+    const light = this.root.querySelector<HTMLElement>('[data-light-help]')!;
+    light.textContent = formatBindingText('困难夜间：靠近墙壁开关按 L 开灯或关灯。亮灯区域的对手不受距离限制，但墙门和真正藏身仍会遮挡；开关有短暂冷却，双方都能使用。', bindings);
     const first = faction === 'DEEPSEEK' ? this.deepseekSection : this.humanSection;
     const last = faction === 'DEEPSEEK' ? this.humanSection : this.deepseekSection;
     const grid = this.root.querySelector<HTMLElement>('.controls-help-grid')!;

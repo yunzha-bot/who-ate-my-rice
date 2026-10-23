@@ -1,13 +1,17 @@
 import type { Direction } from '../systems/SprintSystem';
+import { KeyBindings } from './KeyBindings.ts';
 
 export class InputManager {
+  readonly bindings: KeyBindings;
   private readonly held = new Set<string>();
   private readonly pressed = new Set<string>();
+  private readonly physicalHeld = new Map<string, string>();
   private readonly touchHeld = new Set<string>();
   private touchDirection: Direction = { x: 0, y: 0 };
   private tabCaptureEnabled = false;
 
-  constructor() {
+  constructor(bindings = new KeyBindings()) {
+    this.bindings = bindings;
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
     window.addEventListener('blur', this.clear);
@@ -56,6 +60,7 @@ export class InputManager {
 
   clear = (): void => {
     this.held.clear();
+    this.physicalHeld.clear();
     this.touchHeld.clear();
     this.pressed.clear();
     this.setTouchDirection(0, 0);
@@ -75,13 +80,22 @@ export class InputManager {
   }
 
   private onKeyDown = (event: KeyboardEvent): void => {
+    // User bindings never replace browser/system shortcuts such as Ctrl+R or Alt+Left.
+    if (event.ctrlKey || event.altKey || event.metaKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName ?? '')) return;
+    const code = this.bindings.actionFor(event.code);
+    if (!code) return;
     if (event.code.startsWith('Arrow') || event.code === 'Space' ||
-        (event.code === 'Tab' && this.tabCaptureEnabled)) event.preventDefault();
-    if (!this.isHeld(event.code) && !event.repeat) this.pressed.add(event.code);
-    this.held.add(event.code);
+        (event.code === 'Tab' && this.tabCaptureEnabled) || code !== event.code) event.preventDefault();
+    if (!this.isHeld(code) && !event.repeat) this.pressed.add(code);
+    this.physicalHeld.set(event.code, code);
+    this.held.add(code);
   };
 
   private onKeyUp = (event: KeyboardEvent): void => {
-    this.held.delete(event.code);
+    const code = this.physicalHeld.get(event.code);
+    this.physicalHeld.delete(event.code);
+    if (code && ![...this.physicalHeld.values()].includes(code)) this.held.delete(code);
   };
 }

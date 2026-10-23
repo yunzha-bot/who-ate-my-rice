@@ -41,9 +41,10 @@ export class PulseLockView {
     this.root = root;
   }
 
-  update(entry: PulseLockEntry | null, coreCount: number, doorId: string | null): void {
+  update(entry: PulseLockEntry | null, coreCount: number, doorId: string | null, interactKey = 'E'): void {
     this.root.hidden = !entry || !doorId;
     if (!entry || !doorId) return;
+    this.root.querySelector('kbd')!.textContent = interactKey;
     this.progress.textContent = `门锁破解  ${Math.min(entry.completed + 1, coreCount)} / ${coreCount}`;
     for (let index = 0; index < this.rows.length; index += 1) {
       const state = index < entry.completed ? 'done'

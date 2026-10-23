@@ -44,7 +44,6 @@ for (const channel of (process.env.MOBILE_CHANNELS ?? 'chrome,msedge').split(','
       const tap=async selector=>{await page.waitForFunction(s=>!document.querySelector(s).disabled,selector);const p=await center(selector);await start(99,p.x,p.y);await end(99);};
       for (const faction of ['HUMAN','DEEPSEEK']) {
         await page.locator('.faction-card[data-faction="'+faction+'"]').tap();
-        await page.locator('.menu-start').tap();
         if(await page.locator('.controls-help').isVisible()) await page.locator('.controls-help-close').tap();
         await page.waitForFunction(()=>window.game.match.phase==='PLAYING');
         const layout = await page.evaluate(()=>{
@@ -248,7 +247,6 @@ for (const channel of (process.env.MOBILE_CHANNELS ?? 'chrome,msedge').split(','
     await page.goto(origin+'/__mobile_check__');await page.waitForFunction(()=>window.game?.startupReadiness.canStart);
     await page.locator('.startup-view').waitFor({state:'detached'});
     await page.locator('.faction-card[data-faction="HUMAN"]').click();
-    await page.locator('.menu-start').click();
     if(await page.locator('.controls-help').isVisible())await page.locator('.controls-help-close').click();
     await page.waitForFunction(()=>window.game.match.phase==='PLAYING');
     assert.equal(await page.locator('.mobile-controls').isVisible(),false);

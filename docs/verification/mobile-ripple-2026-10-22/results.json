@@ -1,0 +1,120 @@
+[
+  {
+    "channel": "chrome",
+    "samples": [
+      {
+        "time": 0,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 65,
+        "outerHeight": 49,
+        "left": -1,
+        "top": -1,
+        "opacity": 0.95,
+        "width": 65,
+        "height": 49
+      },
+      {
+        "time": 350,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 68.9062,
+        "outerHeight": 52.9062,
+        "left": -2.96078,
+        "top": -2.96078,
+        "opacity": 0.859091,
+        "width": 65,
+        "height": 49
+      },
+      {
+        "time": 650,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 72.2812,
+        "outerHeight": 56.2812,
+        "left": -4.64146,
+        "top": -4.64146,
+        "opacity": 0.615873,
+        "width": 65,
+        "height": 49
+      },
+      {
+        "time": 900,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 75,
+        "outerHeight": 59,
+        "left": -6,
+        "top": -6,
+        "opacity": 0,
+        "width": 65,
+        "height": 49
+      }
+    ],
+    "removedWhenUnavailable": true,
+    "reducedMotion": true
+  },
+  {
+    "channel": "msedge",
+    "samples": [
+      {
+        "time": 0,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 65,
+        "outerHeight": 49,
+        "left": -1,
+        "top": -1,
+        "opacity": 0.95,
+        "width": 65,
+        "height": 49
+      },
+      {
+        "time": 350,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 68.9062,
+        "outerHeight": 52.9062,
+        "left": -2.96078,
+        "top": -2.96078,
+        "opacity": 0.859091,
+        "width": 65,
+        "height": 49
+      },
+      {
+        "time": 650,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 72.2812,
+        "outerHeight": 56.2812,
+        "left": -4.64146,
+        "top": -4.64146,
+        "opacity": 0.615873,
+        "width": 65,
+        "height": 49
+      },
+      {
+        "time": 900,
+        "transform": "none",
+        "sx": 1,
+        "sy": 1,
+        "outerWidth": 75,
+        "outerHeight": 59,
+        "left": -6,
+        "top": -6,
+        "opacity": 0,
+        "width": 65,
+        "height": 49
+      }
+    ],
+    "removedWhenUnavailable": true,
+    "reducedMotion": true
+  }
+]

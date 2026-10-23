@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { Room } from './map/apartmentMap.ts';
 import { buildCommunityCourt } from './CommunityCourtView.ts';
 import { buildGarageDriveway, garageDrivewayBounds } from './map/GarageGround.ts';
+import { buildStreetLife } from './StreetLifeView.ts';
 
 /** Non-interactive street-block scenery. Never registered with collision or navigation.
  * The playable house sits inside a continuous modern residential block. Every frontage
@@ -258,6 +259,9 @@ export function buildResidentialExterior(parent: THREE.Group, rooms: readonly Ro
     box(`${name}-shade`, x, floorAt(x, z) + 2.93, z, .65, .20, .65, 0xe6d9b6);
   }
   buildCommunityCourt(root, { left, back, groundTop: parcelTop, sidewalkZ: back - 3 });
+  supportBounds.push(...root.children.filter(mesh => mesh.name.endsWith('-plinth'))
+    .map(mesh => new THREE.Box3().setFromObject(mesh)));
+  buildStreetLife(root, layout, floorAt);
   return root;
 }
 

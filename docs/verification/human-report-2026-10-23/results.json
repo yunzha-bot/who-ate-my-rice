@@ -1,0 +1,48 @@
+{
+  "method": "Actual browser UI; outcomes injected through existing match methods, not full gameplay victories",
+  "rows": [
+    {
+      "channel": "chrome",
+      "faction": "HUMAN",
+      "winner": "HUMAN",
+      "source": "/assets/ui/portraits/human-report-hoodie-v1.png",
+      "loaded": true
+    },
+    {
+      "channel": "chrome",
+      "faction": "HUMAN",
+      "winner": "DEEPSEEK",
+      "source": "/assets/ui/portraits/human-report-hoodie-v1.png",
+      "loaded": true
+    },
+    {
+      "channel": "chrome",
+      "faction": "DEEPSEEK",
+      "winner": "HUMAN",
+      "source": "/assets/ui/portraits/deepseek-lose.png",
+      "loaded": true
+    },
+    {
+      "channel": "msedge",
+      "faction": "HUMAN",
+      "winner": "HUMAN",
+      "source": "/assets/ui/portraits/human-report-hoodie-v1.png",
+      "loaded": true
+    },
+    {
+      "channel": "msedge",
+      "faction": "HUMAN",
+      "winner": "DEEPSEEK",
+      "source": "/assets/ui/portraits/human-report-hoodie-v1.png",
+      "loaded": true
+    },
+    {
+      "channel": "msedge",
+      "faction": "DEEPSEEK",
+      "winner": "HUMAN",
+      "source": "/assets/ui/portraits/deepseek-lose.png",
+      "loaded": true
+    }
+  ],
+  "errors": []
+}

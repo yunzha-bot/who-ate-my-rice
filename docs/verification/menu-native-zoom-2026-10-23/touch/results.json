@@ -1,0 +1,94 @@
+{
+  "passed": 10,
+  "artifacts": "docs/verification/menu-native-zoom-2026-10-23/touch",
+  "results": [
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "HUMAN",
+      "layout": true
+    },
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "DEEPSEEK",
+      "layout": true
+    },
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "HUMAN",
+      "layout": true
+    },
+    {
+      "channel": "chrome",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "DEEPSEEK",
+      "layout": true
+    },
+    {
+      "channel": "chrome",
+      "desktop": true,
+      "touchUIHidden": true,
+      "keyboard": true,
+      "eDoor": true,
+      "mouseThrow": true
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "HUMAN",
+      "layout": true
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 667,
+        "height": 375
+      },
+      "faction": "DEEPSEEK",
+      "layout": true
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "HUMAN",
+      "layout": true
+    },
+    {
+      "channel": "msedge",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "faction": "DEEPSEEK",
+      "layout": true
+    },
+    {
+      "channel": "msedge",
+      "desktop": true,
+      "touchUIHidden": true,
+      "keyboard": true,
+      "eDoor": true,
+      "mouseThrow": true
+    }
+  ]
+}

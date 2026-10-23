@@ -2,7 +2,7 @@
 
 《谁吃了我的米》是一款使用 Three.js 制作的双阵营单机追逐游戏。DeepSeek 娘尝试吃完每局激活的 5 份米，Human 通过抓捕赢得对局。
 
-当前版本号仍为 **v1.0.0-rc1**，属于 RC 测试版，不是 v1.0.0 正式发布。旧 RC Tag/Release 是固定历史快照，后续 main 改进不移动该标签，也不因推送自动更新网站。说明见 [候选版发布记录](docs/releases/v1.0.0-rc1.md)。
+当前版本号为 **v1.0.0-rc2**，属于 RC 测试版，不是 v1.0.0 正式发布。旧 v1.0.0-rc1 Tag/Release 是固定历史快照，保留不动；推送代码或Tag不自动更新网站。说明见 [rc2交付记录](docs/releases/v1.0.0-rc2.md)与[旧候选版记录](docs/releases/v1.0.0-rc1.md)。
 
 技术栈：TypeScript、Three.js、Vite、原生 HTML/CSS。推荐 Node.js 24 LTS 与 npm（工作流使用 Node 24；Node 需支持项目测试使用的 TypeScript stripping），桌面目标为 Chrome/Edge；手机版横屏优先，Safari/微信等仍需真机验收。
 
@@ -26,13 +26,24 @@ npm run build
 npm run preview -- --host 127.0.0.1 --port 4173 --strictPort
 ```
 
-预览地址为 `http://127.0.0.1:4173/`。正式站点只部署生成的 `dist/`，不部署整个工作目录，不使用 `npm run dev` 对外提供游戏。生产构建不会初始化场景编辑器、DEV/DEV-B面板、调试绘制、AI诊断日志或DEV预设读取；暂停菜单也不创建开发阵营切换按钮。本地开发功能和预设仍保留。
+预览地址为 `http://127.0.0.1:4173/`。正式站点只部署构建目录内部的文件：默认/Pages为 `dist/`，腾讯云独立包为 `dist-tencent/`。不部署整个工作目录，不使用 `npm run dev` 对外提供游戏。生产构建不会初始化场景编辑器、DEV/DEV-B面板、调试绘制、AI诊断日志或DEV预设读取；暂停菜单也不创建开发阵营切换按钮。本地开发功能和预设仍保留。
 
 布局保存服务仅用于Vite开发环境，不属于正式游戏API。默认构建仍使用根路径；GitHub Pages 专用构建通过显式环境变量使用 `/who-ate-my-rice/`，模型、立绘、CSS 和音频遵循相同 base。
 
+### 腾讯云根路径部署包
+
+```sh
+npm run build -- --base=/ --outDir dist-tencent
+node scripts/verify-tencent-build.mjs
+```
+
+已有腾讯云包须先备份，再重新构建；本轮旧包与可上传ZIP放在本地忽略的 `dist-tencent-delivery/`。上传 `dist-tencent/` 内部全部内容，使网站根层直接包含 `index.html`、`assets/`、`maps/`、`ui/`；不要上传源码、依赖、候选素材、备份或工程配置。ZIP也必须以 `index.html` 为根层，不能套一层dist-tencent。当前开屏点击任一阵营卡片直接开局。
+
+最新上传包、SHA256、真实截图、测试及限制见 [rc2腾讯云交付](docs/verification/rc2-tencent-2026-10-23/README.md)。桌面菜单会正常响应浏览器缩放，CSS视口不足1280px时上下排列，可纵向滚动选择任一阵营。本地验证不等于已经上传上线；腾讯云需由所有者手动上传，Pages仍不自动部署。
+
 ### GitHub Pages RC构建与手动部署
 
-根路径部署（如腾讯云）使用默认构建。GitHub Pages 必须使用下面的显式子路径构建；两个构建都会更新本机 `dist/`，不要混用根路径与 Pages 产物。需要同时保留时使用独立检出副本或先将现有产物复制到明确的备份目录。
+GitHub Pages 使用下面的显式子路径构建，更新本机 `dist/`。腾讯云使用上一节的独立 `dist-tencent/` 根路径构建；两者不要混用。下列工作流保持手动审核部署，本次腾讯云准备不触发它。
 
 ```powershell
 $ricePagesPrevious = $env:PAGES_DEPLOYMENT
@@ -53,12 +64,14 @@ try {
 
 ## 操作与对局
 
+以下为原有默认键位；未主动修改按键设置时保持原样。
+
 - WASD / 方向键移动；E交互、开关门；DeepSeek娘停下并按住E进食。
 - E 复用真实目标仲裁：开关门、藏身、按住吃米；Human 无门时搜查面前合法家具，家具搜查与 V 共用冷却。
 - Q：DeepSeek 娘锁门，Human 布设捕捉网；V 为 Human 前方扇形抓捕。网最多4张，不自动到期，可被触发或投掷物拆除；锁门名额最多3扇。以当前 HUD 状态为准。
 - Space：DeepSeek 娘冲刺 / Human 强行破门；困难夜间靠近开关用 L 开关区域灯光。仅开发版5173支持Z/C旋转视角、X恢复默认视角。
 - F拾取附近生活物件；持有时按住鼠标左键瞄准、松开投掷，右键取消。命中对手眩晕3秒；花瓶/盒子一次性消耗，不锈钢盆最多投掷3次，尚有耐久时落地可回收。
-- Esc打开暂停菜单，可继续、调节声音、重新开始或返回首页。
+- Esc打开暂停菜单，可继续、进入设置、重新开始或返回首页。设置 → 按键设置中可点击操作项后按新键，支持冲突提示、恢复默认和本机自动保存；Esc固定暂停、方向键保留辅助移动，鼠标与手机触屏操作不受改键影响。
 - DeepSeek 娘每份米需累计20秒进食进度，每局目标5份，中断保留进度。三档难度区分对手 AI 速度、投掷/技能决策；困难还使用双方受限的夜间视野与区域开关灯。
 
 ### 手机横屏

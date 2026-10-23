@@ -36,14 +36,19 @@
   .mobile-actions button[data-slots]::after { content: attr(data-slots); position: absolute; top: -6px; right: -4px;
     display: grid; place-items: center; width: 19px; height: 19px; border-radius: 50%;
     background: #4c929e; color: white; font-size: 11px; }
-  .mobile-actions button[data-interaction-state='READY']::after { content: ''; position: absolute; inset: 0;
-    border: 2px solid white; border-radius: inherit; pointer-events: none;
-    animation: mobile-interaction-ripple var(--mobile-ripple-ms, 1050ms) ease-out infinite; }
+  .mobile-actions button[data-interaction-state='READY'] { overflow: visible; }
+  .mobile-actions button[data-interaction-state='READY']::after { content: ''; position: absolute; inset: -1px;
+    box-sizing: border-box; border: 0; border-radius: 13px; pointer-events: none;
+    box-shadow: 0 0 0 .65px white;
+    filter: blur(.3px);
+    animation: mobile-interaction-ripple var(--mobile-ripple-ms, 1050ms) linear infinite; }
   @keyframes mobile-interaction-ripple {
-    0% { transform: scale(1); opacity: .95; }
-    78%, 100% { transform: scale(1.3); transform: scale(
-      calc(1 + 2 * var(--mobile-ripple-spread) / var(--mobile-action-width)),
-      calc(1 + 2 * var(--mobile-ripple-spread) / var(--mobile-action-height))); opacity: 0; }
+    /* Animate lengths directly: no length/length division requiring newer mobile CSS. */
+    0% { inset: -1px; border-radius: 13px; filter: blur(.3px); opacity: .08; }
+    25% { opacity: .95; }
+    55% { opacity: .9; }
+    85%, 100% { inset: calc(-1px - var(--mobile-ripple-spread, 5px));
+      border-radius: calc(13px + var(--mobile-ripple-spread, 5px)); filter: blur(.65px); opacity: 0; }
   }
   .mobile-actions .mobile-throw { color: white; background: #4c929e; }
   .mobile-actions small { font-size: 10px; font-weight: 400; }

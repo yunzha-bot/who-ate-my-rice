@@ -315,19 +315,27 @@ test('exterior is cosmetic, disposable and absent from collision and furniture i
   assert.ok(exterior && exterior.children.length > 50);
   assert.equal(apartment.furnitureMeshes.size, FURNITURE.length);
   let disposed = 0;
-  let count = 0;
+  const geometries = new Set();
+  let instanceCount = 0, instancesDisposed = 0;
   exterior.traverse(o => {
     if (o instanceof THREE.Mesh) {
-      count++;
       assert.equal(o.userData.objectId, undefined);
       const hits = [];
       o.raycast(new THREE.Raycaster(), hits);
       assert.equal(hits.length, 0);
-      o.geometry.addEventListener('dispose', () => disposed++);
+      if (!geometries.has(o.geometry)) {
+        geometries.add(o.geometry);
+        o.geometry.addEventListener('dispose', () => disposed++);
+      }
+      if (o instanceof THREE.InstancedMesh) {
+        instanceCount++;
+        o.addEventListener('dispose', () => instancesDisposed++);
+      }
     }
   });
   apartment.dispose();
-  assert.equal(disposed, count);
+  assert.equal(disposed, geometries.size, 'shared geometry is disposed exactly once');
+  assert.equal(instancesDisposed, instanceCount, 'instance buffers are released');
   assert.equal(scene.children.length, 0);
 });
 

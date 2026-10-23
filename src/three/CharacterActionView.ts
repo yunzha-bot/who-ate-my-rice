@@ -4,6 +4,7 @@ import type { CharacterAction } from '../systems/CharacterAction.ts';
 import type { Faction } from './LocalControl.ts';
 import { HomeAvatar } from './AlphaPresentation.ts';
 import { loadDeepSeekModel, disposeDeepSeekModel } from './DeepSeekGlbModel.ts';
+import { loadHumanModel, disposeHumanModel } from './HumanGlbModel.ts';
 import { DeepSeekAnimation, type DeepSeekVisualState } from './DeepSeekAnimation.ts';
 import { DeepSeekHairMotion } from './DeepSeekHairMotion.ts';
 import type { StartupReadiness } from './StartupReadiness.ts';
@@ -52,6 +53,24 @@ export class CharacterActionView {
     this.paint();
     if (faction === 'DEEPSEEK' && typeof window !== 'undefined') {
       void this.loadVisual();
+    } else if (faction === 'HUMAN' && typeof window !== 'undefined') {
+      void this.loadHumanVisual();
+    }
+  }
+
+  private async loadHumanVisual(): Promise<void> {
+    const attempt = ++this.visualAttempt;
+    let model: THREE.Group | null = null;
+    try {
+      model = await loadHumanModel();
+      if (this.disposed || attempt !== this.visualAttempt || this.simplifiedVisual) {
+        disposeHumanModel(model); return;
+      }
+      this.avatar.useExternalVisual(model);
+    } catch (error) {
+      if (model && model.parent !== this.avatar.root) disposeHumanModel(model);
+      if (!this.disposed && attempt === this.visualAttempt && !this.simplifiedVisual)
+        console.warn('Human visual unavailable; keeping procedural fallback', error);
     }
   }
 

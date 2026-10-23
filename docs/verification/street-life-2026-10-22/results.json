@@ -1,0 +1,48 @@
+[
+  {
+    "channel": "chrome",
+    "metrics": {
+      "drawCalls": 1246,
+      "triangles": 143956,
+      "geometries": 1174,
+      "textures": 24,
+      "props": true
+    },
+    "flows": [
+      {
+        "faction": "DEEPSEEK",
+        "playing": true,
+        "returned": true
+      },
+      {
+        "faction": "HUMAN",
+        "playing": true,
+        "returned": true
+      }
+    ],
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "metrics": {
+      "drawCalls": 1245,
+      "triangles": 131958,
+      "geometries": 1174,
+      "textures": 24,
+      "props": true
+    },
+    "flows": [
+      {
+        "faction": "DEEPSEEK",
+        "playing": true,
+        "returned": true
+      },
+      {
+        "faction": "HUMAN",
+        "playing": true,
+        "returned": true
+      }
+    ],
+    "errors": []
+  }
+]

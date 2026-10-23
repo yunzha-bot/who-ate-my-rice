@@ -1,0 +1,1201 @@
+{
+  "note": "Explicit reviewed source/docs/assets/evidence paths; excludes this self-describing manifest. No private directories, candidates, map backups or build outputs staged.",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 658
+    },
+    {
+      "path": "README.md",
+      "bytes": 10094
+    },
+    {
+      "path": "docs/AGENT_LOG.md",
+      "bytes": 769693
+    },
+    {
+      "path": "docs/ASSET_PROVENANCE.md",
+      "bytes": 9057
+    },
+    {
+      "path": "docs/DEEPSEEK_HANDOFF.md",
+      "bytes": 183646
+    },
+    {
+      "path": "docs/OPENING_UI_RECONSTRUCTION_PLAN.md",
+      "bytes": 21052
+    },
+    {
+      "path": "docs/README.md",
+      "bytes": 2931
+    },
+    {
+      "path": "docs/releases/v1.0.0-rc2.md",
+      "bytes": 1348
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/README.md",
+      "bytes": 2953
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/browser-results.json",
+      "bytes": 12771
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/msedge-browser-results.json",
+      "bytes": 12771
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/msedge-static-1366x768.png",
+      "bytes": 1175345
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/msedge-static-1920x1080.png",
+      "bytes": 2045344
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/static-1366x768.png",
+      "bytes": 1175516
+    },
+    {
+      "path": "docs/verification/faction-card-start-2026-10-23/static-1920x1080.png",
+      "bytes": 2044250
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/README.md",
+      "bytes": 6474
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/audit.json",
+      "bytes": 383
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/browser/results.json",
+      "bytes": 3508
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/gates.json",
+      "bytes": 1016
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/online-status.json",
+      "bytes": 222
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages-artifact.json",
+      "bytes": 16296
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages/chrome-production-menu.png",
+      "bytes": 2094425
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages/msedge-production-menu.png",
+      "bytes": 2095553
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/pages/results.json",
+      "bytes": 446
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/security.json",
+      "bytes": 192
+    },
+    {
+      "path": "docs/verification/git-preparation-2026-10-22/selected-files.json",
+      "bytes": 11050
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/README.md",
+      "bytes": 4207
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/edge-recheck/msedge-browser-results.json",
+      "bytes": 13347
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/edge-recheck/msedge-static-1920x1080.png",
+      "bytes": 2098918
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/final/browser-results.json",
+      "bytes": 13347
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/final/static-1920x1080.png",
+      "bytes": 2095708
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/test-results.txt",
+      "bytes": 106979
+    },
+    {
+      "path": "docs/verification/human-portrait-2026-10-22/zoom/results.json",
+      "bytes": 51393
+    },
+    {
+      "path": "docs/verification/human-portrait-exposure-2026-10-23/README.md",
+      "bytes": 1453
+    },
+    {
+      "path": "docs/verification/human-portrait-exposure-2026-10-23/chrome-after.png",
+      "bytes": 2110932
+    },
+    {
+      "path": "docs/verification/human-portrait-exposure-2026-10-23/chrome-human-after.png",
+      "bytes": 341640
+    },
+    {
+      "path": "docs/verification/human-portrait-exposure-2026-10-23/chrome-human-before.png",
+      "bytes": 343103
+    },
+    {
+      "path": "docs/verification/human-portrait-exposure-2026-10-23/msedge-after.png",
+      "bytes": 2111913
+    },
+    {
+      "path": "docs/verification/human-portrait-exposure-2026-10-23/results.json",
+      "bytes": 302
+    },
+    {
+      "path": "docs/verification/human-report-2026-10-23/README.md",
+      "bytes": 2050
+    },
+    {
+      "path": "docs/verification/human-report-2026-10-23/chrome-DEEPSEEK-HUMAN.png",
+      "bytes": 427249
+    },
+    {
+      "path": "docs/verification/human-report-2026-10-23/chrome-HUMAN-DEEPSEEK.png",
+      "bytes": 480357
+    },
+    {
+      "path": "docs/verification/human-report-2026-10-23/chrome-HUMAN-HUMAN.png",
+      "bytes": 525107
+    },
+    {
+      "path": "docs/verification/human-report-2026-10-23/msedge-HUMAN-HUMAN.png",
+      "bytes": 462383
+    },
+    {
+      "path": "docs/verification/human-report-2026-10-23/results.json",
+      "bytes": 1214
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/README.md",
+      "bytes": 3787
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/chrome-DEEPSEEK-playing.png",
+      "bytes": 276125
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/chrome-HUMAN-playing.png",
+      "bytes": 194903
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/chrome-HUMAN-ready.png",
+      "bytes": 229316
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/chrome-human-detail.png",
+      "bytes": 11861
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/msedge-DEEPSEEK-playing.png",
+      "bytes": 250027
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/msedge-HUMAN-playing.png",
+      "bytes": 209922
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/msedge-HUMAN-ready.png",
+      "bytes": 243120
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/msedge-human-detail.png",
+      "bytes": 13218
+    },
+    {
+      "path": "docs/verification/human-size-2026-10-23/final/results.json",
+      "bytes": 1803
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/README.md",
+      "bytes": 5933
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/production/chrome-production-HUMAN.png",
+      "bytes": 295015
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/production/msedge-production-HUMAN.png",
+      "bytes": 289111
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/production/results.json",
+      "bytes": 458
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/chrome-DEEPSEEK-playing.png",
+      "bytes": 256157
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/chrome-HUMAN-playing.png",
+      "bytes": 219537
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/chrome-human-detail.png",
+      "bytes": 23126
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/chrome-returned-menu.png",
+      "bytes": 1564150
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/msedge-DEEPSEEK-playing.png",
+      "bytes": 246004
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/msedge-HUMAN-playing.png",
+      "bytes": 178536
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/msedge-human-detail.png",
+      "bytes": 9516
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/msedge-returned-menu.png",
+      "bytes": 1559810
+    },
+    {
+      "path": "docs/verification/human-v2-integration-2026-10-22/verified/results.json",
+      "bytes": 1463
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/README.md",
+      "bytes": 4238
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/chrome-deepseek-custom-hud.png",
+      "bytes": 224965
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/chrome-default-settings.png",
+      "bytes": 200010
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/chrome-human-custom-hud.png",
+      "bytes": 220181
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/chrome-settings.png",
+      "bytes": 198369
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/mobile-regression/results.json",
+      "bytes": 3515
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/msedge-default-settings.png",
+      "bytes": 180041
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/msedge-settings.png",
+      "bytes": 180958
+    },
+    {
+      "path": "docs/verification/key-bindings-2026-10-22/results.json",
+      "bytes": 550
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/README.md",
+      "bytes": 5793
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/before/results.json",
+      "bytes": 10495
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/final/chrome-1266x1195-3.png",
+      "bytes": 1311073
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/final/chrome-1768x890-2.png",
+      "bytes": 1694917
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/final/chrome-1920x1080-1.png",
+      "bytes": 2141718
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/final/msedge-1266x1195-10.png",
+      "bytes": 1310867
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/final/results.json",
+      "bytes": 19588
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/flow-chrome/browser-results.json",
+      "bytes": 13374
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/flow-edge/msedge-browser-results.json",
+      "bytes": 13374
+    },
+    {
+      "path": "docs/verification/menu-aspect-2026-10-22/zoom/results.json",
+      "bytes": 51363
+    },
+    {
+      "path": "docs/verification/menu-center-2026-10-23/README.md",
+      "bytes": 1780
+    },
+    {
+      "path": "docs/verification/menu-center-2026-10-23/chrome-1266x1195-3.png",
+      "bytes": 1467324
+    },
+    {
+      "path": "docs/verification/menu-center-2026-10-23/chrome-1366x768-4.png",
+      "bytes": 1273973
+    },
+    {
+      "path": "docs/verification/menu-center-2026-10-23/chrome-1920x1080-1.png",
+      "bytes": 2113207
+    },
+    {
+      "path": "docs/verification/menu-center-2026-10-23/msedge-1920x1080-12.png",
+      "bytes": 2115755
+    },
+    {
+      "path": "docs/verification/menu-center-2026-10-23/results.json",
+      "bytes": 29984
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/README.md",
+      "bytes": 4793
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/before/chrome-1280-1.png",
+      "bytes": 1199416
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/chrome-1280-1.png",
+      "bytes": 1195392
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/chrome-1280-2.png",
+      "bytes": 1203341
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/chrome-1280-3.png",
+      "bytes": 1197657
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/chrome-1280-4.png",
+      "bytes": 1189733
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/fixed-size/results.json",
+      "bytes": 4650
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/results.json",
+      "bytes": 4206
+    },
+    {
+      "path": "docs/verification/menu-edges-2026-10-22/separate-layers/results.json",
+      "bytes": 17141
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/README.md",
+      "bytes": 6541
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/aspects-final/results.json",
+      "bytes": 27420
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/chrome-100-menu.png",
+      "bytes": 2092648
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/chrome-125-menu.png",
+      "bytes": 2243176
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/chrome-150-menu.png",
+      "bytes": 2213879
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/chrome-200-menu.png",
+      "bytes": 1861527
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/chrome-200-scrolled-human.png",
+      "bytes": 1884474
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/chrome-300-scrolled-human.png",
+      "bytes": 1649127
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/results.json",
+      "bytes": 57012
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/tencent/artifact.json",
+      "bytes": 16879
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/tencent/browser/chrome-production-menu.png",
+      "bytes": 2064003
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/tencent/browser/results.json",
+      "bytes": 458
+    },
+    {
+      "path": "docs/verification/menu-native-zoom-2026-10-23/touch/results.json",
+      "bytes": 1723
+    },
+    {
+      "path": "docs/verification/menu-scrollbar-2026-10-22/README.md",
+      "bytes": 859
+    },
+    {
+      "path": "docs/verification/menu-scrollbar-2026-10-22/chrome-scrolled.png",
+      "bytes": 1186795
+    },
+    {
+      "path": "docs/verification/menu-scrollbar-2026-10-22/msedge-scrolled.png",
+      "bytes": 1187957
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/README.md",
+      "bytes": 6217
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/before-final/results.json",
+      "bytes": 25740
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/brand-spec.md",
+      "bytes": 997
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/flow-chrome/browser-results.json",
+      "bytes": 13381
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/flow-edge/msedge-browser-results.json",
+      "bytes": 13381
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/mobile/results.json",
+      "bytes": 3501
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/chrome-100.png",
+      "bytes": 2118792
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/chrome-125.png",
+      "bytes": 2120053
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/chrome-25.png",
+      "bytes": 2113881
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/chrome-300.png",
+      "bytes": 2142289
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/msedge-100.png",
+      "bytes": 2118305
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/msedge-125.png",
+      "bytes": 2119572
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/msedge-25.png",
+      "bytes": 2113382
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/msedge-300.png",
+      "bytes": 2141889
+    },
+    {
+      "path": "docs/verification/menu-zoom-2026-10-22/verified/results.json",
+      "bytes": 51395
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/README.md",
+      "bytes": 11362
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-667-DEEPSEEK-interaction-ripple.png",
+      "bytes": 756835
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-667-HUMAN-floating-stick.png",
+      "bytes": 811355
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-844-DEEPSEEK-aim-multitouch.png",
+      "bytes": 942738
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-844-DEEPSEEK-floating-stick.png",
+      "bytes": 882002
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-chrome/chrome-desktop-keyboard-mouse.png",
+      "bytes": 229113
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-edge/msedge-667-HUMAN-aim-multitouch.png",
+      "bytes": 787611
+    },
+    {
+      "path": "docs/verification/mobile-feel-2026-10-22/final-edge/msedge-desktop-keyboard-mouse.png",
+      "bytes": 234137
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/README.md",
+      "bytes": 2899
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/chrome-0ms.png",
+      "bytes": 248425
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/chrome-350ms.png",
+      "bytes": 282749
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/chrome-650ms.png",
+      "bytes": 283394
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/msedge-0ms.png",
+      "bytes": 242422
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/msedge-350ms.png",
+      "bytes": 282749
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/msedge-650ms.png",
+      "bytes": 283811
+    },
+    {
+      "path": "docs/verification/mobile-ripple-2026-10-22/results.json",
+      "bytes": 2414
+    },
+    {
+      "path": "docs/verification/mobile-ripple-soft-2026-10-22/README.md",
+      "bytes": 2145
+    },
+    {
+      "path": "docs/verification/mobile-ripple-soft-2026-10-22/brighter/results.json",
+      "bytes": 2906
+    },
+    {
+      "path": "docs/verification/mobile-ripple-soft-2026-10-22/chrome-650ms-detail.png",
+      "bytes": 19234
+    },
+    {
+      "path": "docs/verification/mobile-ripple-soft-2026-10-22/msedge-650ms-detail.png",
+      "bytes": 19234
+    },
+    {
+      "path": "docs/verification/mobile-ripple-soft-2026-10-22/results.json",
+      "bytes": 2906
+    },
+    {
+      "path": "docs/verification/mobile-ripple-soft-2026-10-22/thinner/results.json",
+      "bytes": 3380
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/README.md",
+      "bytes": 15729
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/chrome-final-results.json",
+      "bytes": 12013
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/chrome-static-1920x1080.png",
+      "bytes": 2099357
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/gates.json",
+      "bytes": 4111
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/leaf-hardware-observation.json",
+      "bytes": 962
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/motion-results.json",
+      "bytes": 11984
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/msedge-final-results.json",
+      "bytes": 12002
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/msedge-motion-results.json",
+      "bytes": 11993
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/msedge-static-1920x1080.png",
+      "bytes": 2098374
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/opening-motion-14s.webm",
+      "bytes": 4532541
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/protection-and-layout.json",
+      "bytes": 9867
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/recording.json",
+      "bytes": 2001
+    },
+    {
+      "path": "docs/verification/opening-final-2026-10-22/reference-left-current-right-1768x890.png",
+      "bytes": 6466807
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/README.md",
+      "bytes": 5245
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/artifact.json",
+      "bytes": 17063
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/keyboard/chrome-settings.png",
+      "bytes": 176244
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/keyboard/results.json",
+      "bytes": 550
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/layout/chrome-1366x768-4.png",
+      "bytes": 1272247
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/layout/results.json",
+      "bytes": 29984
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/mobile/chrome-667-HUMAN-floating-stick.png",
+      "bytes": 793131
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/mobile/chrome-844-DEEPSEEK-aim-multitouch.png",
+      "bytes": 939675
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/mobile/results.json",
+      "bytes": 3503
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/production/chrome-production-DEEPSEEK.png",
+      "bytes": 294085
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/production/chrome-production-HUMAN.png",
+      "bytes": 353498
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/production/chrome-production-menu.png",
+      "bytes": 2082859
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/production/msedge-production-menu.png",
+      "bytes": 2083906
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/production/results.json",
+      "bytes": 458
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/zoom/chrome-125-menu.png",
+      "bytes": 2247448
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/zoom/chrome-200-menu.png",
+      "bytes": 1859713
+    },
+    {
+      "path": "docs/verification/rc2-tencent-2026-10-23/zoom/results.json",
+      "bytes": 57050
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/README.md",
+      "bytes": 5462
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/chrome-DEEPSEEK-playing.png",
+      "bytes": 268475
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/chrome-HUMAN-playing.png",
+      "bytes": 234011
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/chrome-opening.png",
+      "bytes": 1553983
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/chrome-street-0.png",
+      "bytes": 207734
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/chrome-street-2.png",
+      "bytes": 209199
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/chrome-street-motion.webm",
+      "bytes": 1521523
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/msedge-DEEPSEEK-playing.png",
+      "bytes": 241390
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/msedge-HUMAN-playing.png",
+      "bytes": 269598
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/msedge-opening.png",
+      "bytes": 1552989
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/msedge-street-0.png",
+      "bytes": 207945
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/msedge-street-2.png",
+      "bytes": 209593
+    },
+    {
+      "path": "docs/verification/street-activity-2026-10-22/results.json",
+      "bytes": 1574
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/README.md",
+      "bytes": 4826
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/chrome-DEEPSEEK-playing.png",
+      "bytes": 233806
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/chrome-HUMAN-playing.png",
+      "bytes": 265734
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/chrome-homes-inspection.png",
+      "bytes": 91870
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/chrome-opening.png",
+      "bytes": 1550355
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/chrome-parking-inspection.png",
+      "bytes": 78232
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/chrome-shop-inspection.png",
+      "bytes": 71853
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/msedge-DEEPSEEK-playing.png",
+      "bytes": 266067
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/msedge-HUMAN-playing.png",
+      "bytes": 228745
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/msedge-homes-inspection.png",
+      "bytes": 91870
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/msedge-opening.png",
+      "bytes": 1550520
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/msedge-parking-inspection.png",
+      "bytes": 78232
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/msedge-shop-inspection.png",
+      "bytes": 71853
+    },
+    {
+      "path": "docs/verification/street-life-2026-10-22/results.json",
+      "bytes": 820
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/README.md",
+      "bytes": 5666
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/artifact.json",
+      "bytes": 16879
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/browser/chrome-production-DEEPSEEK.png",
+      "bytes": 305362
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/browser/chrome-production-HUMAN.png",
+      "bytes": 276804
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/browser/chrome-production-menu.png",
+      "bytes": 2063763
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/browser/msedge-production-menu.png",
+      "bytes": 2062448
+    },
+    {
+      "path": "docs/verification/tencent-ready-2026-10-23/browser/results.json",
+      "bytes": 458
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/README.md",
+      "bytes": 5706
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/artifact.json",
+      "bytes": 16976
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/browser-final/chrome-production-DEEPSEEK.png",
+      "bytes": 272327
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/browser-final/chrome-production-menu.png",
+      "bytes": 2093065
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/browser-final/msedge-production-HUMAN.png",
+      "bytes": 281116
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/browser-final/msedge-production-menu.png",
+      "bytes": 2094668
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/browser-final/results.json",
+      "bytes": 457
+    },
+    {
+      "path": "docs/verification/tencent-root-2026-10-22/original-dist.json",
+      "bytes": 14061
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/README.md",
+      "bytes": 4265
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/chrome-1280x1186.png",
+      "bytes": 1397018
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/chrome-1366x768.png",
+      "bytes": 1232843
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/chrome-1920x1080.png",
+      "bytes": 2115540
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/chrome-upper-detail.png",
+      "bytes": 43444
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/msedge-1280x1186.png",
+      "bytes": 1396882
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/msedge-1366x768.png",
+      "bytes": 1232455
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/msedge-1920x1080.png",
+      "bytes": 2115398
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/msedge-upper-detail.png",
+      "bytes": 43444
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/after/results.json",
+      "bytes": 1660
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/before/chrome-1280x1186.png",
+      "bytes": 1382508
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/before/chrome-1366x768.png",
+      "bytes": 1224092
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/before/chrome-1920x1080.png",
+      "bytes": 2098447
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/before/msedge-1280x1186.png",
+      "bytes": 1382122
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/before/msedge-1366x768.png",
+      "bytes": 1224279
+    },
+    {
+      "path": "docs/verification/upper-street-2026-10-22/before/msedge-1920x1080.png",
+      "bytes": 2099425
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 49978
+    },
+    {
+      "path": "package.json",
+      "bytes": 438
+    },
+    {
+      "path": "public/assets/characters/human/human_v2.glb",
+      "bytes": 398148
+    },
+    {
+      "path": "public/assets/ui/portraits/human-hoodie-v1.png",
+      "bytes": 1436403
+    },
+    {
+      "path": "public/assets/ui/portraits/human-report-hoodie-v1.png",
+      "bytes": 2150193
+    },
+    {
+      "path": "scripts/compare-opening-labels.mjs",
+      "bytes": 2469
+    },
+    {
+      "path": "scripts/production-assets.mjs",
+      "bytes": 2054
+    },
+    {
+      "path": "scripts/record-opening-motion.mjs",
+      "bytes": 5064
+    },
+    {
+      "path": "scripts/verify-human-v2.mjs",
+      "bytes": 7192
+    },
+    {
+      "path": "scripts/verify-keybindings.mjs",
+      "bytes": 6811
+    },
+    {
+      "path": "scripts/verify-menu-aspect.mjs",
+      "bytes": 4870
+    },
+    {
+      "path": "scripts/verify-menu-edges.mjs",
+      "bytes": 5441
+    },
+    {
+      "path": "scripts/verify-menu-zoom.mjs",
+      "bytes": 8580
+    },
+    {
+      "path": "scripts/verify-mobile-controls.mjs",
+      "bytes": 27137
+    },
+    {
+      "path": "scripts/verify-mobile-ripple.mjs",
+      "bytes": 5073
+    },
+    {
+      "path": "scripts/verify-opening-final.mjs",
+      "bytes": 11983
+    },
+    {
+      "path": "scripts/verify-opening-motion.mjs",
+      "bytes": 20710
+    },
+    {
+      "path": "scripts/verify-opening-static.mjs",
+      "bytes": 8024
+    },
+    {
+      "path": "scripts/verify-pages-build.mjs",
+      "bytes": 4169
+    },
+    {
+      "path": "scripts/verify-pages-preview.mjs",
+      "bytes": 4572
+    },
+    {
+      "path": "scripts/verify-street-activity.mjs",
+      "bytes": 7064
+    },
+    {
+      "path": "scripts/verify-street-life.mjs",
+      "bytes": 4074
+    },
+    {
+      "path": "scripts/verify-tencent-build.mjs",
+      "bytes": 3980
+    },
+    {
+      "path": "scripts/verify-upper-street.mjs",
+      "bytes": 4218
+    },
+    {
+      "path": "src/game-ui.css",
+      "bytes": 18368
+    },
+    {
+      "path": "src/mobile-ui.css",
+      "bytes": 8094
+    },
+    {
+      "path": "src/opening-menu.css",
+      "bytes": 20039
+    },
+    {
+      "path": "src/three/AlphaHudView.ts",
+      "bytes": 24127
+    },
+    {
+      "path": "src/three/AlphaPresentation.ts",
+      "bytes": 32694
+    },
+    {
+      "path": "src/three/CharacterActionView.ts",
+      "bytes": 12571
+    },
+    {
+      "path": "src/three/ControlsHelpView.ts",
+      "bytes": 7902
+    },
+    {
+      "path": "src/three/GameUiLayout.ts",
+      "bytes": 8116
+    },
+    {
+      "path": "src/three/HumanGlbModel.ts",
+      "bytes": 4188
+    },
+    {
+      "path": "src/three/InputManager.ts",
+      "bytes": 3863
+    },
+    {
+      "path": "src/three/KeyBindings.ts",
+      "bytes": 4583
+    },
+    {
+      "path": "src/three/KeyboardSettingsView.ts",
+      "bytes": 4519
+    },
+    {
+      "path": "src/three/MenuAtmosphereView.ts",
+      "bytes": 14047
+    },
+    {
+      "path": "src/three/PulseLockView.ts",
+      "bytes": 3376
+    },
+    {
+      "path": "src/three/ResidentialExterior.ts",
+      "bytes": 31116
+    },
+    {
+      "path": "src/three/RoomLightView.ts",
+      "bytes": 4404
+    },
+    {
+      "path": "src/three/StreetActivityView.ts",
+      "bytes": 8191
+    },
+    {
+      "path": "src/three/StreetLifeView.ts",
+      "bytes": 12488
+    },
+    {
+      "path": "src/three/ThreeGame.ts",
+      "bytes": 226125
+    },
+    {
+      "path": "src/three/map/MapBuilder.ts",
+      "bytes": 16132
+    },
+    {
+      "path": "tests/alpha-presentation.test.mjs",
+      "bytes": 18021
+    },
+    {
+      "path": "tests/faction-card-ui.test.mjs",
+      "bytes": 6053
+    },
+    {
+      "path": "tests/helpers/faction-menu.mjs",
+      "bytes": 615
+    },
+    {
+      "path": "tests/human-glb.test.mjs",
+      "bytes": 6593
+    },
+    {
+      "path": "tests/key-bindings.test.mjs",
+      "bytes": 4064
+    },
+    {
+      "path": "tests/menu-atmosphere.test.mjs",
+      "bytes": 5979
+    },
+    {
+      "path": "tests/menu-responsive.test.mjs",
+      "bytes": 5588
+    },
+    {
+      "path": "tests/opening-labels.test.mjs",
+      "bytes": 2831
+    },
+    {
+      "path": "tests/pages-deployment.test.mjs",
+      "bytes": 8923
+    },
+    {
+      "path": "tests/production-assets.test.mjs",
+      "bytes": 4139
+    },
+    {
+      "path": "tests/street-activity.test.mjs",
+      "bytes": 5840
+    },
+    {
+      "path": "tests/street-life.test.mjs",
+      "bytes": 4123
+    }
+  ]
+}

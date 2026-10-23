@@ -1,11 +1,12 @@
 import { cooldownFraction } from './AlphaPresentation.ts';
 import type { InteractionPrompt } from './InteractionPrompt.ts';
+import { DEFAULT_KEY_BINDINGS, formatBindingText, type KeyBindingMap } from './KeyBindings.ts';
 
 /** Touch presentation/input tuning only; does not change world movement or skill values. */
 export const MOBILE_CONTROLS = {
   zoneWidthRatio: .5, zoneTopRatio: .28,
   centerInsetPx: 64, edgeGapPx: 8, radiusRatio: .34, deadZoneRatio: .12, sensitivity: 1,
-  rippleMs: 1050, rippleSpreadPx: 12,
+  rippleMs: 1050, rippleSpreadPx: 5,
 };
 
 export function floatingStickCenter(x: number, y: number,
@@ -27,6 +28,7 @@ export interface MobileHudInput {
 }
 
 export interface AlphaHudFrame {
+  keyBindings?: Readonly<KeyBindingMap>;
   phase: string;
   faction: 'HUMAN' | 'DEEPSEEK' | null;
   time: string;
@@ -60,6 +62,7 @@ export interface AlphaHudFrame {
 
 /** HUD and touch commands. Gameplay values and clocks still come from the game. */
 export class AlphaHudView {
+  private keyBindings: Readonly<KeyBindingMap> = DEFAULT_KEY_BINDINGS;
   readonly root = document.createElement('section');
   private readonly faction: HTMLElement;
   private readonly rice: HTMLElement;
@@ -273,6 +276,9 @@ export class AlphaHudView {
   };
 
   update(frame: AlphaHudFrame): void {
+    this.keyBindings = frame.keyBindings ?? DEFAULT_KEY_BINDINGS;
+    this.set(this.root.querySelector('.movement-guide b')!, 'W A S D');
+    this.set(this.root.querySelector('.alpha-key b')!, 'E');
     const hint = frame.phase === 'PLAYING' ? frame.interaction : null;
     this.prompt.dataset.visible = String(!!hint);
     this.prompt.setAttribute('aria-hidden', String(!hint));
@@ -307,12 +313,12 @@ export class AlphaHudView {
     this.cooldown(this.q, dp ? 'Q 锁门' : 'V 抓捕', frame.qRemainingMs, frame.qDurationMs);
     if (dp) this.q.dataset.slots = String(frame.lockSlots);
     else delete this.q.dataset.slots;
-    this.q.setAttribute('aria-label', dp ? `Q 锁门，剩余可锁 ${frame.lockSlots} 扇` : this.q.textContent!);
-    this.q.setAttribute('title', dp ? `剩余可同时锁门名额：${frame.lockSlots}` : 'V 抓捕前方未藏身角色，与 E 家具搜查共用冷却');
+    this.q.setAttribute('aria-label', dp ? formatBindingText(`Q 锁门，剩余可锁 ${frame.lockSlots} 扇`, this.keyBindings) : this.q.textContent!);
+    this.q.setAttribute('title', dp ? `剩余可同时锁门名额：${frame.lockSlots}` : formatBindingText('V 抓捕前方未藏身角色，与 E 家具搜查共用冷却', this.keyBindings));
     this.net.hidden = dp;
     if (!dp) {
       this.net.dataset.slots = String(frame.netSlots);
-      this.net.setAttribute('aria-label', `Q 布网，剩余可布置 ${frame.netSlots} 张`);
+      this.net.setAttribute('aria-label', formatBindingText(`Q 布网，剩余可布置 ${frame.netSlots} 张`, this.keyBindings));
       this.net.setAttribute('title', `布设捕捉网；剩余可布置名额：${frame.netSlots}`);
       this.cooldown(this.net, 'Q 布网', frame.netRemainingMs, frame.netDurationMs);
       if (frame.netStatus) {
@@ -409,6 +415,7 @@ export class AlphaHudView {
   }
 
   private set(node: HTMLElement, value: string): void {
+    value = formatBindingText(value, this.keyBindings);
     if (node.textContent !== value) node.textContent = value;
   }
 

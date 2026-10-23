@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { disposeDeepSeekModel } from './DeepSeekGlbModel.ts';
+import { HumanModelPose, disposeHumanModel } from './HumanGlbModel.ts';
 import type { Rect } from './map/apartmentMap.ts';
 import { buildDeepSeekMaid } from './DeepSeekMaidModel.ts';
 import { dressStorageFurniture, STORAGE_VISUAL_ROLES } from './StorageFurnitureVisual.ts';
@@ -27,6 +28,8 @@ export const HOME_COMPOSITION = {
 
 /** Shared player/NPC visual size; the actor footprint and camera never use it. */
 const DEEPSEEK_GLB_SIZE = 1.2;
+/** Human GLB visual-only multiplier (1.35 = 35% larger), shared by player and AI. */
+const HUMAN_GLB_SIZE = 1.35;
 
 export function homeFrustum(aspect: number, menu: boolean, baseHeight: number, mapDepth: number,
   mapWidth = 0) {
@@ -405,6 +408,10 @@ export class HomeAvatar {
   private readonly cloth: THREE.MeshStandardMaterial;
   private readonly actor: THREE.Mesh;
   private externalVisual: THREE.Group | null = null;
+  private humanPose: HumanModelPose | null = null;
+  private readonly humanFallBounds = new THREE.Box3();
+  private readonly lastWorldPosition = new THREE.Vector3();
+  private readonly originalVisualHeight: number;
   private readonly deepseek: boolean;
   constructor(actor: THREE.Mesh, deepseek: boolean) {
     this.deepseek = deepseek;
@@ -459,6 +466,7 @@ export class HomeAvatar {
       HOME_COMPOSITION.avatarWidth);
     // Lift enlarged child so its feet retain the original ground plane.
     this.root.position.y = h * (HOME_COMPOSITION.avatarHeight - 1) / 2;
+    this.originalVisualHeight = new THREE.Box3().setFromObject(this.root).getSize(new THREE.Vector3()).y;
     const material = actor.material as THREE.MeshStandardMaterial;
     material.transparent = true;
     material.opacity = 0; // Keep the original selectable root and footprint unchanged.
@@ -471,18 +479,21 @@ export class HomeAvatar {
   useExternalVisual(model: THREE.Group): void {
     const bounds = new THREE.Box3().setFromObject(model);
     const size = bounds.getSize(new THREE.Vector3());
-    if (!Number.isFinite(size.y) || size.y <= 0) throw new Error('DeepSeek GLB has empty bounds');
+    if (!Number.isFinite(size.y) || size.y <= 0) throw new Error('Character GLB has empty bounds');
     const height = this.actor.geometry.boundingBox!.getSize(new THREE.Vector3()).y;
-    // Match the existing chibi height and cancel the avatar root's unequal X/Y scales.
-    const worldScale = height * HOME_COMPOSITION.avatarHeight * 1.35 * DEEPSEEK_GLB_SIZE / size.y;
+    const humanPose = this.deepseek ? null : new HumanModelPose(model);
+    // Scale only the visual model; cancel the avatar root's unequal X/Y scales.
+    const worldScale = (this.deepseek
+      ? height * HOME_COMPOSITION.avatarHeight * 1.35 * DEEPSEEK_GLB_SIZE : this.originalVisualHeight * HUMAN_GLB_SIZE) / size.y;
     const horizontalScale = worldScale / HOME_COMPOSITION.avatarWidth;
     const verticalScale = worldScale / HOME_COMPOSITION.avatarHeight;
     const center = bounds.getCenter(new THREE.Vector3());
     model.scale.set(horizontalScale, verticalScale, horizontalScale);
     model.position.set(-center.x * horizontalScale,
       -bounds.min.y * verticalScale - height / 2, -center.z * horizontalScale);
-    if (this.externalVisual) disposeDeepSeekModel(this.externalVisual);
+    if (this.externalVisual) this.disposeExternalVisual();
     this.externalVisual = model;
+    this.humanPose = humanPose;
     this.root.add(model);
     for (const joint of [this.body, this.head, this.leftArm, this.rightArm,
       this.leftLeg, this.rightLeg]) joint.visible = false;
@@ -490,8 +501,9 @@ export class HomeAvatar {
   }
 
   clearExternalVisual(): void {
-    if (this.externalVisual) disposeDeepSeekModel(this.externalVisual);
+    if (this.externalVisual) this.disposeExternalVisual();
     this.externalVisual = null;
+    this.humanPose = null;
     for (const joint of [this.body, this.head, this.leftArm, this.rightArm,
       this.leftLeg, this.rightLeg]) joint.visible = true;
     this.reset();
@@ -517,7 +529,7 @@ export class HomeAvatar {
     this.facing = Math.atan2(Math.sin(this.facing + step), Math.cos(this.facing + step));
     this.root.rotation.y = this.facing;
     this.last.copy(this.actor.position);
-    if (this.externalVisual) return; // External animation belongs to its mixer; heading stays here.
+    if (this.externalVisual && !this.humanPose) return; // DeepSeek clips own posing; heading stays here.
     this.root.rotation.z = !this.deepseek && (action === 'FALL' || action === 'STUN') ? Math.PI / 2 : 0;
     const moving = action === 'WALK' || action === 'RUN';
     const height = this.actor.geometry.boundingBox!.max.y - this.actor.geometry.boundingBox!.min.y;
@@ -528,6 +540,18 @@ export class HomeAvatar {
     const swing = Math.sin(this.stepPhase) * this.stride;
     const legAngle = (action === 'RUN' ? .72 : .52) * swing;
     const armAngle = (action === 'RUN' ? .60 : .44) * swing;
+    if (this.humanPose) {
+      const fallen = action === 'FALL' || action === 'STUN';
+      if (fallen) this.stride = 0;
+      this.humanPose.update(fallen ? 0 : legAngle, fallen ? 0 : armAngle, action);
+      this.root.position.y = height * (HOME_COMPOSITION.avatarHeight - 1) / 2;
+      if (fallen) {
+        this.root.updateWorldMatrix(true, true);
+        const floor = this.actor.getWorldPosition(this.lastWorldPosition).y - height / 2;
+        this.root.position.y += floor - this.humanFallBounds.setFromObject(this.externalVisual!).min.y;
+      }
+      return; // Keep the authored proportions: no procedural root stretching or leaning.
+    }
     this.leftLeg.rotation.x = legAngle;
     this.rightLeg.rotation.x = -legAngle;
     this.leftArm.rotation.x = -armAngle;
@@ -549,6 +573,7 @@ export class HomeAvatar {
   }
 
   reset(): void {
+    this.humanPose?.reset();
     this.time = 0;
     this.stepPhase = 0;
     this.stride = 0;
@@ -568,9 +593,16 @@ export class HomeAvatar {
     }
   }
 
+  private disposeExternalVisual(): void {
+    if (!this.externalVisual) return;
+    if (this.deepseek) disposeDeepSeekModel(this.externalVisual);
+    else disposeHumanModel(this.externalVisual);
+  }
+
   dispose(): void {
-    if (this.externalVisual) disposeDeepSeekModel(this.externalVisual);
+    this.disposeExternalVisual();
     this.externalVisual = null;
+    this.humanPose = null;
     const materials = new Set<THREE.Material>();
     this.root.traverse(object => {
       if (object instanceof THREE.Mesh) {

@@ -1,6 +1,8 @@
 node_modules/
 .npm-cache/
 dist/
+/dist-tencent/
+/dist-tencent-delivery/
 .env
 .env.*
 !.env.example

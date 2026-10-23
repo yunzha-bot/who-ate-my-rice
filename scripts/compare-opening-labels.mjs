@@ -13,7 +13,6 @@ for(const width of [1920,1768]){
   const before=baseline.find(n=>n.width===width), current=after.layouts.find(n=>n.width===width);
   const same=(a,b,name)=>{for(const key of ['x','y','width','height']) assert.ok(Math.abs(a[key]-b[key])<.1,`${name}.${key} moved`);};
   same(before.boxes.find(n=>n.selector==='menu-logo'),current.logo,'logo');
-  same(before.boxes.find(n=>n.selector==='menu-start'),current.start,'start');
   same(before.boxes.find(n=>n.selector==='menu-settings'),current.settings,'settings');
   same(before.boxes.find(n=>n.selector==='menu-credits'),current.footer,'footer');
   before.boxes.filter(n=>n.selector==='faction-card').forEach((b,i)=>same(b,current.cards[i],`card${i}`));

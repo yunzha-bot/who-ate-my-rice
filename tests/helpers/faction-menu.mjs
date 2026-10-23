@@ -6,11 +6,8 @@ export function factionMenuFixture() {
     setAttribute(name, value) { this.attributes[name] = value; },
   });
   const cards = ['DEEPSEEK', 'HUMAN'].map(button);
-  const start = button(); start.disabled = true;
-  const help = { textContent: '' };
-  return { innerHTML: '', hidden: false, cards, start, help, listeners: {},
+  return { innerHTML: '', hidden: false, cards, listeners: {},
     addEventListener(name, callback) { this.listeners[name] = callback; },
     querySelectorAll: () => cards,
-    querySelector: selector => selector === '.menu-start' ? start : help,
   };
 }

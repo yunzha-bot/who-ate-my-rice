@@ -1,0 +1,604 @@
+{
+  "layouts": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "overflowX": false,
+      "logo": {
+        "x": 49.90625,
+        "y": 41.03125,
+        "width": 777.59375,
+        "height": 313.625
+      },
+      "cards": [
+        {
+          "x": 410.875,
+          "y": 340.1875,
+          "width": 608.453125,
+          "height": 513
+        },
+        {
+          "x": 1086.515625,
+          "y": 350.984375,
+          "width": 553.15625,
+          "height": 513
+        }
+      ],
+      "start": {
+        "x": 729.59375,
+        "y": 881.265625,
+        "width": 460.796875,
+        "height": 140.390625
+      },
+      "settings": {
+        "x": 1464.96875,
+        "y": 34.546875,
+        "width": 428.15625,
+        "height": 64.0625
+      },
+      "portraits": [
+        {
+          "x": 608.625,
+          "y": 288.890625,
+          "width": 413.734375,
+          "height": 605.328125
+        },
+        {
+          "x": 1263.53125,
+          "y": 361.234375,
+          "width": 359.546875,
+          "height": 482.21875
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 1041.9375,
+        "width": 1920,
+        "height": 38.0625
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 1768,
+      "height": 890,
+      "overflowX": false,
+      "logo": {
+        "x": 45.953125,
+        "y": 33.8125,
+        "width": 716.03125,
+        "height": 288.796875
+      },
+      "cards": [
+        {
+          "x": 378.34375,
+          "y": 280.34375,
+          "width": 560.28125,
+          "height": 422.75
+        },
+        {
+          "x": 1000.5,
+          "y": 289.234375,
+          "width": 509.359375,
+          "height": 422.75
+        }
+      ],
+      "start": {
+        "x": 671.84375,
+        "y": 726.21875,
+        "width": 424.3125,
+        "height": 115.6875
+      },
+      "settings": {
+        "x": 1349,
+        "y": 28.46875,
+        "width": 394.25,
+        "height": 59.59375
+      },
+      "portraits": [
+        {
+          "x": 560.4375,
+          "y": 238.078125,
+          "width": 380.984375,
+          "height": 498.84375
+        },
+        {
+          "x": 1163.515625,
+          "y": 297.6875,
+          "width": 331.078125,
+          "height": 397.375
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 853.59375,
+        "width": 1768,
+        "height": 36.40625
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 1600,
+      "height": 900,
+      "overflowX": false,
+      "logo": {
+        "x": 41.59375,
+        "y": 34.1875,
+        "width": 648,
+        "height": 261.359375
+      },
+      "cards": [
+        {
+          "x": 342.390625,
+          "y": 283.5,
+          "width": 507.046875,
+          "height": 427.5
+        },
+        {
+          "x": 905.4375,
+          "y": 292.5,
+          "width": 460.953125,
+          "height": 427.5
+        }
+      ],
+      "start": {
+        "x": 608,
+        "y": 734.390625,
+        "width": 384,
+        "height": 117
+      },
+      "settings": {
+        "x": 1220.8125,
+        "y": 28.796875,
+        "width": 356.796875,
+        "height": 54.71875
+      },
+      "portraits": [
+        {
+          "x": 507.1875,
+          "y": 240.75,
+          "width": 344.78125,
+          "height": 504.4375
+        },
+        {
+          "x": 1052.953125,
+          "y": 301.046875,
+          "width": 299.609375,
+          "height": 401.84375
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 866.28125,
+        "width": 1600,
+        "height": 33.71875
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "overflowX": false,
+      "logo": {
+        "x": 35.515625,
+        "y": 29.171875,
+        "width": 553.21875,
+        "height": 223.125
+      },
+      "cards": [
+        {
+          "x": 292.3125,
+          "y": 241.90625,
+          "width": 432.890625,
+          "height": 364.796875
+        },
+        {
+          "x": 773,
+          "y": 249.578125,
+          "width": 393.546875,
+          "height": 364.796875
+        }
+      ],
+      "start": {
+        "x": 519.078125,
+        "y": 626.65625,
+        "width": 327.828125,
+        "height": 99.828125
+      },
+      "settings": {
+        "x": 1042.28125,
+        "y": 24.5625,
+        "width": 304.609375,
+        "height": 45.859375
+      },
+      "portraits": [
+        {
+          "x": 433,
+          "y": 205.4375,
+          "width": 294.359375,
+          "height": 430.453125
+        },
+        {
+          "x": 898.953125,
+          "y": 256.859375,
+          "width": 255.796875,
+          "height": 342.90625
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 737.28125,
+        "width": 1366,
+        "height": 30.71875
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 960,
+      "height": 450,
+      "overflowX": false,
+      "logo": {
+        "x": 24.953125,
+        "y": 17.09375,
+        "width": 388.796875,
+        "height": 156.8125
+      },
+      "cards": [
+        {
+          "x": 205.4375,
+          "y": 141.75,
+          "width": 304.21875,
+          "height": 213.75
+        },
+        {
+          "x": 543.25,
+          "y": 146.25,
+          "width": 276.578125,
+          "height": 213.75
+        }
+      ],
+      "start": {
+        "x": 364.796875,
+        "y": 367.1875,
+        "width": 230.390625,
+        "height": 58.5
+      },
+      "settings": {
+        "x": 732.484375,
+        "y": 14.390625,
+        "width": 214.078125,
+        "height": 32.03125
+      },
+      "portraits": [
+        {
+          "x": 304.3125,
+          "y": 120.375,
+          "width": 206.859375,
+          "height": 252.21875
+        },
+        {
+          "x": 631.765625,
+          "y": 150.515625,
+          "width": 179.765625,
+          "height": 200.921875
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 425.96875,
+        "width": 960,
+        "height": 24.03125
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "overflowX": false,
+      "logo": {
+        "x": 15.59375,
+        "y": 85,
+        "width": 343.1875,
+        "height": 138.40625
+      },
+      "cards": [
+        {
+          "x": 23.390625,
+          "y": 245,
+          "width": 343.1875,
+          "height": 340
+        },
+        {
+          "x": 23.390625,
+          "y": 657.4375,
+          "width": 343.1875,
+          "height": 340
+        }
+      ],
+      "start": {
+        "x": 30,
+        "y": 1011,
+        "width": 330,
+        "height": 108
+      },
+      "settings": {
+        "x": 114.9375,
+        "y": 12,
+        "width": 263.0625,
+        "height": 56
+      },
+      "portraits": [
+        {
+          "x": 134.921875,
+          "y": 211,
+          "width": 233.359375,
+          "height": 401.1875
+        },
+        {
+          "x": 133.234375,
+          "y": 664.234375,
+          "width": 223.0625,
+          "height": 319.59375
+        }
+      ],
+      "footer": {
+        "x": 0,
+        "y": 1139,
+        "width": 390,
+        "height": 92.625
+      },
+      "images": [
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/foliage.webp",
+          "loaded": true,
+          "fit": "cover"
+        },
+        {
+          "src": "/assets/ui/menu/logo.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/deepseek-normal.png",
+          "loaded": true,
+          "fit": "contain"
+        },
+        {
+          "src": "/assets/ui/menu/rice-cat.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/menu/rice-tub.webp",
+          "loaded": true,
+          "fit": "fill"
+        },
+        {
+          "src": "/assets/ui/portraits/human-guardian-v1.webp",
+          "loaded": true,
+          "fit": "contain"
+        }
+      ]
+    }
+  ],
+  "interactions": [
+    "five real volume buses / mute / three difficulties / mutually exclusive panels / Escape focus / credits",
+    "DEEPSEEK: keyboard select only / Start / teaching where applicable / PLAYING / pause / reset menu",
+    "HUMAN: keyboard select only / Start / teaching where applicable / PLAYING / pause / reset menu"
+  ],
+  "errors": []
+}

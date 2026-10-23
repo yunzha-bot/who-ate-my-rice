@@ -4,7 +4,8 @@ import { InteriorShadowView, applyInteriorSunShadow, isCoveredInterior,
   wallHasOutdoorSide } from '../InteriorShadowView.ts';
 import { dressClosedExteriorWall } from './ClosedExteriorDoors.ts';
 import { buildGarageFloor } from './GarageGround.ts';
-import { buildResidentialExterior } from '../ResidentialExterior.ts';
+import { buildResidentialExterior, describeResidentialLayout } from '../ResidentialExterior.ts';
+import { StreetActivityView } from '../StreetActivityView.ts';
 import { doorVisualGeometry } from '../DoorVisualGeometry.ts';
 import { dressFurniture, furnitureColor, HOME_PALETTE, HOME_COMPOSITION } from '../AlphaPresentation.ts';
 import { GAME_CONFIG } from '../../config/gameConfig.ts';
@@ -79,6 +80,7 @@ export interface ApartmentBuild {
   hideSpotIndicators: Map<string, THREE.Mesh>;
   hideSpotIndicatorRoot: THREE.Group;
   interiorShadows: InteriorShadowView;
+  streetActivity: StreetActivityView;
   dispose(): void;
 }
 
@@ -131,7 +133,8 @@ export function buildApartment(parent: THREE.Object3D,
   hideSpotIndicatorRoot.name = 'hide-spot-indicators';
   hideSpotIndicatorRoot.visible = false;
   root.add(hideSpotIndicatorRoot);
-  buildResidentialExterior(root, ROOMS);
+  const exterior = buildResidentialExterior(root, ROOMS);
+  const streetActivity = new StreetActivityView(exterior, describeResidentialLayout(ROOMS));
 
   for (const room of ROOMS) {
     if (room.id === 'garage') {
@@ -303,26 +306,33 @@ export function buildApartment(parent: THREE.Object3D,
 
   return {
     root, debugRoot, obstacles, orientedObstacles, furnitureMeshes, anchorGizmos, anchorGizmoRoot,
-    hideSpotIndicators, hideSpotIndicatorRoot, interiorShadows,
+    hideSpotIndicators, hideSpotIndicatorRoot, interiorShadows, streetActivity,
     dispose(): void {
       interiorShadows.dispose();
+      streetActivity.dispose();
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
       root.traverse(object => {
         if (object instanceof THREE.Sprite) {
-          const spriteMaterial = object.material;
-          spriteMaterial.map?.dispose();
-          spriteMaterial.dispose();
+          materials.add(object.material);
           return;
         }
         const drawable = object as unknown as THREE.Mesh;
         if (!drawable.geometry || !drawable.material) return;
-        drawable.geometry.dispose();
+        geometries.add(drawable.geometry);
+        if (drawable instanceof THREE.InstancedMesh) drawable.dispose();
         const list = Array.isArray(drawable.material) ? drawable.material : [drawable.material];
-        for (const item of list) {
-          const texture = (item as THREE.MeshBasicMaterial).map;
-          texture?.dispose();
-          item.dispose();
-        }
+        list.forEach(item => materials.add(item));
       });
+      // Instanced scenery shares geometry/materials; release each owned resource once.
+      const textures = new Set<THREE.Texture>();
+      materials.forEach(item => {
+        const texture = (item as THREE.MeshBasicMaterial).map;
+        if (texture) textures.add(texture);
+        item.dispose();
+      });
+      textures.forEach(texture => texture.dispose());
+      geometries.forEach(geometry => geometry.dispose());
       root.removeFromParent();
     },
   };

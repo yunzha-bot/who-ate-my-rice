@@ -1,33 +1,50 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { populateFactionMenu, UI_PORTRAITS, REPORT_MARKUP } from '../src/three/GameUiLayout.ts';
 import { factionMenuFixture } from './helpers/faction-menu.mjs';
 
-test('native cards select only; Start dispatches the latest faction and reset clears selection', () => {
+test('opening hoodie portrait is the unchanged supplied RGBA artwork; previous Human art stays available', () => {
+  const portrait = readFileSync(new URL(`../public${UI_PORTRAITS.HUMAN_MENU}`, import.meta.url));
+  assert.equal(createHash('sha256').update(portrait).digest('hex'),
+    'b82ade694981139231ed879c251b18080788d359841328ca1f6705099606da5e');
+  assert.equal(portrait.readUInt32BE(16), 1024);
+  assert.equal(portrait.readUInt32BE(20), 1536);
+  assert.equal(portrait[25], 6);
+  assert.ok(readFileSync(new URL('../public/assets/ui/portraits/human-guardian-v1.webp', import.meta.url)).length > 0);
+});
+
+test('Human report uses the supplied duo artwork unchanged, independently of the opening portrait', () => {
+  const portrait = readFileSync(new URL(`../public${UI_PORTRAITS.HUMAN}`, import.meta.url));
+  assert.equal(createHash('sha256').update(portrait).digest('hex'),
+    'e3cd1ff062348ca132c0da4d54bb0c0b2cb7e8c812ae7937d0b04b89372b5ad8');
+  assert.equal(portrait.readUInt32BE(16), 1312);
+  assert.equal(portrait.readUInt32BE(20), 1199);
+  assert.equal(portrait[25], 6);
+  assert.match(REPORT_MARKUP, /class="report-portrait portrait-human"[^>]*width="1312" height="1199"/);
+  assert.doesNotMatch(REPORT_MARKUP, /human-guardian-v1/);
+});
+
+test('clicking either native faction card starts that faction immediately; reset clears selection', () => {
   const callbacks = [];
   const menu = factionMenuFixture(), buttons = menu.cards;
   const reset = populateFactionMenu(menu, faction => callbacks.push(faction));
   assert.equal((menu.innerHTML.match(/type="button" class="faction-card"/g) ?? []).length, 2);
+  assert.doesNotMatch(menu.innerHTML, /menu-start|选择阵营/);
   assert.equal((menu.innerHTML.match(/type="button" class="menu-setting-button"/g) ?? []).length, 2);
   assert.doesNotMatch(menu.innerHTML, /type="radio"|确认阵营/);
   assert.doesNotMatch(menu.innerHTML, /menu-controls|CONTROL \//);
   buttons[0].listeners.click();
   assert.equal(buttons[0].attributes['aria-pressed'], 'true');
-  assert.equal(menu.start.disabled, false);
+  assert.deepEqual(callbacks, ['DEEPSEEK']);
+  menu.hidden = true;
   buttons[1].listeners.click();
-  assert.deepEqual(callbacks, []);
-  assert.equal(buttons[0].attributes['aria-pressed'], 'false');
-  menu.start.listeners.click();
-  assert.deepEqual(callbacks, ['HUMAN']);
-  menu.hidden = true; menu.start.listeners.click();
-  assert.deepEqual(callbacks, ['HUMAN']);
-  menu.hidden = false; reset(); menu.start.listeners.click();
-  assert.equal(menu.start.disabled, true);
+  assert.deepEqual(callbacks, ['DEEPSEEK']);
+  menu.hidden = false; reset();
   assert.ok(buttons.every(b => b.attributes['aria-pressed'] === 'false'));
-  assert.deepEqual(callbacks, ['HUMAN']);
-  buttons[0].listeners.click(); menu.start.listeners.click();
-  assert.deepEqual(callbacks, ['HUMAN', 'DEEPSEEK']);
+  buttons[1].listeners.click();
+  assert.deepEqual(callbacks, ['DEEPSEEK', 'HUMAN']);
 });
 
 test('menu native Space and arrows stop gameplay propagation without suppressing browser defaults', () => {
@@ -73,12 +90,16 @@ test('standalone PNG/WebP portraits are bounded assets, not baked UI screens', (
       assert.equal(bytes.toString('ascii', 8, 12), 'WEBP');
       assert.ok(bytes.length < 300_000, 'individual WebP portrait exceeds asset budget');
     }
-    if (path === UI_PORTRAITS.DEEPSEEK || path === UI_PORTRAITS.HUMAN) {
+    if (path === UI_PORTRAITS.DEEPSEEK) {
       assert.ok(menu.innerHTML.includes(path));
       assert.ok(REPORT_MARKUP.includes(path));
     }
   }
   assert.equal((menu.innerHTML.match(/class="faction-portrait"/g) ?? []).length, 2);
+  assert.ok(menu.innerHTML.includes(UI_PORTRAITS.HUMAN_MENU));
+  assert.ok(!menu.innerHTML.includes(UI_PORTRAITS.HUMAN));
+  assert.ok(REPORT_MARKUP.includes(UI_PORTRAITS.HUMAN));
+  assert.ok(!REPORT_MARKUP.includes(UI_PORTRAITS.HUMAN_MENU));
   assert.match(REPORT_MARKUP, /<h1><\/h1><p><\/p><div class="overlay-stats"><\/div>/);
   assert.doesNotMatch(menu.innerHTML, /data:image|<canvas/);
   const hud = readFileSync(new URL('../src/three/AlphaHudView.ts', import.meta.url), 'utf8');

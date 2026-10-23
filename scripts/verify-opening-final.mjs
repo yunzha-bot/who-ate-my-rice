@@ -31,37 +31,27 @@ try {
     await page.setViewportSize({width,height});await page.mouse.move(width/2,20);await page.waitForTimeout(180);
     const layout=await page.evaluate(()=>{
       const rect=n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};};
-      const selectors=['.menu-logo','.faction-card[data-faction="DEEPSEEK"]','.faction-card[data-faction="HUMAN"]','.menu-start','.menu-settings'];
+      const selectors=['.menu-logo','.faction-card[data-faction="DEEPSEEK"]','.faction-card[data-faction="HUMAN"]','.menu-settings'];
       return {width:innerWidth,height:innerHeight,dpr:devicePixelRatio,scale:visualViewport.scale,overflow:document.querySelector('.faction-menu').scrollWidth>innerWidth,
+        menuScrollHeight:document.querySelector('.faction-menu').scrollHeight,
         boxes:selectors.map(s=>({selector:s,...rect(document.querySelector(s))})),
         hitTargets:selectors.slice(1).map(s=>{const n=document.querySelector(s),r=n.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {selector:s,ownsCenter:n===hit||n.contains(hit)};}),
         portraits:[...document.querySelectorAll('.faction-portrait')].map(n=>({src:n.getAttribute('src'),natural:[n.naturalWidth,n.naturalHeight],fit:getComputedStyle(n).objectFit,...rect(n)}))};});
     assert.equal(layout.scale,1);assert.equal(layout.dpr,1);assert.equal(layout.overflow,false);
     assert(layout.hitTargets.every(t=>t.ownsCenter),'an overlay intercepted a main control');
-    for(const b of layout.boxes)assert(b.x>=0&&b.y>=0&&b.x+b.w<=width+.5&&b.y+b.h<=height+.5,`cropped ${b.selector}`);
+    for(const b of layout.boxes)assert(b.x>=0&&b.y>=0&&b.x+b.w<=width+.5&&b.y+b.h<=layout.menuScrollHeight+.5,`unreachable ${b.selector}`);
     assert(layout.portraits.every(p=>p.fit==='contain'&&p.natural.every(x=>x>0)));
     await shot(`static-${width}x${height}`);result.layouts.push(layout);
   }
   await page.setViewportSize({width:1920,height:1080});await page.evaluate(()=>{window.__motionConfig.enabled=true;});
   await page.waitForFunction(()=>window.__openingGame.menuAtmosphere.active);
-  assert(await page.locator('.menu-start').isDisabled());
+  assert.equal(await page.locator('.menu-start').count(),0);
   await page.locator('[data-menu-panel="audio"]').click();await page.locator('.menu-audio-slot input[type="range"]').first().fill('37');
   await page.getByLabel('总静音',{exact:true}).check();
   assert.deepEqual(await page.evaluate(()=>[window.__openingGame.audio.settings.master,window.__openingGame.audio.settings.muted]),[.37,true]);
   await shot('audio-settings');await page.locator('[data-menu-panel="difficulty"]').click();assert(await page.locator('.menu-audio-slot').isHidden());
   for(const difficulty of ['NORMAL','HARD','EASY']) {if(await page.locator('.menu-difficulty-slot').isHidden())await page.locator('[data-menu-panel="difficulty"]').click();await page.locator(`input[name="difficulty"][value="${difficulty}"]`).check();assert.equal(await page.evaluate(()=>window.__openingGame.difficultyView.value),difficulty);}
   await page.keyboard.press('Escape');
-  result.keyboard=[];
-  for(const [faction,key] of [['DEEPSEEK','Space'],['HUMAN','Enter']]) {
-    await page.locator(`.faction-card[data-faction="${faction}"]`).focus();await page.keyboard.press(key);
-    assert.equal(await phase(),'FACTION_SELECT');assert.equal(await page.locator(`.faction-card[data-faction="${faction}"]`).getAttribute('aria-pressed'),'true');
-    result.keyboard.push({faction,key,selectOnly:true});
-  }
-  // Rapid real pointer/click transitions must settle with only one selected faction.
-  for(let i=0;i<12;i++){await page.locator(`.faction-card[data-faction="${i%2?'HUMAN':'DEEPSEEK'}"]`).click({delay:10});await page.mouse.move(960,60);}
-  await page.waitForTimeout(600);assert.equal(await page.locator('.faction-card[aria-pressed="true"]').count(),1);
-  result.rapidSelection={clicks:12,selected:await page.locator('.faction-card[aria-pressed="true"]').getAttribute('data-faction'),scales:await page.locator('.faction-card').evaluateAll(ns=>ns.map(n=>getComputedStyle(n).scale))};
-  assert(result.rapidSelection.scales.every(s=>s==='none'||Number(s)===1));
   // Each effect switch is exercised against the actual imported module instance.
   result.switches=[];
   for(const [key,attribute] of [['rice','data-menu-rice'],['interaction','data-menu-interaction']]) {
@@ -82,14 +72,14 @@ try {
   await page.waitForFunction(()=>window.__openingGame.menuAtmosphere.active);
   result.listenersBefore=(await cdp.send('Memory.getDOMCounters')).jsEventListeners;
   for(const faction of ['DEEPSEEK','HUMAN']) {
-    await page.locator(`.faction-card[data-faction="${faction}"]`).click();await page.mouse.move(960,60);await page.waitForTimeout(450);await shot(`selected-${faction}`);
-    assert.equal(await phase(),'FACTION_SELECT');
     if(faction==='DEEPSEEK') {
       await page.evaluate(async()=>{const {StartupReadiness}=await import('/src/three/StartupReadiness.ts');window.__savedGate=window.__openingGame.startupReadiness;window.__openingGame.startupReadiness=new StartupReadiness();});
-      await page.locator('.menu-start').click();assert.equal(await phase(),'FACTION_SELECT');
+      await page.locator('.faction-card[data-faction="DEEPSEEK"]').click();assert.equal(await phase(),'FACTION_SELECT');
       await page.evaluate(()=>{window.__openingGame.startupReadiness=window.__savedGate;delete window.__savedGate;});
     }
-    await page.locator('.menu-start').click();await waitPhase('READY');await shot(`${faction}-ready`);
+    const card=page.locator(`.faction-card[data-faction="${faction}"]`);
+    await card.focus();await page.keyboard.press(faction==='DEEPSEEK'?'Space':'Enter');await waitPhase('READY');
+    assert.equal(await card.getAttribute('aria-pressed'),'true');await shot(`${faction}-ready`);
     assert(!(await state()).active);assert.equal(await page.evaluate(()=>window.__openingGame.control.controlledFaction),faction);
     const teaching=await page.locator('.controls-help').isVisible();if(teaching)await page.locator('.controls-help-close').click();
     await waitPhase('PLAYING');
@@ -103,7 +93,7 @@ try {
     await waitPhase('READY');assert(!(await state()).active);await shot(`${faction}-restarted`);await waitPhase('PLAYING');
     await page.keyboard.press('Escape');await waitPhase('PAUSED');await page.getByRole('button',{name:'返回主菜单',exact:true}).click();await waitPhase('FACTION_SELECT');
     const returned=await state();assert(returned.active);assert.equal(returned.canvas,1);assert.equal(returned.leaves,2);assert.equal(returned.pool,14);
-    assert(await page.locator('.menu-start').isDisabled());await page.mouse.move(960,60);await shot(`${faction}-returned`);
+    assert.equal(await page.locator('.menu-start').count(),0);await page.mouse.move(960,60);await shot(`${faction}-returned`);
     result.flows.push({faction,teaching,ready:true,played:true,moveInput:true,positionBefore,positionAfter,pauseResume:true,restartReadyPlaying:true,returned});
   }
   result.listenersAfter=(await cdp.send('Memory.getDOMCounters')).jsEventListeners;

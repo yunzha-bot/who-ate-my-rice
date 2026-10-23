@@ -1,0 +1,76 @@
+[
+  {
+    "channel": "chrome",
+    "flows": [
+      {
+        "faction": "DEEPSEEK",
+        "readyFrozen": true,
+        "playing": true,
+        "pauseFrozen": true,
+        "resume": true,
+        "restarted": true,
+        "returnedSameSixActors": true
+      },
+      {
+        "faction": "HUMAN",
+        "readyFrozen": true,
+        "playing": true,
+        "pauseFrozen": true,
+        "resume": true,
+        "restarted": true,
+        "returnedSameSixActors": true
+      }
+    ],
+    "allSixMove": true,
+    "coreUiStable": true,
+    "reducedMotionVerified": true,
+    "backgroundVerified": false,
+    "focus": {
+      "hidden": false,
+      "focused": true
+    },
+    "metrics": {
+      "calls": 1363,
+      "geometries": 1161,
+      "textures": 19
+    },
+    "errors": []
+  },
+  {
+    "channel": "msedge",
+    "flows": [
+      {
+        "faction": "DEEPSEEK",
+        "readyFrozen": true,
+        "playing": true,
+        "pauseFrozen": true,
+        "resume": true,
+        "restarted": true,
+        "returnedSameSixActors": true
+      },
+      {
+        "faction": "HUMAN",
+        "readyFrozen": true,
+        "playing": true,
+        "pauseFrozen": true,
+        "resume": true,
+        "restarted": true,
+        "returnedSameSixActors": true
+      }
+    ],
+    "allSixMove": true,
+    "coreUiStable": true,
+    "reducedMotionVerified": true,
+    "backgroundVerified": false,
+    "focus": {
+      "hidden": false,
+      "focused": true
+    },
+    "metrics": {
+      "calls": 1356,
+      "geometries": 1160,
+      "textures": 19
+    },
+    "errors": []
+  }
+]

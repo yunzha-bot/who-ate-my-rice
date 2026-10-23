@@ -43,13 +43,15 @@ export function verifyPagesBuild(root = process.cwd(), publicFiles) {
   walk(dist);
   for (const file of allowed) require(files.some(entry => entry.path === file), `Missing artifact: ${file}`);
   const glbs = files.filter(file => file.path.endsWith('.glb')).map(file => file.path).sort();
-  require(JSON.stringify(glbs) === JSON.stringify(['assets/characters/deepseek/deepseek_animated_v6_hair.glb', 'assets/props/rice-bag/rice-bag.glb']), 'Unexpected production models');
+  require(JSON.stringify(glbs) === JSON.stringify(['assets/characters/deepseek/deepseek_animated_v6_hair.glb',
+    'assets/characters/human/human_v2.glb', 'assets/props/rice-bag/rice-bag.glb']), 'Unexpected production models');
   const code = entries.map(file => readFileSync(join(dist, file), 'utf8')).join('\n');
   for (const name of ['KeyZ', 'KeyC', 'KeyX', '/__dev/', ...PRODUCTION_EXCLUDED_ASSETS.map(file => file.split('/').at(-1))])
     require(!code.includes(name), `Development/private reference: ${name}`);
   require(!/["'`]\/(?:assets|ui)\/|url\(["']?\/(?:assets|ui)\//.test(code), 'Root asset URL remains');
   // Rollup may keep BASE_URL in a shared constant instead of folding every template.
   require(code.includes(base) && code.includes('assets/characters/deepseek/deepseek_animated_v6_hair.glb'), 'Missing base-aware v6 URL');
+  require(code.includes('assets/characters/human/human_v2.glb'), 'Missing base-aware Human URL');
   return { base, files: files.sort((a, b) => a.path.localeCompare(b.path)), count: files.length, bytes: files.reduce((sum, file) => sum + file.bytes, 0) };
 }
 

@@ -21,13 +21,19 @@
 | `scripts/` | 构建安全审查、浏览器验收及素材工具；用途不同不视为重复 |
 | `archive/` | 历史功能恢复资料，不自动清理 |
 | `incoming-assets/`、地图 `.bak` | 用户材料及恢复备份，仅本地保留，不纳入本次提交 |
-| `dist/`、`node_modules/`、`.npm-cache/` | 可重建产物、依赖与缓存，不提交 |
+| `dist/`、`dist-tencent/` | 默认/Pages构建与腾讯云根路径独立构建，不提交 |
+| `dist-tencent-delivery/` | 本地旧包备份与腾讯云上传ZIP，不提交；与实际上传目录分开 |
+| `node_modules/`、`.npm-cache/` | 依赖与缓存，不提交 |
 | `.github/workflows/pages.yml` | 手动 Pages 流程与 approved_sha 门禁，不因 push 自动部署 |
 
-本轮采用职责索引与过期说明修正，**没有移动或删除文件**。根 `design-qa.md` 是开屏历史 QA，不是第二份当前交接；保留原位置以免破坏旧引用。私人配置目录不读取或整理。
+源码、原始素材和历史文档维持原目录。2026-10-23仅将旧dist-tencent完整移入dist-tencent-delivery作为备份，再生成新包；没有删除原始资料。根 `design-qa.md` 是开屏历史 QA，不是第二份当前交接；保留原位置以免破坏旧引用。私人配置目录不读取或整理。
 
 ## 最新交付
 
+- [v1.0.0-rc2归档与腾讯云上传包](verification/rc2-tencent-2026-10-23/README.md)，[发布记录](releases/v1.0.0-rc2.md)。
+
+- [开屏正常浏览器缩放与腾讯云v2包](verification/menu-native-zoom-2026-10-23/README.md)。
+- [腾讯云最新版部署包与工程整理](verification/tencent-ready-2026-10-23/README.md)。
 - [手机操作优化报告](verification/mobile-feel-2026-10-22/README.md)。
 - [Git整理与部署前审查](verification/git-preparation-2026-10-22/README.md)。
 
