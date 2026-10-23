@@ -5206,3 +5206,30 @@ main与origin/main本地引用仍一致、暂存区为空；没有commit/push/Ta
 ### Git检查点、已知限制与下一项
 
 此条记录提交前已完成的构建/审核事实；后续实际commit/push/Tag结果另追加，不提前宣称成功。详细文件清单、必要截图与上传方法见verification/rc2-tencent-2026-10-23/README.md。既有RC1 Release与Pages最近成功部署只读核对保留；未登录/操作腾讯云，等待用户手动上传，不触发Pages。
+
+### 本轮Git实际执行回执：HTTP408中止
+
+本地正常提交ff1602d53e6d1af1dcc7de488ca61e442c8e047e成功（269文件，说明release: prepare rc2 controls visuals and Tencent root build）。随后的git push origin main退出1：RPC failed; HTTP 408 curl 22 / send-pack unexpected disconnect / remote end hung up unexpectedly；末尾虽出现Everything up-to-date，但只读ls-remote确认远端main和origin/main仍为a3ea62f6b55c0602a5f6135408f65fb12a0af590，没有rc2 Tag。不能宣称推送成功。
+
+遵守Git错误立即停止规则，未重试或更改配置、未强推/amend、未创建Tag/Release，未上传腾讯云或触发Pages。本地dist-tencent/rc2 ZIP已通过全部验证，源码对应上述本地提交。此失败回执、HANDOFF和报告是提交后的本地文档追加，尚未提交；网络恢复并获继续指示后需正常推送、另行归档回执和创建/推送用户指定Tag，不能把本轮记为Gate PASS。
+
+## RC2 Git推送恢复与Tag归档 — 2026-10-23
+
+### 完成内容
+
+用户明确指示继续，重新核对main/远端、三份失败回执、空暂存区、无冲突及Tag重名。正常推送代码ff1602d53e6d1af1dcc7de488ca61e442c8e047e成功，命令级HTTP/1.1及postBuffer用于网络兼容，不改全局配置或证书规则。创建并正常推送v1.0.0-rc2注释Tag成功，远端Tag对象ca082d7125cf7367bc5070956f5b1b8e917dddc7解引用为上述代码SHA，已只读核对。
+
+同步HANDOFF、RC2发布记录/交付报告，保留首次失败历史。Tag固定已验证源码，main后续仅正常追加本回执文档；不移动Tag、不amend/强推，不创建Release或部署。旧RC1完整保留。
+
+### 检查结果
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 正常push与Tag | 两次命令均退出0，远端代码/Tag落点核对一致 |
+| 包与源码 | ZIP SHA256仍为f29e9672a92b5c7c1b9fbcb57ff6382e65c20a9e862f9db1c579adde6b27403c；运行源码未改，与构建源码提交一致 |
+| diff检查 | 通过，仅文档更新；保留LF/CRLF提示 |
+| 游戏测试/构建 | 纯Git/文档续办，不重复执行，上一轮1126/1126与构建结果仍为历史实测，不冒充本轮新跑 |
+
+### 限制与下一项
+
+尚未操作腾讯云或触发Pages。用户手动上传dist-tencent内部全部内容或RC2 ZIP，再核验实际域名/缓存/MIME/手机真机。Tag已实际推送，后续文档回执继续正常提交，最终main与origin/main/远端一致性在交付回执核对，不在历史日志内维护“当前SHA”。

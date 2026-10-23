@@ -52,3 +52,27 @@
 ## Git与线上
 
 按明确文件路径暂存并复核，不使用add .或-A，不强推/改历史。执行后的完整提交SHA、远端与Tag结果另追加或写本地回执。既有Pages最近成功工作流38897897043，构建提交e9f361fce9dd5f392e2165ec2cf0b5f1148ed108（只读API查询）；不代表腾讯云上线或本次新部署。
+
+### 首次Git结果：HTTP408中止（后续已恢复，见下节）
+
+- 本地提交：`ff1602d53e6d1af1dcc7de488ca61e442c8e047e`，`release: prepare rc2 controls visuals and Tencent root build`，269个变更文件；其余已审引用文件原已追踪且无变化。构建源码与该提交一致。
+- `git push origin main`退出1，完整错误：
+
+```text
+error: RPC failed; HTTP 408 curl 22 The requested URL returned error: 408
+send-pack: unexpected disconnect while reading sideband packet
+fatal: the remote end hung up unexpectedly
+Everything up-to-date
+```
+
+- 推送后只读`git ls-remote`核对：远端main仍为`a3ea62f6b55c0602a5f6135408f65fb12a0af590`，origin/main相同；没有rc2 Tag。因此末行不能解释为成功，Git归档未完成。
+- 按项目安全规则停止Git写操作，没有重试、强推、重写历史、创建Tag/Release或部署。用户已指定的v1.0.0-rc2名称保留，待网络问题处理后继续正常推送并创建/推送Tag。
+- 本段及交接/追加日志是失败后本地交付记录，尚未纳入提交；需要后续正常追加文档提交，不amend。RC2 ZIP与dist-tencent已验证可用，但不能宣称它们已对应GitHub上的rc2发布。
+
+### 用户指示继续后的实际结果
+
+- 用户再次明确“继续”后，重新只读核对main未变化、无Tag重名/合并变基，仅三份失败回执文档为本地修改。
+- 正常推送成功：代码提交`ff1602d53e6d1af1dcc7de488ca61e442c8e047e`已在远端main；本次命令级HTTP/1.1和268435456字节postBuffer仅用于传输兼容，不改全局配置，不禁用TLS验证，不绕过认证。
+- `v1.0.0-rc2`注释Tag创建及推送成功；远端Tag对象`ca082d7125cf7367bc5070956f5b1b8e917dddc7`，解引用源码提交`ff1602d53e6d1af1dcc7de488ca61e442c8e047e`。该Tag固定本轮已验证的构建源码，之后main只追加回执文档，不移动Tag。
+- ZIP哈希再次核对不变，运行源码与Tag源码一致；本次继续任务为纯Git/文档，执行diff检查，不重复运行上一轮1126项游戏测试或构建，也不把旧测试写成本轮重新执行。
+- 不创建Release、不部署腾讯云或Pages；保留RC1。最新main应通过`git log -1`/`git ls-remote`查询，本报告不硬编码会自我过期的“当前SHA”。最终main及回执提交核对见本地`dist-tencent-delivery/rc2-delivery-receipt.json`与交付回复。
