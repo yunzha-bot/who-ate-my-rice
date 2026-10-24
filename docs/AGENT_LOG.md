@@ -5258,3 +5258,9 @@ main与origin/main本地引用仍一致、暂存区为空；没有commit/push/Ta
 ### Git检查点与下一项
 
 本轮正常commit/push已授权，按明确文件路径审核；实际执行回执随后另记，不提前声称归档成功。本地旧构建/未知验证材料/场景备份保留，dist-tencent仍不提交Git。最新上传入口在本轮报告；用户手动上传文件夹后核验网站根目录、缓存、MIME及双阵营操作。
+
+### 本轮Git实际归档回执
+
+2026-10-24提交35f1b0ad52bde1ce1f30f5f64261480b4cb37a5f（fix: archive Human held prop tuning and unify project records）成功，17文件；正常push origin main成功，HEAD与origin/main已核对一致。源码包括用户确认的Human .40/.70视觉持物位置，打包目录对应此源码；未强推/amend，未移动原RC2 Tag或新建Tag/Release，未上传/部署腾讯云或Pages。
+
+本回执/HANDOFF/报告随后只作纯文档正常追加提交，不改变构建源码与102文件目录。最终main/远端核对及文件夹信息写入本地dist-tencent-delivery/folder-receipt-2026-10-24.json。用户按实际方式上传最新dist-tencent文件夹，旧ZIP不含本次修正；未知/私人资料、场景备份和未引用原始输出继续保留。
