@@ -1,0 +1,34 @@
+{
+  "method": "Real browsers, isolated fixture prop placement; normal F pickup",
+  "rows": [
+    {
+      "channel": "chrome",
+      "faction": "HUMAN",
+      "distance": 0.40000000000000036,
+      "height": 0.7,
+      "state": "HELD"
+    },
+    {
+      "channel": "chrome",
+      "faction": "DEEPSEEK",
+      "distance": 0.5999999999999996,
+      "height": 0.55,
+      "state": "HELD"
+    },
+    {
+      "channel": "msedge",
+      "faction": "HUMAN",
+      "distance": 0.40000000000000036,
+      "height": 0.7,
+      "state": "HELD"
+    },
+    {
+      "channel": "msedge",
+      "faction": "DEEPSEEK",
+      "distance": 0.5999999999999996,
+      "height": 0.55,
+      "state": "HELD"
+    }
+  ],
+  "errors": []
+}

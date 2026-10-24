@@ -6,7 +6,7 @@
 
 技术栈：TypeScript、Three.js、Vite、原生 HTML/CSS。推荐 Node.js 24 LTS 与 npm（工作流使用 Node 24；Node 需支持项目测试使用的 TypeScript stripping），桌面目标为 Chrome/Edge；手机版横屏优先，Safari/微信等仍需真机验收。
 
-文档入口：[文档职责与工程目录](docs/README.md)、[当前交接](docs/DEEPSEEK_HANDOFF.md)、[移动浏览器说明](docs/MOBILE_BROWSER_SUPPORT.md)。
+文档入口：[开发日志与专项记录统一入口](docs/README.md)、[当前交接](docs/DEEPSEEK_HANDOFF.md)、[移动浏览器说明](docs/MOBILE_BROWSER_SUPPORT.md)。
 
 ## 本地运行
 
@@ -39,7 +39,9 @@ node scripts/verify-tencent-build.mjs
 
 已有腾讯云包须先备份，再重新构建；本轮旧包与可上传ZIP放在本地忽略的 `dist-tencent-delivery/`。上传 `dist-tencent/` 内部全部内容，使网站根层直接包含 `index.html`、`assets/`、`maps/`、`ui/`；不要上传源码、依赖、候选素材、备份或工程配置。ZIP也必须以 `index.html` 为根层，不能套一层dist-tencent。当前开屏点击任一阵营卡片直接开局。
 
-最新上传包、SHA256、真实截图、测试及限制见 [rc2腾讯云交付](docs/verification/rc2-tencent-2026-10-23/README.md)。桌面菜单会正常响应浏览器缩放，CSS视口不足1280px时上下排列，可纵向滚动选择任一阵营。本地验证不等于已经上传上线；腾讯云需由所有者手动上传，Pages仍不自动部署。
+最新可上传目录、资源清单、真实截图及本轮测试见 [2026-10-24持物位置与腾讯云目录更新](docs/verification/logs-tencent-2026-10-24/README.md)。本次直接上传dist-tencent文件夹（或其内部内容），无需ZIP；若保留外层文件夹，网站文档根目录应指向该文件夹内部，使游戏仍从域名根路径访问。旧RC2 ZIP保留作历史包，不含此次Human持物位置修正，不要当作最新版上传。
+
+桌面菜单正常响应浏览器缩放，CSS视口不足1280px时上下排列，可纵向滚动选阵营。本次是RC2 Tag之后的main更新，版本标识仍为RC测试版，既有Tag不移动。腾讯云由所有者手动上传，Pages仍不自动部署。
 
 ### GitHub Pages RC构建与手动部署
 

@@ -188,7 +188,15 @@ export class ThrowableView {
       model.visible=item.state!=='USED'&&this.system.config.enabled;
       if(item.state==='HELD'){const actor=actors.find(a=>a.faction===item.holder)!;
         const heading=this.heading(actor.faction)??actor.heading;
-        model.visible=!actor.hidden&&actor.renderVisible!==false&&this.system.config.enabled;model.position.set(actor.x+Math.sin(heading)*.60,.55,actor.z+Math.cos(heading)*.60);
+        model.visible=!actor.hidden&&actor.renderVisible!==false&&this.system.config.enabled;
+        const isHuman = actor.faction === 'HUMAN';
+        const forward = isHuman ? 0.40 : 0.60;
+        const height = isHuman ? 0.70 : 0.55;
+        model.position.set(
+          actor.x + Math.sin(heading) * forward,
+          height,
+          actor.z + Math.cos(heading) * forward,
+        );
       }else model.position.set(item.x,item.height+.025,item.z);
       model.rotation.z=item.state==='FLIGHT'&&!this.reducedMotion?Math.sin(this.system.nowMs*.015)*.35:0;
     }

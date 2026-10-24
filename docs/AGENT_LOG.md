@@ -5233,3 +5233,28 @@ main与origin/main本地引用仍一致、暂存区为空；没有commit/push/Ta
 ### 限制与下一项
 
 尚未操作腾讯云或触发Pages。用户手动上传dist-tencent内部全部内容或RC2 ZIP，再核验实际域名/缓存/MIME/手机真机。Tag已实际推送，后续文档回执继续正常提交，最终main与origin/main/远端一致性在交付回执核对，不在历史日志内维护“当前SHA”。
+
+## 日志统一入口、Human持物位置归档与Tencent目录更新 — 2026-10-24
+
+### 完成内容
+
+用户确认自己调好的人类持物观感，并授权整理日志、准备最新dist-tencent及正常Git提交/推送。基线main/HEAD/origin/main/远端一致，无合并/变基，索引为空；仅ThrowableView有用户修改。保留Human前距.40/高度.70、DeepSeek .60/.55，只整理缩进，新增双阵营四朝向及逻辑状态不变测试，不改玩法配置/投掷物理或资源。
+
+按长期规则保留本日志全部原文，仅末尾追加；复用docs/README.md统一索引整理前已有62份专项Markdown、当前交接、历史QA/交付与RC快照，明确27份本地原始.log仅为命令输出，不复制/删除/移动历史。同步根README/HANDOFF及verification/logs-tencent-2026-10-24报告，相关链接核对，不读取私人目录或清理未知资料。原始输出不批量提交。
+
+旧dist-tencent完整移入dist-tencent-delivery/previous-before-human-hold-20261024-133705，再用base=/重建，102文件共48317598字节，JS入口index-SSy6slQe.js；旧ZIP保留但不包含本次持物调整。本次按用户实际方式交付文件夹，不生成新ZIP、不移动RC2 Tag、不创建Tag/Release/部署。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 持物定向 / 全量 | 25/25；npm test 1127/1127，失败/取消/跳过0，66.26秒 |
+| 独立tsc / 默认build / Tencent build | 退出0，143模块，chunk>500kB提示保留 |
+| npm audit --audit-level=high | 0漏洞 |
+| 生产浏览器 | Chrome154/Edge151各双阵营READY/教学/PLAYING/暂停返回，各16音频解码；102文件HTTP/字节核对，缺失URL404，错误0 |
+| 持物实际浏览器 | 两浏览器各双阵营4组，测试安排盒子后原F拾取，Human距离≈.40/高.70、DeepSeek≈.60/.55，返回通过，错误0 |
+| 已知限制 | 首次持物探针因5173停止连接失败，核对端口并启动本项目后重跑通过；仅受控夹具不是完整自然对局，不冒充手机真机或腾讯云实际域名验收 |
+
+### Git检查点与下一项
+
+本轮正常commit/push已授权，按明确文件路径审核；实际执行回执随后另记，不提前声称归档成功。本地旧构建/未知验证材料/场景备份保留，dist-tencent仍不提交Git。最新上传入口在本轮报告；用户手动上传文件夹后核验网站根目录、缓存、MIME及双阵营操作。

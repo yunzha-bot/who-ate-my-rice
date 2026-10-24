@@ -282,6 +282,27 @@ test('pointer aiming uses the actual offset canvas and all four camera angles; c
  assert.equal(view.status.removed,true);
 });
 
+test('held props use the accepted Human offset while keeping DeepSeek offset and physics unchanged',t=>{
+ const oldWindow=globalThis.window,oldDocument=globalThis.document;globalThis.window=new EventTarget();
+ globalThis.document={createElement:()=>({style:{},setAttribute(){},remove(){}})};
+ t.after(()=>{globalThis.window=oldWindow;globalThis.document=oldDocument;});
+ for(const faction of ['HUMAN','DEEPSEEK']){
+  const s=system('BOX'),a={...actor(faction),heading:0},scene=new THREE.Scene();
+  const canvas=new EventTarget();canvas.parentElement={append(){}};
+  const view=new ThrowableView(canvas,scene,new THREE.OrthographicCamera(),s,()=>[a],()=>faction,clear,()=>{});
+  try{
+   assert(s.pickup(a,clear));const state=JSON.stringify(s.items);
+   for(const heading of [0,Math.PI/2,Math.PI,3*Math.PI/2]){
+    a.heading=heading;view.sync();const p=view.root.getObjectByName('one').position;
+    const forward=faction==='HUMAN'?.40:.60;
+    assert(Math.abs(p.x-a.x-Math.sin(heading)*forward)<1e-9);
+    assert(Math.abs(p.z-a.z-Math.cos(heading)*forward)<1e-9);
+    assert.equal(p.y,faction==='HUMAN'?.70:.55);assert.equal(JSON.stringify(s.items),state);
+   }
+  }finally{view.dispose();}
+ }
+});
+
 test('throw availability shares execution cooldown, durability, concealment and stun gates without mutation',()=>{
  const s=system('BASIN'),a=actor();assert.equal(s.canThrow(a),false);s.pickup(a,clear);
  assert.equal(s.canThrow(a),true);assert.equal(s.canThrow({...a,hidden:true}),false);
