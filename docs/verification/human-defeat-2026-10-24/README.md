@@ -41,3 +41,7 @@
 - 上传此文件夹或内部内容时，站点根层需直接对应index.html、assets/、maps/、ui/；若保留外层文件夹，请将站点文档根目录指向其内部。旧ZIP和旧Tag不包含本次失败图，不能当作此轮最新包。
 
 源码/文档/必要证据正常推送GitHub，dist-tencent及备份仍被Git忽略；不公开私人配置/候选原件/场景备份/未知材料。用户手动上传腾讯云后，再核验缓存和实际两阵营流程。此轮未登录云平台、未触发Pages或自动部署；Git实际提交/远端结果在回执补记。
+
+### 实际Git回执
+
+2026-10-24提交`fb668c502f20b133f3e244d506294f8dcaa6828b`成功（21文件，fix: use separate Human defeat artwork and refresh Tencent build handoff），正常推送origin main成功，已核对origin/main相同。本轮103文件目录对应此源码；后续仅正常追加回执文档，不改构建代码或移动Tag。最终main/远端核对写在本地dist-tencent-delivery/human-defeat-receipt-2026-10-24.json与交付回复，不在正文维护会过期的“当前SHA”。

@@ -5289,3 +5289,9 @@ GameUiLayout既有updateResultPortrait按赢家选择Human独立胜/负图，切
 ### Git检查点与下一项
 
 本轮正常commit/push已授权，精确暂存并复核本轮文件；实际执行结果随后回执记录。未知/私人资料、候选原件、备份及中间材料保留，不提交dist目录。用户手动上传最新dist-tencent，确认站点根层与资源缓存；不自动触发Pages、创建Tag/Release或操作腾讯云。
+
+### 本轮Git实际归档回执
+
+2026-10-24正常提交fb668c502f20b133f3e244d506294f8dcaa6828b（21文件，fix: use separate Human defeat artwork and refresh Tencent build handoff）并push origin main成功，HEAD与origin/main核对一致。dist-tencent对应本次源码与新失败PNG；后续只有本回执/HANDOFF/报告的纯文档追加，不改构建源码，不移动旧Tag。未强推/amend，未创建Tag/Release、上传腾讯云或触发Pages。
+
+103文件目录和最终远端核对另存本地dist-tencent-delivery/human-defeat-receipt-2026-10-24.json。用户手动上传最新dist-tencent文件夹，旧ZIP/Tag为历史版本；上线后仍需核验域名根目录/缓存/MIME及实际操作。
