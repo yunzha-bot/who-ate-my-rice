@@ -4,6 +4,11 @@
 
 ## 1. 项目概况
 
+### 2026-10-24 Human失败独立插画与腾讯云目录
+
+- 用户指定新PNG替换人类失败素材并授权正常Git推送。新增human-report-lose-v1.png原样文件；GameUiLayout按赢家切Human胜/负图并同步尺寸，DeepSeek不变，失败灰度/淡化和移动端原隐藏规则保留。胜负逻辑、开屏、3D模型及持物数值不改。
+- 本轮定向17/17、全量1128/1128、独立tsc/默认与Tencent构建、审计0漏洞通过；Chrome/Edge10条胜负切换/返回与生产103文件/双阵营/音频通过。[最新截图、目录和限制](verification/human-defeat-2026-10-24/README.md)。旧目录备份，最新dist-tencent包含新失败图；无新ZIP/Tag/Release或自动部署。
+
 ### 2026-10-24 日志统一入口、Human持物位置及腾讯云目录更新
 
 - 用户确认自己调整的Human持物观感可用，授权整理日志、更新dist-tencent并正常提交/推送。保留ThrowableView里Human前距.40/高度.70，DeepSeek仍.60/.55；仅规范缩进，新增双阵营四朝向视觉位置/逻辑不变回归，不改投掷物理、玩法配置或原资源。

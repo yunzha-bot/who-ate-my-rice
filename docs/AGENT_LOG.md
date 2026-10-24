@@ -5264,3 +5264,28 @@ main与origin/main本地引用仍一致、暂存区为空；没有commit/push/Ta
 2026-10-24提交35f1b0ad52bde1ce1f30f5f64261480b4cb37a5f（fix: archive Human held prop tuning and unify project records）成功，17文件；正常push origin main成功，HEAD与origin/main已核对一致。源码包括用户确认的Human .40/.70视觉持物位置，打包目录对应此源码；未强推/amend，未移动原RC2 Tag或新建Tag/Release，未上传/部署腾讯云或Pages。
 
 本回执/HANDOFF/报告随后只作纯文档正常追加提交，不改变构建源码与102文件目录。最终main/远端核对及文件夹信息写入本地dist-tencent-delivery/folder-receipt-2026-10-24.json。用户按实际方式上传最新dist-tencent文件夹，旧ZIP不含本次修正；未知/私人资料、场景备份和未引用原始输出继续保留。
+
+## Human失败独立插画、Git归档与Tencent目录 — 2026-10-24
+
+### 完成内容
+
+用户指定新图替换Human失败结算并明确授权正常Git提交/推送、准备腾讯云上线目录。基线fb747ad2c2b57c85ec76db1db75e476036ddabbf与远端一致，索引为空、追踪文件无修改、无合并/变基。原样新增human-report-lose-v1.png，1536×1024 RGBA，2373138字节，SHA256 7046faeab56c6bcd34e9e71bd51cf17da1648af39cfd4da91d5d4f6f9d2ad88c。
+
+GameUiLayout既有updateResultPortrait按赢家选择Human独立胜/负图，切换对应宽高；原获胜图和DeepSeek图不改。原失败灰度/透明度样式保留，无CSS/开屏/模型/玩法/持物值修改。新增原图哈希及反复胜负切换测试、verify-human-results实际浏览器脚本，Tencent审核清单显式加入新图；同步README/统一索引/素材来源/HANDOFF与verification/human-defeat-2026-10-24报告，本日志只追加。
+
+旧dist-tencent完整备份到dist-tencent-delivery/previous-before-human-defeat-20261024-153302，再base=/重建；新目录103文件共50691036字节，JS index-C6SvuAHU.js。新PNG源文件与构建副本哈希一致；本轮按用户要求交付文件夹，不生成ZIP、不动旧Tag、不自动部署。
+
+### 自动化测试与人工验收
+
+| 项目 | 本轮实际结果 |
+| --- | --- |
+| 定向 / 全量 | 17/17；npm test1128/1128，失败/取消/跳过0，63.50秒 |
+| 独立tsc / 默认与Tencent build | 均退出0，143模块；chunk>500kB提示保留 |
+| npm audit --audit-level=high | 0漏洞 |
+| 实际结算浏览器 | Chrome154/Edge151各5条，共10条；Human失败→获胜→再失败、DeepSeek胜负，加载/比例/源图恢复/返回菜单通过，页面和资源错误0 |
+| 生产根路径 | 103文件HTTP/字节核对，缺失URL404；两浏览器各双阵营READY/教学/PLAYING/暂停返回，各16音频解码通过，错误0 |
+| 人工与限制 | 查看本轮Chrome失败新图截图；结算由测试调用既有match方法触发，不冒充自然完整对局。手机真机及腾讯云域名/缓存/MIME尚非本轮验证 |
+
+### Git检查点与下一项
+
+本轮正常commit/push已授权，精确暂存并复核本轮文件；实际执行结果随后回执记录。未知/私人资料、候选原件、备份及中间材料保留，不提交dist目录。用户手动上传最新dist-tencent，确认站点根层与资源缓存；不自动触发Pages、创建Tag/Release或操作腾讯云。

@@ -28,6 +28,8 @@
 
 ### 近期专项记录
 
+- [Human失败独立插画与最新腾讯云目录 — 2026-10-24](verification/human-defeat-2026-10-24/README.md)
+
 - [日志统一入口、人类持物位置及最新腾讯云目录 — 2026-10-24](verification/logs-tencent-2026-10-24/README.md)
 
 - [阵营卡片直接开局 — 2026-10-23](verification/faction-card-start-2026-10-23/README.md)
@@ -115,6 +117,8 @@
 源码、原始素材和历史文档维持原目录。2026-10-23仅将旧dist-tencent完整移入dist-tencent-delivery作为备份，再生成新包；没有删除原始资料。根 `design-qa.md` 是开屏历史 QA，不是第二份当前交接；保留原位置以免破坏旧引用。私人配置目录不读取或整理。
 
 ## 最新交付
+
+- [2026-10-24 Human失败插画与最新dist-tencent目录](verification/human-defeat-2026-10-24/README.md)。仅人类失败切新图，原获胜图保留。
 
 - [2026-10-24日志整理与最新dist-tencent目录](verification/logs-tencent-2026-10-24/README.md)。本次按文件夹上传，旧RC2 ZIP不包含此次持物调整；Tag固定不动。
 

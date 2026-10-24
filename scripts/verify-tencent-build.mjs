@@ -13,7 +13,7 @@ const tracked = execFileSync('git', ['ls-files', '-z', '--', 'public'], { encodi
   .split('\0').filter(Boolean).map(file => file.slice(7));
 // Explicitly reviewed local additions; never allow all untracked public files implicitly.
 const additions = ['assets/characters/human/human_v2.glb', 'assets/ui/portraits/human-hoodie-v1.png',
-  'assets/ui/portraits/human-report-hoodie-v1.png'];
+  'assets/ui/portraits/human-report-hoodie-v1.png', 'assets/ui/portraits/human-report-lose-v1.png'];
 const approved = [...new Set([...tracked, ...additions])].filter(file => !PRODUCTION_EXCLUDED_ASSETS.includes(file));
 assert(!lstatSync(dist).isSymbolicLink());
 const html = readFileSync(join(dist, 'index.html'), 'utf8');
@@ -43,6 +43,7 @@ for (const forbidden of ['/who-ate-my-rice/', '127.0.0.1', 'localhost:', '/@vite
   assert(!code.includes(forbidden), `Unexpected production reference: ${forbidden}`);
 assert(!/gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKID[A-Za-z0-9]{32}|-----BEGIN [A-Z ]*PRIVATE KEY-----|[A-Z]:\\(?:Users|桌面)\\/.test(code), 'Potential secret or private path in production code');
 assert(code.includes('assets/characters/human/human_v2.glb') && code.includes('assets/ui/portraits/human-hoodie-v1.png'));
+assert(code.includes('assets/ui/portraits/human-report-lose-v1.png'), 'Missing new Human defeat portrait reference');
 assert(!code.includes('menu-start-row'), 'Outdated separate start button');
 const result = { base: '/', outDir: dist, count: files.length, bytes: files.reduce((n, file) => n + file.bytes, 0),
   extensions: Object.fromEntries([...new Set(files.map(file => extname(file.path)))].map(ext => [ext, files.filter(file => extname(file.path) === ext).length])),

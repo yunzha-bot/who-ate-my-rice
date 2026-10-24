@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { populateFactionMenu, UI_PORTRAITS, REPORT_MARKUP } from '../src/three/GameUiLayout.ts';
+import { populateFactionMenu, UI_PORTRAITS, REPORT_MARKUP, updateResultPortrait } from '../src/three/GameUiLayout.ts';
 import { factionMenuFixture } from './helpers/faction-menu.mjs';
 
 test('opening hoodie portrait is the unchanged supplied RGBA artwork; previous Human art stays available', () => {
@@ -24,6 +24,24 @@ test('Human report uses the supplied duo artwork unchanged, independently of the
   assert.equal(portrait[25], 6);
   assert.match(REPORT_MARKUP, /class="report-portrait portrait-human"[^>]*width="1312" height="1199"/);
   assert.doesNotMatch(REPORT_MARKUP, /human-guardian-v1/);
+});
+
+test('Human defeat art is the unchanged supplied PNG and result changes restore the winning art', () => {
+  const bytes = readFileSync(new URL(`../public${UI_PORTRAITS.HUMAN_LOSE}`, import.meta.url));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'),
+    '7046faeab56c6bcd34e9e71bd51cf17da1648af39cfd4da91d5d4f6f9d2ad88c');
+  assert.deepEqual([bytes.readUInt32BE(16), bytes.readUInt32BE(20), bytes[25]], [1536, 1024, 6]);
+  const node = src => ({ attrs: { src }, getAttribute(key) { return this.attrs[key]; },
+    setAttribute(key, value) { this.attrs[key] = value; } });
+  const human = node(UI_PORTRAITS.HUMAN), deepseek = node(UI_PORTRAITS.DEEPSEEK);
+  const overlay = { querySelector: selector => selector === '.portrait-human' ? human : deepseek };
+  for (const winner of ['DEEPSEEK', 'HUMAN', 'DEEPSEEK', 'HUMAN']) {
+    updateResultPortrait(overlay, winner);
+    assert.equal(human.attrs.src, winner === 'HUMAN' ? UI_PORTRAITS.HUMAN : UI_PORTRAITS.HUMAN_LOSE);
+    assert.equal(deepseek.attrs.src, winner === 'HUMAN' ? UI_PORTRAITS.DEEPSEEK_LOSE : UI_PORTRAITS.DEEPSEEK_WIN);
+    assert.equal(human.attrs.width, winner === 'HUMAN' ? '1312' : '1536');
+    assert.equal(human.attrs.height, winner === 'HUMAN' ? '1199' : '1024');
+  }
 });
 
 test('clicking either native faction card starts that faction immediately; reset clears selection', () => {

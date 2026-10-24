@@ -39,7 +39,7 @@ node scripts/verify-tencent-build.mjs
 
 已有腾讯云包须先备份，再重新构建；本轮旧包与可上传ZIP放在本地忽略的 `dist-tencent-delivery/`。上传 `dist-tencent/` 内部全部内容，使网站根层直接包含 `index.html`、`assets/`、`maps/`、`ui/`；不要上传源码、依赖、候选素材、备份或工程配置。ZIP也必须以 `index.html` 为根层，不能套一层dist-tencent。当前开屏点击任一阵营卡片直接开局。
 
-最新可上传目录、资源清单、真实截图及本轮测试见 [2026-10-24持物位置与腾讯云目录更新](docs/verification/logs-tencent-2026-10-24/README.md)。本次直接上传dist-tencent文件夹（或其内部内容），无需ZIP；若保留外层文件夹，网站文档根目录应指向该文件夹内部，使游戏仍从域名根路径访问。旧RC2 ZIP保留作历史包，不含此次Human持物位置修正，不要当作最新版上传。
+最新可上传目录、资源清单、真实截图及本轮测试见 [2026-10-24人类失败插画与腾讯云目录更新](docs/verification/human-defeat-2026-10-24/README.md)；此前持物与日志整理见[历史记录](docs/verification/logs-tencent-2026-10-24/README.md)。直接上传dist-tencent文件夹（或其内部内容），无需ZIP；若保留外层文件夹，网站文档根目录应指向该文件夹内部，使游戏仍从域名根路径访问。旧RC2 ZIP保留作历史包，不含最新持物和失败插画修正，不要当作最新版上传。
 
 桌面菜单正常响应浏览器缩放，CSS视口不足1280px时上下排列，可纵向滚动选阵营。本次是RC2 Tag之后的main更新，版本标识仍为RC测试版，既有Tag不移动。腾讯云由所有者手动上传，Pages仍不自动部署。
 

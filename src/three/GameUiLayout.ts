@@ -36,6 +36,7 @@ export const UI_PORTRAITS = {
   DEEPSEEK_WIN: `${assetBase}assets/ui/portraits/deepseek-win.png`,
   DEEPSEEK_LOSE: `${assetBase}assets/ui/portraits/deepseek-lose.png`,
   HUMAN: `${assetBase}assets/ui/portraits/human-report-hoodie-v1.png`,
+  HUMAN_LOSE: `${assetBase}assets/ui/portraits/human-report-lose-v1.png`,
   HUMAN_MENU: `${assetBase}assets/ui/portraits/human-hoodie-v1.png`,
 } as const;
 
@@ -48,6 +49,13 @@ export function updateResultPortrait(overlay: HTMLElement, winner: Faction): voi
   const portrait = overlay.querySelector<HTMLImageElement>('.portrait-deepseek');
   const source = deepseekResultPortrait(winner);
   if (portrait && portrait.getAttribute('src') !== source) portrait.setAttribute('src', source);
+  const human = overlay.querySelector<HTMLImageElement>('.portrait-human');
+  const humanSource = winner === 'HUMAN' ? UI_PORTRAITS.HUMAN : UI_PORTRAITS.HUMAN_LOSE;
+  if (human && human.getAttribute('src') !== humanSource) {
+    human.setAttribute('src', humanSource);
+    human.setAttribute('width', winner === 'HUMAN' ? '1312' : '1536');
+    human.setAttribute('height', winner === 'HUMAN' ? '1199' : '1024');
+  }
 }
 
 // Artwork is decorative; all report values and controls remain live HTML.

@@ -1,0 +1,136 @@
+{
+  "method": "Real browser UI; controlled match outcomes, not natural full-match victories",
+  "rows": [
+    {
+      "channel": "chrome",
+      "faction": "HUMAN",
+      "winner": "DEEPSEEK",
+      "outcome": "lose",
+      "file": "human-report-lose-v1.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "artFilter": "grayscale(1)",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "chrome",
+      "faction": "HUMAN",
+      "winner": "HUMAN",
+      "outcome": "win",
+      "file": "human-report-hoodie-v1.png",
+      "dimensions": [
+        1312,
+        1199
+      ],
+      "artFilter": "none",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "chrome",
+      "faction": "HUMAN",
+      "winner": "DEEPSEEK",
+      "outcome": "lose",
+      "file": "human-report-lose-v1.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "artFilter": "grayscale(1)",
+      "repeatedDefeat": true
+    },
+    {
+      "channel": "chrome",
+      "faction": "DEEPSEEK",
+      "winner": "HUMAN",
+      "outcome": "lose",
+      "file": "deepseek-lose.png",
+      "dimensions": [
+        1312,
+        1199
+      ],
+      "artFilter": "grayscale(1)",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "chrome",
+      "faction": "DEEPSEEK",
+      "winner": "DEEPSEEK",
+      "outcome": "win",
+      "file": "deepseek-win.png",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "artFilter": "none",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "msedge",
+      "faction": "HUMAN",
+      "winner": "DEEPSEEK",
+      "outcome": "lose",
+      "file": "human-report-lose-v1.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "artFilter": "grayscale(1)",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "msedge",
+      "faction": "HUMAN",
+      "winner": "HUMAN",
+      "outcome": "win",
+      "file": "human-report-hoodie-v1.png",
+      "dimensions": [
+        1312,
+        1199
+      ],
+      "artFilter": "none",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "msedge",
+      "faction": "HUMAN",
+      "winner": "DEEPSEEK",
+      "outcome": "lose",
+      "file": "human-report-lose-v1.png",
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "artFilter": "grayscale(1)",
+      "repeatedDefeat": true
+    },
+    {
+      "channel": "msedge",
+      "faction": "DEEPSEEK",
+      "winner": "HUMAN",
+      "outcome": "lose",
+      "file": "deepseek-lose.png",
+      "dimensions": [
+        1312,
+        1199
+      ],
+      "artFilter": "grayscale(1)",
+      "repeatedDefeat": false
+    },
+    {
+      "channel": "msedge",
+      "faction": "DEEPSEEK",
+      "winner": "DEEPSEEK",
+      "outcome": "win",
+      "file": "deepseek-win.png",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "artFilter": "none",
+      "repeatedDefeat": false
+    }
+  ],
+  "errors": []
+}
